@@ -1,0 +1,488 @@
+/**
+ * Created by HuyNT2
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+
+//navController.initWithRootView("transfer-local-create-scr", true);
+
+/*var tmpTargetAcc = document.getElementById("trans.targetaccount");
+var tmpStrAcc = tmpTargetAcc.value;
+if (gDestinationInput.length >=8) {
+	tmpTargetAcc.value = gDestinationInput;
+}
+else {
+	tmpTargetAcc.value = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+}*/
+
+var tempCustomerCode;
+var totalAmount = 0;
+var billsPay ;
+var checkBill;
+var checkBillStt;
+var mng = 'N';
+
+document.addEventListener("evtLoadPageSuccess", function(e){
+	if (currentPage == "payment/payment-evnhcm-bill-scr") {
+		if(gUserInfo.lang == 'EN'){
+			document.getElementById('mng.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_EN[0];
+		}else{
+			document.getElementById('mng.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_VN[0];
+		}
+		mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+		var payeeDesc = document.getElementById("mng.payee");
+		var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+		var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+		if (gEvnPayeeType != '')
+		{
+			//mng = gEvnPayeeType;
+			var check = false;
+			for (var i = 0; i < tmpArray2.length; i++)
+			{
+				if (tmpArray2[i] == mng)
+				{
+					payeeDesc.value = tmpArray1[i];
+					check = true;
+				}
+			}
+			if (mng == CONST_VAL_PAYEE_NOT_TEMPLATE[0])
+			{
+				//payeeDesc.setAttribute('disabled', 'diasbled');
+				payeeDesc.setAttribute('onclick', 'showInputMNG()');
+			}
+			else{
+				payeeDesc.removeAttribute('disabled');
+				payeeDesc.setAttribute('onclick', 'showInputMNG()');
+			}
+		}
+		else
+		{
+			mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0] ;
+			payeeDesc.value = tmpArray1[0];
+			payeeDesc.setAttribute('disabled', '');
+			payeeDesc.removeAttribute('disabled');
+			payeeDesc.setAttribute('onclick', 'showInputMNG()');
+		}
+	}
+	
+}, false);
+function parseDataEvn()
+{
+	var tmpAcc = gUserInfo.accountList[0];
+		document.getElementById("evn.id.accountno").value = tmpAcc.accountNumber;
+		var nodeAccBal = document.getElementById("evn.sourceaccoutbalance");
+		nodeAccBal.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + formatNumberToCurrency(tmpAcc.balanceAvailable) + " " + CONST_DEFAULT_CURRENCY + "</b></h6>";
+		//document.getElementById("id.balance").value = tmpAcc.balanceAvailable;
+		//document.getElementById("id.balanceText").value = formatNumberToCurrency(tmpAcc.balanceAvailable) + " " + CONST_DEFAULT_CURRENCY;
+		
+	checkBill = false;
+	if (globalEvnObj != undefined)
+	{
+		var divBillDetail = document.getElementById('id.div.bills');
+		var divTotalAmount = document.getElementById('evn.bill.total.amount');
+		for(k = 0; k< gUserInfo.accountList.length; k++)
+		{
+		  if(gUserInfo.accountList[k].accountNumber == document.getElementById('evn.id.accountno').value)
+		  {
+			document.getElementById('evn.bill.total.currency').innerHTML = gUserInfo.accountList[k].currency;
+		  }
+		}
+/*		document.getElementById('evn.id.customer.code').innerHTML = globalEvnObj.evnCustomerCode;
+		document.getElementById('evn.id.customer.name').innerHTML = globalEvnObj.evnCustomerName;
+		document.getElementById('evn.id.customer.address').innerHTML = globalEvnObj.evnCustomerAddress;
+		document.getElementById('evn.id.evn.code').innerHTML = globalEvnObj.evnCustomerEvnCode;
+		document.getElementById('evn.id.customer.phone').innerHTML = globalEvnObj.evnCustomerNumberPhone;
+		document.getElementById('evn.id.electric.code').innerHTML = globalEvnObj.evnCustomerElectricMotor;*/
+		
+		var evnBills = globalEvnObj.evnBills;
+		var temp = '';
+		if (evnBills != undefined && evnBills.length > 0)
+		{
+			for (var i = 0; i < evnBills.length; i++)
+			{
+				var billDetail = evnBills[i];
+				var arrBillDetail = billDetail.split('#');
+				var amount = formatNumberToCurrency(parseInt(arrBillDetail[1]));
+				temp = temp + (
+					'<tr onclick="tickBillForPayment(' + i + ');">' + 
+'<td>' + '<div><div class="mobile-mode" style="float:left;">' + CONST_STR.get('LOAN_AD_SELECTION') + '</div><div  class="content-detail" style="float:right; padding-right:8px;" >' +
+						'<input type="checkbox" style="float:left;" class="checkbox-accept" onclick="tickBillForPayment(' + i + ');" name = "evn.bill.detail" value = "' + billDetail +'"/>'+
+'</div></div><br /></td>'+
+						'<td>' + "<div class='mobile-mode'>" + CONST_STR.get('EVN_BILL_CODE') + "</div><div class='td-date'>" + arrBillDetail[0] + '</div></td>' + 
+						'<td>' + "<div class='mobile-mode'>" + CONST_STR.get('EVN_BILL_AMOUNT') + "</div><div class='td-date'>" +  amount + '</div></td>' + 
+						'<td>' + "<div class='mobile-mode'>" + CONST_STR.get('EVN_BILL_FROM_DATE') + "</div><div class='td-date'>"  + arrBillDetail[2] + '</div></td>' + 
+						'<td>' + "<div class='mobile-mode'>" + CONST_STR.get('EVN_BILL_TO_DATE') + "</div><div class='td-date'>" +  arrBillDetail[3] + '</div></td>' +
+					'</tr>'
+				);
+			}
+		}
+		else
+		{
+			message = document.getElementById("id.div.message");
+			message.innerHTML = CONST_STR.get('EVN_NOT_HAS_BILLS');
+			message.style.display = '';
+			//temp = "<td colspan='5' align='center'>" + CONST_STR.get('EVN_NOT_HAS_BILLS') + "</td>";
+			tbl = document.getElementById("customer_bill_detail_table");
+			tbl.style.display = 'none';
+		}
+		divBillDetail.innerHTML = temp;
+		divTotalAmount.innerHTML = totalAmount;
+	}
+}
+function tickBillForPayment(index)
+{
+	var checkboxs = document.getElementsByName('evn.bill.detail');
+	billsPay = '';
+	if (checkboxs != undefined && checkboxs.length > 0)
+	{
+		totalAmount = 0;
+		checkboxs.item(index).checked = !checkboxs.item(index).checked;
+		checkBillStt = true;
+		for (var i = 0; i < checkboxs.length; i++)
+		{
+			if (checkboxs.item(i).checked)
+			{
+				checkBill = true;
+				var checkboxValue = checkboxs.item(i).value;
+				var arrCheckboxValue = checkboxValue.split('#');
+				totalAmount += parseInt(arrCheckboxValue[1].replace(/,/g, ''));
+				billsPay = billsPay + checkboxs.item(i).value + '~';
+			}
+            if(i >= 1)
+			{
+			  if (checkboxs.item(i).checked)
+			  {
+				  if(checkboxs.item(i-1).checked)
+				  {			
+					  checkBillStt = true;
+				  }
+				  else
+				  {
+					  checkBillStt = false;
+				  }
+			  }
+			}
+		}
+		var divTotalAmount = document.getElementById('evn.bill.total.amount');
+		divTotalAmount.innerHTML = formatNumberToCurrency(totalAmount);
+	}
+}
+
+function showAccountSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+	
+}
+//event: selectec account number
+function handleSelectionAccountList(e) {
+	if (currentPage == "payment/payment-evnhcm-bill-scr") {
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("evn.id.accountno");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		var nodeAccBal = document.getElementById("evn.sourceaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			nodeAccBal.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + e.selectedValue2 + "</b></h6>";
+		}
+	}
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "payment/payment-evnhcm-bill-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+
+function showInputEvnCustomerCodeScreen() {
+	navController.pushToView('com-input-account', true);
+	gHistoryCode = 'EVN-HCM';
+	document.addEventListener("evtInputAccount", handleInputEvnCustomerCode, false);
+}
+
+
+//event listener: input account
+function handleInputEvnCustomerCode(e) {
+	document.removeEventListener("evtInputAccount", handleInputEvnCustomerCode, false);
+	tempCustomerCode = e.inputValue;
+}
+
+
+//Send request
+var gprsResp = new GprsRespObj("","","","");
+
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	var sourceAcc = document.getElementById('evn.id.accountno');
+	var amount = totalAmount;
+	var customerCode = globalEvnObj.evnCustomerCode;
+	var tmpStr = sourceAcc.value;
+	if (tmpStr.trim() == '')
+	{
+		showAlertText(CONST_STR.get('ERR_EMPTY_NO_ACC'));
+		return;
+	}
+	if (tmpStr.length != 11) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_ACC'));
+		return;
+	}
+	if (!checkBill)
+	{
+		showAlertText(CONST_STR.get('EVN_ERR_NOT_CHECK_BILL'));
+		return;
+	}
+	if (!checkBillStt)
+	{
+		showAlertText(CONST_STR.get('EVN_ERR_NOT_CHECK_BILL_STT'));
+		return;
+	}
+	
+	arrayArgs.push(sourceAcc.value);
+	arrayArgs.push(amount);
+	arrayArgs.push(billsPay.substring(0, billsPay.length - 1));
+	arrayArgs.push(customerCode);
+	arrayArgs.push(mng);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_EVN_PAY_BILL"), "", "", "VN", gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0' || gprsResp.respCode == '1013') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_EVN_PAY_BILL")))) {
+		genReviewScreen();
+	}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(){
+	/*if ((e.type == "evtHttpFail") && (currentPage == "payment/payment-evnhcm-bill-scr")) {
+		document.removeEventListener("evtHttpFail", requestMBServiceFail, false);
+	}*/
+};
+
+//LOADING SCREEN EVENT
+
+document.addEventListener("evtLoadPageSuccess", function(e){
+	if (currentPage == "payment/payment-evnhcm-create-scr") {
+		var customerCode = document.getElementById('id.evn.cuscode');
+		if (typeof(tempCustomerCode) != 'undefined')
+		{
+	    	customerCode.value = tempCustomerCode;
+		}
+	}
+	
+}, false);
+
+function parserPaymentEvn() {
+	//parser info
+	//gprsResp
+}
+function genReviewScreen() {
+	//var nodeReviewInfo = document.getElementById("panelContent");
+	var htmlReviewInfo = "";
+	
+	var sourceAcc = document.getElementById("evn.id.accountno");
+	htmlReviewInfo = "<table width='100%' align='center'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 align='left' class='Header' <span>" + 
+					CONST_STR.get('TRANS_ACCOUNT_INFO_BLOCK_TITLE') + 
+				"</span></h5>" + "</tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='100%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('EVN_ACC_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						sourceAcc.value + 
+					"</td></tr>";
+	
+	
+	for (var idx=0; idx<gUserInfo.accountList.length; idx++) {
+		var tmpAcc = new AccountObj();
+		tmpAcc = gUserInfo.accountList[idx];
+		if(tmpAcc.accountNumber == sourceAcc.value) {
+			htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default'>" + 
+					"<td class='td-left'>" + 
+						CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(tmpAcc.balanceAvailable) + " " + tmpAcc.currency +
+					"</td></tr></table></tr>";
+		}
+	}
+	
+	// Get All Bill Pay
+	var temp = '<table class="table-account">' +
+					'<tr class="trow-title">' +
+						'<th><span>' + CONST_STR.get('EVN_BILL_CODE') + '</span></th>' +
+						'<th><span>' + CONST_STR.get('EVN_BILL_AMOUNT') + '</span></th>' +
+						'<th><span>' + CONST_STR.get('EVN_BILL_FROM_DATE') +'</span></th>' +
+						'<th><span>' + CONST_STR.get('EVN_BILL_TO_DATE') + '</span></th>' + 
+                	'</tr>';
+	
+	var evnBills = globalEvnObj.evnBills;
+	var checkboxs = document.getElementsByName('evn.bill.detail');
+	
+	for (var i = 0; i < evnBills.length; i++)
+	{
+		var billDetail = evnBills[i];
+		var arrBillDetail = billDetail.split('#');
+		if (checkboxs.item(i).checked)
+		{
+			var amount = formatNumberToCurrency(parseInt(arrBillDetail[1]));
+			temp = temp + (
+				'<tr>' + 
+					'<td>' + "<div class='mobile-mode'>" + CONST_STR.get('EVN_BILL_CODE') + "</div><div class='td-date'>" + arrBillDetail[0] + '</div></td>' + 
+					'<td>' + "<div class='mobile-mode'>" + CONST_STR.get('EVN_BILL_AMOUNT') + "</div><div class='td-date'>" + amount + '</div></td>' + 
+					'<td>' + "<div class='mobile-mode'>" + CONST_STR.get('EVN_BILL_FROM_DATE') + "</div><div class='td-date'>" + arrBillDetail[2] + '</div></td>' + 
+					'<td>' + "<div class='mobile-mode'>" + CONST_STR.get('EVN_BILL_TO_DATE') + "</div><div class='td-date'>" + arrBillDetail[3] + '</div></td>' +
+				'</tr>'
+			);
+		}
+	}
+	
+	temp = temp + '</table>'
+	
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='100%' align='center' class='background-blacktrans'>";
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 align='left' class='Header' <span>" + 
+					CONST_STR.get('EVN_CUSTOMER_TITLE') + 
+				"</span></h5>" + "</tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('EVN_CUSTOMER_CODE') + 
+				"</td>" + "<td class='td-right'>" + 
+					globalEvnObj.evnCustomerCode + 
+				"</td></tr>";
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('EVN_CUSTOMER_NAME') + 
+				"</td>" + "<td class='td-right'>" + 
+					globalEvnObj.evnCustomerName + 
+				"</td></tr> </table>";
+				
+	htmlReviewInfo += 
+			'<tr>' +
+            	'<h5 class="Header"><span>' + CONST_STR.get('EVN_BILL_LIST_TITLE') + '</span></h5>' +
+			'</tr>';
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr>" + temp + "</tr>";				
+				var currency;
+		for(k = 0; k< gUserInfo.accountList.length; k++)
+		{
+		  if(gUserInfo.accountList[k].accountNumber == document.getElementById('evn.id.accountno').value)
+		  {
+			currency = gUserInfo.accountList[k].currency;
+		  }
+		}
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='100%' align='center' class='background-blacktrans'>" + 
+				"<tr class='trow-default'>" +
+					"<td class='td-left'>" + 
+						CONST_STR.get('EVN_BILL_TOTAL_AMOUNT') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(totalAmount) + 
+					"</td>" +
+				"</tr>" +
+				"<tr class='trow-default'>" +
+					"<td class='td-left'>" + CONST_STR.get('EXCHANGE_RATE_UNIT') + "</td>"+
+					"</td>" + "<td class='td-right'>" + 
+						currency + 
+					"</td>" +
+				"</tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<table width='100%' align='center'";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><td width='50%'>" +
+					"<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='REVIEW_BTN_CANCEL'/>" +
+				"</td><td width='50%'>" +
+					"<input type='button' class='btnshadow btn-second' onClick='sendJSONRequest()' onclick='' value='REVIEW_BTN_CONFIRM' />" +
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo ;//+ 
+				//"/<table";
+	setReviewHtmlStore(htmlReviewInfo);
+	navController.pushToView("com-review-scr", true);
+}
+function goBack() {
+	navController.popView(true);
+}
+
+function showInputMNG()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+	var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+	document.addEventListener("evtSelectionDialog", handleInputMNG, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_MGN_PAYEE_SELCT'), tmpArray1, tmpArray2, false);
+}
+
+
+function handleInputMNG(e)
+{
+	if (currentPage == "payment/payment-evnhcm-bill-scr") {
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var mnglist = document.getElementById('mng.payee');
+			if (mnglist.nodeName == "INPUT") {
+				mnglist.value = e.selectedValue1;
+			}
+			else {
+				mnglist.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			mng = e.selectedValue2;
+		}
+	}
+}
+
+function handleInputMNGClose() {
+	if (currentPage == "payment/payment-evnhcm-bill-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+	}
+}
+
+
+
+parseDataEvn();

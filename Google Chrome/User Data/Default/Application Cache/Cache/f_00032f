@@ -1,0 +1,1497 @@
+// JavaScript Document
+
+var docXml;
+var tenorValue;
+var flag = true;
+var tenorRateValue;
+var destinationAccNo = "";
+var tmpcheck = 1;
+var tmpstr = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+var amountOpen;
+var typeTrans;
+var secAccNo1;
+var secAccNo2;
+var secAccNo;//gan gia tri id select
+var selectionID = 1;
+var tenorRateValueString;
+var tenorValuselect =0;
+function viewBackFromOther() {
+
+	logInfo('Back from other view');
+	flag = false;
+    /*var tagSelection = document.getElementById("esavingType");
+    var tittle =  tagSelection.value.toUpperCase();
+    var titles = CONST_STR.get('SAVNO_BEFORE_MATDATE_MENU').toUpperCase();
+    if(tittle == titles){
+
+        selectionID = 2;
+    }*/
+
+}
+function loadInitXML(){	
+	
+}
+
+function tmpcheckingrd(id) {
+    if (id == 1) {
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-checked');
+        document.getElementById('tmpcheckingrd1').style.color = '#fb8c00';
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-unchecked');
+        if(checkScreenisMobilePX()){
+            document.getElementById('tmpcheckingrd2').style.color = 'white';
+            document.getElementById('tmpcheckingrd3').style.color = 'white';
+        }else{
+            document.getElementById('tmpcheckingrd2').style.color = 'black';
+            document.getElementById('tmpcheckingrd3').style.color = 'black'; 
+        }
+        document.getElementById('tmpcheckingrd3').setAttribute('class','icon-radio-unchecked');
+        tmpcheck = 1;
+        tmpstr = document.getElementById('gan1').innerHTML;
+
+        return;
+    }
+    if (id == 2) {
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-checked');
+        document.getElementById('tmpcheckingrd2').style.color = '#fb8c00';
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-unchecked');
+        if(checkScreenisMobilePX()){
+            document.getElementById('tmpcheckingrd1').style.color = 'white';
+            document.getElementById('tmpcheckingrd3').style.color = 'white';
+        }else{
+            document.getElementById('tmpcheckingrd1').style.color = 'black';
+            document.getElementById('tmpcheckingrd3').style.color = 'black'; 
+        }        
+        document.getElementById('tmpcheckingrd3').setAttribute('class','icon-radio-unchecked');
+        tmpcheck = 2;
+        tmpstr = document.getElementById('gan2').innerHTML;
+        return;
+    }
+    if (id == 3) {
+        document.getElementById('tmpcheckingrd3').setAttribute('class','icon-radio-checked');
+        document.getElementById('tmpcheckingrd3').style.color = '#fb8c00';
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-unchecked');
+        if(checkScreenisMobilePX()){
+            document.getElementById('tmpcheckingrd2').style.color = 'white';
+            document.getElementById('tmpcheckingrd1').style.color = 'white';
+        }else{
+            document.getElementById('tmpcheckingrd2').style.color = 'black';
+            document.getElementById('tmpcheckingrd1').style.color = 'black'; 
+        }
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-unchecked');
+        tmpcheck = 3;
+        tmpstr = document.getElementById('gan3').innerHTML;
+        return;
+    }
+
+}
+
+function callbackClose(){
+    navController.getBottomBar().show();
+    if (tmpcheck == 1)
+    {
+        document.getElementById('rd1').checked = true;
+        document.getElementById('rd2').checked = false;
+        document.getElementById('rd3').checked = false;
+        document.getElementById('selectAccount').setAttribute("style", "display:none;");
+		typeTrans =1;
+    }
+    else if (tmpcheck == 2)
+    {
+        document.getElementById('rd2').checked = true;
+        document.getElementById('rd1').checked = false;
+        document.getElementById('rd3').checked = false;
+        document.getElementById('selectAccount').setAttribute("style", "display:table-row;");
+		typeTrans =2;
+    }
+    else
+    {
+        document.getElementById('rd3').checked = true;
+        document.getElementById('rd1').checked = false;
+        document.getElementById('rd2').checked = false;
+        document.getElementById('selectAccount').setAttribute("style", "display:table-row;");
+		typeTrans =3;
+    }
+    console.log(tmpcheck);
+
+    document.getElementById('gangiatri').value = tmpstr;
+    actionbar.showActionBar();
+}
+
+function callbackLoadXsl(){
+    navController.getBottomBar().hide();
+    document.getElementById('gan1').innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+    document.getElementById('gan2').innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+    document.getElementById('gan3').innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+
+    var flagcheck1 = document.getElementById('rd1');
+    var flagcheck2 = document.getElementById('rd2');
+    var flagcheck3 = document.getElementById('rd3');
+    if(flagcheck1.checked == true)
+    {
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-unchecked');
+        document.getElementById('tmpcheckingrd3').setAttribute('class','icon-radio-unchecked');
+        var tmpcheckingrd = document.getElementById('tmpcheckingrd1');
+        tmpcheckingrd.setAttribute('class','icon-radio-checked');
+        tmpcheckingrd.style.color = '#fb8c00';
+        tmpcheck = 1;
+    }
+    else if (flagcheck2.checked == true)
+    {
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-unchecked');
+        document.getElementById('tmpcheckingrd3').setAttribute('class','icon-radio-unchecked');
+        var tmpcheckingrd = document.getElementById('tmpcheckingrd2');
+        tmpcheckingrd.setAttribute('class','icon-radio-checked');
+        tmpcheckingrd.style.color = '#fb8c00';
+        tmpcheck = 2;
+    }
+    else
+    {
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-unchecked');
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-unchecked');
+        var tmpcheckingrd = document.getElementById('tmpcheckingrd3');
+        tmpcheckingrd.setAttribute('class','icon-radio-checked');
+        tmpcheckingrd.style.color = '#fb8c00';
+        tmpcheck = 3;
+    }
+
+    actionbar.hideActionbar();
+    modalDialog.showDialogFull();
+}
+function initBottomBar(){
+    var arrBottom = new Array();
+    arrBottom.push(new MenuBottom("ESAVING_PRODUCT_INTRO", "icon-recents"));
+    arrBottom.push(new MenuBottom("MENU_BANK_INFO_INTEREST", "icon-template"));
+    navController.initBottomBarWithCallBack("esaving/esaving-open-scr", arrBottom, "esaving-open", function (index) {
+        //alert(index);
+        switchAction(index);
+    });
+}
+function switchAction(index){
+    switch(index)
+    {
+        case "0":
+            if(selectionID ==1){
+                if (gUserInfo.lang == 'EN') {
+                    openLinkInWindows('./download/esaving/Tiet kiem dien tu - English.pdf');
+                }else{
+                    openLinkInWindows('./download/esaving/Tiet kiem dien tu - Vietnamese.pdf');
+                }
+            }else{
+                if (gUserInfo.lang == 'EN') {
+                    openLinkInWindows('./download/esaving/Tiet kiem tai loc - English.pdf');
+                }else{
+                    openLinkInWindows('./download/esaving/Tiet kiem tai loc -Vietnamese.pdf');
+                }
+            }
+            break;
+
+        case "1":
+            gotoRateTable();
+            break;
+    }
+}
+function openLink(link) {
+	var items = link.split('.');
+	var linkEN = '';
+	for (var i = 0; i < items.length - 1; i++) {
+		if (i == items.length - 2) {
+			linkEN = linkEN + items[i] + '-EN';
+		} else {
+			linkEN = linkEN + items[i] + '.';
+		}
+	}
+	linkEN = linkEN + '.' + items[items.length - 1];
+	if (gUserInfo.lang == 'EN') {
+		openLinkInWindows(linkEN);
+	} else {
+		openLinkInWindows(link);
+	}
+
+}
+function initModalDialog(){
+    if (gUserInfo.lang == 'EN') {
+        initDialog("Please select","","esaving/esaving-schedule",callbackClose,callbackLoadXsl,false);
+    }
+    else {
+        initDialog("Vui lòng chọn","","esaving/esaving-schedule",callbackClose,callbackLoadXsl,false);
+    }  
+}
+
+function openModalDialog(){
+    initModalDialog();
+}
+
+function testaa() {
+    modalDialog.hideDialogFull();
+    navController.getBottomBar().show();
+    if (tmpcheck == 1)
+    {
+        document.getElementById('rd1').checked = true;
+        document.getElementById('rd2').checked = false;
+        document.getElementById('rd3').checked = false;
+        document.getElementById('selectAccount').setAttribute("style", "display:none;");
+		typeTrans = 1;
+    }
+    else if (tmpcheck == 2)
+    {
+        document.getElementById('rd2').checked = true;
+        document.getElementById('rd1').checked = false;
+        document.getElementById('rd3').checked = false;
+        document.getElementById('selectAccount').setAttribute("style", "display:table-row;");
+		typeTrans = 2;
+    }
+    else
+    {
+        document.getElementById('rd3').checked = true;
+        document.getElementById('rd1').checked = false;
+        document.getElementById('rd2').checked = false;
+        document.getElementById('selectAccount').setAttribute("style", "display:table-row;");
+		typeTrans = 3;
+    }
+    console.log(tmpcheck);
+
+    document.getElementById('gangiatri').value = tmpstr;
+    actionbar.showActionBar();
+}
+
+function viewDidLoadSuccess(){
+    initBottomBar();
+    resizeMainViewContent(currentPage); 
+	logInfo('Account change infomation load success');
+	if(flag){
+		initComboTextAccount();
+		if(navController.getActionBar().getCurrrentTitleBar() == CONST_STR.get('SAVNO_BEFORE_MATDATE_MENU_2')){
+        selectionID = 2;
+        document.getElementById('tenor').value =CONST_STR.get('UTILITIES_CALCULATOR_TERM_1M');
+        document.getElementById('esaving_mini_amount').textContent = CONST_STR.get('SAVNO_BEFORE_MATDATE_MIN_AMT');
+    }else if(navController.getActionBar().getCurrrentTitleBar() == CONST_STR.get('ESAVING_REVIEW_SAVINGTYPE')){
+        selectionID = 1;
+        document.getElementById('tenor').value =CONST_STR.get('UTILITIES_CALCULATOR_TERM_1W');
+        document.getElementById('esaving_mini_amount').textContent = CONST_STR.get('ESAVING_MINIMUN_AMOUNT');
+    }
+	esaving_tenor_open = 1;
+    if (tmpcheck == 1)
+    {
+        document.getElementById('rd1').checked = true;
+        document.getElementById('rd2').checked = false;
+        document.getElementById('rd3').checked = false;
+		typeTrans=1;
+    }
+    else if (tmpcheck == 2)
+    {
+        document.getElementById('rd2').checked = true;
+        document.getElementById('rd1').checked = false;
+        document.getElementById('rd3').checked = false;
+		typeTrans=2;
+    }
+    else
+    {
+        document.getElementById('rd3').checked = true;
+        document.getElementById('rd1').checked = false;
+        document.getElementById('rd2').checked = false;
+		typeTrans=3
+    }
+
+    document.getElementById('gangiatri').value = tmpstr;
+	initialize();
+	}
+    else{
+		if(navController.getActionBar().getCurrrentTitleBar() == CONST_STR.get('SAVNO_BEFORE_MATDATE_MENU_2')){
+			selectionID = 2;
+		
+		}else if(navController.getActionBar().getCurrrentTitleBar() == CONST_STR.get('ESAVING_REVIEW_SAVINGTYPE')){
+			selectionID = 1;
+			
+		}
+		initialize();
+	}
+    //alert(navController.getActionBar().getCurrrentTitleBar())
+    	
+}
+function initialize(){
+	genSequenceForm();
+    actionbar.addListSequence("esaving/esaving-open-scr");
+    if(selectionID ==1){
+        if (gSysData == undefined || gSysData.interest_rates == undefined || gSysData.interest_rates.data.length == 0){
+            tenorRateValue = 0;
+            tenorRateValueString = "";
+        }
+        else
+        {
+			if(flag){
+				tenorRateValue = gSysData.interest_rates.data[0].vnd;
+				tenorValue = 1;
+				if (gUserInfo.lang == 'EN')
+				{
+					tenorRateValueString = gSysData.interest_rates.data[0].description_en;
+				}
+				else
+				{
+					tenorRateValueString = gSysData.interest_rates.data[0].description_vn;
+				}
+			}else{
+				
+			}
+           
+        }
+    }else if(selectionID ==2){
+
+        if (gSysData == undefined || gSysData.interest_rates_tailoc == undefined || gSysData.interest_rates_tailoc.data.length == 0) {
+            tenorRateValue = 0;
+            tenorRateValueString = "";
+			tenorValue = 0;
+        }
+        else
+        {
+           if (!flag) {
+               
+                var dataInterest = gSysData.interest_rates_tailoc.data;
+                var lengthMonthDescription;
+                var monthDescription;
+                for (i = 0; i < dataInterest.length; i++) {
+                    lengthMonthDescription = dataInterest[i].key.length;
+                    monthDescription = dataInterest[i].key.slice(1, lengthMonthDescription);
+                    if (tenorValue == monthDescription) {
+                        tenorRateValue = dataInterest[i].vnd+'%';
+
+                        if (gUserInfo.lang == 'EN') {
+                            var monthTitle = (monthDescription == "1") ? CONST_STR.get('UTILITIES_CALCULATOR_TERM_M') : CONST_STR.get('ESAVING_RATE_MONTHS_TITLE');
+                            tenorRateValueString = monthDescription + " " + monthTitle;
+                        }
+                        else {
+                            tenorRateValueString = monthDescription + " " + CONST_STR.get('UTILITIES_CALCULATOR_TERM_M');
+                        }
+                        
+						document.getElementById('tenor').value = tenorRateValueString;
+                        return;
+                    }
+
+                }
+
+
+            }else {
+               // var dataInterest = gSysData.interest_rates_tailoc.data[0];
+               // tenorRateValue = dataInterest.vnd;
+				var tempArr =gSysData.interest_rates_tailoc.data
+					for (k=0; k<tempArr.length; k++ ){
+						if(tempArr[k].vnd >0){
+							
+							var dataInterest=tempArr[k];
+							tenorRateValue=dataInterest.vnd +'%';
+							//tenorValue = dataInterest.vnd;
+							var lengthMonthDescription = dataInterest.key.length;
+							var monthDescription = dataInterest.key.slice(1, lengthMonthDescription);
+							tenorRateValueString = monthDescription + " " + CONST_STR.get('UTILITIES_CALCULATOR_TERM_M');
+							tenorValue =monthDescription;
+							document.getElementById('tenor').value = tenorRateValueString;
+							break;
+						}
+					}
+            }
+
+        }
+    }
+
+
+	/*var srcAccNo1 = document.getElementById('secAccNo1');
+	srcAccNo1.disabled = true;
+	srcAccNo1.value = gUserInfo.accountList[0].accountNumber;
+	secAccNo1 = gUserInfo.accountList[0].accountNumber;
+	var srcAccNo2 = document.getElementById('secAccNo2');
+	srcAccNo2.disabled = true;
+	srcAccNo2.value = gUserInfo.accountList[0].accountNumber;
+	secAccNo2 = gUserInfo.accountList[0].accountNumber;*/
+	/*mac sinh la hi*/
+	var srcAccNo = document.getElementById('secAccNo');
+	//srcAccNo.disabled = true;
+	srcAccNo.value = gUserInfo.accountList[0].accountNumber;
+	secAccNo = gUserInfo.accountList[0].accountNumber;
+	
+	/* chuan hoa ko de chu dam
+	document.getElementById("balancing").innerHTML = "<b>"+
+		formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) +" VND </b>";*/
+	
+	//if(flag ==true){
+		// var sourceAcc = document.getElementById('sourceAcc');
+		// sourceAcc.value = gUserInfo.accountList[0].accountNumber;
+		// document.getElementById("balancing").innerHTML = 
+		// formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) +" VND ";
+		//tenorValue ='1';
+		//}
+}
+
+//gen sequence form
+function genSequenceForm() {
+    
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpStepNo = 301;
+	setRespObjStore(301);
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+//=================SHOW DIALOG FOR SAVING TYPE=============================//
+function showInputSavingType(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_SAVING_ONL_TYPE_EN: CONST_KEY_SAVING_ONL_TYPE_VN;
+	var tmpArray2 = CONST_KEY_SAVING_TYPE_ID;
+	document.addEventListener("evtSelectionDialog", showInputSavingTypeOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showInputSavingTypeClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1,tmpArray2, false);
+}
+
+function showInputSavingTypeOpen(e) {
+
+	if (currentPage == "esaving/esaving-open-scr") {
+		showInputSavingTypeClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagSelection = document.getElementById("esavingType");
+			if (tagSelection.nodeName == "INPUT") {
+				tagSelection.value = e.selectedValue1;
+			}
+			else {
+				tagSelection.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectionID = e.selectedValue2;
+		}
+		if(selectionID == '2'){
+            var lengthMonthDescriptionDefault;
+					var monthDescriptionDefault;
+            //document.getElementById('tenor').value = CONST_STR.get('UTILITIES_CALCULATOR_TERM_1M');
+			var tempArr =gSysData.interest_rates_tailoc.data
+			for (k=0; k<tempArr.length; k++ ){
+				if(tempArr[k].vnd >0){
+					lengthMonthDescriptionDefault=tempArr[k].key.length;
+					tenorRateValue=tempArr[k].vnd;
+					monthDescriptionDefault = parseInt(tempArr[k].key.slice(1, lengthMonthDescriptionDefault));
+					tenorValue=monthDescriptionDefault;
+					tenorRateValueString = monthDescriptionDefault + " " + CONST_STR.get('UTILITIES_CALCULATOR_TERM_M');
+					break;
+				}
+			}
+			document.getElementById('tenor').value =monthDescriptionDefault+" "+ CONST_STR.get('UTILITIES_CALCULATOR_TERM_M');
+            document.getElementById('esaving_mini_amount').textContent = CONST_STR.get('SAVNO_BEFORE_MATDATE_MIN_AMT');
+
+
+			//navController.pushToView('esaving/esaving-no-close-scr', true, 'xsl');
+		}else if(selectionID == '1'){
+            selectionID = 1;
+            document.getElementById('tenor').value =CONST_STR.get('UTILITIES_CALCULATOR_TERM_1W');
+            document.getElementById('esaving_mini_amount').textContent = CONST_STR.get('ESAVING_MINIMUN_AMOUNT');
+		}
+	}
+}
+
+function showInputSavingTypeClose() {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showInputSavingTypeOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showInputSavingTypeClose, false);
+	}
+}
+
+//=================SHOW DIALOG FOR MONEY TYPE=============================//
+function showInputMoneyType(){
+	var tmpArray1 = (gUserInfo.lang == 'VN')? [CONST_STR.get('INTEREST_RATE_VND')]:[CONST_STR.get('INTEREST_RATE_VND')];
+	document.addEventListener("evtSelectionDialog", showMoneySelectionOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showMoneySelectionClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, false);
+}
+
+function showMoneySelectionOpen(e) {
+	if (currentPage == "esaving/esaving-open-scr") {
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showMoneySelectionClose();
+		}			
+	}
+}
+
+function showMoneySelectionClose() {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showMoneySelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showMoneySelectionClose, false);
+	}
+}
+
+//=================SHOW DIALOG FOR TENOR SELECTION=============================//
+function showInputTenorType(){
+	/*
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_PERIOD_ESAVING_EN: CONST_KEY_PERIOD_ESAVING_VN;
+	var tmpArray2 = CONST_KEY_PERIOD_ID_ESAVING;			
+	*/
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+    //SANGNT1 SỬA LẤY DANH SÁCH LÃI SUẤT
+	/*if (gSysData == undefined || gSysData.interest_rates == undefined || gSysData.interest_rates.data.length == 0)
+	{
+		showAlertText(CONST_STR.get('COMMON_SYSDATA_EMPTY'));
+		return;
+	}
+
+	for (var i = 0; i < gSysData.interest_rates.data.length; i++)
+	{
+		if (gUserInfo.lang == 'EN')
+		{
+			tmpArray1.push(gSysData.interest_rates.data[i].description_en);
+		}
+		else
+		{
+			tmpArray1.push(gSysData.interest_rates.data[i].description_vn);
+		}
+		tmpArray2.push(gSysData.interest_rates.data[i].vnd+ " %");
+	}*/
+    if(selectionID ==1){
+
+        if (gSysData == undefined || gSysData.interest_rates == undefined || gSysData.interest_rates.data.length == 0 )
+        {
+            showAlertText(CONST_STR.get('COMMON_SYSDATA_EMPTY'));
+            return;
+        }else{
+            for (var i = 0; i < gSysData.interest_rates.data.length; i++)
+            {
+                if (gUserInfo.lang == 'EN')
+                {
+
+                    tmpArray1.push(gSysData.interest_rates.data[i].description_en);
+                }
+                else
+                {
+                    tmpArray1.push(gSysData.interest_rates.data[i].description_vn);
+                }
+                tmpArray2.push(gSysData.interest_rates.data[i].vnd+ " %");
+            }
+        }
+    }else{
+        if (gSysData == undefined || gSysData.interest_rates_tailoc == undefined || gSysData.interest_rates_tailoc.data.length == 0) {
+            showAlertText(CONST_STR.get('COMMON_SYSDATA_EMPTY'));
+            return;
+        } else {
+            var dataInterest;
+            var monthDescription;
+            var lengthMonthDescription;
+
+            var dataInterestsx1;
+            var monthDescriptionsx1;
+            var lengthMonthDescriptionsx1;
+
+            var dataInterestsx2;
+            var monthDescriptionsx2;
+            var lengthMonthDescriptionsx2;
+
+            var arrInterestData = gSysData.interest_rates_tailoc.data;
+			for (i = 0; i < arrInterestData.length; i++) {
+				if(arrInterestData[i].vnd >0){
+					for (j = arrInterestData.length - 1; j > 0; j--) {
+                    dataInterestsx1 = arrInterestData[j];
+                    lengthMonthDescriptionsx1 = dataInterestsx1.key.length;
+                    monthDescriptionsx1 = parseInt(dataInterestsx1.key.slice(1, lengthMonthDescriptionsx1));
+
+                    dataInterestsx2 = arrInterestData[j - 1];
+                    lengthMonthDescriptionsx2 = dataInterestsx2.key.length;
+                    monthDescriptionsx2 = parseInt(dataInterestsx2.key.slice(1, lengthMonthDescriptionsx2));
+
+
+                    if (monthDescriptionsx1 < monthDescriptionsx2) {
+                        var temp = arrInterestData[j];
+                        arrInterestData[j] = arrInterestData[j - 1];
+                        arrInterestData[j - 1] = temp;
+                    }
+                }
+				}
+            }
+			for (var i = 0; i < arrInterestData.length; i++) {
+				if(arrInterestData[i].vnd >0){
+					dataInterest = arrInterestData[i];
+					lengthMonthDescription = dataInterest.key.length;
+					monthDescription = dataInterest.key.slice(1, lengthMonthDescription);
+	
+					if (gUserInfo.lang == 'EN') {
+						var monthTitle = (monthDescription == "1") ? CONST_STR.get('UTILITIES_CALCULATOR_TERM_M') : CONST_STR.get('ESAVING_RATE_MONTHS_TITLE');
+						tmpArray1.push(monthDescription + " " + monthTitle);
+					}
+					else {
+						tmpArray1.push(monthDescription + " " + CONST_STR.get('UTILITIES_CALCULATOR_TERM_M'));
+					}
+					tmpArray2.push(gSysData.interest_rates_tailoc.data[i].vnd + " %");
+				}
+                
+            }
+
+        }
+
+    }
+
+    //END SANGNT1 SỬA LẤY DANH SÁCH LÃI SUẤT
+	document.addEventListener("evtSelectionDialog", showTenorSelectionOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showTenorSelectionClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'),  tmpArray1, tmpArray2, true);
+}
+
+function showTenorSelectionOpen(e) {
+	if (currentPage == "esaving/esaving-open-scr") {				
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+						
+			tenorValue = e.selectedIndex;
+            tenorValuselect = e.selectedIndex;
+            if(selectionID == 1){
+                tenorRateValue = gSysData.interest_rates.data[parseInt(tenorValue)-1].vnd;
+
+                if (gUserInfo.lang == 'EN')
+                {
+                    tenorRateValueString = gSysData.interest_rates.data[parseInt(tenorValue)-1].description_en;
+                }
+                else
+                {
+                    tenorRateValueString = gSysData.interest_rates.data[parseInt(tenorValue)-1].description_vn;
+                }
+            }else if(selectionID ==2){
+               tenorRateValueString=e.selectedValue1;
+				var tmp =tenorRateValueString.split(" ");
+				tenorValue=tmp[0];                             
+				tenorRateValue=e.selectedValue2;
+
+            }
+
+			esaving_tenor_open = tenorValue;
+		}
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			document.getElementById('tenor').value =e.selectedValue1;
+		}
+		showTenorSelectionClose();
+	}
+}
+
+function showTenorSelectionClose() {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showTenorSelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showTenorSelectionClose, false);
+	}
+}
+//=================SHOW DIALOG FOR ACCTION SELECTION=============================//
+var comboEl;
+function initComboTextAccount(){
+
+    try{
+        var comboBox = document.getElementById('cb-container');
+        if(comboBox!==null){
+            return false;
+        }
+        document.getElementById("holder-account-info").innerHTML = "";
+    }catch(e){}
+
+
+    document.getElementById("holder-account-info").innerHTML = "";
+    var accountName = gUserInfo.accountName;
+    var accountNumber = gUserInfo.accountList[0].accountNumber;
+    var accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable)+" "+gUserInfo.accountList[0].currency;
+    comboEl = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountName : accountName, //account name
+        accountNumber : accountNumber, //account number
+		accountBalance : accountBalance, //account balance
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboEl.show("holder-account-info");
+}
+function showAccountSelection() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        if(tmpAcc.accClass == 'D3A003' && tmpAcc.nodebit == 'Y'){
+        }
+        else {
+            tmpArray1.push(tmpAcc.accountNumber);
+			tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable) +" "+ tmpAcc.currency);
+        }
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+    showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+
+}
+
+
+function handleSelectionAccountList(e) {
+    if (currentPage == "esaving/esaving-open-scr") {
+        handleSelectionAccountListClose();
+        var accountNumber = e.selectedValue1;
+        var accountBalance = e.selectedValue2;
+        comboEl.refresh({
+            accountNumber : accountNumber,
+            accountBalance : accountBalance
+        });
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("id.sourceAcc");
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+        }
+        var nodeAccBal = document.getElementById("esaving.sourceaccoutbalance");
+        if (e.selectedValue2 != undefined) {
+            nodeAccBal.innerHTML = "<div class='availblstyle' id='id.balance'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + "VND</div>";
+            //            var balance = document.getElementById("id.balance");
+            //            balance.value = removeSpecialChar(e.selectedValue2.replace("VND","").trim());
+        }
+    }
+}
+
+
+
+function handleSelectionAccountListClose(e) {
+    if (currentPage == "esaving/esaving-open-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    }
+}
+
+//=================SHOW DIALOG FOR ACCOUNT SELECTION <1>=============================//
+function showAccountSelection1(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+	}
+	
+	document.addEventListener("evtSelectionDialog", showAccountSelectionOpen1, false);
+	document.addEventListener("evtSelectionDialogClose", showAccountSelectionClose1, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'),  tmpArray1, false);
+	
+}
+
+function showAccountSelectionOpen1(e) {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showAccountSelectionClose1();
+			secAccNo1 = e.selectedValue1;
+			document.getElementById("secAccNo1").value = secAccNo1;						
+		}		
+	}
+}
+
+function showAccountSelectionClose1() {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showAccountSelectionOpen1, false);
+		document.removeEventListener("evtSelectionDialogClose", showAccountSelectionClose1, false);
+	}
+}
+//=================SHOW DIALOG FOR ACCOUNT SELECTION <2>=============================//
+function showAccountSelection2(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+	}
+	
+	document.addEventListener("evtSelectionDialog", showAccountSelectionOpen2, false);
+	document.addEventListener("evtSelectionDialogClose", showAccountSelectionClose2, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'),  tmpArray1, false);
+	
+}
+
+function showAccountSelectionOpen2(e) {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showAccountSelectionClose2();
+			secAccNo = e.selectedValue1;
+			//secAccNo2 = e.selectedValue1;
+			//document.getElementById("secAccNo2").value = secAccNo2;
+			document.getElementById("secAccNo").value = secAccNo;
+			
+		}		
+	}
+}
+function showAccountSelectionClose2() {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showAccountSelectionOpen2, false);
+		document.removeEventListener("evtSelectionDialogClose", showAccountSelectionClose2, false);
+	}
+}
+//=============================================================================================
+//NEXT TO REVIEW SCREEN
+function click_Next(){	
+	// collect the form data while iterating over the inputs
+	
+	destinationAccNo = comboEl.accountNumber;
+	
+	var amountTrans = document.getElementById("amount");
+	amountOpen = removeSpecialChar(amountTrans.value);
+	var balanceMoney = 0;
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		if(gUserInfo.accountList[i].accountNumber == destinationAccNo)
+		{
+		balanceMoney = gUserInfo.accountList[i].balanceAvailable;
+		if(balanceMoney==''){
+			balanceMoney = 0;
+		}
+		}
+	}
+	
+	if ((parseInt(amountOpen) <= 0) || (amountOpen.length < 1)) {
+		showAlertText(CONST_STR.get('ERR_EMPTY_ESAVING_AMOUNT'));
+		return;
+	}
+	else if(selectionID == 1 && parseInt(amountOpen) < 1000000 ) {
+		showAlertText(CONST_STR.get('ERR_EMPTY_ESAVING_MIN_AMOUNT'));
+		return;
+	}
+    else if(selectionID == 2 && parseInt(amountOpen) < 10000000 ) {
+        showAlertText(CONST_STR.get('ERR_EMPTY_ESAVING_FORTUNE_MIN_AMOUNT'));
+        return;
+    }
+	if (destinationAccNo.length != 11) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_ACC'));
+		return;
+	}
+	if(parseInt(amountOpen) > parseInt(balanceMoney))
+	{
+		showAlertText(CONST_STR.get('TRANSFER_ERROR_BALANCE_AMOUNT'));
+		return;
+	}
+
+	if ((tenorValue == undefined) || (tenorValue == null) || (tenorValue.length < 1)) {
+		showAlertText(CONST_STR.get('ERR_EMPTY_ESAVING_MATURITY'));
+		return;
+	}
+	if ((tenorValue == undefined) || (tenorValue == null) || (tenorValue.length < 1)) {
+		showAlertText(CONST_STR.get('ERR_EMPTY_ESAVING_PERIOD'));
+		return;
+	}
+	
+	var data = {};
+	var arrayArgs = new Array();
+
+	arrayArgs.push(destinationAccNo);	
+	arrayArgs.push(amountOpen);	
+	arrayArgs.push(tenorValue);	
+	arrayArgs.push(typeTrans);
+	switch (typeTrans){
+		case 1:
+			arrayArgs.push(destinationAccNo);
+			break;
+		case 2:
+			arrayArgs.push(secAccNo);//old secAccNo1
+			break;
+		case 3:
+			arrayArgs.push(secAccNo);//old secAccNo2
+			break;
+	}
+    var idRequest="";
+    if(selectionID ==2)
+    {
+        idRequest = CONSTANTS.get("CMD_TYPE_REG_eSAVING_FORTUNE");
+    }
+    else{
+        idRequest = CONSTANTS.get("CMD_TYPE_REG_eSAVING");
+    }
+	var gprsCmd = new GprsCmdObj(idRequest, "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceReviewSuccess, requestMBServiceReviewFail);	
+}
+
+function requestMBServiceReviewSuccess(e){
+	//Gen review screen
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_REG_eSAVING"))
+        || parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_REG_eSAVING_FORTUNE")))) {
+	//By Pass Token
+
+		genReviewScreen();		
+	}else{
+		document.addEventListener('closeAlertView', handleAlertEmpty, false);
+		showAlertText(gprsResp.respContent);			
+	}
+}
+
+function requestMBServiceReviewFail(e){
+	document.addEventListener('closeAlertView', handleAlertEmpty, false);
+	showAlertText(CONST_STR.get('ESAVING_TRANS_FAILED'));	
+}
+//event alert
+function handleAlertEmpty(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "esaving/esaving-open-scr")) {
+		document.removeEventListener('closeAlertView', handleAlertEmpty, false);
+		//navController.pushToView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+		
+		
+	}
+}
+
+function rdSelected(inNode){
+	if(inNode.type =="radio"){
+		return;
+	}
+	var tmpArr = inNode.getElementsByTagName('input');
+	for (var i=0; i<tmpArr.length; i++) {
+		var tmpNode = tmpArr[i];
+		if(tmpNode.type=="radio") {
+			tmpNode.checked = true; break;
+		}
+	}
+	
+	if(document.getElementById('rd1').checked == true){
+		typeTrans = 1;
+		//document.getElementById('secAccNo1').disabled = true;
+		//document.getElementById('secAccNo2').disabled = true;
+		 //document.getElementById('secAccNo').disabled = true;
+	}
+	if(document.getElementById('rd2').checked == true){
+		typeTrans = 2;
+		//document.getElementById('secAccNo1').disabled = false;
+		//document.getElementById('secAccNo2').disabled = true;
+		//document.getElementById('secAccNo').disabled = false;//hien thi
+	}
+	if(document.getElementById('rd3').checked == true){
+		typeTrans = 3;
+		//document.getElementById('secAccNo1').disabled = true;
+		//document.getElementById('secAccNo2').disabled = false;
+		//document.getElementById('secAccNo').disabled = false;//hien thi
+	}
+	
+}
+
+function getChiThiTaiTuc(){
+	switch (typeTrans)
+	{
+		case 1: 
+			return CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+		case 2: 
+			return CONST_STR.get('ESAVING_CHANGEINFO_RD_REN')+secAccNo;//old secAccNo1
+		case 3: 
+			return CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN')+secAccNo;//old secAccNo2				
+	}
+	return CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+}
+
+/*** GENARATE REVIEW SCREEN ***/
+function genReviewScreen(){	
+		// resizeMainViewContent(currentPage);
+	/*docXml = createXMLDoc();	
+	
+	
+	var tenorRateValueTmpl = tenorRateValue +((gUserInfo.lang == 'EN')? "%/year":"%/năm");
+	var arrayPeriodESaving = (gUserInfo.lang == 'EN')? CONST_KEY_PERIOD_ESAVING_EN: CONST_KEY_PERIOD_ESAVING_VN;
+	var arrayMaturityESaving = (gUserInfo.lang == 'EN')? CONST_KEY_MATURITY_ESAVING_EN: CONST_KEY_MATURITY_ESAVING_VN;
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	//review/reviewinfo/reviewtranstitle
+	
+	//toan khoan nhan
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('UTILITIES_CALCULATOR_SAV_INPUT_E-SAVE'), docXml, tmpChildNodeAcc);
+	//Loại tiền
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('ACC_CURRENCY_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('INTEREST_RATE_VND'), docXml, tmpChildNodeAcc);
+
+	//Kỳ hạn gửi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), docXml, tmpChildNodeAcc);	
+	tmpChildNode = createXMLNode('transinfocontent', arrayPeriodESaving[parseInt(tenorValue) - 1], docXml, tmpChildNodeAcc);
+	//Ngày gửi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', gprsResp.arguments[1], docXml, tmpChildNodeAcc);
+	//Ngày đáo hạn
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CLOSE_DATE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  gprsResp.arguments[2], docXml, tmpChildNodeAcc);
+
+	//Số tiền gửi
+
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',CONST_STR.get('ESAVING_CREATE_AMOUNT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  formatNumberToCurrency(amountOpen)+" VND", docXml, tmpChildNodeAcc);
+	//Lãi suất gửi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_INTEREST_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',tenorRateValueTmpl , docXml, tmpChildNodeAcc);
+	
+	//Lãi tạm tính
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST') , docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(gprsResp.arguments[3])+" VND", docXml, tmpChildNodeAcc);
+
+	//Số tài khoản trích tiền
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',"Số tài khoản trích tiền" , docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', destinationAccNo, docXml, tmpChildNodeAcc);
+	//Chỉ thị tái tục
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_INPUT_INFO'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', getChiThiTaiTuc(), docXml, tmpChildNodeAcc);
+	//Điều khoản điều kiện
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_INPUT_INFO'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', getChiThiTaiTuc(), docXml, tmpChildNodeAcc);
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');*/
+	
+	var htmlReviewInfo = "";
+	var tenorRateValueTmpl = (selectionID == 2) ? (tenorRateValue +((gUserInfo.lang == 'EN')? "/year":"/năm")):(tenorRateValue +((gUserInfo.lang == 'EN')? "%/year":"%/năm"));
+	var arrayPeriodESaving = (gUserInfo.lang == 'EN')? CONST_KEY_PERIOD_ESAVING_EN: CONST_KEY_PERIOD_ESAVING_VN;
+	var arrayMaturityESaving = (gUserInfo.lang == 'EN')? CONST_KEY_MATURITY_ESAVING_EN: CONST_KEY_MATURITY_ESAVING_VN;
+    var categoryOpenSaving = (selectionID == 2) ? CONST_STR.get('SAVNO_BEFORE_MATDATE_MENU_2'): CONST_STR.get('UTILITIES_CALCULATOR_SAV_INPUT_E-SAVE');
+
+	var tmpNode = document.getElementById('');
+
+    var tmparrreview = new Array();
+
+    //htmlReviewInfo = "<table width='98%' align='center'><div>111</div>";
+	/*htmlReviewInfo = htmlReviewInfo + 
+				"<h5 class='Header' style='padding: 10px 0 10px 0;'><span>" +
+					CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE') + 
+				"</span></h5>";*/
+	/*htmlReviewInfo = htmlReviewInfo +
+				"<tr><table width='98%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default' infoview='review'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE') + 
+					"</td>" + "<td class='td-right' id='categorySavingTitle'>" + categoryOpenSaving +
+					"</td></tr>";*/
+    var row1 = new Array();
+    row1.push(CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'),categoryOpenSaving,'review');
+    tmparrreview.push(row1);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ACC_CURRENCY_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						CONST_STR.get('INTEREST_RATE_VND') + 
+					"</td></tr>";*/
+    var row2 = new Array();
+    row2.push(CONST_STR.get('ACC_CURRENCY_TITLE'),CONST_STR.get('INTEREST_RATE_VND'),'');
+    tmparrreview.push(row2);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE') + 
+					"</td>" + "<td class='td-right'>" + tenorRateValueString
+						//arrayPeriodESaving[parseInt(tenorValue) - 1] +
+					"</td></tr>";*/
+    var row3 = new Array();
+    row3.push(CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'),tenorRateValueString,'');
+    tmparrreview.push(row3);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default' scrinfo='review'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE') + 
+					"</td>" + "<td class='td-right'>" + 
+						gprsResp.arguments[1] + 
+					"</td></tr>";*/
+    var row4 = new Array();
+    row4.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),gprsResp.arguments[1],'review');
+    tmparrreview.push(row4);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default' scrinfo='review'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_CLOSE_DATE_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						gprsResp.arguments[2] + 
+					"</td></tr>";*/
+    var row5 = new Array();
+    row5.push(CONST_STR.get('ESAVING_CLOSE_DATE_TITLE'),gprsResp.arguments[2],'review');
+    tmparrreview.push(row5);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_CREATE_AMOUNT') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(amountOpen)+" VND" + 
+					"</td></tr>";*/
+    var row6 = new Array();
+    row6.push(CONST_STR.get('ESAVING_CREATE_AMOUNT'),formatNumberToCurrency(amountOpen)+" VND",'');
+    tmparrreview.push(row6);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default' scrinfo='review'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_INTEREST_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						tenorRateValueTmpl + 
+					"</td></tr>";*/
+    var row6 = new Array();
+    row6.push(CONST_STR.get('ESAVING_INTEREST_TITLE'),tenorRateValueTmpl,'review');
+    tmparrreview.push(row6);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default' scrinfo='review'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(gprsResp.arguments[3])+" VND" + 
+					"</td></tr>";*/
+    var row7 = new Array();
+    row7.push(CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST'),formatNumberToCurrency(gprsResp.arguments[3])+" VND",'review');
+    tmparrreview.push(row7);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_DEBIT_ACC') + 
+					"</td>" + "<td class='td-right'>" + 
+						destinationAccNo + 
+					"</td></tr>";*/
+    var row8 = new Array();
+    row8.push(CONST_STR.get('ESAVING_DEBIT_ACC'),destinationAccNo,'');
+    tmparrreview.push(row8);
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('ESAVING_INPUT_INFO') + 
+					"</td>" + "<td class='td-right'>" + 
+						getChiThiTaiTuc() + 
+					"</td></tr>";*/
+    var row9 = new Array();
+    row9.push(CONST_STR.get('ESAVING_INPUT_INFO'),getChiThiTaiTuc(),'');
+    tmparrreview.push(row9);
+
+    var recycler = new RecyclerView({
+        type: "NORMAL",
+        typeTextAlign: "MIDLE",
+        title: "Thông tin tiết kiệm",
+        titleAlign:"LEFT",
+        opacity:true
+    });
+    recycler.setData(tmparrreview);
+    var contentHTML = recycler.initSaving();
+    htmlReviewInfo = htmlReviewInfo + contentHTML;
+
+	//htmlReviewInfo = htmlReviewInfo + 
+					//"<tr class='trow-default'>" + "<td class='td-left'>" + 
+					//	CONST_STR.get('SCHEDULE_BANK_CONFIRM_BY')+ 
+					//"</td>" + "<td class='td-right'>" +
+					//	gCustomerNanme +
+					//"</td></tr>";
+
+	htmlReviewInfo = htmlReviewInfo +
+                  "<table width='100%'>" +
+                  "<tr id ='setCheck'>" +
+                    "<td width='3#' onclick='setChecked()'>" +
+					"<span class='icon-checkbox-unchecked' style='display:table-cell;font-size:16px' id='chkAgree'/>" +
+					"</td>" + 
+                    "<td><div class='notestyle'><span>"+CONST_STR.get('ESAVING_CONDITON_NOTE1')+
+					"<em><a target='_blank' class='ref-link' onClick=\"  (selectionID == 2) ? openLinkInWindows('./download/esaving/DK_Tiet_Kiem_TL.pdf') : openLinkInWindows('./download/esaving/DK_Tiet_Kiem_DT.pdf')  \"><u>" +
+					CONST_STR.get('ESAVING_CONDITON_NOTE2')+"</u></a></em>" + ((selectionID == 2) ? CONST_STR.get('ESAVING_CONDITON_NOTE4') : CONST_STR.get('ESAVING_CONDITON_NOTE3'))
+					+ "</span></div></td>" +
+                  "</tr>";
+        if(selectionID ==2){
+                htmlReviewInfo = htmlReviewInfo +"<tr id='intro_alert_saving' style='display: none;'>"
+                + "<td colspan='2'>"
+                +"<div style='font-style:italic; color:#fb8c00' width='98%'>"
+                +"<span>"
+                +CONST_STR.get('ESAVING_FORTUNE_AMOUNT_DESCRIPTION')
+                +"</span>"
+                +"</div>"
+                +"</td></tr>";
+        }
+    htmlReviewInfo = htmlReviewInfo + "</table>" + "<table width='100%'>";
+
+    htmlReviewInfo = htmlReviewInfo + "<tr id='trMessage' style='display:none;'>" + "<td colspan='2'>" +
+						"<span style='color:#fb8c00;white-space:pre-wrap;' id='lblErrRequired'></span>" + "</td>" +
+					"</tr>";
+htmlReviewInfo = htmlReviewInfo + 					
+            "<tr class='desktopmode' id='result-export-print' style='display:none;'>" +
+            	"<td colspan='2'>" +
+
+                	"<div align='right' style='padding-right: 5px;'>" +
+                        "<a href='javascript:void(0)' onclick='printResultHistory();'><img title='In trang này' style='margin-right:5px;' src='css/img/print.png'/></a>" +
+                    "</div></td></tr>";
+					
+            htmlReviewInfo = htmlReviewInfo + 
+                                "<tr>" + "<td colspan='2'>" +
+                                    "<div style='text-align: center;'>" +
+                                      "<input id='trCondition' autocapitalize='off' autocomplete='off' autocorrect='off' class='btnshadow-after btn-second-desktop-after' onclick='clickHomeOrBack()' spellcheck='off' type='submit' value='Quay lại'/>" +
+                                        "<input autocapitalize='off' autocomplete='off' autocorrect='off' class='btnshadow-after btn-second-after btn-changecolor' id='goEsavingOpenLnk' onclick='btnCancelClick()' spellcheck='off' type='submit' value='REVIEW_BTN_CANCEL'/>" +
+                                        "<input autocapitalize='off' autocomplete='off' autocorrect='off' class='btnshadow-after btn-second-after' onclick='checkAgree()' spellcheck='off' type='button' value='REVIEW_BTN_NEXT'/>" +
+                                    "</div>"+                         			   
+                                "</td>" + "</tr>";
+					
+	htmlReviewInfo ="<div style='margin: 5px;'>"+ htmlReviewInfo + "</table>"+"</div>";
+	setReviewHtmlStore(htmlReviewInfo);
+
+
+
+
+	//by pass token
+		//gprsResp.respCode = CONSTANTS.get('TRANS_RELIABLE');
+	navController.pushToView("com-review-scr", true);
+}
+
+function checkToShowButton(tenorValue){
+	if(parseInt(tenorValue)>2){
+		return 	 "<input type='button' class='btnshadow btn-second' onClick='checkAgree()' value='REVIEW_BTN_NEXT'/>";
+	}
+	return "";
+}
+//===============FUNCTION ALLOW INPUT NUMBER =============//
+function isNumberKeyNotDot(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+//==============FORMAT MONEY FOR THIS INPUT TAG=============//
+function handleInputAmount(e, des){
+	var limitActivate = document.getElementById('amount');
+    formatCurrency(e, limitActivate);
+
+	var tmpVale = des.value;
+	//formatCurrency(e, des);
+	//des.value = formatNumberToCurrency(des.value);
+	var numStr = convertNum2WordWithLang(removeSpecialChar(tmpVale), gUserInfo.lang); 
+	
+	var nodeNumTxt = document.getElementById("num_to_word");
+	/*bo in dam
+	nodeNumTxt.innerHTML = "<b>" + numStr + "</b>";*/
+	nodeNumTxt.innerHTML =numStr ;
+}
+//GOTO RATE TABLE
+function gotoRateTable(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+
+    //SANGNT1 SỬA LẤY DANH SÁCH LÃI SUẤT
+    if(selectionID ==1){
+
+        if (gSysData == undefined || gSysData.interest_rates == undefined || gSysData.interest_rates.data.length == 0 )
+        {
+            showAlertText(CONST_STR.get('COMMON_SYSDATA_EMPTY'));
+            return;
+        }else{
+            for (var i = 0; i < gSysData.interest_rates.data.length; i++)
+            {
+                if (gUserInfo.lang == 'EN')
+                {
+
+                    tmpArray1.push(gSysData.interest_rates.data[i].description_en);
+                }
+                else
+                {
+                    tmpArray1.push(gSysData.interest_rates.data[i].description_vn);
+                }
+                tmpArray2.push(gSysData.interest_rates.data[i].vnd+ "%");
+            }
+        }
+    }else{
+        if (gSysData == undefined || gSysData.interest_rates_tailoc == undefined || gSysData.interest_rates_tailoc.data.length == 0) {
+            showAlertText(CONST_STR.get('COMMON_SYSDATA_EMPTY'));
+            return;
+        }else{
+            var dataInterest;
+            var monthDescription;
+            var lengthMonthDescription;
+            var dataInterestsx1;
+            var monthDescriptionsx1;
+            var lengthMonthDescriptionsx1;
+
+            var dataInterestsx2;
+            var monthDescriptionsx2;
+            var lengthMonthDescriptionsx2;
+
+            var arrInterestData = gSysData.interest_rates_tailoc.data;
+            for (i = 0; i < arrInterestData.length; i++) {
+					if(arrInterestData[i].vnd >0){
+						for (j = arrInterestData.length - 1; j > 0; j--) {
+						dataInterestsx1 = arrInterestData[j];
+						lengthMonthDescriptionsx1 = dataInterestsx1.key.length;
+						monthDescriptionsx1 = parseInt(dataInterestsx1.key.slice(1, lengthMonthDescriptionsx1));
+	
+						dataInterestsx2 = arrInterestData[j - 1];
+						lengthMonthDescriptionsx2 = dataInterestsx2.key.length;
+						monthDescriptionsx2 = parseInt(dataInterestsx2.key.slice(1, lengthMonthDescriptionsx2));
+	
+	
+						if (monthDescriptionsx1 < monthDescriptionsx2) {
+							var temp = arrInterestData[j];
+							arrInterestData[j] = arrInterestData[j - 1];
+							arrInterestData[j - 1] = temp;
+						}
+					}
+				}
+            }
+
+            for (var i = 0; i < arrInterestData.length; i++) {
+				if(arrInterestData[i].vnd >0){
+					dataInterest = arrInterestData[i];
+					lengthMonthDescription = dataInterest.key.length;
+					monthDescription = dataInterest.key.slice(1, lengthMonthDescription);
+	
+					if (gUserInfo.lang == 'EN') {
+						var monthTitle = (monthDescription == "1") ? CONST_STR.get('UTILITIES_CALCULATOR_TERM_M') : CONST_STR.get('ESAVING_RATE_MONTHS_TITLE');
+						tmpArray1.push(monthDescription + " " + monthTitle);
+					}
+					else {
+						tmpArray1.push(monthDescription + " " + CONST_STR.get('UTILITIES_CALCULATOR_TERM_M'));
+					}
+					tmpArray2.push(gSysData.interest_rates_tailoc.data[i].vnd + " %");
+					}
+            }
+        }
+
+    }
+    //END SANGNT1 SỬA LẤY DANH SÁCH LÃI SUẤT
+	document.addEventListener("evtSelectionDialog", showRateSelectionOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showRateSelectionClose, false);
+	showDialogList(CONST_STR.get('MENU_BANK_INFO_INTEREST')+" "+CONST_STR.get('INTEREST_RATE_VND'),  tmpArray1, tmpArray2,  true);
+}
+
+function showRateSelectionOpen(e) {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showRateSelectionClose();
+									
+		}		
+	}
+}
+
+function showRateSelectionClose() {
+	if (currentPage == "esaving/esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showRateSelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showRateSelectionClose, false);
+	}
+}
+
+//================THÔNG TIN BẢNG LÃI SUẤT TIẾT KIỆM==============================//
+function getRealInterestRate()
+{
+	var data = {};
+	var arrayArgs = new Array();
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUERY_INTEREST_RATE"), "", "", "VN", "", arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);	
+	requestMBService(data, true, 0, getRealInterestRateSuccess, getRealInterestRateFaild);
+}
+function getRealInterestRateSuccess(e)
+{
+	gprsResp = parserJSON(e);
+	if((gprsResp.arguments == undefined) || (gprsResp.arguments == null) || (gprsResp.arguments.length==0)) {
+		document.addEventListener('closeAlertView', handleAlertEmptyBankInfo, false);
+		showAlertText(CONST_STR.get('ERR_BANK_INFO_EMPTY_DATA'));		
+		return;
+	}	
+	setRespObjStore(gprsResp);
+	if ((gprsResp.respCode == '0') && 
+		(parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUERY_INTEREST_RATE")))) {
+		if (gprsResp.arguments.length > 0)
+		{				
+			genScreenInterestRateHTML(gprsResp.arguments);
+		}		
+	}
+	else 
+	if ((gprsResp.respCode != '0') && 
+		((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUERY_INTEREST_RATE"))  
+		|| (gprsResp.responseType == '-1')))) {
+		showAlertText(CONST_STR.get('ERR_BANK_INFO_EMPTY_DATA'));		
+	}	
+}
+
+function handleAlertEmptyBankInfo(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "bankinfo/interest-rate")) {
+		document.removeEventListener('closeAlertView', handleAlertEmptyBankInfo, false);
+		showAlertText(CONST_STR.get('ERR_BANK_INFO_EMPTY_DATA'));		
+	}
+}
+
+function getRealInterestRateFaild()
+{	
+	showAlertText(CONST_STR.get('ERR_BANK_INFO_EMPTY_DATA'));		
+}
+
+function ReloadPage(){
+	document.getElementById("section1").style.display = 'none';
+	document.getElementById("section2").style.display = 'block';			
+}
+function genScreenInterestRateHTML(listInterestRate)
+{
+	
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+
+	for (var i = 1; i < interest_rate.data.length; i++)
+	{
+		tmpArray1.push(interest_rate.data[0]+" "+CONST_STR.get("TRANS_PERIODIC_MONTH"));
+		tmpArray2.push(interest_rate.data[1]+ " %");
+	}
+	
+	
+	document.addEventListener("evtSelectionDialog", showRateSelectionOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showRateSelectionClose, false);
+	showDialogList(CONST_STR.get('MENU_BANK_INFO_INTEREST')+" "+CONST_STR.get('INTEREST_RATE_VND'),  tmpArray1, tmpArray2,  true);
+	
+}
+function direclinkIntroEsavingPDF(){
+    if(selectionID == 1){
+        openLinkInWindows('./download/esaving/Tiet kiem dien tu - Vietnamese.pdf');
+    }else if(selectionID == 2){
+        //window.open("https://ebank.tpb.vn/retail/download/esaving/Tiet kiem dien tu - Vietnamese.pdf");
+		if(gUserInfo.lang == 'EN'){
+			openLinkInWindows('./download/esaving/Tiet kiem tai loc - English.pdf');
+		}else{
+			openLinkInWindows('./download/esaving/Tiet kiem tai loc -Vietnamese.pdf');
+		}
+		 
+    }
+}
+
+function checkingrd(id) {
+    flagcheck = document.getElementById('rd'+ id);
+    if(flagcheck.checked == false)
+    {
+        document.getElementById('rd1').checked = false;
+        document.getElementById('rd2').checked = false;
+        document.getElementById('rd3').checked = false;
+        document.getElementById('checkingrd1').setAttribute('class','icon-checkbox-unchecked');
+        document.getElementById('checkingrd2').setAttribute('class','icon-checkbox-unchecked');
+        document.getElementById('checkingrd3').setAttribute('class','icon-checkbox-unchecked');
+        flagcheck.checked = true;
+        var tmpcheckingrd = document.getElementById('checkingrd'+ id);
+        tmpcheckingrd.setAttribute('class','icon-checked');
+    }
+}
+
+function shareFacebookSaving(){
+	if(selectionID==2){
+		
+		openLinkInWindows('http://www.facebook.com/sharer/sharer.php?u=https://tpb.vn/tiet-kiem-tai-loc');
+	}else{
+		openLinkInWindows('http://www.facebook.com/sharer/sharer.php?u=https://tpb.vn/tiet-kiem-dien-tu');
+	}
+}
+function shareLinkinSaving(){
+	if(selectionID==2){
+		
+		openLinkInWindows('https://www.linkedin.com/shareArticle?url=https://tpb.vn/tiet-kiem-tai-loc');
+	}else{
+		openLinkInWindows('https://www.linkedin.com/shareArticle?url=https://tpb.vn/tiet-kiem-dien-tu');
+	}
+}
+function sharegoogleplusSaving(){
+	if(selectionID==2){
+		openLinkInWindows('https://plus.google.com/share?url=https://tpb.vn/tiet-kiem-tai-loc');
+	}else{
+		openLinkInWindows('https://plus.google.com/share?url=https://tpb.vn/tiet-kiem-dien-tu');
+	}
+}

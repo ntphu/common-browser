@@ -1,0 +1,472 @@
+/**
+ * Created by JetBrains WebStorm.
+ * User: DangLN.FSOFT
+ * Date: 8/1/16
+ * Time: 11:08 AM
+ * To change this template use File | Settings | File Templates.
+ */
+
+
+var ResultSearchArray = new Array();
+var HisTransArrayResponse = new Array();
+var idTransNo = null;
+var currentPageHistrans = "transfer/his-trans-scr";
+var positionBottomOffset = null;
+function RecentObj(){
+    this.partnerName = "";
+    this.partnerNumber = "";
+    this.transToBank = "";
+    this.transValue = "";
+    this.transContent = "";
+    this.transTime = "";
+    this.idNo = "";
+ }
+
+if(!gIsLogin) {
+    var tmpNodeBack = document.getElementById('bankinfo.btn.back');
+    tmpNodeBack.style.display = 'block';
+}
+
+
+/*** Success View ***/
+function viewDialogLoadSuccess(){
+   
+    document.getElementById("txtSearch").placeholder = CONST_STR.get('INTRODUCE_SREACH_TITLE');
+    getListHisTranfer(gHisTypeTranfer);
+}
+
+
+function goBack() {
+    navController.popView(true);
+}
+function getListHisTranfer(typeTransfer) {
+  
+    var data = {};
+    var arrayArgs = new Array();
+  /*  arrayArgs.push(gCustomerNo);
+    arrayArgs.push(typeTransfer);*/
+    arrayArgs.push(latestParam.latestParam1);
+    arrayArgs.push(latestParam.latestParam2);
+    var gprsCmd = new GprsCmdObj(latestParam.latestServices, "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+  
+    requestMBService(data, true, 0, requestMBServiceHistorySuccess, requestMBServiceHistoryFail);
+
+}
+
+//event listener: http request success
+function requestMBServiceHistorySuccess(e){
+   
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp);
+
+  
+
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANSFER_GET_HIS_TRANSACTION")))) {
+        HisTransArrayResponse = gprsResp.arguments;
+        if(HisTransArrayResponse === null || HisTransArrayResponse == "" || HisTransArrayResponse === undefined){
+            resultListNull("divListContact");
+            document.getElementById('template-contact').style.display = 'none';
+            return;
+        }
+        document.getElementById('template-contact').style.display = '';
+        if(gModeScreenView == CONST_MODE_SCR_SMALL){
+            genMainMenuScreen(HisTransArrayResponse);
+        }else{
+
+            genScrDesktopRecent(HisTransArrayResponse);
+        }
+    }
+};
+//event listener: http request fail
+function requestMBServiceHistoryFail(e){
+    genBankListFail();
+};
+
+
+function genBankListFail() {
+    var nodeHistory = document.getElementById('divListGroup1');
+    nodeHistory.innerHTML ="";
+
+    var htmlReviewInfo = "<table width='100%' align='center'>";
+
+    htmlReviewInfo = htmlReviewInfo +
+        "<tr><td><h5 align='left' style='font-weight:bold; margin-left:3%'>" +
+        CONST_STR.get('BANK_INFO_CITY_TITLE') +
+        "</h5></td>"+
+        "<td><div class='div-btn-round-container'>" +
+        /*"<input type='button' class='btnshadow btn-primary btn-round-20' onClick='getAtmTpbList()' id='input.btn.reloadHistory' value='R'/>" + */
+        "<div class='icon-spinner btnshadow btn-primary btn-round-15' onClick='getAtmTpbList()' id='input.btn.reloadHistory'></div>" +
+        "</div></td></tr>" +
+        "<tr><td colspan='2'><div class='line-separate'></div></td></tr>";
+
+    htmlReviewInfo = htmlReviewInfo +
+        "<tr><table width='100%' align='center' class='background-blacktrans' style='background-color: rgba(210, 225, 244, 0.4);'>";
+    htmlReviewInfo = htmlReviewInfo + "<tr class='trow-default'>" +
+        "<td colspan='2' class='td-textnobg'>" +
+        CONST_STR.get('BANK_INFO_REQUEST_FAIL') +
+        "</td></tr>";
+
+
+    htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+
+    htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+
+    nodeHistory.innerHTML = htmlReviewInfo;
+}
+function genMainMenuScreen(respArr) {
+
+    //generate Menu
+    if(respArr === null || respArr == "" || respArr =="undefined") {
+        resultListNull("divListGroup1");
+        return;
+    }
+    // List View
+    var list = new ListView({
+        data :  respArr,
+        parserService : true,
+        idParent : "list-view-search",
+        fieldsRow : [5,4,6],
+        fieldsHidden : [0,1,2,3,4,5,6,7,8],
+        avatar : {status: true},
+        option : "default",
+        numberRecords :10,
+        maxWidthButton : 150,
+        doubleClickItem : function(node){
+          
+            //hand code
+            // callbackDocTranfer(objectVal);
+            try{
+                var  val = getObjectValue(node);
+             
+
+                var valDiv = node.getElementsByClassName("p-value")[0];
+
+                var objectVal;
+                if(gEdit == 1 || gEdit === 4 || gEdit == 2 || gEdit == 3){
+                  
+                    //trong TPB
+                    // chung khoan
+                    //su dung  callbackContactTranfer
+                    var typeTranferD = gEdit == 1 ? "LOCALTRAN" : //lien ngan hang
+                            gEdit == 2 ? "INTERFASTTRAN" :
+                            gEdit == 3 ? "CARDTRANQ" :
+                            gEdit == 4 ? "FPTSTRAN" : -1;//chung khoan
+
+                    var mC = valDiv.childNodes[7] != undefined ? valDiv.childNodes[7].innerHTML : "";
+                    var bC = valDiv.childNodes[8] != undefined ? valDiv.childNodes[8].innerHTML : "";
+
+                    objectVal = {
+                        bincode :bC,
+                        citadCode:mC,
+                        customerNo: "",
+                        fancyName :"",
+                        partnerCode:"",
+                        partnerName: valDiv.childNodes[6].innerHTML,
+                        payeeType:"",
+                        peopleName: valDiv.childNodes[5].innerHTML,
+                        provinceCode:"",
+                        shortname:"",
+                        transType: typeTranferD,
+                        transValue:valDiv.childNodes[4].innerHTML,
+                        transactionId :valDiv.childNodes[0].innerHTML
+                    }
+                }
+//                else if (  gEdit == 3) {
+//                    //lien ngan hang
+//                    //qua the
+//                    // su dung callbackDocTranfer
+//                    var typeTranferD = gEdit == 2 ? "1" : //lien ngan hang
+//                                       gEdit == 3 ? "2" : -1;//qua the
+//
+//                    var mC = valDiv.childNodes[7] != undefined ? valDiv.childNodes[7].innerHTML : "";
+//                    var bC = valDiv.childNodes[8] != undefined ? valDiv.childNodes[8].innerHTML : "";
+//
+//                    objectVal = {
+//                        bincode : bC,
+//                        loai_chuyen_tien: typeTranferD,
+//                        ma_citad : mC,
+//                        name : "",
+//                        ngan_hang_nhan : valDiv.childNodes[6].innerHTML,
+//                        noi_dung : "",
+//                        so_tien  : "",
+//                        tai_khoan_dich: valDiv.childNodes[4].innerHTML,
+//                        tai_khoan_nguon : "",
+//                        ten_tai_khoan_dich : valDiv.childNodes[5].innerHTML
+//                    }
+//                }
+                else if(gEdit === 5){
+                    var content = valDiv.childNodes[3].innerHTML.split("~");
+                    // qua CMTND
+                    //su dung callbackContactTranfer
+                    objectVal = {
+                        bank_code:"",
+                        bincode:"",
+                        citadCode:valDiv.childNodes[7].innerHTML,
+                        customerNo:"", // support
+                        fancyName:"",
+                        ngay_cap_cmnd:content[2],
+                        noi_cap_cmnd:content[1],
+                        partnerCode:content[2],
+                        partnerName:valDiv.childNodes[6].innerHTML,
+                        payeeType:"",
+                        peopleName:valDiv.childNodes[5].innerHTML,
+                        provinceCode:content[1],
+                        shortname:"",
+                        so_cmnd:valDiv.childNodes[4].innerHTML,
+                        transType:"CMND",
+                        transValue: valDiv.childNodes[4].innerHTML,
+                        transactionId:valDiv.childNodes[0].innerHTML,
+                        numReceive :content[3]
+                    }
+                }
+               modalDialog.fireCallBack(objectVal);
+            }catch(e){}
+        }  ,
+        button : [
+            { name : 'func', icon : 'icon-detail', action: function(id){
+               
+                var parent = document.getElementById(id);
+                var valDiv = parent.getElementsByClassName("p-value")[0];
+
+                // lay vi tri cua li de show detail
+                positionBottomOffset = parent.getBoundingClientRect().bottom;
+
+                showDetail(parent.event,{
+                    nameTranfer: valDiv.childNodes[5].innerHTML,
+                    accTranfer: valDiv.childNodes[4].innerHTML,
+                    bankTranfer: valDiv.childNodes[6].innerHTML,
+                    moneyTranfer: valDiv.childNodes[2].innerHTML,
+                    descTranfer: valDiv.childNodes[3].innerHTML,
+                    dateTranfer: valDiv.childNodes[1].innerHTML
+                })
+
+            }, type: 'func'},
+            { name : 'delete', icon : 'icon-delete', action: function(id){
+                var node = document.getElementById(id);
+                var pValue = node.getElementsByClassName("p-value")[0];
+                var idNo = pValue.childNodes[0].innerHTML;
+                showPopUpDelete(idNo)
+            }, type: 'delete', idPopup :  'btnAlertConfirmOk'},
+            { name : 'save', icon : 'icon-template', action: function(id1){
+                var node1 = document.getElementById(id1);
+                var pValue1 = node1.getElementsByClassName("p-value")[0];
+                var idNo1 = pValue1.childNodes[0].innerHTML;
+               
+                showPopUpSave(idNo1)
+            }, type: 'save', idPopup :  'btnAlertConfirmOk'}
+        ]
+    });
+
+    var div = document.getElementById("divListGroup1");
+    div.innerHTML ="";
+    list.showList(div);
+    //div.appendChild(html);
+    hideLoadingMask();
+    if(typeof styleHistoryList == 'function' ){
+        styleHistoryList();
+    }
+}
+
+function showDetail(e, data){
+    var htmlStr = "<div>"+CONST_STR.get('HEADER_TRANSFER_TO')+"</div>";
+        htmlStr += "<div style='padding-left:10px'>" + data.nameTranfer + "</div>";
+        htmlStr += "<div style='padding-left:10px'>" + data.accTranfer +"</div>";
+        htmlStr += "<div style='padding-left:10px'>" + data.bankTranfer +"</div>";
+        htmlStr += "<div>VND</div>";
+        htmlStr += "<div style='padding-left:10px'>" + formatNumberToCurrency(data.moneyTranfer) +"</div>";
+        htmlStr += "<div>"+CONST_STR.get('INFORMATION_TITLE')+"</div>";
+        htmlStr += "<div style='padding-left:10px'>" + data.descTranfer +"</div>";
+        htmlStr += "<div>"+ CONST_STR.get('DAY_TRANSFER') + " " + data.dateTranfer +"</div>";
+   
+
+    showPopUpDetail(e, htmlStr, positionBottomOffset);
+    positionBottomOffset = null;
+}
+
+ //anhntt bo xung them button save
+function showPopUpSave(idNo1){
+    var str = CONST_STR.get('QUESTION_SAVE_LATEST_TRANSFER');
+    idTransNo = idNo1;
+
+    document.addEventListener("alertConfirmOK", alertSaveOK, false);
+    document.addEventListener("alertConfirmCancel", alertSaveCancel, false);
+    document.getElementById('btnAlertConfirmCancel').value = CONST_STR.get('BENEFIC_LIST_NO');
+    document.getElementById('btnAlertConfirmOk').value = CONST_STR.get('BENEFIC_LIST_YES');
+    showAlertConfirmText(str, alertSaveOK, alertSaveCancel);
+}
+function alertSaveOK(){
+    if (currentPageHistrans == "transfer/his-trans-scr") {
+        alertSaveCancel();
+        //  request Del
+
+        var data = {};
+        var arrayArgs = new Array();
+        arrayArgs.push(idTransNo);
+        arrayArgs.push(gCustomerNo);
+        idTransNo = null;
+        var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TRANSFER_SAVE_HIS_TRANSACTION"), "", "",gUserInfo.lang,gUserInfo.sessionID, arrayArgs);
+
+        data = getDataFromGprsCmd(gprsCmd);
+        requestMBService(data, true, 0, callbackSaveSuccess, callbackSaveFail);
+    }
+}
+function callbackSaveSuccess(){
+   
+}
+function callbackSaveFail(){
+   
+}
+function alertSaveCancel(){
+    if (currentPageHistrans == "transfer/his-trans-scr") {
+        document.removeEventListener("alertSaveCancel", alertSaveCancel, false);
+        document.removeEventListener("alertSaveOK", alertSaveOK, false);
+    }
+}
+
+function showPopUpDelete(idNo){
+    logInfo(typeof(idNo));
+
+    var str = CONST_STR.get('QUESTION_DELETE_LATEST_TRANSFER');
+    idTransNo = idNo;
+
+    document.addEventListener("alertConfirmOK", alertConfirmOK, false);
+    document.addEventListener("alertConfirmCancel", alertConfirmCancel, false);
+    document.getElementById('btnAlertConfirmCancel').value = CONST_STR.get('BENEFIC_LIST_NO');
+    document.getElementById('btnAlertConfirmOk').value = CONST_STR.get('BENEFIC_LIST_YES');
+    showAlertConfirmText(str, alertConfirmOK, alertConfirmCancel);
+}
+
+function alertConfirmOK() {
+    if (currentPageHistrans == "transfer/his-trans-scr") {
+        alertConfirmCancel();
+        //  request Del
+
+		var data = {};
+        var arrayArgs = new Array();
+        arrayArgs.push(idTransNo);
+		arrayArgs.push(gCustomerNo);
+        idTransNo = null;
+        var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TRANSFER_DISABLE_HIS_TRANSACTION"), "", "",gUserInfo.lang,gUserInfo.sessionID, arrayArgs);
+
+        data = getDataFromGprsCmd(gprsCmd);
+        requestMBService(data, true, 0, callbackSuccessDelete, callbackFailsDelete);
+  }
+}
+
+function callbackSuccessDelete(respArr){
+   
+    //goi lai list histranfer
+    showLoadingMask();
+    setTimeout(
+        function(){
+            getListHisTranfer(gHisTypeTranfer);
+        },1000
+    );
+
+}
+function callbackFailsDelete(){
+    
+}
+
+function alertConfirmCancel() {
+    if (currentPageHistrans == "transfer/his-trans-scr") {
+        document.removeEventListener("alertConfirmCancel", alertConfirmCancel, false);
+        document.removeEventListener("alertConfirmOK", alertConfirmOK, false);
+    }
+}
+
+function SearchRow(objKeyword)
+{
+    ResultSearchArray = new Array();
+    var strKeyword = objKeyword.value;
+    strKeyword = strKeyword.toLowerCase();
+    for(var i =0; i < HisTransArrayResponse.length; i++){
+        var tempSearch = HisTransArrayResponse[i].split('#');
+        if(tempSearch[5].toLowerCase().indexOf(strKeyword.toLowerCase()) != -1 || tempSearch[4].toLowerCase().indexOf(strKeyword.toLowerCase()) != -1){
+            ResultSearchArray.push(HisTransArrayResponse[i]);
+        }
+    }
+   
+    if(gModeScreenView == CONST_MODE_SCR_SMALL){
+        genMainMenuScreen(ResultSearchArray);
+    }else{
+        var div = document.getElementById("divListGroup1");
+            div.innerHTML = "";
+        genScrDesktopRecent(ResultSearchArray);
+    }
+
+}
+
+function transRecent (obj){
+    try{
+        var  val;
+
+        var objectVal;
+        if(gEdit == 1 || gEdit === 4 || gEdit == 2 || gEdit == 3){
+           
+            //trong TPB
+            // chung khoan
+            //su dung  callbackContactTranfer
+            var typeTranferD = gEdit == 1 ? "LOCALTRAN" : //lien ngan hang
+                    gEdit == 2 ? "INTERFASTTRAN" :
+                    gEdit == 3 ? "CARDTRANQ" :
+                    gEdit == 4 ? "FPTSTRAN" : -1;//chung khoan
+
+            var mC =  "";
+            var bC = "";
+
+            objectVal = {
+                bincode :tempRespArr[obj].bincode,
+                citadCode:tempRespArr[obj].citadCode,
+                customerNo: "",
+                fancyName :"",
+                partnerCode:"",
+                partnerName: tempRespArr[obj].transToBank,
+                payeeType:"",
+                peopleName: tempRespArr[obj].partnerName,
+                provinceCode:"",
+                shortname:"",
+                transType: typeTranferD,
+                transValue:tempRespArr[obj].partnerNumber,
+                transactionId : ""
+            }
+        }else if(gEdit === 5){
+//            var content = document.getElementById('info_8').innerHTML.split("~");
+            var content = tempRespArr[obj].transContent.split("~");
+            // qua CMTND
+            //su dung callbackContactTranfer
+            objectVal = {
+                bank_code:"",
+                bincode:"",
+                citadCode:tempRespArr[obj].citadCode,
+                customerNo:"", // support
+                fancyName:"",
+                ngay_cap_cmnd:content[2],
+                noi_cap_cmnd:content[1],
+                partnerCode:content[2],
+                partnerName:tempRespArr[obj].transToBank,
+                payeeType:"",
+                peopleName:tempRespArr[obj].partnerName,
+                provinceCode:content[1],
+                shortname:"",
+//                so_cmnd:valDiv.childNodes[4].innerHTML,
+                so_cmnd:"",
+                transType:"CMND",
+                transValue: tempRespArr[obj].partnerNumber,
+//                transactionId:valDiv.childNodes[0].innerHTML,
+                transactionId:"",
+                numReceive :content[3]
+            }
+               
+        }
+       modalDialog.fireCallBack(objectVal);
+    }catch(e){}
+}
+function deleteRecent(idNo){
+    showPopUpDelete(idNo);
+}
+function saveRecent(idNo1){
+    showPopUpSave(idNo1)
+}

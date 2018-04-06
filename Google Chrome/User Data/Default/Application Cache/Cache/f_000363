@@ -1,0 +1,814 @@
+/**
+ * Created by HuyNT2.
+ * Update: HuyNT2
+ * Date: 11/4/13
+ * Time: 5:35 PM
+ */
+function goBack() {
+	navController.popView(true);
+}
+// get bank list from MBCore
+var flag_check = false;
+contentDetail = function displayAccDetail(){
+	//Content of HTML
+	var nodeReviewInfo = document.getElementById('div-datainfo');
+	nodeReviewInfo.innerHTML = displayContentNew();
+}();
+
+
+function viewBackFromOther() {
+    logInfo('Back from other view');
+    flag_check = true;
+//	setDefaultInfo(newCusInfoObj);
+}
+function displayContentNew(){
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var data = new Array();
+        var row1 = [CONST_STR.get('ACCOUNT_TYPE'), CONST_STR.get('GOLD_WITHDRAW_ACCOUNT_CURRENT')];
+        var row2 = [CONST_STR.get('OPEN_DATE_OF_ACC'), loanObjOverdraft.ngay_mo_tk];
+        var row3 = [CONST_STR.get('CURRENCY'), loanObjOverdraft.currency];
+        var row4 = [CONST_STR.get('BRANCH_OF_ACC'), loanObjOverdraft.branch_name];
+        var row5 = [CONST_STR.get('OVERDRAFT_INTEREST'), loanObjOverdraft.rate1+ CONST_STR.get('LOAN_PERCENT') + " / "+ CONST_STR.get('LOAN_YEAR')];
+        var row6 = [CONST_STR.get('ACCOUNT_BALANCE_TITLE'), loanObjOverdraft.so_du +" "+loanObjOverdraft.currency];
+        var row7 = [CONST_STR.get('VALUE_DATE1'), loanObjOverdraft.ngay_bat_dau_hmtc];
+        var row8 = [CONST_STR.get('EXPIRED_DATE'), loanObjOverdraft.ngay_ket_thuc_hmtc];
+        var row9 = [CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'), ((parseFloat(loanObjOverdraft.so_du_kha_dung) < 0) ? 0 : loanObjOverdraft.so_du_kha_dung + " " +loanObjOverdraft.currency)];
+        var row10 = [CONST_STR.get('OVERDRAFT_LIMIT'), loanObjOverdraft.han_muc_thau_chi+" "+loanObjOverdraft.currency];
+        var row11 = [CONST_STR.get('ACCRUED_CREDIT_INTEREST'), loanObjOverdraft.lai_du_chi+" "+loanObjOverdraft.currency];
+        var row12 = [CONST_STR.get('ACCRUED_DEBIT_INTEREST'), loanObjOverdraft.lai_du_thu+" "+loanObjOverdraft.currency];
+
+        data = [row1, row2, row3, row4,row5, row6, row7, row8, row9, row10, row11, row12];
+//        var divAccInfo = document.getElementById('info-info-desktop');
+        var contentHTML = "";
+        console.log(CONST_BROWSER_MODE);
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            var recycler = new RecyclerView({
+                type: "DESKTOP_GRID",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+
+            recycler.setData(data);
+            contentHTML = recycler.init();
+        }else{
+            var recycler = new RecyclerView({
+                type: "NORMAL",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+
+            recycler.setData(data);
+            contentHTML = recycler.init();
+        }
+        return contentHTML;
+    }
+    else {
+	var content = "";
+	content += "<table width='98%' align='center' class='recycler-table-ebank'>"+
+			   //ROW 1
+
+				   "<tr class='recycler-row-parity'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('ACCOUNT_TYPE')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+CONST_STR.get('GOLD_WITHDRAW_ACCOUNT_CURRENT')+"</td>"+
+				   "</tr>"+
+				   "<tr class='recycler-row-as'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('OPEN_DATE_OF_ACC')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.ngay_mo_tk+"</td>"+
+				   "</tr>"+
+
+			   //ROW 2
+					"<tr class='recycler-row-parity'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('CURRENCY')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.currency+"</td>"+
+					"</tr>"+
+					 "<tr class='recycler-row-as'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('BRANCH_OF_ACC')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.branch_name+"</td>"+
+				   "</tr>"+
+			   //ROW 3
+					"<tr class='recycler-row-parity'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+ CONST_STR.get('OVERDRAFT_INTEREST')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.rate1+"%/"+ CONST_STR.get('LOAN_YEAR') +"</td>"+
+					"</tr>"+
+					"<tr class='recycler-row-as'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('ACCOUNT_BALANCE_TITLE')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.so_du+"</td>"+
+					"</tr>"+
+			   //ROW 4
+
+					"<tr class='recycler-row-parity'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('VALUE_DATE1')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.ngay_bat_dau_hmtc+"</td>"+
+				   "</tr>"+
+					"<tr class='recycler-row-as'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('EXPIRED_DATE')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.ngay_ket_thuc_hmtc+"</td>"+
+					"</tr>"+
+			    //ROW 5
+				   "<tr class='recycler-row-parity'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+((parseFloat(loanObjOverdraft.so_du_kha_dung) < 0) ? 0 : loanObjOverdraft.so_du_kha_dung)+"</td>"+
+				   "</tr>"+
+				   "<tr class='recycler-row-as'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('OVERDRAFT_LIMIT')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.han_muc_thau_chi+"</td>"+
+				    "</tr>"+
+
+			   //ROW 6
+					"<tr class='recycler-row-parity'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('ACCRUED_CREDIT_INTEREST')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.lai_du_chi+"</td>"+
+					"</tr>"+
+				    "<tr class='recycler-row-as'>"+
+						"<td class='recycler-row-align-midle-left-opacity'>"+CONST_STR.get('ACCRUED_DEBIT_INTEREST')+"</td>"+
+						"<td class='recycler-row-align-midle-right-opacity'>"+loanObjOverdraft.lai_du_thu+"</td>"+
+					"</tr>"+
+			   "</table>"
+			   ;
+	return content;
+    }
+}
+
+//this function to display content of each Loan
+/*function displayContent(){
+	var content = "";		
+		content = content+
+			"<tr><td>"+
+			"<table width='92%' align='center' class='background-blacktrans'>" + 
+			
+				"<tr class='trow-default'>" + "<td class='td-left'>" + 
+					CONST_STR.get('ACCOUNT_ACC_NO_TITLE')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.acc_number + 
+				"</td></tr>" + 
+				
+				"<tr class='trow-default'>" + "<td class='td-left'>" + 
+					CONST_STR.get('ACCOUNT_TYPE')+
+				"</td>" + "<td class='td-right'>" + 
+					CONST_STR.get('GOLD_WITHDRAW_ACCOUNT_TITLE')+ //Hard fixed
+				"</td></tr>" + 
+				//3
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('CURRENCY')+ 
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.currency+
+				"</td></tr>" + 
+				//4
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('OVERDRAFT_INTEREST')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.rate+"%"+
+				"</td></tr>" + 
+				//5
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('ACCOUNT_BALANCE_TITLE')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.so_du+
+				"</td></tr>" + 
+				//6
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.so_du_kha_dung+ 
+				"</td></tr>" +
+				//7
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('OVERDRAFT_LIMIT')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.han_muc_thau_chi+ 
+				"</td></tr>" +
+				//8
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('OPEN_DATE_OF_ACC')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.ngay_mo_tk+ 
+				"</td></tr>" +
+				//9
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('BRANCH_OF_ACC')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.branch_name+ 
+				"</td></tr>" +
+				//10
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('VALUE_DATE1')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.ngay_bat_dau_hmtc+ 
+				"</td></tr>" +
+				//11
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('EXPIRED_DATE')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.ngay_ket_thuc_hmtc+ 
+				"</td></tr>" +
+				//12
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('ACCRUED_CREDIT_INTEREST')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.lai_du_chi+ 
+				"</td></tr>" +
+				//13
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('ACCRUED_DEBIT_INTEREST')+
+				"</td>" + "<td class='td-right'>" + 
+					loanObjOverdraft.lai_du_thu+ 
+				"</td></tr>";
+		
+		content = content + "</table></td></tr></table>";
+	return content;
+}*/
+
+//event start unload page
+document.addEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+
+function handleStartUnloadPage(e) {
+	if ((e.type == "evtStartUnloadPage") && (currentPage == "loan/loan-overdraft-info-detail")) {
+		document.removeEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+		document.removeEventListener("evtScrollToIdx", handleScrollToLoanIdx, false);
+	}
+}
+
+/*SAO KE LAI THAU CHI - start*/
+var gprsResp = new GprsRespObj("","","","");
+var arrAllHisObj = new Array();
+var totalPage = 0;
+var itemsPerPage = 10;
+var pageIndex = 1;
+var xslAccHisTable ;
+
+function viewDidLoadSuccess() {	  
+	//set up calendar
+	//set up calendar
+	var today = new Date();						
+	var dd = today.getDate();						
+	var mm = today.getMonth()+1; //January is 0!						
+	var yyyy = today.getFullYear();						
+	
+	var prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());	
+			
+	if(dd<10) {						
+		dd='0'+dd;					
+	} 						
+							
+	if(mm<10) {						
+		mm='0'+mm;					
+	} 						
+							
+	today = yyyy+'-'+mm+'-'+dd;						
+							
+	var fromDate;						
+	var toDate;						
+							
+	if (gUserInfo.lang == 'VN') {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('acchis.fromdate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2005',			
+				range_max    : '01-01-2051',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.fromdate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('acchis.todate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2005',			
+				range_max    : '01-01-2051',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.todate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+							
+	}						
+	else {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('acchis.fromdate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2005',			
+				range_max    : '01-01-2051',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',			
+				dom_field    : document.getElementById('span.fromdate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('acchis.todate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2005',			
+				range_max    : '01-01-2051',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',			
+				dom_field    : document.getElementById('span.todate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);				
+	}						
+	
+	fromDate.select(prevMonth);			
+	toDate.select(today);	
+	document.getElementById('id.overDraftInfo').style.display ='none';
+	document.getElementById('total').style.display ='none';
+	document.getElementById('title').style.display ='none'; 
+	document.getElementById('acc.pagination').style.display='none';
+	document.getElementById('acchis-exportFunc').style.display='none';
+}
+
+/*** SEND REQUEST ***/
+function sendJSONRequest() {	
+	var data = {};
+	var arrayArgs = new Array();	
+	
+	var inAccObj = getSelectedAccInfoObj();
+	var fromDateNode = document.getElementById('acchis.fromdate');
+	var toDateNode = document.getElementById('acchis.todate');
+	
+	if(!isValidDate(fromDateNode.value) || !isValidDate(toDateNode.value)) {
+		showAlertText(CONST_STR.get('ACC_HIS_WRONG_DATE_FORMAT'));
+		return;
+	}
+	var numDays = getDiffDaysBetween(fromDateNode.value, toDateNode.value, 'dd/MM/yyyy');
+	
+	var today = new Date();
+	var numDaysYear = getDiffDaysBetween(fromDateNode.value, getStringFromDate(today), 'dd/MM/yyyy');
+	var compareDays = getDiffDaysBetween(fromDateNode.value, '25/07/2015', 'dd/MM/yyyy');
+	if(numDaysYear > 365) {
+		showAlertText(CONST_STR.get('ACC_HIS_DATE_OVER_1YEAR'));
+		return;
+	}
+	//ngocdt3 tam thoi comment de phucvh test
+	if(compareDays > 0) {
+		showAlertText(CONST_STR.get('LOAN_SB_OD_OVERDRAFT_INTEREST_DATES'));
+		return;
+	}
+	
+	if(numDays < 0 || numDaysYear < 0) {
+		showAlertText(CONST_STR.get('ACC_HIS_INVALID_QUERY_DATE'));
+		return;
+	}
+	if(numDays > 92) {//20170921 ngocdt3 chinh sua ngya tra cuu len 92
+		showAlertText(CONST_STR.get('ACC_HIS_DATE_OVER_90DAYS'));
+		return;
+	}
+	arrayArgs.push(loanObjOverdraft.acc_number);
+	arrayArgs.push(fromDateNode.value); //from date
+	arrayArgs.push(toDateNode.value); //to date	
+	arrayArgs.push(loanObjOverdraft.ngay_bat_dau_hmtc); //to date	
+	arrayArgs.push(loanObjOverdraft.ngay_ket_thuc_hmtc); //to date	
+	arrayArgs.push(loanObjOverdraft.han_muc_thau_chi); //to date	
+		
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get('CMD_TYPE_VIEW_INFO_OVERDRAFT'), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+function requestMBServiceSuccess(e) {
+	gprsResp = parserJSON(e);
+	//setRespObjStore(gprsResp); //store response
+	
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get('CMD_TYPE_VIEW_INFO_OVERDRAFT'))))
+	{
+		var transType = document.getElementById('pagination-clean').children;
+		for(var i = 0; i < transType.length; i++){
+			if(transType[i].className = "active"){
+				transType[i].className = "normal";				
+			}
+		}
+		itemsPerPage =10;
+		transType[1].className = "active";
+		parserLoanOverdraftInfo(gprsResp);
+		document.getElementById('id.overDraftInfo').style.display ='';
+		document.getElementById('total').style.display ='';
+		document.getElementById('title').style.display =''; 
+	}
+}
+
+function requestMBServiceFail(e) {	
+}
+
+function parserLoanOverdraftInfo(inResp) {
+	if((inResp.arguments == undefined) || (inResp.arguments.length < 2)) {
+		resetViewWhenChangeAcc();
+		var tmpNode = document.getElementById('id.overDraftInfo');
+		tmpNode.innerHTML = CONST_STR.get('ACC_HIS_NO_DATA_FOUND');//"Không có dữ liệu";
+		return;
+	}
+	arrAllHisObj = new Array();
+	totalPage = 0;	
+	//set link download file at index 0
+	var tmpLinkFile = inResp.arguments[0];
+	setDownloadFileAccHis(tmpLinkFile);	
+	
+	//start index from 1	
+	tonglai=0;	
+	for(var i=1; i<inResp.arguments.length; i++) {
+		var tmpStrArgs = inResp.arguments[i].split('#');
+		var tmpOverdraftInfo = new TransactionHistoryObj();
+		tmpOverdraftInfo.fromdate = tmpStrArgs[0];
+		tmpOverdraftInfo.toDate = tmpStrArgs[1];
+		tmpOverdraftInfo.dateNum = tmpStrArgs[2];
+		tmpOverdraftInfo.rate = tmpStrArgs[3];
+		tmpOverdraftInfo.curLai = tmpStrArgs[4];
+		tmpOverdraftInfo.estimate = tmpStrArgs[5];		
+		tmpOverdraftInfo.flagLai = tmpStrArgs[6];
+		tonglai= parseFloat(tmpStrArgs[5].replace(/,/g, '')) + parseFloat(tonglai);		
+		arrAllHisObj.push(tmpOverdraftInfo);
+	}
+	
+	if(arrAllHisObj.length > 0) {
+		//show button export file
+		var nodeExport = document.getElementById('acchis-exportFunc');
+		nodeExport.style.display = 'block';
+		var nodeOverDraft = document.getElementById('sumOverdraft');
+		nodeOverDraft.style.display = 'block';
+		var pagingOverDraft = document.getElementById('acc.pagination');
+		pagingOverDraft.style.display = 'block';
+		
+		//total page
+		totalPage = calTotalPage(arrAllHisObj);					
+		//save history transaction		
+		var inAccObj = getSelectedAccInfoObj();
+		inAccObj.transactionHistory = arrAllHisObj;
+		
+		//gen page indicator
+		pageIndex = 1;
+		genPagging(totalPage);
+		
+		
+		//get object per page
+		var arrMedial = new Array();
+		
+		arrMedial = getItemsPerPage(arrAllHisObj, pageIndex);
+		genXMLHistoryDoc(arrMedial);
+		var tmpNode = document.getElementById('total');	
+		tmpNode.innerHTML = tonglai.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+		/*var tmpXmlDoc = genXMLHistoryDoc(arrMedial);
+		xslAccHisTable = getCachePageXsl("loan/loan-table");
+		var tmpXslDoc = xslAccHisTable;
+		genHTMLStringWithXMLScrollto(tmpXmlDoc, tmpXslDoc, function(oStr){
+			var tmpNode = document.getElementById('id.overDraftInfo');
+			tmpNode.innerHTML = oStr;			
+		},null,null,document.getElementById('parse_transaction'));
+		var tmpNode = document.getElementById('total');	
+		tmpNode.innerHTML = tonglai.toFixed(2).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");*/
+		
+	}	
+}
+
+function genXMLHistoryDoc(inHisArray) {
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var arrTitle = new Array();
+        arrTitle.push(CONST_STR.get('HIS_CHOOSE_START_DATE'));
+        arrTitle.push(CONST_STR.get('HIS_CHOOSE_END_DATE'));
+        arrTitle.push(CONST_STR.get('LOAN_NUMBER_DAYS'));
+        arrTitle.push(CONST_STR.get('LOAN_OVERDRAFT_INTEREST2'));
+        arrTitle.push(CONST_STR.get('LOAN_ACCOUNT_BALANCE'));
+        arrTitle.push(CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_INT_A'));
+        arrTitle.push(CONST_STR.get('LOAN_NOTE'));
+
+        var arrContentData = new Array();
+        arrContentData.push(arrTitle);
+
+        var arrItemContent;
+        var contentHTML="";
+        for(var i = 0; i < inHisArray.length; i++) {
+            var tmpHisObj = inHisArray[i];
+            arrItemContent = new Array();
+            arrItemContent.push(tmpHisObj.fromdate);
+            arrItemContent.push(tmpHisObj.toDate);
+            arrItemContent.push(tmpHisObj.dateNum);
+            arrItemContent.push(parseFloat(tmpHisObj.rate).toFixed(2));
+            arrItemContent.push(tmpHisObj.curLai);
+            arrItemContent.push(tmpHisObj.estimate);
+            if(tmpHisObj.flagLai==1){
+                arrItemContent.push(CONST_STR.get('LOAN_OVERDRAFT_LAITRONG'));
+            }else if(tmpHisObj.flagLai==3){
+                arrItemContent.push(CONST_STR.get('LOAN_OVERDRAFT_LAINGOAI'));
+            }
+
+            arrContentData.push(arrItemContent);
+        }
+        var recycler = new RecyclerView({
+            type: "DESKTOP_LIST",
+            typeTextAlign: "MIDLE",
+            title: "Tài khoản online",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+        recycler.setData(arrContentData);
+        contentHTML = recycler.init();
+        document.getElementById('id.overDraftInfo').innerHTML=contentHTML;
+    }else{
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+    var contentHTMLs = "";
+	var row1 = new Array();
+	var row2 = new Array();
+	var row3 = new Array();
+	var row4 = new Array();
+	var row5 = new Array();
+	var row6 = new Array();
+	var row7 = new Array();
+	var data = new Array();
+	var tmpXmlRootNode = createXMLNode('resptable', '', docXml);
+	var tmpXmlNodeTitle = createXMLNode('tabletitle', '', docXml, tmpXmlRootNode);	
+	var tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('HIS_CHOOSE_START_DATE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('HIS_CHOOSE_END_DATE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('LOAN_NUMBER_DAYS'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('LOAN_OVERDRAFT_INTEREST2'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle5', CONST_STR.get('LOAN_ACCOUNT_BALANCE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle6', CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_INT_A'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle7', CONST_STR.get('LOAN_NOTE'), docXml, tmpXmlNodeTitle);
+	
+	for(var i = 0; i < inHisArray.length; i++) {
+		var tmpHisObj = inHisArray[i];
+		var tmpXmlNodeInfo = createXMLNode('tabletdetail', '', docXml, tmpXmlRootNode);
+		
+		tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('HIS_CHOOSE_START_DATE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent1', tmpHisObj.fromdate, docXml, tmpXmlNodeInfo);
+		row1=[CONST_STR.get('HIS_CHOOSE_START_DATE'),tmpHisObj.fromdate];
+		
+		tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('HIS_CHOOSE_END_DATE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent2', tmpHisObj.toDate, docXml, tmpXmlNodeInfo);
+		row2=[CONST_STR.get('HIS_CHOOSE_END_DATE'),tmpHisObj.toDate];
+		
+		tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('LOAN_NUMBER_DAYS'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent3', tmpHisObj.dateNum, docXml, tmpXmlNodeInfo);
+		row3=[CONST_STR.get('LOAN_NUMBER_DAYS'),tmpHisObj.dateNum];
+		
+		tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('OVERDRAFT_INTEREST'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent4', parseFloat(tmpHisObj.rate).toFixed(2), docXml, tmpXmlNodeInfo);
+		row4=[CONST_STR.get('OVERDRAFT_INTEREST'),parseFloat(tmpHisObj.rate).toFixed(2)];
+		
+		tmpChildNode = createXMLNode('coltitle5', CONST_STR.get('LOAN_ACCOUNT_BALANCE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent5',tmpHisObj.curLai, docXml, tmpXmlNodeInfo);
+		row5=[CONST_STR.get('LOAN_ACCOUNT_BALANCE'),tmpHisObj.curLai];
+		
+		tmpChildNode = createXMLNode('coltitle6', CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_INT_A'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent6', tmpHisObj.estimate, docXml, tmpXmlNodeInfo);
+		row6=[CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_INT_A'),tmpHisObj.estimate];
+		
+		tmpChildNode = createXMLNode('coltitle7', CONST_STR.get('LOAN_NOTE'), docXml, tmpXmlNodeInfo);
+		if(tmpHisObj.flagLai==1){
+			tmpChildNode = createXMLNode('colcontent7', CONST_STR.get('LOAN_OVERDRAFT_LAITRONG'), docXml, tmpXmlNodeInfo);
+			row7=[CONST_STR.get('LOAN_NOTE'),CONST_STR.get('LOAN_OVERDRAFT_LAITRONG')];
+		}else if(tmpHisObj.flagLai==3){
+			tmpChildNode = createXMLNode('colcontent7', CONST_STR.get('LOAN_OVERDRAFT_LAINGOAI'), docXml, tmpXmlNodeInfo);
+			row7=[CONST_STR.get('LOAN_NOTE'),CONST_STR.get('LOAN_OVERDRAFT_LAINGOAI')];
+		}
+		data.push(row1);
+        data.push(row2);
+        data.push(row3);
+        data.push(row4);
+        data.push(row5);
+        data.push(row6);
+		data.push(row7);
+		var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Tài khoản online",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+        recycler.setData(data);
+        var contentHTML = recycler.init();
+        contentHTMLs += contentHTML + "<div class='trow-space'></div>"
+        data = [];
+    }
+		
+	//	var tmpChildNode = createXMLNode('content', contentHTML, docXml, tmpXmlNodeInfo);
+
+	document.getElementById('id.overDraftInfo').innerHTML=contentHTMLs;
+	//return docXml;
+}
+}
+
+//OTHER FUNCTION
+
+function setDownloadFileAccHis(inLink) {	
+	var nodeLoadFile = document.getElementById('acchis.exportfile');
+	nodeLoadFile.setAttribute('onClick', 'window.open("' + inLink + '")');
+}
+
+function printAccHistory() {	
+	var div1 = 99;
+	for (i=0;i<document.getElementById("mainViewContent").childNodes.length;i++)
+	{					
+		if (document.getElementById("mainViewContent").childNodes[i].nodeType == 1)
+		{
+			if (div1 == 99)
+			{
+				div1 = i;	
+				break;
+			}
+		}
+	}
+	
+	var printNode = document.getElementById("mainViewContent").childNodes[div1];	
+	printNodeWithAll(printNode);
+}
+
+//RESET VIEW
+function resetViewWhenChangeAcc() {
+	document.getElementById('id.overDraftInfo').innerHTML = '';
+	document.getElementById('acc.pagination').innerHTML = '';
+	document.getElementById('acchis-exportFunc').style.display = 'none';
+	document.getElementById('sumOverdraft').style.display = 'none';
+}
+
+//EVENT SELECTED PAGE
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	pageIndex = selectedIdx;
+	
+	var arrMedial = new Array();
+	arrMedial = getItemsPerPage(arrAllHisObj, selectedIdx);
+	//gen xml
+	var tmpXmlDoc = genXMLHistoryDoc(arrMedial);
+	//gen xsl
+	var tmpXslDoc = xslAccHisTable;
+	
+	genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('id.overDraftInfo');
+		tmpNode.innerHTML = oStr;
+	});	
+}
+
+//GEN PAGGING
+
+function genPagging(arr, pageIndex) {
+	var nodepage = document.getElementById('acc.pagination');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}		
+	}	
+	return arrTmp;
+}
+
+// Set active cho item chon hien thi 
+function changeClass(el, selectedItem)
+{
+	var transType = document.getElementById('pagination-clean').children;
+	for(var i = 0; i < transType.length; i++){
+		if(transType[i].className = "active"){
+			transType[i].className = "normal";
+		}
+	}
+	el.className = "active";
+	if(selectedItem == 0){
+		itemsPerPage = 10;
+	} else if(selectedItem == 1){
+		itemsPerPage = 30;
+	} else if(selectedItem == 2){
+		itemsPerPage = 50;
+	} else {
+		itemsPerPage = gprsResp.arguments.length - 1;
+	}	
+	parserLoanOverdraftInfo(gprsResp);
+}

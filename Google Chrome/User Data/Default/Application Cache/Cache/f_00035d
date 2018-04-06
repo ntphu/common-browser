@@ -1,0 +1,877 @@
+/**
+ * Created by ThuanTM.
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+var arrSav;
+var amountSav = "";
+var rateSav   = "";
+var status_Adjust = false;
+var arr1={};
+var arr2={};
+
+//get Loan from MBCore
+//Create function getLoanInfoContent and execute immediately.
+applyVerticalScrollPage(true, -180);
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	status_Adjust = true;
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	navController.getActionBar().setTitleBarOnly(CONST_STR.get('LOAN_ADJUST_SB_OD_TITLE'));
+	navController.getActionBar().hideNavHeaderBar();
+	navController.getActionBar().setHavingBackground(false);
+	logInfo('transfer load success');
+	if(status_Adjust) {
+		logInfo('no load loan');
+		status_Adjust = false;
+		//addLoanSaving();
+		refreshArrayWhenBackpage();
+        //refreshSwitchUICheckbox();
+	}
+	else {
+		logInfo('load loan successed');
+		document.getElementById('limitODAD').value="";
+		document.getElementById('rateODAD').value="";			
+		isIncrease =2;	
+		changeTextForCombo(isIncrease);
+		getLoanInfoAdjust();
+	}
+
+}
+//function refreshSwitchUICheckbox(){
+//    var checkboxElArr = document.getElementsByTagName('INPUT');
+//        for(i =0;i<checkboxElArr.length;i++){
+//            if(checkboxElArr[i].type == 'checkbox'){
+//                changeSwitchUI(checkboxElArr[i].parentNode);
+//            }
+//        }
+//}
+
+function changeTextForCombo(isIncrease){
+	
+	var tmpArray1 = (gUserInfo.lang == 'EN')? ['Lift my overdraft limit', 'Make lower my overdraft limit']:[CONST_STR.get('LIFT_MY_OD_LIMIT'), CONST_STR.get('LOWER_MY_OD_LIMIT')];
+	if(isIncrease == 2)
+	{
+		document.getElementById("id.limitOD").value = tmpArray1[0];
+	}
+	else{
+		document.getElementById("id.limitOD").value = tmpArray1[1];
+	}
+	
+}
+
+function showAll(){
+	document.getElementById("mainViewContent").style.display='';
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+function viewWillUnload() {
+	logInfo('transfer will unload');
+    document.removeEventListener("evtChangeWidthDesktop",parserLoanSaving,false);
+    document.removeEventListener("evtChangeWidthMobile",parserLoanSaving,false);
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+
+//getLstLoanSaving = 
+function getLoanInfoAdjust(){
+	var data = {};	
+	var arrayArgs = new Array();
+	var userCIFAccount = gCustomerNo;
+	arrayArgs.push(userCIFAccount);
+
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_ADJUST_SB_OVERDRAFT"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}//();
+
+
+//event scroll to index
+document.addEventListener("evtScrollToIdx", handleScrollToLoanIdx, false);
+
+function handleScrollToLoanIdx(e) {
+	 if ((e.type == "evtScrollToIdx") && (currentPage == "loan/loan-adjust-standby-overdraft")) {
+		/*setTimeout(function() {
+			document.removeEventListener("evtScrollToIdx", evtFunc);
+		}, 100);*/
+		idxAcc = e.scrolledToIdx;
+		var tmpAcc = new AccountObj();
+		tmpAcc = gESavingObjs[e.scrolledToIdx];
+		updateAccDetail(tmpAcc);
+	}
+}
+
+//event start unload page
+document.addEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+
+function handleStartUnloadPage(e) {
+	if ((e.type == "evtStartUnloadPage") && (currentPage == "loan/loan-adjust-standby-overdraft")) {
+		document.removeEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+		document.removeEventListener("evtScrollToIdx", handleScrollToLoanIdx, false);
+	}
+}
+
+//handle
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	//remove listener which added above (Callback function)
+	isIncrease =2;
+	gprsResp = parserJSON(e);
+	gRespObj = gprsResp; 
+	if ((gprsResp.respCode == '0') 
+		&& (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_ADJUST_SB_OVERDRAFT")))) 
+	{	
+		showAll();
+		parserLoanSaving();
+        document.addEventListener("evtChangeWidthDesktop",parserLoanSaving,false);
+        document.addEventListener("evtChangeWidthMobile",parserLoanSaving,false);
+        //refreshSwitchUICheckbox();
+		logInfo('request loan saving list successed');			
+	}
+	else if ((gprsResp.respCode != '0') && 
+	((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_ADJUST_SB_OVERDRAFT"))  
+	|| (gprsResp.responseType == '-1')))) {
+		//When click OK (Dialog) then Opening Left menu avaiable.
+		//navController.initWithRootView('account/account-scr', true);
+		/*
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		*/
+		
+		var tmpPageName = "";
+		var tmpPageType = "";
+				
+		if (gprsResp.respCode == '508')		
+		{
+			document.addEventListener('closeAlertView', gotoOpenStandbyOverdraftPage, false);
+			return;					
+		}
+		else
+		{
+			tmpPageName = navController.getDefaultPage();
+			tmpPageType = navController.getDefaultPageType();	
+		}
+		
+		navController.pushToView(tmpPageName, true, tmpPageType);
+	}
+}
+function gotoOpenStandbyOverdraftPage(e){
+	if ((e.type == "closeAlertView") && (currentPage == "loan/loan-adjust-standby-overdraft")) {
+		tmpPageName = "loan/loan-open-standby-overdraft";
+		tmpPageType = "xsl";	
+		// navController.pushToView(tmpPageName, true, tmpPageType);
+		navController.getBottomBar().setSelectedtAtIndexWithID(1, 'loan-info-overdreaft');
+	}
+}
+//parser info
+function parserLoanSaving() {
+	arrSav = new Array();
+	arrSavAdjust1 = new Array();
+	arrSavAdjust2 = new Array();
+	gOverdraft = new Overdraft();
+	if((gRespObj.arguments == undefined) || (gRespObj.arguments == null) || (gRespObj.arguments.length==0)) {
+		document.addEventListener('closeAlertView', handleAlertEmptyLoan, false);
+		showAlertText(CONST_STR.get('ERR_EMPTY_LOAN_ACCOUNT'));//sửa ở đây
+		return;
+	}
+	var flag = '';
+	for (var i=0; i<gRespObj.arguments.length; i++) {
+		if(gRespObj.arguments[i]=='ACC_OVERDRAFT'){
+			flag = 'ACC_OVERDRAFT'; continue;
+		}
+		if(gRespObj.arguments[i]=='LST_NOT_SB_OL'){
+			flag = 'LST_NOT_SB_OL';continue;
+		}
+		if(gRespObj.arguments[i]=='LST_SAVING_SB'){
+			flag = 'LST_SAVING_SB';continue;
+		}
+		//--GET INFO ACC OVERDRAFT
+		if(flag == 'ACC_OVERDRAFT'){
+			var tmpArr = gRespObj.arguments[i].split("#");	
+			gOverdraft.cif = tmpArr[0];
+			gOverdraft.accOverdraft = tmpArr[1];
+			gOverdraft.limitODStandby = tmpArr[2];
+			gOverdraft.odLimit = tmpArr[3];
+			gOverdraft.limitODCurrent = tmpArr[4];
+			gOverdraft.interestRateOD = tmpArr[5];
+			gOverdraft.limitODUse = tmpArr[6];
+			gOverdraft.effectiveDate = tmpArr[7];
+			gOverdraft.valueDate = tmpArr[8];
+			gOverdraft.blockAmountSaving = tmpArr[9];
+			gOverdraft.blockAmountSavingActive = tmpArr[10];
+			gOverdraft.acy_Accrued_dr_ic = tmpArr[11];
+		}
+		//--GET LIST SAVING NOT STANDBY OL
+		if(flag == 'LST_NOT_SB_OL'){
+			var tmpLoan = new LoanSaving();	
+			var tmpArr = gRespObj.arguments[i].split("#");	
+			tmpLoan.accountSaving = tmpArr[0];
+			tmpLoan.amountConvert = tmpArr[1];
+			tmpLoan.currency	  = tmpArr[2];
+			tmpLoan.sendDate	  = tmpArr[3];
+			tmpLoan.dueDate		  = tmpArr[4];
+			tmpLoan.accOverdraft  = tmpArr[5];
+			tmpLoan.branchOpen    = tmpArr[6];
+			arrSavAdjust2.push(tmpLoan);
+		}
+		//--GET LIST SAVING STANDBY
+		if(flag == 'LST_SAVING_SB'){
+			var tmpLoan = new LoanSaving();	
+			var tmpArr = gRespObj.arguments[i].split("#");						
+			tmpLoan.accountSaving = tmpArr[0];
+			tmpLoan.amountConvert = tmpArr[1];
+			tmpLoan.currency	  = tmpArr[2];
+			tmpLoan.sendDate	  = tmpArr[3];
+			tmpLoan.dueDate		  = tmpArr[4];
+			tmpLoan.accOverdraft  = tmpArr[5];
+			tmpLoan.branchOpen    = tmpArr[6];
+			arrSavAdjust1.push(tmpLoan);
+			logInfo('Push vao so luong'+tmpLoan.amountConvert);
+			arrSav.push(tmpLoan);
+		}
+	}
+	//update view
+	fillDataToHTMLFile(arrSavAdjust1,arrSavAdjust2);
+	var node = document.getElementById('rateODAD');
+	node.value = "80";
+	handleInputAmount(node);
+}
+//add loanSaving to arrSav
+function addLoanSaving(){
+	arrSav = new Array();
+	for(var i = 0; i<arrSavAdjust1.length; i++){
+		arrSav.push(arrSavAdjust1[i]);
+	}
+}
+//event listener: http request fail
+function requestMBServiceFail(e){
+	//navController.initWithRootView('account/account-scr', true);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.pushToView(tmpPageName, true, tmpPageType);
+	document.addEventListener('closeAlertView', handleAlertEmptyLoan, false);
+	showAlertText(CONST_STR.get('ERR_EMPTY_LOAN_ACCOUNT'));
+};
+
+//event alert
+function handleAlertEmptyLoan(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "loan/loan-adjust-standby-overdraft")) {
+		document.removeEventListener('closeAlertView', handleAlertEmptyLoan, false);
+		//navController.initWithRootView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+//this function to fill all data to HTML
+function fillDataToHTMLFile(arr1, arr2) {	
+	//Content of HTML
+	
+	document.getElementById('section1').innerHTML = getHTMLSection1(arr1);
+	if(arrSavAdjust2.length>0){		
+		document.getElementById('section2').innerHTML = getHTMLSection2(arr2);
+	}
+	document.getElementById('valueLimitOD').innerHTML =String(gOverdraft.limitODStandby) ;
+}
+function getHTMLTitle(){
+	var htmlTMP = "";
+	htmlTMP += "<tr><td><table width='100%' align='center' class='accinfo-table'>";
+	// htmlTMP += 
+	// 		'<tr class="trow-title">'+
+			
+	// 		'<th width="20%">' + CONST_STR.get('LOAN_AD_SAVING_ACC') +
+	// 		'</th><th width="20%">' + CONST_STR.get('LOAN_AD_AMOUNT') + 
+	// 		'</th><th  width="8%">' + CONST_STR.get('LOAN_AD_CURRENCY') + 
+	// 		'</th><th width="20%">' + CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE')+
+	// 		'</th><th width="20%">' + CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE') + '</th>'+
+	// 		'<th width="8%">' + CONST_STR.get('LOAN_AD_SELECTION')  +
+	// 		'</th></td></tr>';
+			
+	/*htmlTMP = htmlTMP+ 
+					"<tr class='trow-default'>" + 
+						"<th class='td-header'>" +
+									CONST_STR.get('LOAN_AD_SELECTION') +
+						"</th>"+
+						"<th class='td-header'>" +
+									CONST_STR.get('LOAN_AD_SAVING_ACC') +
+						"</th>"+
+						"<th class='td-header'>" +
+									CONST_STR.get('LOAN_AD_AMOUNT') +
+						"</th>"+
+						"<th class='td-header'>" +
+									CONST_STR.get('LOAN_AD_CURRENCY') +
+						"</th>"+
+						"<th class='td-header'>" +
+									CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE')  +
+						"</th>"+
+						"<th class='td-header'>" +
+									CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE')  +
+						"</th>"+
+					"</tr>";*/
+	return htmlTMP;
+				
+}
+function enableCheckbox(){
+	
+	for(var i = 0; i<arrSavAdjust1.length; i++)
+	{		
+		if(arrSavAdjust1[i].branchOpen == 'QUAY' || arrSavAdjust1[i].accOverdraft!=''){	
+			document.getElementById(String(arrSavAdjust1[i].accountSaving)).disabled = true;
+			document.getElementById("clickChange_" + i).style.background = "#b3b3b3 !important";
+			document.getElementById("buttonBold_" + i).style.background = "#949494 !important";
+			document.getElementById("buttonBold_" + i).style.backgroundImage = "none !important";
+		}else{
+			document.getElementById(String(arrSavAdjust1[i].accountSaving)).disabled = false;
+			document.getElementById("clickChange_" + i).setAttribute('style','top:0px !important');
+			document.getElementById("buttonBold_" + i).setAttribute('style','');
+			document.getElementById("buttonBold_" + i).style.backgroundImage = "-webkit-linear-gradient(top, white 40%, #f0f0f0)";
+		}
+	}
+}
+
+function getHTMLSection1(arr1){
+	var htmlTMP = "";
+	 htmlTMP = htmlTMP+"<table width='100%' align='center' class='accinfo-table'>"+ 
+	 			//ROW INDEX
+				"<tr>"+
+					"<td>"+
+						"<h5 class ='Header'><span>"+
+						CONST_STR.get('LOAN_LST_SB_TITLE')+"</span></h5>"+
+					"</td>"+
+				"</tr>";
+				
+				//ROW TITLE
+		htmlTMP = htmlTMP + getHTMLTitle();
+		
+		for(var i = 0; i<arr1.length; i++)
+		{
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                var arrTitle = new Array();
+                arrTitle.push(CONST_STR.get('LOAN_AD_SAVING_ACC'));
+                arrTitle.push(CONST_STR.get('LOAN_AD_AMOUNT'));
+                arrTitle.push(CONST_STR.get('LOAN_AD_CURRENCY'));
+                arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'));
+                arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'));
+                arrTitle.push(CONST_STR.get('LOAN_AD_SELECTION'));
+
+                var arrContentData = new Array();
+                arrContentData.push(arrTitle);
+                for(var i=0;i<arr1.length;i++){
+                    var arrItemContent = new Array();
+                    arrItemContent.push(arr1[i].accountSaving);
+                    arrItemContent.push(formatNumberToCurrency(arr1[i].amountConvert));
+                    arrItemContent.push(arr1[i].currency);
+                    arrItemContent.push(arr1[i].sendDate);
+                    arrItemContent.push(arr1[i].dueDate);
+                   arrItemContent.push('<div onClick = "change_Saving('+i+',true,this);" style="top:0px !important; background: #b3b3b3 !important" class="custom-switch custom-switch-on"  id="clickChange_' + i + '">' +
+                       "<input type='checkbox' class='custom-switch-input custom-switch-input-on' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' name = 'limitAdjust1'  id = "+arr1[i].accountSaving+" checked='checked' disabled='disabled'>"+
+                       '<span class="custom-switch-label custom-switch-label-on" id="mng.payee.val" data-on="On" data-off="Off">on</span>'+
+                       '<span class="custom-switch-handle custom-switch-handle-on" id="buttonBold_' + i + '" style="background:#949494 !important"></span></div>');
+
+                    arrContentData.push(arrItemContent);
+                }
+
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_LIST",
+                    typeTextAlign: "MIDLE",
+                    opacity:false
+                });
+                recycler.setData(arrContentData);
+                htmlTMP +="<tr>"+"<td>"+ recycler.init()+"</td>"+"</tr>"+"</table></tr></table>";
+            }
+            else
+            {
+                htmlTMP = htmlTMP +
+                "<tr>" +
+                    '<td>'+ '<div class="recycler-list" id="recycler-list">' + '<table class="recycler-table-ebank" id="recycler-table-ebank">' +
+                        '<tr class="recycler-row-as" onClick = "change_Saving('+i+',true,this);">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get('LOAN_AD_SAVING_ACC')  + '</td><td class="recycler-row-align-midle-right">' +arr1[i].accountSaving+ '</td>' + '</tr>' +
+                        '<tr class="recycler-row-parity" onClick = "change_Saving('+i+',true,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_AMOUNT') + '</td><td class="recycler-row-align-midle-right">' + formatNumberToCurrency(arr1[i].amountConvert)  + '</td>' + '</tr>' +
+                        '<tr class="recycler-row-parity" onClick = "change_Saving('+i+',true,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_CURRENCY') + '</td><td class="recycler-row-align-midle-right">' +arr1[i].currency  + '</td>' + '</tr>' +
+                        '<tr class="recycler-row-parity" onClick = "change_Saving('+i+',true,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE') + '</td><td class="recycler-row-align-midle-right">' +arr1[i].sendDate + '</td>' + '</tr>' +
+                        '<tr class="recycler-row-parity" onClick = "change_Saving('+i+',true,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE') + '</td><td class="recycler-row-align-midle-right">' +arr1[i].dueDate+ '</td>' + '</tr>' +
+                        '<tr class="recycler-row-parity" onClick = "change_Saving('+i+',true,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_SELECTION') + '</td><td class="recycler-row-align-midle-right">'
+                         +'<div style="top:0px !important; background: #b3b3b3 !important" class="custom-switch custom-switch-on"  id="clickChange_' + i + '">' +
+                        "<input type='checkbox' class='custom-switch-input custom-switch-input-on' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' name = 'limitAdjust1'  id = "+arr1[i].accountSaving+" checked='checked' disabled='disabled'>"+
+                        '<span class="custom-switch-label custom-switch-label-on" id="mng.payee.val" data-on="On" data-off="Off">on</span>'+
+                        '<span class="custom-switch-handle custom-switch-handle-on" id="buttonBold_' + i + '" style="background:#949494 !important"></span></div>'+ '</td>' + '</tr>' +
+                            '</table>'+
+                        '</div>'+
+                    '</td>'+
+             '</tr>';
+		}
+        }
+		htmlTMP = htmlTMP+"</table></tr></table>";
+		return htmlTMP;
+}
+function getHTMLSection2(arr2){
+	var htmlTMP = "";
+	 htmlTMP = htmlTMP+"<table width='100%' align='center' class='accinfo-table'>"+ 		
+				//ROW INDEX
+				"<tr>"+
+					"<td>"+
+						CONST_STR.get('LOAN_LST_MORE_SB_TITLE')+
+					"</td>"+
+				"</tr>";
+				
+				//ROW TITLE				
+		htmlTMP = htmlTMP + getHTMLTitle();
+		for(var i = 0; i<arr2.length; i++)
+		{
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                var arrTitle = new Array();
+                arrTitle.push(CONST_STR.get('LOAN_AD_SAVING_ACC'));
+                arrTitle.push(CONST_STR.get('LOAN_AD_AMOUNT'));
+                arrTitle.push(CONST_STR.get('LOAN_AD_CURRENCY'));
+                arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'));
+                arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'));
+                arrTitle.push(CONST_STR.get('LOAN_AD_SELECTION'));
+
+                var arrContentData = new Array();
+                arrContentData.push(arrTitle);
+
+                for(var i = 0; i<arr2.length; i++){
+                    var arrItemContent = new Array();
+                    arrItemContent.push(arr2[i].accountSaving);
+                    arrItemContent.push(formatNumberToCurrency(arr2[i].amountConvert));
+                    arrItemContent.push(arr2[i].currency);
+                    arrItemContent.push(arr2[i].sendDate);
+                    arrItemContent.push(arr2[i].dueDate);
+                    arrItemContent.push('<div onClick = "change_Saving('+i+',false,this);" style="top:0px !important" class="custom-switch custom-switch-off"   id="clickChange_' + i + '">' +
+                        "<input type='checkbox' class='custom-switch-input custom-switch-input-on' value='false' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' name = 'limitAdjust2'  id = "+arr2[i].accountSaving+" disabled='disabled'>"+
+                        '<span class="custom-switch-label custom-switch-label-off" id="mng.payee.val" data-on="On" data-off="Off">off</span>'+
+                        '<span class="custom-switch-handle custom-switch-handle-off"></span></div>');
+
+                    arrContentData.push(arrItemContent);
+                }
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_LIST",
+                    typeTextAlign: "MIDLE",
+                    opacity:false
+                });
+                recycler.setData(arrContentData);
+                htmlTMP += "<tr>"+"<td>"+ recycler.init()+"</td>"+"</tr>"+"</table></tr></table>";
+            }else{
+			htmlTMP = htmlTMP + 
+			"<tr>" +
+				'<td>'+ '<div class="recycler-list" id="recycler-list">' + '<table class="recycler-table-ebank" id="recycler-table-ebank">' +                                      
+	              '<tr class="recycler-row-as" onClick = "change_Saving('+i+',false,this);">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get('LOAN_AD_SAVING_ACC')  + '</td><td class="recycler-row-align-midle-right">' +arr2[i].accountSaving+ '</td>' + '</tr>' +
+	            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',false,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_AMOUNT') + '</td><td class="recycler-row-align-midle-right">' + formatNumberToCurrency(arr2[i].amountConvert)  + '</td>' + '</tr>' +
+	            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',false,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_CURRENCY') + '</td><td class="recycler-row-align-midle-right">' +arr2[i].currency  + '</td>' + '</tr>' +
+	            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',false,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE') + '</td><td class="recycler-row-align-midle-right">' +arr2[i].sendDate + '</td>' + '</tr>' +
+	            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',false,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE') + '</td><td class="recycler-row-align-midle-right">' +arr2[i].dueDate+ '</td>' + '</tr>' +
+	            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',false,this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_SELECTION') + '</td><td class="recycler-row-align-midle-right">'
+	            	  +'<div style="top:0px !important" class="custom-switch custom-switch-off"   id="clickChange_' + i + '">' +
+            	"<input type='checkbox' class='custom-switch-input custom-switch-input-on' value='false' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' name = 'limitAdjust2'  id = "+arr2[i].accountSaving+" disabled='disabled'>"+
+            	'<span class="custom-switch-label custom-switch-label-off" id="mng.payee.val" data-on="On" data-off="Off">off</span>'+
+            	'<span class="custom-switch-handle custom-switch-handle-off"></span></div>'+ '</td>' + '</tr>' +
+					'</table>'+
+				'</div>'+
+			'</td>'+
+		 	'</tr>';  				
+            }
+		}
+		htmlTMP = htmlTMP+"</table></tr></table>";
+		return htmlTMP;
+}
+
+//=============return total amount saving checked=============//
+function getTotalSaving(){
+	var temp_total = 0;
+	if(arrSav.length>0){
+		for(var i = 0; i<arrSav.length; i++){
+			temp_total =parseFloat(temp_total) + parseFloat(arrSav[i].amountConvert);
+		}
+	}
+	logInfo('TONG GIA TRI TRONG MANG: '+temp_total);
+	return temp_total;
+}
+
+//==Format currency and pronounce to Vietnamese========
+function handleInputAmount (des) {
+	refreshArrayWhenBackpage();
+	var ptotal = getTotalSaving();
+	if(des.id == 'limitODAD'){	
+		des.value = formatNumberToCurrency(des.value);				
+		
+		var rateOD = document.getElementById('rateODAD');			
+		if(ptotal>0){
+			
+			var tmpl = ((removeSpecialChar(des.value)/ptotal)*100);
+			
+			if(tmpl == 0) {
+				rateOD.value  = "";
+			}else{
+				rateOD.value = roundToTwo(tmpl);
+			}
+		}else{
+			rateOD.value  = "";
+		}
+	}
+	else
+	{
+		if(des.id == 'rateODAD'){
+			
+			if(isNaN(des.value)){
+				//showAlertText(CONST_STR.get('LOAN_AD_ERR_01'));
+				des.value = "";
+				return;
+			}		
+			checkOverThreeNum(des);
+			if(ptotal!=0){
+				var limitOD = document.getElementById('limitODAD');								
+				var value = parseFloat(Math.floor((removeSpecialChar(des.value)*ptotal)/10000000))*100000;
+				limitOD.value = formatNumberToCurrency(value);
+				//formatCurrency(e, limitOD);
+			}
+		}				
+	}
+}
+//KIỂM TRA XEM CÓ QUÁ 3 CHỮ SỐ KHÔNG
+function checkOverThreeNum(node){
+	var valueToCheck = node.value;
+	var index = String(valueToCheck).indexOf('.');
+	var strRateTmp = String(valueToCheck);				
+	if(index > 0)
+	{
+		var strTmp = strRateTmp.substr(parseInt(index)); 
+	
+		if (strTmp.length > 3)
+		{
+			node.value = strRateTmp.substring(0,strRateTmp.length-1);
+			showAlertText(CONST_STR.get('LOAN_OPEN_ERR_08'));
+			
+			return;
+		}
+	}
+	return;
+}
+
+//==============Next button clicked==================//
+function click_Next() {
+	var check = false;
+	check = validateLimitOdAD();
+	if(check)
+	{
+		amountSav =removeSpecialChar(document.getElementById('limitODAD').value);
+		rateSav =removeSpecialChar(document.getElementById('rateODAD').value);
+		navController.pushToView('loan/loan-adjust-term-confirm-scr', true);
+	}
+} 
+
+//=====================Validate data============================================//
+
+function validateLimitOdAD()
+{
+	try
+	{
+		rateSav = "";
+		var limit_od = removeSpecialChar(document.getElementById('limitODAD').value);
+		var rateTmp = removeSpecialChar(document.getElementById('rateODAD').value);
+		var totalSaving = getTotalSaving();
+		if(totalSaving == 0 && (limit_od != 0 || rateTmp !=0)){
+			showAlertText(CONST_STR.get('LOAN_AD_ERR_03'));
+			return false;
+		}
+		if((limit_od == undefined)||(limit_od ==null)){			
+			showAlertText(CONST_STR.get('LOAN_AD_ERR_02'));
+			return false;
+		}
+		if(limit_od ==''){
+			limit_od = 0;
+		}
+		
+		var rate_tmp = (limit_od/getTotalSaving())*100;		
+		if(parseFloat(rate_tmp) > 80)
+		{			
+			showAlertText(CONST_STR.get('LOAN_AD_ERR_03'));
+			return false;			
+		}else{
+			rateSav = roundToTwo(rate_tmp);
+		}
+		if(parseFloat(rateTmp)>80){
+			showAlertText(CONST_STR.get('LOAN_AD_ERR_07'));
+			return false;
+		}
+
+		if(parseFloat(limit_od) > 1000000000)
+		{
+			showAlertText(CONST_STR.get('LOAN_AD_ERR_04'));
+			return false;
+		}
+		if(parseFloat(limit_od)%100000 > 0)
+		{
+			showAlertText(CONST_STR.get('LOAN_AD_ERR_05'));
+			return false;
+		}
+		
+		if(parseFloat(isIncrease) == 2) //tang
+		{
+			if(parseFloat(limit_od) <= 0 || parseFloat(rateSav) <= 0|| parseFloat(limit_od) <= parseFloat(removeSpecialChar(gOverdraft.limitODStandby)))
+			{				
+				showAlertText(CONST_STR.get('LOAN_AD_ERR_02'));
+				return false;
+			}
+		}
+		if(parseFloat(isIncrease) == 3) //giam
+		{
+			if(parseFloat(removeSpecialChar(gOverdraft.odLimit)) > 0)
+			{
+				if( parseFloat(removeSpecialChar(gOverdraft.odLimit)) > parseFloat(limit_od))
+				{
+					showAlertText(CONST_STR.get('LOAN_AD_ERR_06'));
+					return false;
+				}
+			}
+			if(parseFloat(limit_od) < 0 || parseFloat(rateODAD) < 0 || parseFloat(limit_od) > parseFloat(removeSpecialChar(gOverdraft.limitODStandby)))
+			{
+				showAlertText(CONST_STR.get('LOAN_AD_ERR_02'));
+				return false;
+			}
+		}
+		var index = String(rateTmp).indexOf('.');
+		var strRateTmp = String(rateTmp);				
+		if(index > 0)
+		{
+			var strTmp = strRateTmp.substr(parseInt(index)); 
+		
+			if (strTmp.length > 3)
+			{
+				showAlertText(CONST_STR.get('LOAN_OPEN_ERR_08'));
+				return false;
+			}
+		}
+	return true;
+	
+	}catch(err)
+	{
+		return false;
+	}
+} 
+function roundToTwo(num) {    				
+	return (Math.floor(num * 100)) / 100;				
+}
+
+function roundToOne(num) {
+	return (Math.floor(num * 10)) / 10;
+} 
+
+//REFRESH ARRAY WHEN BACK TO THIS PAGE
+function refreshArrayWhenBackpage(){
+	arrSav = new Array();
+	if(isIncrease==2){//Tang (increase)
+		for(var i = 0; i<arrSavAdjust1.length; i++){
+			arrSav.push(arrSavAdjust1[i]);
+		}
+		var tmpArr = document.getElementsByName('limitAdjust2');
+		//get elements with checkbox is checked.
+		for (var i=0; i<tmpArr.length; i++) {
+			var tmpNode = tmpArr[i];
+			if(tmpNode.type=="checkbox") {				
+				if(tmpNode.checked) {
+					arrSav.push(arrSavAdjust2[i]);
+				}
+			}
+		}			
+	}
+	if(isIncrease==3){//Giam (decrease)
+		var tmpArr = document.getElementsByName('limitAdjust1');
+		for (var i=0; i<tmpArr.length; i++) {
+			var tmpNode = tmpArr[i];
+			if(tmpNode.type=="checkbox") {						
+				if(tmpNode.checked) {
+					arrSav.push(arrSavAdjust1[i]);
+				}
+			}
+		}
+	}
+	changeTextForCombo(isIncrease);
+}
+
+//=============called when change status of checkbox======================//
+function change_Saving(index, flag, inNode)
+{
+
+	//WHEN USER CLICK ON ROW.
+	arrSav = new Array();
+	if(isIncrease==2){//Tang (increase)
+		logInfo('Vao Tang');
+		//Looking on arr2
+		if(flag) return;//we return when flag= true (User click on area 1 (disabled)) 
+		var tmpArr = document.getElementsByName('limitAdjust2');
+		//get all Element with arr1
+		for(var i = 0; i<arrSavAdjust1.length; i++){
+			arrSav.push(arrSavAdjust1[i]);
+		}
+		//get elements with checkbox is checked.
+		for (var i=0; i<tmpArr.length; i++) {
+			var tmpNode = tmpArr[i];
+			if(tmpNode.type=="checkbox") {
+				if(i==index && inNode.type !="checkbox"){
+                    tmpNode.checked = !tmpNode.checked;
+                    changeSwitchUI((tmpNode.parentNode));
+                }//Only change status of row which user clicked
+				if(tmpNode.checked && !tmpNode.disabled) {
+					arrSav.push(arrSavAdjust2[i]);
+				}
+			}
+		}				
+		logInfo('So phan tu trong mang: '+arrSav.length);
+	}
+	if(isIncrease==3){//Giam (decrease)
+		//Looking on arr1		
+		logInfo('Vao Giam');
+		var tmpArr = document.getElementsByName('limitAdjust1');
+		for (var i=0; i<tmpArr.length; i++) {
+			var tmpNode = tmpArr[i];
+			if(tmpNode.type=="checkbox") {
+				//Only change status of row which user clicked
+				if(i==index && !tmpNode.disabled  && inNode.type !="checkbox"){
+                    tmpNode.checked = !tmpNode.checked;
+                    changeSwitchUI((tmpNode.parentNode));
+                }
+				if(tmpNode.checked) {
+					arrSav.push(arrSavAdjust1[i]);
+				}
+			}
+		}
+	}	
+	handleInputAmount(document.getElementById('rateODAD'));
+}
+function handleInputBackUp(des){
+	logInfo('Vao 1');
+	var total = getTotalSaving();	
+	logInfo('Vao 2');
+	if(des.id == 'limitODAD'){					
+		if(total>0){
+			var rateOD = document.getElementById('rateODAD');
+			var tmpl = ((parseFloat(removeSpecialChar(des.value))/total)*100);			
+			if(tmpl == 0 || isNaN(tmpl)) {
+				rateOD.value  = 0;
+			}else{
+				rateOD.value = roundToTwo(tmpl);
+			}
+		}else{
+			rateOD.value = 0;
+		}
+	}
+}
+
+function scrollPrevious(){
+	//scrollToElement
+	var nodeAccList = document.getElementById("thelist").getElementsByTagName("li");
+	idxAcc--;
+	if (idxAcc >= 0) {
+		setTimeout(function(){
+			accountSelectScroll.scrollToElementIdx(idxAcc, 500);
+			var tmpAcc = new AccountObj();
+			tmpAcc = gESavingObjs[idxAcc];
+			updateAccDetail(tmpAcc);
+		}, 100);
+	}
+	else {
+		idxAcc = 0;
+	}
+}
+
+function showLimitedSelection(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? ['Lift my overdraft limit', 'Make lower my overdraft limit']:[CONST_STR.get('LIFT_MY_OD_LIMIT'), CONST_STR.get('LOWER_MY_OD_LIMIT')];
+	var tmpArray2 = ['2', '3'];//Value of isIncrease (Tăng hoặc giảm)	
+	document.addEventListener("evtSelectionDialog", handleSelectionLimitList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionLimitListClose, false);
+	//Show dialog
+	showDialogList(CONST_STR.get('LIMITED_SELECT_TITLE'), tmpArray1, tmpArray2, false);
+}
+//event: selection dialog list
+function handleSelectionLimitList(e) {
+	enableCheckbox();	
+	if (currentPage == "loan/loan-adjust-standby-overdraft") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionLimitListClose, false);	
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			//destinationAccNo = e.selectedValue1;
+			
+			var tagAccNo = document.getElementById("id.limitOD");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;				
+			}
+			else {			
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			isIncrease = e.selectedValue2;
+			
+			if(isIncrease==2){//Tăng hạn mức	
+					
+				fillDataToHTMLFile(arrSavAdjust1,arrSavAdjust2);
+				document.getElementById('limitODAD').value="";
+				document.getElementById('rateODAD').value="80";	
+				handleInputAmount(document.getElementById('rateODAD'));
+				
+			}else{//Giảm hạn mức
+				document.getElementById('section2').innerHTML="";
+				//Reset List arrSav
+				addLoanSaving();
+				document.getElementById('limitODAD').value="";
+				document.getElementById('rateODAD').value="";	
+				//Reset Rate
+				handleInputBackUp(document.getElementById('limitODAD'));
+				
+			}
+		}
+			
+	}
+}
+
+function handleSelectionLimitListClose(e) {
+	if (currentPage == "loan/loan-adjust-standby-overdraft") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionLimitListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionLimitList, false);
+	}
+}
+function isNumberKey(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode != 46 && charCode > 31
+    && (charCode < 48 || charCode > 57))
+        return false;
+
+    return true;
+}
+
+function isNumberKeyNotDot(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+
+function scrollNext(){
+	//scrollToElement
+	var nodeAccList = document.getElementById("thelist").getElementsByTagName("li");
+	idxAcc++;
+	if (idxAcc < nodeAccList.length) {
+		setTimeout(function(){
+			accountSelectScroll.scrollToElementIdx(idxAcc, 500);
+			var tmpAcc = new AccountObj();
+			tmpAcc = gESavingObjs[idxAcc];
+			updateAccDetail(tmpAcc);
+		}, 100);
+	}
+	else {
+		idxAcc = nodeAccList.length - 1;
+	}
+}

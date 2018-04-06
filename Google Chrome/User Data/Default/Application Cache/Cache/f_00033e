@@ -1,0 +1,361 @@
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+    <xsl:template match="/">
+        <html>
+            <body>
+                <div id="mainViewContent" class="main-layout-subview">
+                    <div>
+                        <div class="panelContent">
+                            <!--<table width="100%">-->
+                                <!--<tr>-->
+                                    <!--<td>-->
+                                        <!--<div>-->
+                                            <!--<h5 align="left" class="screen-title"><span>MENU_SETTING_CHANGE_LAYOUT</span></h5>-->
+                                        <!--</div>-->
+                                        <!--<div class="line-separate" style="margin-top:2px;display:none;"></div>-->
+                                    <!--</td>-->
+                                <!--</tr>-->
+                            <!--</table>-->
+                            <!-- <table width="100%" class="table-intro">
+                                <tr>
+                                    <td>
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">MENU_SETTING_CHANGE_LAYOUT</span>
+                                            <input onclick="showLayoutSelection()" id="id.layout" type="button" class="form-control form-control-righttext" value="CHOICE_LAYOUT" style="white-space:pre-wrap;"/>
+                                            <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table> -->
+                            <table id="change-layoutmb" width="100%" align="center">
+                                <tr>
+                                    <td>
+                                        <h5 class="Header light-mb-pddtop">
+                                            <span class="">CHOICE_LAYOUT</span> 
+                                        </h5>
+                                    </td>
+                                </tr>
+                            <tr>
+                                <td>
+                            <table id="id.layout" class="change-skin">
+                                <tr id="selection-dialog-scroll">
+                                    <td with="33%" class="td-change">
+                                        <div onclick="LayOut('1');">
+                                            <div class="content-change" align="center">
+                                                <span>DARK_LAYOUT</span>
+                                            </div>
+                                            <div class="img-center ripple-add-on">
+                                                <img src="./assets/images/dark.jpg" class="change-img" style="width:100%"/>
+                                            </div>
+                                        </div>
+                                     </td>
+                                    <td with="33%" class="td-change">
+                                        <div onclick="LayOut('2');">
+                                           <div class="content-change" align="center">
+                                            <span>LIGHT_LAYOUT</span>
+                                            </div>
+                                            <div class="img-center ripple-add-on">
+                                                <img src="./assets/images/light.jpg" class="change-img" style="width:100%"/></div>
+                                            </div>
+                                    </td>
+                                    <td with="33%" class="td-change">
+                                        <div onclick=""> 
+                                     <div class="content-change" align="center">
+                                        <span>OLD_LAYOUT</span>
+                                    </div>
+                                            <div class="img-center ripple-add-on">
+                                                <img src="./assets/images/old.jpg" class="change-img" style="width:100%"/>
+                                            </div>
+                                        </div>
+                                     </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                                <tr>
+                                    <td>
+                                        <h5 class="Header">
+                                            <span>CHANGE_BACKGROUND</span>
+                                        </h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <table class="change-skin">
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div id="" onclick="ChangeBackground('1');">
+                                                        <div class="img-center ripple-add-on">
+                                                            <img src="./assets/images/back-ground/mb/1.jpg"  class="change-img" style="width:100%"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('2');">
+                                                        <img src="./assets/images/back-ground/mb/2.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('3');">
+                                                        <img src="./assets/images/back-ground/mb/3.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('4');">
+                                                        <img src="./assets/images/back-ground/mb/4.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('5');">
+                                                        <img src="./assets/images/back-ground/mb/5.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('6');">
+                                                        <img src="./assets/images/back-ground/mb/6.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+											<tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('7');">
+                                                        <img src="./assets/images/back-ground/mb/7.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('8');">
+                                                        <img src="./assets/images/back-ground/mb/8.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('9');">
+                                                        <img src="./assets/images/back-ground/mb/9.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('10');">
+                                                        <img src="./assets/images/back-ground/mb/10.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('11');">
+                                                        <img src="./assets/images/back-ground/mb/11.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('12');">
+                                                        <img src="./assets/images/back-ground/mb/12.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('13');">
+                                                        <img src="./assets/images/back-ground/mb/13.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('14');">
+                                                        <img src="./assets/images/back-ground/mb/14.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('15');">
+                                                        <img src="./assets/images/back-ground/mb/15.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('16');">
+                                                        <img src="./assets/images/back-ground/mb/16.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('17');">
+                                                        <img src="./assets/images/back-ground/mb/17.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('18');">
+                                                        <img src="./assets/images/back-ground/mb/18.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('19');">
+                                                        <img src="./assets/images/back-ground/mb/19.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('20');">
+                                                        <img src="./assets/images/back-ground/mb/20.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('21');">
+                                                        <img src="./assets/images/back-ground/mb/21.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('22');">
+                                                        <img src="./assets/images/back-ground/mb/22.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('23');">
+                                                        <img src="./assets/images/back-ground/mb/23.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('24');">
+                                                        <img src="./assets/images/back-ground/mb/24.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                </table>
+                    <table id="change-layoutdk" class="top-content-margin"  width="100%" align="center">
+                                <tr>
+                                    <td>
+                                        <h5 class="Header">
+                                            <span>CHANGE_BACKGROUND</span>
+                                        </h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <table class="change-skin">
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div id="" onclick="ChangeBackground('1');">
+                                                        <div class="img-center ripple-add-on">
+                                                            <img src="./assets/images/back-ground/ib/1.jpg"  class="change-img" style="width:100%"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('2');">
+                                                        <img src="./assets/images/back-ground/ib/2.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('3');">
+                                                        <img src="./assets/images/back-ground/ib/3.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('4');">
+                                                        <img src="./assets/images/back-ground/ib/4.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('5');">
+                                                        <img src="./assets/images/back-ground/ib/5.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('6');">
+                                                        <img src="./assets/images/back-ground/ib/6.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('7');">
+                                                        <img src="./assets/images/back-ground/ib/7.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('8');">
+                                                        <img src="./assets/images/back-ground/ib/8.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('9');">
+                                                        <img src="./assets/images/back-ground/ib/9.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('10');">
+                                                        <img src="./assets/images/back-ground/ib/10.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('11');">
+                                                        <img src="./assets/images/back-ground/ib/11.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('12');">
+                                                        <img src="./assets/images/back-ground/ib/12.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('13');">
+                                                        <img src="./assets/images/back-ground/ib/13.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('14');">
+                                                        <img src="./assets/images/back-ground/ib/14.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('15');">
+                                                        <img src="./assets/images/back-ground/ib/15.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('16');">
+                                                        <img src="./assets/images/back-ground/ib/16.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('17');">
+                                                        <img src="./assets/images/back-ground/ib/17.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                                <td with="33%" class="td-change">
+                                                    <div class="img-center ripple-add-on" onclick="ChangeBackground('18');">
+                                                        <img src="./assets/images/back-ground/ib/18.jpg" class="change-img" style="width:100%"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                </table>
+                        </div>
+                         <div width="32%">
+                          <input type='submit' style='width:18%;' class='btnDesktopshadow btnHomeShadow' onClick= 'clickHomeOrBack()' value='INPUT_ACC_BTN_GOBACK'/>
+          </div>
+                    </div>
+                </div>
+
+                <div id="selection-dialog" class="dialog-blacktrans" align="center" style="display:none">
+                    <div class="dialog-backgroundtrans" onClick="closeDialog(this)"></div>
+                    <div id="divListGroup" class="list-group dialog-list"></div>
+                </div>
+            </body>
+        </html>
+    </xsl:template>
+
+</xsl:stylesheet>

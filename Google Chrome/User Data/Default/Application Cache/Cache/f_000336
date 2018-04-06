@@ -1,0 +1,610 @@
+var cardArr = [];
+var lstAccAdvance = [];
+var ShowmoreStatus = true;
+var gavailCreLim =0;
+var tod_limitAcc = 0;
+var flag_check;//để kiểm tra tài khoản luân chuyển có hay không
+var flag = false;
+var accountSelected;
+/*** VIEW LOAD SUCCESS ***/
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+function viewDidLoadSuccess() {
+//    init bottom bar
+    function MenuContent(title, src) {
+        this.title = title;
+        this.src = src;
+        this.keyLang = title;
+    }
+    var arrBottom = new Array();
+    arrBottom.push(new MenuContent('REGISTER_CASH_ADVANCE', 'cardservicexsl/card-advance-register'));
+    arrBottom.push(new MenuContent('RETURN_CASH_ADVANCE', 'cardservicexsl/card-advance-return'));
+    navController.initBottomBarOnlyText(arrBottom[0].src, arrBottom, "id_card-advance-register_main");
+  
+	flag_check = -1;
+	if(!flag){
+		accountSelected ='';
+		document.getElementById('id.limitsuggest').value = "";
+		document.getElementById('id.amounttotext').innerText = "";
+		document.getElementById('id.transafter').value ="";
+	}
+
+    var tmpStepNo = getSequenceFormIdx(tmpStepNo);
+    tmpStepNo = 301
+    //store sequence review index
+    setSequenceFormIdx(tmpStepNo);
+    //genSequenceForm();
+    actionbar.addListSequence("cardservicexsl/card-advance-register");
+
+	var data = {};
+	var arrayArgs = new Array();	
+	arrayArgs.push(gCustomerNo); // CIF	number
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUERY_CARD_INFO"), "", "", 
+				gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);	
+	requestMBService(data, true, 0, setCardList, setCardListFail);
+}
+
+function switchAction(index){
+    console.log(index);
+}
+
+/*** VIEW WILL UNLOAD END ***/
+function setCardList(e){
+	gprsResp = parserJSON(e);
+	if (gprsResp.respCode != '0'&& (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUERY_CARD_INFO")))){
+		showAlertText(gprsResp.respContent);		
+		document.addEventListener('closeAlertView', handleAlertEmpty, false);
+		return;	
+	}
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUERY_CARD_INFO")))) {
+		cardArr = new Array();
+		lstAccAdvance = new Array();
+		
+		if(gprsResp.arguments != undefined) {				
+			var isAccount = false;
+			for(var i=0; i<gprsResp.arguments.length; i++) {
+				
+				if(gprsResp.arguments[i] == 'TKTT'){//Separate
+					isAccount = true;
+					continue;
+				}					
+				var tmpArr = gprsResp.arguments[i].split('#');		
+				if(!isAccount){	//Lay danh sach the								
+					// tra ve 1 list các thẻ
+					// Kiem tra trong list này thằng nào đã luân chuyển rồi <Theo dk nào đó  - >
+					// Nếu có 1 thẻ mà đã luân chuyển
+					// Thì disable không cho chọn thẻ, tài khoản
+					// Nếu không thì mới hiển thị cho User chọn						
+					var cardObj = {"cardNo": tmpArr[0],"holderName": tmpArr[1], "limitcurrent": tmpArr[2], 
+								"HM_DDK": tmpArr[3], "availCreLim": tmpArr[4], "limitMax": tmpArr[5],
+								"TK_FCC":tmpArr[6], "HM_TK": tmpArr[7] 
+							};
+							
+					if(cardObj.TK_FCC !="" && cardObj.TK_FCC.length > 8){
+						flag_check = i;	//Lưu vị trí
+					}
+					cardArr.push(cardObj);						
+				}else{//Lay danh sach tk thoa man dk						
+					lstAccAdvance.push(tmpArr);											
+				}
+
+			}
+			
+			if(cardArr.length < 1) {
+				showAlertText(CONST_STR.get('CREDIT_HIS_NO_CARD'));
+				//showAlertText(CONST_STR.get('CREDIT_CARD_NO_CARD_AVAILABLE_MSG'));
+				// var tmpPageName = navController.getDefaultPage();
+				// var tmpPageType = navController.getDefaultPageType();
+				// navController.initWithRootView(tmpPageName, true, tmpPageType);
+				navController.popView();
+				return;
+			}			
+		}
+		else {
+			showAlertText(CONST_STR.get('CREDIT_HIS_NO_CARD'));
+			// var tmpPageName = navController.getDefaultPage();
+			// var tmpPageType = navController.getDefaultPageType();
+			// navController.initWithRootView(tmpPageName, true, tmpPageType);
+			navController.popView();
+		}
+	}
+	else {
+		showAlertText(CONST_STR.get('CREDIT_HIS_NO_CARD'));
+		// var tmpPageName = navController.getDefaultPage();
+		// var tmpPageType = navController.getDefaultPageType();
+		// navController.initWithRootView(tmpPageName, true, tmpPageType);
+		navController.popView();
+	}
+	if(flag_check != -1 &&cardArr.length >0 ){
+		
+		var cardNo = document.getElementById("id.cardNumber");
+		
+		cardNo.disabled =true;
+		cardNo.value = cardArr[flag_check].cardNo;
+		var node = document.getElementById("card.limitcurrent");
+		node.innerHTML = formatNumberToCurrency(cardArr[flag_check].limitcurrent) + " " + CONST_DEFAULT_CURRENCY;
+		gavailCreLim =  cardArr[flag_check].availCreLim;					
+		//showAlertText(gavailCreLim);
+		//Hạn mức còn lại
+		node = document.getElementById("card.limitremain");
+		node.innerHTML = formatNumberToCurrency(cardArr[flag_check].availCreLim) + " " + CONST_DEFAULT_CURRENCY;
+		// Han muc toi da
+		node = document.getElementById("id.limitmax");
+		node.value = formatNumberToCurrency(cardArr[flag_check].limitMax);	
+		//Hạn mức ứng tiền đã đăng ký
+		node = document.getElementById("id.limitregister");
+		node.value = formatNumberToCurrency(cardArr[flag_check].HM_DDK);	
+		
+		tod_limitAcc = cardArr[flag_check].HM_TK;//Han muc TK	
+		var tagAccNo = document.getElementById("id.limitaccount");
+        tagAccNo.disabled =true;
+		tagAccNo.value = cardArr[flag_check].TK_FCC;
+        accountSelected = cardArr[flag_check].TK_FCC;
+		document.getElementById('ccDetalsTable').style.display = '';
+	}
+
+	if(lstAccAdvance.length <1) {
+	/*	
+		var tagAccNo = document.getElementById("id.limitaccount");
+       tagAccNo.disabled =true;*/
+	   var tagchoiaccno = document.getElementById('choice_accno');
+	   tagchoiaccno.style.display ='none';
+	}
+}
+
+//event alert
+function handleAlertEmpty(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "cardservicexsl/card-advance-register")) {
+		document.removeEventListener('closeAlertView', handleAlertEmpty, false);
+		//navController.initWithRootView('account/account-scr', true);		
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();				
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+function showCardNumberSelection(){
+	//first time querry - if background service did not completed or returned data
+	var tmpArray1 = new Array();
+	for(i = 0; i<cardArr.length; i++){
+		tmpArray1.push(cardArr[i].cardNo);
+	}		
+	document.addEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+	document.addEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+	showDialogList(CONST_STR.get('CARD_LOCK_NO_CARD_SELECTION'), tmpArray1, false);
+}
+//event: selection dialog list
+function handleCardNoChoiceSelection(e) {
+
+	if (currentPage == "cardservicexsl/card-advance-register") {
+		handleCardNoChoiceSelectionClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {					
+			
+			var cardNo = document.getElementById("id.cardNumber");
+			cardNo.value = e.selectedValue1;
+
+			for (var i = 0; i < cardArr.length; i++) {
+				if (cardArr[i].cardNo == e.selectedValue1) {
+				
+					//Hạn mức được cấp
+					var node = document.getElementById("card.limitcurrent");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].limitcurrent) + " " + CONST_DEFAULT_CURRENCY;
+					gavailCreLim =  cardArr[i].availCreLim;					
+					//showAlertText(gavailCreLim);
+					//Hạn mức còn lại
+					node = document.getElementById("card.limitremain");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].availCreLim) + " " + CONST_DEFAULT_CURRENCY;
+					// Han muc toi da
+					node = document.getElementById("id.limitmax");
+					node.value = formatNumberToCurrency(cardArr[i].limitMax);
+					// Hạn mức ứng tiền đã đăng ký
+					node = document.getElementById("id.limitregister");
+					node.value = formatNumberToCurrency(cardArr[i].HM_DDK);	
+					
+					tod_limitAcc = cardArr[i].HM_TK;//Han muc TK
+					document.getElementById('ccDetalsTable').style.display = '';
+					break;									
+				}
+			}						
+		}
+	}
+}
+
+function handleCardNoChoiceSelectionClose(e) {
+	if (currentPage == "cardservicexsl/card-advance-register") {
+		document.removeEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+		document.removeEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+	}
+}
+
+function setCardListFail() {
+	logInfo("Background service fail: cannot retrieve credit card list");
+	showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL'));
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+function showChoiceAccount(){
+	if(lstAccAdvance.length >0){
+		var tmpArray1 = lstAccAdvance;		
+		document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+		document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, true);
+	}
+	
+}
+
+//event: select account number
+function handleSelectionAccountList(e) {
+	if (currentPage == "cardservicexsl/card-advance-register") {
+		handleSelectionAccountListClose();		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("id.limitaccount");
+            var spanAccNo = document.getElementById("span.limitaccount");
+			if (tagAccNo.nodeName == "INPUT") {
+				accountSelected = e.selectedValue1;
+				tagAccNo.value = e.selectedValue1;
+                spanAccNo.innerHTML = tagAccNo.value;
+			}			
+		}
+	}
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "cardservicexsl/card-advance-register") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+		
+function sendJSONRequestChanceLimit(){
+	var data = {};
+	var arrayArgs = new Array();
+	
+
+	var cardNo = document.getElementById("id.cardNumber").value;
+	
+	if (cardNo == undefined || cardNo == "" || cardNo == CONST_STR.get('ENTER_CHOICE_MENU'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_SELECTION_CARDNO'));
+		return;
+	}	
+	var availCreLim = document.getElementById("card.limitremain").innerHTML;
+	var limitsuggest = keepOnlyNumber(document.getElementById("id.limitsuggest").value);
+	
+	if (limitsuggest== undefined || limitsuggest == "" || limitsuggest == CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_SELECTION_LIMITSUGGEST'));
+		return;
+	}
+	//check han muc de nghi la so am, =0, so thap phan
+	if ((parseFloat(limitsuggest)) <= 0 ){
+		showAlertText(CONST_STR.get('ERR_INPUT_LIMITSUGGEST'));
+		return;
+	}
+	//B1 kiem tra list tai khoan? nếu khác rỗng thì mới check.
+	if (lstAccAdvance.length> 0 && accountSelected == ""){				
+		showAlertText(CONST_STR.get('COM_TXT_SELECTION_ACCOUNTNO'));
+		return;		
+	}
+	if(lstAccAdvance.length ==0){
+		accountSelected ='';
+	}
+	var limitmax = keepOnlyNumber(document.getElementById("id.limitmax").value);	
+	if (parseFloat(limitsuggest) > parseFloat(limitmax)){
+		showAlertText(CONST_STR.get('ERR_INPUT_LIMITSUGGEST_MAX'));
+		return;
+	}
+	/*if(parseInt(limitsuggest) <= parseInt(serviceFee)) {
+		showAlertText(CONST_STR.get('ERR_INPUT_LIMITSUGGEST_FEE'));
+		return;
+	}THUANTM COMMENT KHONG BAO GIO XAY RA
+	*/
+	arrayArgs.push(cardNo);
+	arrayArgs.push(gavailCreLim);
+	arrayArgs.push(limitsuggest);
+	arrayArgs.push(limitmax);
+	arrayArgs.push(accountSelected);
+	arrayArgs.push(tod_limitAcc);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUERY_CARD_ADVANCE"), "", "", 
+	gUserInfo.lang , gUserInfo.sessionID, arrayArgs);	
+	data = getDataFromGprsCmd(gprsCmd);	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	//gRespObj = gprsResp; 
+	setRespObjStore(gprsResp);
+	
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUERY_CARD_ADVANCE")))) {
+		genReviewScreen();
+	}else{
+		showAlertText(gprsResp.respContent);
+	}
+};
+
+//event listener: http request fail
+function genReviewScreen() {
+	var htmlReviewInfo = "";
+	var cardNo = document.getElementById("id.cardNumber").value;
+	var limitcurrent = document.getElementById("card.limitcurrent").innerHTML;
+	var limitaval = document.getElementById("card.limitremain").innerHTML;
+	var limitsuggest = document.getElementById("id.limitsuggest").value;
+	var limitregister = document.getElementById("id.limitregister").value;
+	
+	//Phi dich vu
+	var serviceFee = gprsResp.arguments[5];
+	//Ngay giao dich	
+	today = gprsResp.arguments[6];
+	//Thong tin giao dich
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><td><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE') + 
+				//"</h5><div class='line-separate' style='display:none'></div></td></tr>";	
+				"</h5></td></tr>";
+
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='97%' align='center'>";
+
+    // khoi tao mang va tao listview
+    var reviewInfo = new Array();
+    var row1 = new Array(CONST_STR.get('CARD_LIMIT_TRANS_TYPE'), CONST_STR.get('CHANCE_LIMIT_ADVANCE_TITLE'));
+    var row2 = new Array(CONST_STR.get('CARD_NUMBER_ADVANCE'), cardNo);
+    var row3 = new Array(CONST_STR.get('LIMIT_AVAI_CARD_TRANS_BEFORE'), formatNumberToCurrency(limitaval)+" VND");
+    var row4 = new Array(CONST_STR.get('LIMIT_ADVANCE_CARD_TRANS_BEFORE'), formatNumberToCurrency(limitregister)+" VND");
+    var row5 = new Array(CONST_STR.get('LIMIT_ADVANCE_SUGGEST'), limitsuggest + " VND");
+    var limitavaiafter = parseFloat(removeSpecialChar(limitaval)) - parseFloat (removeSpecialChar(limitsuggest));
+    var row6 = new Array(CONST_STR.get('LIMIT_AVAI_CARD_TRANS_AFTER'), formatNumberToCurrency(limitavaiafter)+" VND");
+    var limitafter = parseFloat(removeSpecialChar(limitregister)) + parseFloat (removeSpecialChar(limitsuggest));
+    var row7 = new Array(CONST_STR.get('LIMIT_ADVANCE_CARD_TRANS_AFTER'), formatNumberToCurrency(limitafter)+" VND");
+    reviewInfo.push(row1);
+    reviewInfo.push(row2);
+    reviewInfo.push(row3);
+    reviewInfo.push(row4);
+    reviewInfo.push(row5);
+    reviewInfo.push(row6);
+    reviewInfo.push(row7);
+
+    if(!accountSelected){
+        // hide row nay
+        var row8 = new Array(CONST_STR.get('LIMIT_ACCOUNT'), accountSelected);
+    }
+    else {
+        //show row nay
+        var row8 = new Array(CONST_STR.get('LIMIT_ACCOUNT'), accountSelected);
+        reviewInfo.push(row8);
+    }
+    var row9 = new Array(CONST_STR.get('CARD_SERVICE_FEE'), formatNumberToCurrency(serviceFee)+ " VND");
+    var row10 = new Array(CONST_STR.get('CREDIT_CARD_TRANSACTION_DATE'), today);
+    reviewInfo.push(row9);
+    reviewInfo.push(row10);
+
+    var recycler = new RecyclerView({
+        type: "NORMAL",
+        typeTextAlign: "MIDLE",
+        title: "Tai khoan jumbo",
+        titleAlign:"LEFT",
+        opacity:true
+    });
+    recycler.setData(reviewInfo);
+    var contentHTML = recycler.init();
+    htmlReviewInfo = htmlReviewInfo + "<tr><td>" +contentHTML + "</td></tr>";
+	/*htmlReviewInfo = htmlReviewInfo +
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('CARD_LIMIT_TRANS_TYPE') + 
+				"</td>" + "<td class='td-right'>" + 
+					CONST_STR.get('CHANCE_LIMIT_ADVANCE_TITLE') + 
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('CARD_NUMBER_ADVANCE') + 
+				"</td>" + "<td class='td-right'>" + 
+					cardNo + 
+				"</td></tr>";*/
+// Han muc kha dung cua the truoc giao dich
+/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('LIMIT_AVAI_CARD_TRANS_BEFORE') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(limitaval)+" VND"+ 
+					"</td></tr>";*/
+// Han muc ung tien tu the truoc giao dich
+/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('LIMIT_ADVANCE_CARD_TRANS_BEFORE') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(limitregister)+" VND"+ 
+					"</td></tr>";*/
+
+// Han muc ung tien de nghi
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('LIMIT_ADVANCE_SUGGEST') + 
+					"</td>" + "<td class='td-right'>" + 
+						limitsuggest + " VND" +
+					"</td></tr>";	*/
+// Han muc kha dung cua the sau giao dich
+/*var limitavaiafter = parseFloat(removeSpecialChar(limitaval)) - parseFloat (removeSpecialChar(limitsuggest));
+htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('LIMIT_AVAI_CARD_TRANS_AFTER') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(limitavaiafter)+" VND"+ 
+					"</td></tr>";*/
+// Han muc ung tien tu the sau giao dich
+/*var limitafter = parseFloat(removeSpecialChar(limitregister)) + parseFloat (removeSpecialChar(limitsuggest));
+htmlReviewInfo = htmlReviewInfo + 
+					"<tr id ='id.after' class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('LIMIT_ADVANCE_CARD_TRANS_AFTER') + 
+					"</td>" + "<td class='td-right'>" + 
+					formatNumberToCurrency(limitafter)+" VND"+
+					"</td></tr>";*/
+// so tai khoan thanh toan
+/*if(!accountSelected){
+	htmlReviewInfo = htmlReviewInfo + 
+					"<tr style='display:none;' class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('LIMIT_ACCOUNT') + 
+					"</td>" + "<td class='td-right'>" + 
+						accountSelected+
+					"</td></tr>";	
+}
+else {
+    htmlReviewInfo = htmlReviewInfo + 
+					"<tr scrinfo ='review' class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('LIMIT_ACCOUNT') + 
+					"</td>" + "<td class='td-right'>" + 
+						accountSelected+
+					"</td></tr>";}*/
+		
+// Phi dich vu
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('CARD_SERVICE_FEE') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(serviceFee)+ " VND"+
+					"</td></tr>";	*/
+					
+
+// Ngay thuc hien
+	/*htmlReviewInfo = htmlReviewInfo +
+					"<tr scrinfo='review' class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('CREDIT_CARD_TRANSACTION_DATE') + 
+					"</td>" + "<td class='td-right'>" + 
+						today + 
+					"</td></tr>";
+*/
+	htmlReviewInfo = htmlReviewInfo + 
+					"<tr id='trCondition'>" + "<td colspan='2'>" + 
+                  "<table width='98%'>" +
+                  "<tr>" +
+                    "<td width='3#' onclick='setChecked()'>" +
+					"<span class='icon-checkbox-unchecked' style='display:table-cell;font-size:16px' id='chkAgree'/>" +
+					"</td>" + 
+                    "<td><div class='notestyle'><span>"+CONST_STR.get('LIMIT_ADVANCE_NOTE4')+
+					"<em><a target='_blank' class='ref-link' onClick=\"openLinkInWindows('./download/NHCN_Dieu khoan Dieu kien Ung tien tu the tin dung_29 11 2014-FINAL.html');\"><u>"+
+					CONST_STR.get('LIMIT_ADVANCE_NOTE5')+"</u></a></em>"+
+					"</span></div></td>" +
+                  "</tr>" + 
+                  "</table>" +
+					"</td></tr>";	
+
+htmlReviewInfo = htmlReviewInfo + "<tr id='trMessage' style='display:none;'>" + "<td colspan='2'>" + 
+						"<span style='color:#ff0000;white-space:pre-wrap;' id='lblErrRequired'></span>" + "</td>"
+					"</tr>";
+
+htmlReviewInfo = htmlReviewInfo + 					
+            "<tr class='desktopmode' id='result-export-print' style='display:none;'>" +
+            	"<td colspan='2'>" +
+                	"<div align='right' style='padding-right: 5px;'>" +
+                        "<a href='javascript:void(0)' onclick='printResultHistory();'><img title='In trang này' style='margin-right:5px;' src='css/img/print.png'/></a>" +
+                    "</div></td></tr>";
+
+	htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+	
+//	htmlReviewInfo = htmlReviewInfo + "</table>";
+	htmlReviewInfo = htmlReviewInfo + "<span style='margin-left:5%'>";
+	htmlReviewInfo = htmlReviewInfo + "<table width='96%'>";
+    htmlReviewInfo = htmlReviewInfo + "<tr align='center'><td><div style='text-align: center;'>" +
+        "<input id='trgoBack' class='btnshadow-after btn-second-desktop-after' onclick='clickHomeOrBack()' type='submit' value='REVIEW_BTN_BACK'/>" +
+        "<input id='trCancel' class='btnshadow-after btn-second-after btn-changecolor' onclick='btnCancelClick()' type='submit' value='REVIEW_BTN_CANCEL'/>"+
+        "<input id='trNext' class='btnshadow-after btn-second-after' onclick='checkAQ()' type='button' value='REVIEW_BTN_NEXT'/>"+
+        "</div></td></tr>";
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	
+	//gReviewHtml = htmlReviewInfo;
+	setReviewHtmlStore(htmlReviewInfo);
+	
+	navController.pushToView("com-review-scr", true);
+}
+
+function checkToShowButton(tenorValue){
+	if(parseInt(tenorValue)>2){
+		return 	 "<input type='button' class='btnshadow btn-second' onClick='checkAQ()' value='REVIEW_BTN_NEXT'/>";
+	}
+	return "";
+}
+function displayAcc(){
+	if(accountSelected == ""){
+		return 'display:none;';
+	}
+}
+function handleInputAmount1(e, des){
+	var limitsuggest = document.getElementById('id.limitsuggest');
+	formatCurrency(e, limitsuggest);		
+	var tmpVale = des.value;
+	var numStr = convertNum2WordWithLang(removeSpecialChar(tmpVale), gUserInfo.lang); 
+	var nodeNumTxt = document.getElementById("id.amounttotext");
+	//nodeNumTxt.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": " + numStr + "</div>";
+	nodeNumTxt.innerHTML = "<div class='availblstyle' style='padding-left: 7px'>" + numStr + "</div>";
+	var limitregister = removeSpecialChar(document.getElementById("id.limitregister").value);
+	var transafter = document.getElementById('id.transafter');
+	if(tmpVale != undefined && tmpVale != null && tmpVale != ""){
+		transafter.value = formatNumberToCurrency(parseFloat(limitregister) + parseFloat (removeSpecialChar(tmpVale)));
+	
+	}
+	else {
+	transafter.value = "";
+	}
+}
+function showChoiceCardNumber(){
+	//first time querry - if background service did not completed or returned data
+	var tmpArray1 = new Array();
+	for(i = 0; i<cardArr.length; i++){
+		tmpArray1.push(cardArr[i].cardNo);
+	}		
+	document.addEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+	document.addEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+	showDialogList(CONST_STR.get('CARD_LOCK_NO_CARD_SELECTION'), tmpArray1, false);
+}
+//event: selection dialog list
+function handleCardNoChoiceSelection(e) {
+
+	if (currentPage == "cardservicexsl/card-advance-register") {
+		handleCardNoChoiceSelectionClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {					
+			
+			var cardNo = document.getElementById("id.cardNumber");
+			cardNo.value = e.selectedValue1;
+			
+			for (var i = 0; i < cardArr.length; i++) {
+				if (cardArr[i].cardNo == e.selectedValue1) {
+				
+					//Hạn mức được cấp
+					var node = document.getElementById("card.limitcurrent");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].limitcurrent) + " " + CONST_DEFAULT_CURRENCY;
+					gavailCreLim =  cardArr[i].availCreLim;					
+					//showAlertText(gavailCreLim);
+					//Hạn mức còn lại
+					node = document.getElementById("card.limitremain");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].availCreLim) + " " + CONST_DEFAULT_CURRENCY;
+					// Han muc toi da
+					node = document.getElementById("id.limitmax");
+					node.value = formatNumberToCurrency(cardArr[i].limitMax);
+					// Hạn mức ứng tiền đã đăng ký
+					node = document.getElementById("id.limitregister");
+					node.value = formatNumberToCurrency(cardArr[i].HM_DDK);	
+					
+					tod_limitAcc = cardArr[i].HM_TK;//Han muc TK
+					document.getElementById('ccDetalsTable').style.display = '';
+					break;									
+				}
+			}						
+		}
+	}
+}
+
+function handleCardNoChoiceSelectionClose(e) {
+	if (currentPage == "cardservicexsl/card-advance-register") {
+		document.removeEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+		document.removeEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+	}
+}

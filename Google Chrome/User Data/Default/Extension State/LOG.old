@@ -1,0 +1,15 @@
+2018/03/21-20:32:25.082 16980 Reusing MANIFEST F:\Browser\Google Chrome\User Data\Default\Extension State/MANIFEST-000001
+2018/03/21-20:32:25.325 16980 Recovering log #348
+2018/03/21-20:32:26.045 16980 Reusing old log F:\Browser\Google Chrome\User Data\Default\Extension State/000348.log 
+2018/03/21-22:55:47.962 10472 Level-0 table #352: started
+2018/03/21-22:55:48.201 10472 Level-0 table #352: 1891750 bytes OK
+2018/03/21-22:55:48.234 10472 Delete type=0 #348
+2018/03/21-22:55:48.235 10472 Compacting 4@0 + 1@1 files
+2018/03/21-22:55:48.768 10472 Generated table #353@0: 18 keys, 11235 bytes
+2018/03/21-22:55:48.768 10472 Compacted 4@0 + 1@1 files => 11235 bytes
+2018/03/21-22:55:48.789 10472 compacted to: files[ 0 1 1 0 0 0 0 ]
+2018/03/21-22:55:48.790 10472 Delete type=2 #340
+2018/03/21-22:55:48.790 10472 Delete type=2 #343
+2018/03/21-22:55:48.791 10472 Delete type=2 #346
+2018/03/21-22:55:48.791 10472 Delete type=2 #349
+2018/03/21-22:55:48.805 10472 Delete type=2 #352

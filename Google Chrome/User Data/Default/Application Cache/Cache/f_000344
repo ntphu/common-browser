@@ -1,0 +1,567 @@
+/**
+ * Created by Thuantm
+ * User: Thuantm
+ * Date: 7/1/14
+ * Time: 5:05 PM
+ */
+var tenor;
+var xmlDetail = '';
+var linkPDF;
+
+function loadInitXML(){
+
+}
+
+function viewDidLoadSuccess(){
+    var tmpXsl = getCachePageXsl("esaving/esaving-info-table");
+    xmlDetail = getReviewXmlStore();
+    var tmpHtmlStr = genHTMLStringWithXML(xmlDetail, tmpXsl, function(oStr){
+        //var tmpNode = document.getElementById('div-datainfo');
+        //if(tmpNode !=null) tmpNode.innerHTML = oStr;
+    });
+    getTenor();
+
+    /*var arraccinfo = new Array();
+     var row1 = new Array();
+     row1.push(CONST_STR.get('FUTURE_SAVING_PURPOSE'),gArraySav.savingtype);
+     var row2 = new Array();
+     row2.push(CONST_STR.get('FUTURE_SAVING_BALANCE_NON'),gArraySav.currcont);
+     var row3 = new Array();
+     row3.push(CONST_STR.get('FUTURE_SAVING_AMT_PRD'),gArraySav.amountcont);
+     var row4 = new Array();
+     row4.push(CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'),tenor);
+     var row5 = new Array();
+     row5.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),gArraySav.interestcont);
+     var row6 = new Array();
+     row6.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'));
+     var row7 = new Array();
+     row7.push(CONST_STR.get('FUTURE_SAVING_FREQUENCY'));
+     var row8 = new Array();
+     row8.push(CONST_STR.get('FUTURE_SAVING_TYPE'));
+     var row9 = new Array();
+     row9.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'));
+     var row10 = new Array();
+     row10.push(CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'));
+     var row11 = new Array();
+     row11.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'));
+     var row12 = new Array();
+     row12.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'));
+     arraccinfo.push(row1,row2,row3,row4,row5,row6,row7,row8,row9,row10,row11,row12);*/
+    gentable();
+    document.addEventListener('evtChangeWidthDesktop',gentable,false);
+    document.addEventListener('evtChangeWidthMobile',gentable,false);
+    // document.getElementById('narrowright').style.display="none";
+    //    document.getElementById("recycler_table_ebank").style.width = "100%";
+
+    if(gArraySav.prod_code =='T5A004'||gArraySav.prod_code =='T5A003'||gArraySav.prod_code =='TEA001'){
+        document.getElementById('esaving_note').style.display='';
+
+    }
+    else{
+        document.getElementById('esaving_note').style.display='none';
+    }
+    if(gArraySav.prod_code =='ETVIBD' ||gArraySav.prod_code =='ETVIKW'||gArraySav.prod_code =='T11ESW'||gArraySav.prod_code =='T11ESM' || gArraySav.prod_code =='T5A007'|| gArraySav.prod_code =='T5A009'){
+        printResultInfo();
+        document.getElementById('printInfo').style.display='';
+    }
+    else{
+        document.getElementById('printInfo').style.display='none';
+    }
+    gFurSaving = gArraySav;
+
+    if(gArraySav.prod_code =='T5A004'||gArraySav.prod_code =='T5A003'||gArraySav.prod_code =='TEA001'){
+        getTenorTailoc();
+        /*vanptt check tat toan tai loc*/
+        document.getElementById('columnTattoan').style.display='none';
+        if(gArraySav.prod_code =='T5A004'){
+            var arrayArgs = new Array();
+            arrayArgs.push(gArraySav.accnocont);
+
+            var data = {};
+            var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_CHECK_WITHDRAW_FORTUNE"), "", "",
+                gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+            data = getDataFromGprsCmd(gprsCmd);
+            requestMBService(data, true, 0, function(e){
+                gprsResp = parserJSON(e);
+                if(gprsResp.respCode != '0'){
+                    setTimeout(function(){
+                        var removeModal =  document.getElementById('myModalDialog');
+                        if(removeModal){
+                            removeModal.style.display = 'none';
+                        }
+                    },100);
+                }else if(gprsResp.respCode == '0'){
+                    document.getElementById('columnTattoan').style.display='';
+                }else{
+                    document.getElementById('columnTattoan').style.display='none';
+                }
+            }, function(e){});
+        }
+        /*end vanptt check tat toan tai loc*/
+
+        if(gArraySav.prod_code =='T5A003'||gArraySav.prod_code =='TEA001'){
+            document.getElementById('columnChangeInfo').style.display='none';
+        }else{
+            document.getElementById('columnChangeInfo').style.display='';
+        }
+    }else{
+        if(gArraySav.prod_code=='ETVIBD'||gArraySav.prod_code=='ETVIKW' ||gArraySav.prod_code=='ETVIBD'||gArraySav.prod_code=='T5A005' ||
+            gArraySav.prod_code=='T5A007' || gArraySav.prod_code=='T5A009')
+        {
+            document.getElementById('columnTattoan').style.display='';
+            document.getElementById('columnChangeInfo').style.display='';
+        }
+        else {
+            document.getElementById('columnTattoan').style.display='none';
+            document.getElementById('columnChangeInfo').style.display='none';
+        }
+        //getTenor();
+    }
+    //document.addEventListener("evtChangeWidthDesktop",printResultInfo,false);
+   // document.addEventListener("evtChangeWidthMobile",printResultInfo,false);
+}
+
+function gentable(){
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var recycler = new RecyclerView({
+            type: "DESKTOP_GRID",
+            typeTextAlign: "MIDLE",
+            title: "Detail tài khoản",
+            titleAlign:"LEFT",
+            opacity:true
+        });
+
+        recycler.setData(gArraccinfo);
+        var contentHTML = recycler.init();
+        var content = document.getElementById('div-datainfo');
+        content.innerHTML = contentHTML;
+    }else{
+        var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Detail tài khoản",
+            titleAlign:"LEFT",
+            opacity:true
+        });
+
+        recycler.setData(gArraccinfo);
+        var contentHTML = recycler.init();
+        var content = document.getElementById('div-datainfo');
+        content.innerHTML = contentHTML;
+    }
+    var dataInfo = document.getElementById('div-datainfo');
+    if(dataInfo != undefined || dataInfo != ''){
+        dataInfo.style.display = '';
+    }
+}
+
+function goBack() {
+    navController.popView(true);
+}
+
+function viewWillUnload(){
+    document.removeEventListener('evtChangeWidthDesktop',gentable,false);
+    document.removeEventListener('evtChangeWidthMobile',gentable,false);
+
+    document.removeEventListener("evtChangeWidthDesktop",printResultInfo,false);
+    document.removeEventListener("evtChangeWidthMobile",printResultInfo,false);
+}
+function printResultInfo(){
+    var data = {};
+    var arrayArgs = new Array();
+    arrayArgs.push(gArraySav.accnocont);//số sổ
+    arrayArgs.push(gArraySav.savingtype);//loai tiet kiem
+    arrayArgs.push(gArraySav.valdatecont);//ngay mo so
+    arrayArgs.push(gArraySav.matdatecont);//ngay dao han
+    arrayArgs.push(tenor);//ky han
+    arrayArgs.push(gArraySav.interestcont);//lai suat
+    arrayArgs.push(gArraySav.amountcont);//so tien gui
+    arrayArgs.push(gArraySav.estimatedcont);//lai tam tinh
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_LINK_SAVING_INFO"), "", "",
+        gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+    //requestBacgroundMBService("CMD_GET_LINK_SAVING_INFO", arrayArgs, requestMBServiceSuccesss, requestMBServiceFail);
+}
+function requestMBServiceSuccesss(e){
+    gprsResp = parserJSON(e,false);
+    setRespObjStore(gprsResp);
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_LINK_SAVING_INFO")))){
+
+        linkPDF=gprsResp.arguments[0];
+        
+    }
+    else{
+    }
+}
+function requestMBServiceFail(){
+}
+function getTenor(){
+    var tenorday = parseInt(gArraySav.tenor_day);
+    var tenormonth = parseInt(gArraySav.tenor_month);
+    var tenoryear = parseInt(gArraySav.tenor_year);
+    var counttenor = tenorday + 30*tenormonth +365*tenoryear;
+    if(counttenor>0){
+        if(tenorday <1){
+            if(tenormonth >0){
+                if(tenoryear >0){
+                    tenor= gArraySav.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+gArraySav.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+                }
+                else {
+                    tenor= gArraySav.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+                }
+            }
+            else if(tenormonth <1){
+                tenor= gArraySav.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR');
+            }
+        }
+        else if(tenorday >0){
+            if(tenormonth >0){
+                if(tenoryear >0){
+                    tenor=  gArraySav.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+ gArraySav.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH')+' '+gArraySav.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+
+                }
+                else {
+                    tenor=  gArraySav.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH')+' '+gArraySav.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+                }
+            }
+            else if(tenormonth <1){
+                if(tenoryear >0){
+                    tenor=  gArraySav.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+gArraySav.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+                }
+                else{
+                    tenor= gArraySav.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+                }
+            }
+
+        }
+    }
+}
+function PrintPDF(){
+  openLinkInWindows(linkPDF);
+}
+function ChangeInfo(){
+    //setTitleBar('Trong TPBank');
+    if(gArraySav.prod_code == 'T5A005' && gArraySav.checktype =='PRD'){
+        navController.pushToView("esaving/future-esaving-prd-changeinfo", true, 'xsl');
+        setTitleBar(CONST_STR.get('FUTURE_ESAVING_CHANGE_HEADER'));
+
+    }
+    else if(gArraySav.prod_code == 'T5A005' && gArraySav.checktype =='FLX'){
+        navController.pushToView("esaving/future-esaving-auto-changeinfo", true, 'xsl');
+        setTitleBar(CONST_STR.get('FUTURE_ESAVING_CHANGE_HEADER'));
+    }
+    else if(gArraySav.prod_code == 'T6A001'){
+        navController.pushToView("esaving/esaving-check-auto-saving", true, 'xsl');
+        setTitleBar(CONST_STR.get('JUMBO_ACC_TITLE'));
+
+        AutoSavAcc=accid;
+    }
+    else if(gArraySav.prod_code == 'T5A007' || gArraySav.prod_code == 'T5A009'){
+        navController.pushToView("esaving/esaving-online-changeinfo", true, 'xsl');
+        setTitleBar(CONST_STR.get('LIVE_BANK_HEADER_BAR'));
+    }
+    else {
+        navController.pushToView("esaving/esaving-online-changeinfo", true, 'xsl');
+        setTitleBar(CONST_STR.get('E_ESAVING_HEADER_BAR'));
+
+    }
+}
+function WithDraw(){
+    if(gArraySav.prod_code == 'T6A001') {
+        var tmpAccObj = new AccountObj();
+        tmpAccObj.accountNumber = gArraySav.accnocont;
+        tmpAccObj.accClass = gArraySav.prod_code;
+        //loai tien
+        tmpAccObj.currency = gArraySav.currcont;
+        //so tien
+        tmpAccObj.balance = gArraySav.sodu_hientai;
+        //ky han gui
+        if (gUserInfo.lang == 'VN' && gArraySav.prod_des == 'NO_TENOR') {
+            tmpAccObj.ky_han_gui = 'Không kỳ hạn';
+        }
+        else if (gUserInfo.lang == 'EN' && gArraySav.prod_des == 'NO_TENOR') {
+            tmpAccObj.ky_han_gui = 'Không kỳ hạn';
+        }
+        else {
+            tmpAccObj.ky_han_gui = "-";
+        }
+        //ngay mo tai khoan
+        tmpAccObj.openDate = gArraySav.valdatecont;
+        //ngay đến hạn
+        tmpAccObj.overdraftEndDate = gArraySav.matdatecont;
+        //lai suat
+        tmpAccObj.rate = gArraySav.interestcont;
+        //lai den han (tam tinh)
+        tmpAccObj.profitReven = gArraySav.estimatedcont;
+        //so tien phong toa
+        tmpAccObj.numBlockedAmt = gArraySav.so_phong_toa;
+        //muc dich phong toa
+        tmpAccObj.blockReason = gArraySav.lydo_phong_toa;
+        setSelectedAccInfoObj(tmpAccObj);
+
+        //navController.pushToView("accountxsl/account-history-scr", true, 'xsl');
+        navController.pushToView("esaving/auto-saving-close", true, 'xsl');
+        setTitleBar(CONST_STR.get('TRANS_ACCOUNT_INFO_BLOCK_TITLE'));
+    }else if(gArraySav.prod_code == 'T5A007' || gArraySav.prod_code == 'T5A009'){
+            var docXml = createXMLDoc();
+
+            var tmpXmlRootNode;
+            var tmpXmlRootNode = createXMLNode('account', '', docXml);
+
+            var data = new Array();
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), gArraySav.savingtype]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), gArraySav.currcont]);
+            data.push([CONST_STR.get('ESAVING_TIEN_GUI_BAN_DAU'), formatNumberToCurrencyWithSymbol(parseFloat(gArraySav.amountcont))]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_TERM'), getTenorObject(gArraySav)]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), gArraySav.interestcont + "%"]);
+
+            if(gArraySav.estimatedcont == '-') {
+                data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), gArraySav.estimatedcont]);
+            }
+            else {
+                data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), formatNumberToCurrency(gArraySav.estimatedcont)]);
+            }
+
+
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_VALDATE'), gArraySav.valdatecont]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), formatNumberToCurrencyWithSymbol(gArraySav.so_phong_toa)]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), gArraySav.matdatecont]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), gArraySav.lydo_phong_toa]);
+
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_GRID",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+            }else{
+                var recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+            }
+            recycler.setData(data);
+            var contentHTML = recycler.init();
+
+            var tmpXmlNodeInfo = createXMLNode('content', contentHTML, docXml, tmpXmlRootNode);
+            setReviewXmlStore(docXml);
+            navController.pushToView("esaving/future-esaving-close", true, 'xsl');
+            setTitleBar(CONST_STR.get('LIVE_BANK_CLOSE_TITLE'));
+    }else{
+        var docXml = createXMLDoc();
+
+        var tmpXmlRootNode;
+        var tmpXmlRootNode = createXMLNode('account', '', docXml);
+        var tmpIndex = getSelectedAccIdx();
+        if(gArraySav.prod_code == 'T5A005' && gArraySav.checktype == 'PRD'){
+            var data = new Array();
+            data.push([CONST_STR.get('FUTURE_SAVING_PURPOSE'), CONST_STR.get(gArraySav.purpose)]);
+            data.push([CONST_STR.get('FUTURE_SAVING_BALANCE_NON'), gArraySav.sodu_hientai +"VND"]);
+            data.push([CONST_STR.get('FUTURE_SAVING_AMT_PRD'), formatNumberToCurrency(gArraySav.frequency_amt)+"VND"]);
+            if(gArraySav.prod_des < 12){
+                data.push([CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), gArraySav.prod_des + " "+CONST_STR.get('FUTURE_SAVING_MONTH_CUR')]);
+            } else if(gArraySav.prod_des > 12){
+                data.push([CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), (gArraySav.prod_des/12) + " "+CONST_STR.get('TRANS_PERIODIC_YEAR')]);
+            }
+
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), gArraySav.valdatecont]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), gArraySav.matdatecont]);
+            if (gUserInfo.lang == 'VN') {
+                if(gArraySav.is_type =='T30'){
+                    data.push([CONST_STR.get('FUTURE_SAVING_FREQUENCY'), CONST_KEY_ESAVING_FREQUENCY_VN[0]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+gArraySav.frequendate]);
+                }
+                else if(gArraySav.is_type =='T60'){
+                    data.push([CONST_STR.get('FUTURE_SAVING_FREQUENCY'), CONST_KEY_ESAVING_FREQUENCY_VN[1]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+gArraySav.frequendate]);
+                }
+                else if(gArraySav.is_type =='T90'){
+                    data.push([CONST_STR.get('FUTURE_SAVING_FREQUENCY'), CONST_KEY_ESAVING_FREQUENCY_VN[2]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+gArraySav.frequendate]);
+                }
+            }else{
+                if(gArraySav.is_type =='T30'){
+                    data.push([CONST_STR.get('FUTURE_SAVING_FREQUENCY'), CONST_KEY_ESAVING_FREQUENCY_EN[0]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+gArraySav.frequendate]);
+                }
+                else if(gArraySav.is_type =='T60'){
+                    data.push([CONST_STR.get('FUTURE_SAVING_FREQUENCY'), CONST_KEY_ESAVING_FREQUENCY_EN[1]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+gArraySav.frequendate]);
+                }
+                else if(gArraySav.is_type =='T90'){
+                    data.push([CONST_STR.get('FUTURE_SAVING_FREQUENCY'), CONST_KEY_ESAVING_FREQUENCY_EN[2]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+gArraySav.frequendate]);
+                }
+            }
+
+            data.push([CONST_STR.get('FUTURE_SAVING_TYPE'), CONST_STR.get('FUTURE_SAVING_PRD')]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), gArraySav.interestcont +"%"]);
+
+            data.push([CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'), gArraySav.channel]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), gArraySav.so_phong_toa]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), gArraySav.lydo_phong_toa]);
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_GRID",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+            }else{
+                var recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+            }
+            recycler.setData(data);
+            var contentHTML = recycler.init();
+
+            var tmpXmlNodeInfo = createXMLNode('content', contentHTML, docXml, tmpXmlRootNode);
+        }
+        else if (gArraySav.prod_code == 'T5A005' && gArraySav.checktype == 'FLX'){
+            var data = new Array();
+            data.push([CONST_STR.get('FUTURE_SAVING_PURPOSE'), CONST_STR.get(gArraySav.purpose)]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), gArraySav.currcont]);
+            data.push([CONST_STR.get('FUTURE_SAVING_BALANCE_NON'), gArraySav.sodu_hientai]);
+            data.push([CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), gArraySav.prod_des+ " "+CONST_STR.get('FUTURE_SAVING_MONTH_CUR')]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), gArraySav.valdatecont]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), gArraySav.matdatecont]);
+            data.push([CONST_STR.get('FUTURE_SAVING_FREQUENCY'), gArraySav.is_type]);
+            data.push([CONST_STR.get('FUTURE_SAVING_TYPE'), CONST_STR.get('FUTURE_SAVING_AUTO')]);
+            data.push([CONST_STR.get('FUTURE_SAVING_INTEREST'), gArraySav.interestcont+"%"]);
+            data.push([CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'), gArraySav.channel]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), gArraySav.so_phong_toa]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), gArraySav.lydo_phong_toa]);
+
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_GRID",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+            }else{
+                var recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+            }
+
+            recycler.setData(data);
+            var contentHTML = recycler.init();
+
+            var tmpXmlNodeInfo = createXMLNode('content', contentHTML, docXml, tmpXmlRootNode);
+        }
+        else {
+            var data = new Array();
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), gArraySav.savingtype]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), gArraySav.currcont]);
+            data.push([CONST_STR.get('ESAVING_TIEN_GUI_BAN_DAU'), formatNumberToCurrencyWithSymbol(parseFloat(gArraySav.amountcont))]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_TERM'), getTenorObject(gArraySav)]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), gArraySav.interestcont + "%"]);
+
+            if(gArraySav.estimatedcont == '-') {
+                data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), gArraySav.estimatedcont]);
+            }
+            else {
+                data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), formatNumberToCurrency(gArraySav.estimatedcont)]);
+            }
+
+
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_VALDATE'), gArraySav.valdatecont]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), formatNumberToCurrencyWithSymbol(gArraySav.so_phong_toa)]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), gArraySav.matdatecont]);
+            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), gArraySav.lydo_phong_toa]);
+
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_GRID",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+            }else{
+                var recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+            }
+            recycler.setData(data);
+            var contentHTML = recycler.init();
+
+            var tmpXmlNodeInfo = createXMLNode('content', contentHTML, docXml, tmpXmlRootNode);
+        }
+        -
+            setReviewXmlStore(docXml);
+        navController.pushToView("esaving/future-esaving-close", true, 'xsl');
+        setTitleBar(CONST_STR.get('ESAVING_CLOSE_TITLE'));
+    }
+}
+function getTenorTailoc(){
+
+    var tenormonth = parseInt(gArraySav.tenor_month);
+    var tenoryear = parseInt(gArraySav.tenor_year);
+    var counttenor = tenormonth +12*tenoryear;
+    if(counttenor >1){
+        tenor =  counttenor +' '+ CONST_STR.get('ESAVING_RATE_MONTHS_TITLE');
+    }
+    else {
+        tenor =  counttenor + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+    }
+}
+function getTenorObject(obj){
+    var tenorday = parseInt(obj.tenor_day);
+    var tenormonth = parseInt(obj.tenor_month);
+    var tenoryear = parseInt(obj.tenor_year);
+    var counttenor = tenorday + 30*tenormonth +365*tenoryear;
+    if(counttenor>0){
+        if(tenorday <1){
+            if(tenormonth >0){
+                if(tenoryear >0){
+                    return obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+                }
+                else {
+                    return obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+                }
+            }
+            else if(tenormonth <1){
+                return obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR');
+            }
+        }
+        else if(tenorday >0){
+            if(tenormonth >0){
+                if(tenoryear >0){
+                    return  obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+ obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+
+                }
+                else {
+                    return  obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+                }
+            }
+            else if(tenormonth <1){
+                if(tenoryear >0){
+                    return  obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+                }
+                else{
+                    return obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+                }
+            }
+
+        }
+    }
+}

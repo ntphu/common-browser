@@ -1,0 +1,533 @@
+/*TUANNM5 - 06/11/2015*/
+
+/*** HEADER ***/
+
+
+
+
+
+// JavaScript
+flag = false;
+/*** INIT VIEW ***/
+function loadInitXML() {
+	
+	return '';
+}
+
+/*** INIT VIEW END ***/
+
+
+
+/*** VIEW LOAD SUCCESS ***/
+	
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+	var devicePlatform = device.platform;
+	var versionSDK = device.version;
+	if (devicePlatform == 'iOS') {
+		THEBTouchID.checkTouchID('HuyNT2', function(e){
+			//e = 0 -- Thiet bi co ho tro van tay
+			document.getElementById('div-fingerprint').style.display = '';
+			//document.getElementById('div-notifi-fingerprint').style.display = '';
+			sendJSONCheckFingerprintPINRequest();
+
+		}, function(e){
+			//e = 1 -- Thiet bi khong ho tro van tay
+			document.getElementById('div-fingerprint').style.display = 'none';
+			sendJSONCheckFingerprintPINRequest();
+		});
+	} else if(devicePlatform == 'Android' && versionSDK != 'undefined' && parseInt(versionSDK) >= 6){
+
+        //document.getElementById('div-fingerprint').style.display = '';
+
+        cordova.exec(function(e){
+            document.getElementById('div-fingerprint').style.display = '';
+            if (flag == false) {
+                sendJSONCheckFingerprintPINRequest();
+
+            }
+        }, function(e){
+            document.getElementById('div-fingerprint').style.display = 'none';
+            if (flag == false) {
+                sendJSONCheckFingerprintPINRequest();
+
+            }
+        }, 'FingerPrint', 'checkSupportFingerPrint', ['checkSupportFingerPrint']);
+        //END SANGNT1 bổ sung cho Android Platform
+    }else {
+		document.getElementById('div-fingerprint').style.display = 'none';
+		sendJSONCheckFingerprintPINRequest();
+	}
+	
+}
+
+//ham nay tuong duong event onload cho body
+function viewDidLoadSuccess() {
+    actionbar.setTitleBarOnly(CONST_STR.get('PIN_FINGERPRINT_REGIST_TITLE'));
+	logInfo('TouchID register load success');
+	navController.getBottomBar().hide();
+	var devicePlatform = device.platform;
+	var versionSDK = device.version;
+	if (devicePlatform == 'iOS') {
+		//document.getElementById('div-fingerprint').style.display = '';
+		THEBTouchID.checkTouchID('HuyNT2', function(e){
+			//e = 0 -- Thiet bi co ho tro van tay
+			//alert(e + 'a');
+			document.getElementById('div-fingerprint').style.display = '';
+		//	document.getElementById('div-notifi-fingerprint').style.display = '';
+			if (flag == false) {
+				sendJSONCheckFingerprintPINRequest();
+
+			}
+		}, function(e){
+			//e = 1 -- Thiet bi khong ho tro van tay
+			document.getElementById('div-fingerprint').style.display = 'none';
+			if (flag == false) {
+				sendJSONCheckFingerprintPINRequest();
+				
+			}
+		});
+	} //SANGNT1 bổ sung cho Android Platform
+	else if(devicePlatform == 'Android' && versionSDK != 'undefined' && parseInt(versionSDK) >= 6){
+
+        //document.getElementById('div-fingerprint').style.display = '';
+
+        cordova.exec(function(e){
+            document.getElementById('div-fingerprint').style.display = '';
+            if (flag == false) {
+                sendJSONCheckFingerprintPINRequest();
+
+            }
+        }, function(e){
+            document.getElementById('div-fingerprint').style.display = 'none';
+            if (flag == false) {
+                sendJSONCheckFingerprintPINRequest();
+
+            }
+        }, 'FingerPrint', 'checkSupportFingerPrint', ['checkSupportFingerPrint']);
+        //END SANGNT1 bổ sung cho Android Platform
+    } else {
+		document.getElementById('div-fingerprint').style.display = 'none';
+		sendJSONCheckFingerprintPINRequest();
+	}
+
+	/*
+	var inputCheck = document.getElementById("checkOD_mAccInfo");
+	inputCheck.checked = false;
+	changeSwitchUI(document.getElementById("menu_switch_mAccInfo"));
+	*/
+}
+
+function goBack() {
+	navController.popView(true);
+}
+
+function onPinCheckChange() {
+	
+	if (gPincode == '-1' || gPincode.length == 0) {
+		//khach hang chua dang ky su dung PIN code
+		//check xem kh co dang su dung app hay trinh duyet
+		
+		var deviceID = '';
+		try {
+			deviceID = device.uuid;
+		}
+		catch(err) {
+			deviceID = '';
+		}
+		
+		if (deviceID == null || deviceID.length == 0) {
+			//dang su dung trinh duyet
+			showAlertText(CONST_STR.get('PIN_REGIST_INVALID_DEVICE_ALERT'));
+			document.getElementById('checkOD_pin').checked = false
+		} else {
+			//co the dang ky su dung duoc
+			gUsingPinpadMode = 'create_pass';
+			navController.pushToView('setting/setting-pin-fingerprint/setting-pin-verify-password', true);
+		}
+	} else {
+		
+		//kh da dang ky su dung PIN code - swtich sang che do unregister
+		var data = {};
+		arrayArgs = [];
+		arrayArgs.push(gCustomerNo);
+		arrayArgs.push('-1');
+		arrayArgs.push(device.uuid);
+		//arrayArgs.push('123456');
+		
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_PINCODE_CHANGE"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+		data = getDataFromGprsCmd(gprsCmd);
+		requestMBService(data, true, 0, requestMBServiceReviewSuccess, requestMBServiceReviewFail);
+	}
+}
+
+function onFingerprintCheckChange() {
+	//var checked = document.getElementById('checkOD_fingerprint').checked;
+	
+	if (gUsingFingerprint == '0') {
+		//KH chua dang ky su dung Fingerprint
+		//check xem KH co dang su dung app hay trinh duyet
+		//KH dang su dung ung dung mobile, check xem thiet bi co ho tro Fingerprint hay ko
+		var touchIDTimer = setInterval(function(){
+				clearInterval(touchIDTimer);
+				var devicePlatform = device.platform;
+				var versionSDK = device.version;
+                if(devicePlatform == 'Android' && versionSDK != 'undefined' && parseInt(versionSDK) >= 6){
+
+                    cordova.exec(function(e){
+                        navController.pushToView("setting/setting-pin-fingerprint/setting-fingerprint-verify-password", true);
+                    }, function(e){
+
+                    }, 'FingerPrint', 'checkSupportFingerPrint', ['checkSupportFingerPrint']);
+
+                }
+                //END SANGNT1
+                else{
+                    THEBTouchID.alert('abc', 'def', 'Huynt2', function(){
+                        navController.pushToView("setting/setting-pin-fingerprint/setting-fingerprint-verify-password", true);
+                    }, function(e) {
+                        if (e == '3') {
+                            //showAlertText(CONST_STR.get("TOUCHID_3_TIMES_FAIL_ALERT"));
+                        }
+                    });
+                }
+
+		}, 200);
+		setTimeout(function(){
+			if(touchIDTimer) {
+				clearInterval(touchIDTimer);
+			}
+		}, 45000);
+		
+	} else {
+		//kh da dang ky su dung Fingerprint - switch sang che do unregister
+		var data = {};
+		arrayArgs = [];
+		arrayArgs.push(gCustomerNo);
+		arrayArgs.push(device.uuid);
+		
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TOUCHID_UNREGISTER"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+		data = getDataFromGprsCmd(gprsCmd);
+		requestMBService(data, true, 0, requestMBServiceReviewSuccess, requestMBServiceReviewFail);	
+	}
+}
+
+function onChangePinCodeClick() {
+	
+	if (document.getElementById('checkOD_pin').checked == false) {
+		//showAlertText(CONST_STR.get('PIN_CHANGE_UNAVAILABLE_ALERT'));
+	} else {
+		gUsingPinpadMode = 'change_pass';
+		navController.pushToView("setting/setting-pin-fingerprint/setting-pin-verify-password", true);
+	}
+	
+}
+
+function registerUsingTouchID() {
+	showAlertAppText(CONST_STR.get('FINGERPRINT_REGIST_ALERT'), CONST_STR.get('TOUCHID_ALERT_YES'), CONST_STR.get('TOUCHID_ALERT_NO'));
+    document.addEventListener('alertAppConfirmOK', showChoiceConfirmPre, false);
+    document.addEventListener('alertAppConfirmCancel', showChoiceConfirmPreClose, false);
+}
+
+function showChoiceConfirmPre(e) {
+	if (currentPage == "setting/setting-pin-fingerprint-regist") {
+		showChoiceConfirmPreClose();
+		navController.pushToView("setting/setting-pin-fingerprint/setting-fingerprint-verify-password", true);
+	}
+}
+
+function showChoiceConfirmPreClose() {
+	if (currentPage == "setting/setting-pin-fingerprint-regist") {
+		document.removeEventListener("alertAppConfirmCancel", showChoiceConfirmPreClose, false);
+		document.removeEventListener("alertAppConfirmOK", showChoiceConfirmPre, false);
+	}
+}
+
+function viewWillUnload() {
+	logInfo('transfer will unload');
+	flag = false;
+}
+
+function sendJSONCheckFingerprintPINRequest() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	var deviceID ='';//= device.uuid;
+	try {
+		deviceID = device.uuid;
+		arrayArgs.push(deviceID);
+        if(gDeviceRestartFlag){
+            arrayArgs.push('Y');
+        }else{
+            arrayArgs.push('');
+        }
+//		arrayArgs.push('718207E7-6784-4F4B-B374-651A88B27450');
+
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_FINGERPRINT_PINCODE_CHECK_STATUS"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+		
+		data = getDataFromGprsCmd(gprsCmd);
+		
+		requestMBService(data, true, 0, requestMBServiceReviewSuccess, requestMBServiceReviewFail);
+		// showLoadingMask(this);	
+		// requestBacgroundMBService('CMD_FINGERPRINT_PINCODE_CHECK_STATUS', arrayArgs, requestMBServiceReviewSuccess, requestBacgroundMBServiceReviewFail);
+	}
+	catch(err) {
+	}
+}
+/*
+function requestBacgroundMBServiceReviewFail() {
+	hideLoadingMask();
+	alert("xxxxxx");
+	goBack();
+}
+*/
+function requestMBServiceReviewSuccess(e){
+
+	//Gen review screen
+	hideLoadingMask();
+	gprsResp = parserJSON(e);
+	if ((parseInt(gprsResp.respCode) == parseInt(RESP.get('COM_SUCCESS'))) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_FINGERPRINT_PINCODE_CHECK_STATUS")))) {	    
+		if (gprsResp.arguments[0] == '-1') {
+			gPincode = gprsResp.arguments[1];
+			//thiet bi nay chua dang ky su dung PIN code hay Fingerprint
+			var pin = document.getElementById('checkOD_pin');
+			pin.checked = false;
+			changeSwitchUI(document.getElementById("menu_switch_pin"));
+			
+			var fingerprint = document.getElementById('checkOD_fingerprint');
+			fingerprint.checked = false;
+			changeSwitchUI(document.getElementById("menu_switch_fingerprint"));
+			document.getElementById('div-change-pin').style.display = 'none';
+			document.getElementById('div.fingerprint.auth').style.display = 'none';
+			document.getElementById('finger_auth_note').style.display = 'none';
+			 
+		} else {				
+			if (gCustomerNo == gprsResp.arguments[3]) {
+				//Thiet bi nay co dang ky Pin/finger & chinh chu
+				gTokenKey = gprsResp.arguments[0];
+				gUsingFingerprint = gprsResp.arguments[2];
+				gPincode = gprsResp.arguments[1];				
+				gAuthenFinger = gprsResp.arguments[10];
+				if (gPincode == '-1' || gPincode.length == 0) {
+					//Khong dang ky PIN
+					document.getElementById('checkOD_pin').checked = false;
+					changeSwitchUI(document.getElementById("menu_switch_pin"));
+					document.getElementById('div-change-pin').style.display = 'none';
+					document.getElementById('finger_auth_note').style.display = 'none';
+				} else {
+					//Co dang ky PIN
+					document.getElementById('checkOD_pin').checked = true;
+					changeSwitchUI(document.getElementById("menu_switch_pin"));
+					document.getElementById('div-change-pin').style.display = '';	
+					document.getElementById('finger_auth_note').style.display = 'none';						
+				}
+				
+				if (gUsingFingerprint == '0') {
+					//Khong dang ky van tay
+					document.getElementById('checkOD_fingerprint').checked = false;
+					changeSwitchUI(document.getElementById("menu_switch_fingerprint"));
+					document.getElementById('div.fingerprint.auth').style.display = 'none';
+					document.getElementById('finger_auth_note').style.display = 'none';
+				} else {
+					//Co dang ky van tay
+					document.getElementById('checkOD_fingerprint').checked = true;
+					changeSwitchUI(document.getElementById("menu_switch_fingerprint"));
+					document.getElementById('div.fingerprint.auth').style.display = '';			
+					document.getElementById('finger_auth_note').style.display ='';
+					if(gAuthenFinger=='N'){
+						document.getElementById('authen_fingerprint').checked = false;
+						changeSwitchUI(document.getElementById("authen_switch_fingerprint"));
+					}
+					else{
+						document.getElementById('authen_fingerprint').checked = true;
+						changeSwitchUI(document.getElementById("authen_switch_fingerprint"));
+					}
+				}
+			} else {					
+				//Thiet bi nay co dang ky & khong phai chinh chu
+				var pin = document.getElementById('checkOD_pin');
+				pin.checked = false;
+				changeSwitchUI(document.getElementById("menu_switch_pin"));
+				
+				var fingerprint = document.getElementById('checkOD_fingerprint');
+				fingerprint.checked = false;
+				changeSwitchUI(document.getElementById("menu_switch_fingerprint"));
+				document.getElementById('div-change-pin').style.display = 'none';
+				document.getElementById('div.fingerprint.auth').style.display = 'none';
+			}				
+		}	
+		if((gprsResp.arguments[7]=='N') && (gprsResp.arguments[8]=='N'))
+	    {
+		}else if((gprsResp.arguments[7]=='Y') && (gprsResp.arguments[8]=='Y')) {
+			
+			//showAlertText(CONST_STR.get('PIN_RE_DEVICE_ACCOUNT_ALERT'));
+			document.getElementById('div-notifi-fingerprint').innerHTML =CONST_STR.get('PIN_RE_DEVICE_ACCOUNT_ALERT');
+			document.getElementById('div-notifi-fingerprint').style.display = '';	
+			
+		}else if((gprsResp.arguments[7]=='Y') && (gprsResp.arguments[8]=='N')) {
+			document.getElementById('div-notifi-fingerprint').innerHTML =CONST_STR.get('PIN_RE_ACCOUNT_ALERT');
+			document.getElementById('div-notifi-fingerprint').style.display = '';	
+			//showAlertText(CONST_STR.get('PIN_RE_ACCOUNT_ALERT'));
+			
+		}else if((gprsResp.arguments[7]=='N') && (gprsResp.arguments[8]=='Y')) {
+			document.getElementById('div-notifi-fingerprint').innerHTML =CONST_STR.get('PIN_RE_DEVICE_ALERT');
+			document.getElementById('div-notifi-fingerprint').style.display = '';	
+			//showAlertText(CONST_STR.get('PIN_RE_DEVICE_ALERT'));
+		}		
+		
+	} else if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_PINCODE_CHANGE")))) {
+		gPincode = '';
+		gTokenKey = gprsResp.arguments[0];
+		
+		var docXml = createXMLDoc();
+		var tmpXmlRootNode;
+		var tmpXmlRootNode = createXMLNode('result', '', docXml);
+		//review/reviewtitle //screen title
+		var tmpXmlNodeInfo = createXMLNode('resulttitle', CONST_STR.get('PIN_REGISTER_TITLE'), docXml, tmpXmlRootNode);
+		
+		tmpXmlNodeInfo = createXMLNode('resulttitleresult', CONST_STR.get('PIN_UNREGIST_ALERT_COMPLETE'), docXml, tmpXmlRootNode);
+		
+		logInfo(docXml);
+		setReviewXmlStore(docXml);
+		
+		navController.pushToView("setting/setting-pin-fingerprint/setting-pin-fingerprint-result-scr", true, 'xsl');
+	} else if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TOUCHID_UNREGISTER")))) {
+		gUsingFingerprint = '0';
+		genResultScreen();
+	}  else if ((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_FINGERPRINT_PINCODE_CHECK_STATUS")))) {
+		goBack();
+	} 
+	else {
+		document.addEventListener('closeAlertView', handleAlertEmpty, false);
+		showAlertText(gprsResp.respContent);			
+	}
+}
+
+function requestMBServiceReviewFail() {
+
+}
+
+function genResultScreen() {
+	//var nodeReviewInfo = document.getElementById("panelContent");
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlRootNode = createXMLNode('result', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('resulttitle', CONST_STR.get('FINGERPRINT_REGISTER_TITLE'), docXml, tmpXmlRootNode);
+	
+	tmpXmlNodeInfo = createXMLNode('resulttitleresult', CONST_STR.get('TOUCHID_UNREGISTER_COMPLETE_TITLE'), docXml, tmpXmlRootNode);
+	
+	logInfo(docXml);
+	setReviewXmlStore(docXml);
+	
+	navController.pushToView("setting/setting-pin-fingerprint/setting-pin-fingerprint-result-scr", true, 'xsl');
+}
+
+function onChangeSwitch(e) {	
+    var tmpCheckNode = e.getElementsByTagName('input')[0];
+	if (tmpCheckNode != null) {
+    	tmpCheckNode.checked = !tmpCheckNode.checked;
+    };
+	changeSwitchUI(e);
+}
+
+function changeSwitchUI(e) {
+
+    var tmpCheckNode = e.getElementsByTagName('input')[0];
+    var switchBackground = e;
+    var switchHandle = e.getElementsByClassName("custom-switch-handle")[0];
+    var switchLabel = e.getElementsByClassName("custom-switch-label")[0];
+
+    
+
+    console.log("checked: ", tmpCheckNode.checked);
+
+    if (switchBackground != null) {
+        if (!tmpCheckNode || (tmpCheckNode && tmpCheckNode.checked)) {
+            // switch
+            if (!switchBackground.classList.contains('custom-switch-on')) {
+                switchBackground.classList.add('custom-switch-on');
+                switchBackground.getElementsByClassName("custom-switch-label").innerHTML = "on";
+            }
+            if (switchBackground.classList.contains('custom-switch-off')) {
+                switchBackground.classList.remove('custom-switch-off');
+            }
+            // handle
+            if (!switchHandle.classList.contains('custom-switch-handle-on')) {
+                switchHandle.classList.add('custom-switch-handle-on');
+            }
+            if (switchHandle.classList.contains('custom-switch-handle-off')) {
+                switchHandle.classList.remove('custom-switch-handle-off');
+            }
+            // label
+            switchLabel.innerHTML = "on";
+            if (!switchLabel.classList.contains('custom-switch-label-on')) {
+                switchLabel.classList.add('custom-switch-label-on');
+            }
+            if (switchLabel.classList.contains('custom-switch-label-off')) {
+                switchLabel.classList.remove('custom-switch-label-off');
+            }
+        } else {
+            if (!switchBackground.classList.contains('custom-switch-off')) {
+                switchBackground.classList.add('custom-switch-off');
+                switchBackground.getElementsByClassName("custom-switch-label").innerHTML = "off";
+            }
+            if (switchBackground.classList.contains('custom-switch-on')) {
+                switchBackground.classList.remove('custom-switch-on');
+            }
+            // handle
+            if (!switchHandle.classList.contains('custom-switch-handle-off')) {
+                switchHandle.classList.add('custom-switch-handle-off');
+            }
+            if (switchHandle.classList.contains('custom-switch-handle-on')) {
+                switchHandle.classList.remove('custom-switch-handle-on');
+            }
+            // label
+            switchLabel.innerHTML = "off";
+            if (!switchLabel.classList.contains('custom-switch-label-off')) {
+                switchLabel.classList.add('custom-switch-label-off');
+            }
+            if (switchLabel.classList.contains('custom-switch-label-on')) {
+                switchLabel.classList.remove('custom-switch-label-on');
+            }
+        }
+    } else {}
+}
+
+function onFingerprintAuthChange(){
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(gCustomerNo); //CIF
+	arrayArgs.push(device.uuid); // device ID
+	arrayArgs.push("CHANGE_STATUS");
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_FINGERPRINT_AUTH_INFO"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceAuthenSuccess, requestMBServiceAuthenFail);
+
+}
+function requestMBServiceAuthenSuccess(e) {
+	gprsResp = parserJSON(e);
+	//alert(parseInt(gprsResp.responseType));
+	//alert(parseInt(CONSTANTS.get("CMD_GET_FINGERPRINT_AUTH_INFO")));
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_FINGERPRINT_AUTH_INFO")))) {
+		var status = gprsResp.arguments[0];
+		//alert(gprsResp.arguments[0]);
+		if (status == 'FALSE') {
+			//alert('false');
+			var pin = document.getElementById('authen_fingerprint');
+			pin.checked = false;
+			changeSwitchUI(document.getElementById("authen_switch_fingerprint"));
+		} else {
+			//alert('true');
+			var pin = document.getElementById('authen_fingerprint');
+			pin.checked = true;
+			changeSwitchUI(document.getElementById("authen_switch_fingerprint"));
+		}
+	}
+}
+
+function requestMBServiceAuthenFail(){
+}

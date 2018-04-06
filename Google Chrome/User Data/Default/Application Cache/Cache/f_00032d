@@ -1,0 +1,564 @@
+// JavaScript Document
+/*
+ * Created by DungNT11
+ * User: DungNT11.Fsoft
+ * Date: 7/15/14tmpArray1
+ * Time: 5:05 PM
+ */
+
+var gLoyaltyManageObjs;
+var gChangeLimitObj;
+var cardId;
+var cardNumberId;
+var cardNumberName;
+var perLimitId;
+var cardDeactivateId;
+var compare ;
+var tab1Loaded = false;
+var arrCardObj = [];
+var arrCardChangeObj = [];
+var tmpArray1 = [];
+var tmpArray2 = [];
+var gPerTransaction;
+var flag_back;
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+	return '';
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag_back = true;
+	
+}
+/*** VIEW BACK FROM OTHER ***/
+
+/*** VIEW LOAD SUCCESS ***/
+function MenuContent(title, src) {
+    this.title = title;
+    this.src = src;
+    this.keyLang = title;
+}
+
+function viewDidLoadSuccess() {
+        var arrBottom = new Array();
+        arrBottom.push(new MenuContent('CHANCE_LIMIT_TITLE', 'cardservicexsl/card-setup-payment'));
+        arrBottom.push(new MenuContent('DEACTIVATE_TITLE', 'cardservicexsl/card-deactivate-limit'));
+        navController.initBottomBarOnlyText(arrBottom[0].src ,arrBottom, "card-change-deactivate");
+        navController.getActionBar().setTitleBarOnly(CONST_STR.get("MENU_SETUP_CARD_ONLINE_MENU"));
+    initRequestCards();
+    actionbar.addListSequence("cardservicexsl/card-setup-payment");
+    if(flag_back){
+        flag_back = false;
+    }else{
+        logInfo('transfer load success');
+        cardId = 0;
+        cardNumberName = 0;
+        perLimitId = 0;
+        cardDeactivateId = "";
+        //reset value
+        document.getElementById("id.cardNumber").value = CONST_STR.get('ENTER_CHOICE_MENU');
+
+        document.getElementById("id.creditLimit").style.display='none';
+        document.getElementById("id.perTransaction").style.display='none';
+        document.getElementById("id.perDay").style.display='none';
+        //document.getElementById("id.perShowTransaction").value = CONST_STR.get('ENTER_CHOICE_MENU');
+        document.getElementById("id.showperDay").value="";
+        document.getElementById("id.errorCardNumber").style.display='none';
+      //  document.getElementById("id.errorPerTransaction").style.display='none';
+    }
+}
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('transfer will unload');
+}
+
+/*** VIEW WILL UNLOAD END ***/
+function showPageTab1() {
+	document.getElementById('tabpage_1').style.display = '';
+//	document.getElementById('tabpage_2').style.display = 'none';
+}
+
+function showPageTab2() {
+	document.getElementById('tabpage_1').style.display = 'none';
+	document.getElementById('tabpage_2').style.display = '';
+}
+
+function CardObj(){
+	this.ocardTitle = "";
+	this.ocardNo = "";
+	this.ograntedcredit = "";
+	this.operTransaction = "";
+	this.operDay= "";
+	this.ocardStyle = "";
+}
+var pCardSelected = new CardObj();
+
+function CardChangeObj(){
+	this.ocardStyleChange = "";
+	this.operTransactionChange = "";
+	this.operDayChange = "";
+}
+//check khach hang co the tin dung hay khong
+function initRequestCards(){
+	//navController.initWithRootView('accountxsl/account-scr');
+	document.getElementById("tabContainer").style.display = "none";
+	var arrayArgs = new Array();	
+	arrayArgs.push("");
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_MANAGER_CARD"), "", "", gUserInfo.lang, gUserInfo.sessionID,arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccessInit, requestMBServiceFailInit);	
+}
+
+function requestMBServiceSuccessInit(e){
+	tab1Loaded = true;	
+    gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == CONSTANTS.get("CMD_MANAGER_CARD"))) {
+		if(tab1Loaded) {
+			showPageTab1();
+		}
+		else {
+
+			showPageTab2();
+		}
+		gLoyaltyManageObjs = new Array();
+		gLoyaltyManageObjs = gprsResp.arguments;	
+		if (gLoyaltyManageObjs && gLoyaltyManageObjs.length > 0){
+			var tempArrStr = gLoyaltyManageObjs[0].split("#");
+			var check = new Array;
+			for(var i =0; i< tempArrStr.length; i++){																							
+			var tmpVisaObj = new VisaCardObj()
+			var tmpStr = tempArrStr[i];;
+			tmpVisaObj.cardtype = tmpStr[0];
+			
+				if((tmpVisaObj.cardtype =='C') || (tmpVisaObj.cardtype =='D') || (tmpVisaObj.cardtype =='M')){
+				check.push(tmpVisaObj.cardtype);
+			}
+			}
+			if(check.length <1){
+				showAlertText(CONST_STR.get('CARD_SETUP_PAYMENT_ERR'));
+				var tmpPageName = navController.getDefaultPage();
+				var tmpPageType = navController.getDefaultPageType();
+				navController.initWithRootView(tmpPageName, true, tmpPageType);
+            }
+			
+			if (tempArrStr.length < 1 || (tempArrStr.length == 1 && tempArrStr[0] == '')) {
+				showAlertText(CONST_STR.get('CARD_SETUP_PAYMENT_ERR'));
+                var tmpPageName = navController.getDefaultPage();
+                var tmpPageType = navController.getDefaultPageType();
+                navController.initWithRootView(tmpPageName, true, tmpPageType);
+			}
+			else {
+				document.getElementById("tabContainer").style.display = "";
+
+				//NOTE: CHECK CASE SERVICE KHONG CO DU LIEU NAY????
+				for (var i = 0; i < tempArrStr.length; i++){
+					if (tempArrStr[i] == "C"){
+						temp = CONST_STR.get('NAME_CARD_TITLE_C')
+						tmpArray1.push(temp);
+						tmpArray2.push(tempArrStr[i]);
+					}
+					if (tempArrStr[i] == "D"){
+						temp = CONST_STR.get('NAME_CARD_TITLE_D')
+						tmpArray1.push(temp);
+						tmpArray2.push(tempArrStr[i]);
+					}
+					if (tempArrStr[i] == "M"){
+						temp = CONST_STR.get('NAME_CARD_TITLE_M')
+						tmpArray1.push(temp);
+						tmpArray2.push(tempArrStr[i]);
+					}
+				}
+				//show default vaule
+				/*if(tmpArray2.length > 0) {
+					var tmpEvt = Object();
+					tmpEvt.selectedValue1 = tmpArray1[0];
+					tmpEvt.selectedValue2 = tmpArray2[0];
+					showChoiceCardInfoPre(tmpEvt);
+				}*/
+			}
+			var tmpCardObj = new CardObj();
+			var tmpCardChangeObj = new CardChangeObj();
+			var tmpLastIdx = 1;
+			var checkPerTrans = 0;
+			for (var i = tmpLastIdx; i < gLoyaltyManageObjs.length; i++){
+				if(gLoyaltyManageObjs[i] != 'END') {
+					tempArrStr = gLoyaltyManageObjs[i].split("#");
+					if (tempArrStr.length > 4){ //Card object
+						tmpCardObj = new CardObj();
+						tmpCardObj.ocardNo = tempArrStr[0];
+						tmpCardObj.ocardTitle = tempArrStr[1];
+						tmpCardObj.ograntedcredit = tempArrStr[2];
+						tmpCardObj.operTransaction = tempArrStr[3];
+						tmpCardObj.operDay = tempArrStr[4];
+						tmpCardObj.ocardStyle = tempArrStr[5];				
+						arrCardObj.push(tmpCardObj);
+						
+						//check per trans for showing lock card limit
+						checkPerTrans = Number(checkPerTrans) + Number(tmpCardObj.operTransaction);
+					}
+
+				}
+				else {
+					tmpLastIdx = i;
+					break;
+				}
+			}
+            if(isLocked() == false) navController.getBottomBar().hide();
+			for(var i = tmpLastIdx; i < gLoyaltyManageObjs.length; i++) {
+				if(gLoyaltyManageObjs[i] != 'END') { //card change limit
+					tempArrStr = gLoyaltyManageObjs[i].split("#");
+					tmpCardChangeObj = new CardChangeObj();
+					tmpCardChangeObj.ocardStyleChange = tempArrStr[0];
+					tmpCardChangeObj.operTransactionChange = tempArrStr[1];
+					tmpCardChangeObj.operDayChange = tempArrStr[2];
+					arrCardChangeObj.push(tmpCardChangeObj);
+				}
+			}
+		}
+        else{
+			showAlertText(CONST_STR.get('CARD_SETUP_PAYMENT_ERR'));
+			var tmpPageName = navController.getDefaultPage();
+			var tmpPageType = navController.getDefaultPageType();
+			navController.pushToView(tmpPageName, true, tmpPageType);
+		}
+	}
+   else{
+		//navController.initWithRootView('accountxsl/account-scr');
+		showAlertText(CONST_STR.get('CARD_SETUP_PAYMENT_ERR'));
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.pushToView(tmpPageName, true, tmpPageType);
+	}
+}
+
+function requestMBServiceFailInit(e){
+	//navController.initWithRootView('accountxsl/account-scr');
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.pushToView(tmpPageName, true, tmpPageType);
+}
+
+//fill data card title
+function showChoiceCardTitle(){	
+	
+	document.addEventListener("evtSelectionDialog",showChoiceCardInfoPre, false);
+	document.addEventListener("evtSelectionDialogClose", showChoiceCardInfoPreClose, false);
+    showDialogList(CONST_STR.get('ENTER_CHOICE_MENU'), tmpArray1, tmpArray2 ,false,isLocked());
+}
+function showChoiceCardInfoPre(e) {
+	if (currentPage == "cardservicexsl/card-setup-payment") {
+		showChoiceCardInfoPreClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			defaultChoice = e.selectedValue1;			
+			var tagAccNo = document.getElementById("id.cardTitle");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			
+			if(cardId == ""){
+				cardId = e.selectedValue2;
+			}
+			else if(cardId == e.selectedValue2 ){
+			}
+			else if (cardId != e.selectedValue2){
+				cardId = e.selectedValue2;
+				//reset value
+				document.getElementById("id.cardNumber").value = CONST_STR.get('ENTER_CHOICE_MENU');
+				
+				document.getElementById("id.creditLimit").style.display='none';
+				document.getElementById("id.perTransaction").style.display='none';
+				document.getElementById("id.perDay").style.display='none';			
+				document.getElementById("id.showperDay").value="";
+				document.getElementById("id.errorCardNumber").style.display='none';
+			}			
+			cardNumberId = "";
+		}
+	}
+}
+function showChoiceCardInfoPreClose() {
+	if (currentPage == "cardservicexsl/card-setup-payment") {
+		document.removeEventListener("evtSelectionDialogClose", showChoiceCardInfoPreClose, false);
+		document.removeEventListener("evtSelectionDialog", showChoiceCardInfoPre, false);
+	}
+}
+
+//fill data card number
+
+function showChoiceCardNumber(){
+	if(cardId != "" && cardId != undefined) {
+		var cardNumberArray1 = [];
+		var cardNumberArray2 = [];
+		for (var i = 0; i < arrCardObj.length; i++){
+			
+			if (arrCardObj[i].ocardTitle == cardId ){
+				cardNumberArray1.push(arrCardObj[i].ocardNo);
+				cardNumberArray2.push(arrCardObj[i].ocardStyle);
+			}
+		}
+		document.addEventListener("evtSelectionDialog",showChoiceCardNumberInfoPre, false);
+		document.addEventListener("evtSelectionDialogClose", showChoiceCardNumberInfoPreClose, false);
+		showDialogList(CONST_STR.get('ENTER_CHOICE_MENU'), cardNumberArray1,cardNumberArray2, false,isLocked());
+	}
+}
+
+function showChoiceCardNumberInfoPre(e) {
+	if (currentPage == "cardservicexsl/card-setup-payment") {
+		showChoiceCardNumberInfoPreClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			defaultChoice = e.selectedValue1;			
+			var tagAccNo1 = document.getElementById("id.cardNumber");
+			if (tagAccNo1.nodeName == "INPUT") {
+				tagAccNo1.value = e.selectedValue1;		
+				if(cardNumberName == ""){
+					cardNumberName = e.selectedValue1;
+				}
+				else if(cardNumberName == e.selectedValue1 ){
+				}
+				else if (cardNumberName != e.selectedValue1){
+					cardNumberName = e.selectedValue1;				
+					document.getElementById("id.showperDay").value="";
+				}
+			}
+			else {
+				tagAccNo1.innerHTML = e.selectedValue1;				
+			}
+			
+			if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+				cardNumberId = e.selectedValue2				
+			}			
+			loadLabel();
+		}
+		
+	}
+}
+
+function showChoiceCardNumberInfoPreClose() {
+	if (currentPage == "cardservicexsl/card-setup-payment") {
+		document.removeEventListener("evtSelectionDialogClose", showChoiceCardNumberInfoPreClose, false);
+		document.removeEventListener("evtSelectionDialog", showChoiceCardNumberInfoPre, false);
+	}
+}
+
+// fill data label
+function loadLabel(){
+	var carNumber = document.getElementById("id.cardNumber");		
+	for (var i = 0; i < arrCardObj.length; i++){
+		if(arrCardObj[i].ocardNo == carNumber.value){
+			pCardSelected = arrCardObj[i];
+			if (arrCardObj[i].ograntedcredit != " "){
+				document.getElementById("id.creditLimit").style.display='';
+				document.getElementById("id.creditLimitTitle").innerHTML = formatNumberToCurrencyWithSymbol(arrCardObj[i].ograntedcredit) + " " + CONST_DEFAULT_CURRENCY;
+			}
+			else {
+				pCardSelected.ograntedcredit = 0;
+				document.getElementById("id.creditLimit").style.display='none';
+				document.getElementById("id.creditLimitTitle").innerHTML = 0;
+			}
+			document.getElementById("id.perTransaction").style.display='';
+			document.getElementById("id.perTransactionTitle").innerHTML = formatNumberToCurrencyWithSymbol(arrCardObj[i].operTransaction) + " " + CONST_DEFAULT_CURRENCY;
+			document.getElementById("id.perTransactionTitleVal").value = arrCardObj[i].operTransaction;
+			document.getElementById("id.perDay").style.display='';
+			document.getElementById("id.perDayTitle").innerHTML = formatNumberToCurrencyWithSymbol(arrCardObj[i].operDay) + " " + CONST_DEFAULT_CURRENCY;
+            document.getElementById("input-group").style.display='';
+        }
+	}
+}
+function sendJSONRequestChanceLimit(){
+	var data = {};
+	var check = 0;
+	var cardTitle = document.getElementById("id.cardTitle");
+	var cardNumber = document.getElementById("id.cardNumber");
+	//var perShowTransaction = document.getElementById("id.showPerTransVal");
+	var perShowTransaction = document.getElementById("id.perShowTransaction");
+	var perDay = document.getElementById("id.showperDay");
+	var curPerTrans = document.getElementById('id.perTransactionTitle');
+	var curPerDay = document.getElementById('id.perDayTitle');
+	var curLimit = document.getElementById('id.creditLimitTitle');
+    if(cardTitle.value== undefined||cardTitle.value==""||cardTitle.value== CONST_STR.get('CARD_PAY_LIMIT_SECL')){
+        showAlertText(CONST_STR.get('CARD_PAY_LIMIT_SECL') + ' "' + CONST_STR.get('CARD_PAY_LIMIT_CARD_TIT') + '"');
+        return;
+    }
+    if(cardNumber.value== undefined||cardNumber.value==""||cardNumber.value== CONST_STR.get('CARD_PAY_LIMIT_SECL')){
+        showAlertText(CONST_STR.get('CARD_PAY_LIMIT_SECL') + ' "' + CONST_STR.get('CARD_PAY_LIMIT_CARD_NUM') + '"');
+        return;
+    }
+	if(perShowTransaction.value== undefined||perShowTransaction.value==""||perShowTransaction.value== CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER')){
+        showAlertText(CONST_STR.get('CARD_PAY_LIMIT_PER_TRANS_ERR'));
+        return;
+    }
+	
+	if(perDay.value== undefined||perDay.value==""||perDay.value== CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER')){
+        showAlertText(CONST_STR.get('CARD_PAY_LIMIT_PER_DAY_ERR'));
+        return;
+    }
+	if(removeSpecialChar(perShowTransaction.value) ==removeSpecialChar(curPerTrans.innerHTML) && removeSpecialChar(perDay.value)==removeSpecialChar(curPerDay.innerHTML)){
+		 showAlertText(CONST_STR.get('CARD_PAYMENT_SETUP_ERR'));
+        return;
+	}
+	
+	if((parseInt(removeSpecialChar(perShowTransaction.value) ) >parseInt(removeSpecialChar(perDay.value)))|| (cardId=='C' && parseInt(removeSpecialChar(perDay.value)) > parseInt(removeSpecialChar(curLimit.innerHTML)))||(cardId=='M' && parseInt(removeSpecialChar(perDay.value)) > parseInt(removeSpecialChar(curLimit.innerHTML)))){
+		 showAlertText(CONST_STR.get('CARD_PAYMENT_SETUP_LIMIT_ERR'));
+        return;
+	}
+	var arrayArgs = new Array()
+	arrayArgs.push(cardNumber.value);
+	arrayArgs.push(removeSpecialChar(perShowTransaction.value));
+	arrayArgs.push(removeSpecialChar(perDay.value));
+	arrayArgs.push(cardId);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_CARD_LOCK"), "", "", gUserInfo.lang, gUserInfo.sessionID,arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccessChangeLimit, requestMBServiceFailChangeLimit);
+	
+}
+
+function requestMBServiceSuccessChangeLimit(e){
+    gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_CARD_LOCK")))) {
+		gChangeLimitObj = new Array();
+		gChangeLimitObj = gprsResp.arguments;
+		genReviewScreen();
+	}else {
+		//navController.initWithRootView('accountxsl/account-scr');	
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.pushToView(tmpPageName, true, tmpPageType);
+	}
+}
+function requestMBServiceFailChangeLimit(e){
+	//navController.initWithRootView('accountxsl/account-scr');
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.pushToView(tmpPageName, true, tmpPageType);
+}
+
+function genReviewScreen(){
+	var cardTitle = document.getElementById("id.cardTitle");
+	var cardNumber = document.getElementById("id.cardNumber");
+	var creditLimitTitle = document.getElementById("id.creditLimitTitle");
+	var perTransactionTitle = document.getElementById("id.perTransactionTitle");
+	var perDayTitle = document.getElementById("id.perDayTitle");
+	var perShowTransaction = document.getElementById("id.perShowTransaction");
+	var showperDay = document.getElementById("id.showperDay");
+
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('MENU_SETUP_CARD_ONLINE_MENU'), docXml, tmpXmlRootNode);
+
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+		
+	//loai the
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CARD_TITLE_BGN'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', cardTitle.value, docXml, tmpChildNodeAcc);
+
+	//so the
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CARD_NUMBER_TITLE_BGN'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', cardNumber.value, docXml, tmpChildNodeAcc);
+	
+	//Han muc the duoc cap
+	if (creditLimitTitle.innerHTML != 0){
+		var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_LIMIT_TITLE'), docXml, tmpChildNodeAcc);
+		tmpChildNode = createXMLNode('transinfocontent', creditLimitTitle.innerHTML, docXml, tmpChildNodeAcc);
+		tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+	}
+	
+	//han muc lan hien tai
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('PER_TRANSACTION_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',perTransactionTitle.innerHTML, docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+
+	//han muc ngay hien tai
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('PER_DAY_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', perDayTitle.innerHTML, docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+	
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	//han muc lan muon thay doi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('PER_TRACSACTION_TITLE_BGN'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', perShowTransaction.value +" VND", docXml, tmpChildNodeAcc);
+//	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+	
+	//han muc ngay muon thay doi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('PER_DAY_TITLE_BGN'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', showperDay.value+" VND", docXml, tmpChildNodeAcc);
+//	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+	
+	//han muc lan ket qua thay doi
+//	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+//	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('PER_TRANSACTION_RESULT_TITLE'), docXml, tmpChildNodeAcc);
+//	tmpChildNode = createXMLNode('transinfocontent', perShowTransaction.value, docXml, tmpChildNodeAcc);
+//	tmpChildNode = createXMLNode('transinfodisplay', 'result', docXml, tmpChildNodeAcc); //display in result
+//	
+//	//han muc ngay ket qua thay doi
+//	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+//	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('PER_DAY_RESULT_TITLE'), docXml, tmpChildNodeAcc);
+//	tmpChildNode = createXMLNode('transinfocontent', showperDay.value, docXml, tmpChildNodeAcc);
+//	tmpChildNode = createXMLNode('transinfodisplay', 'result', docXml, tmpChildNodeAcc); //display in result
+
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+
+}
+function isLocked(){
+    var deactive = false;
+    for (var i = 0; i < arrCardObj.length; i++){
+        if ((arrCardObj[i].ocardTitle == "C" || (arrCardObj[i].ocardTitle =='D') || (arrCardObj[i].ocardTitle =='M')) && arrCardObj[i].operDay != 0 && arrCardObj[i].operTransaction != 0)
+        deactive = true;
+    }
+    return deactive;
+}
+function handleInputAmount (e, des) {
+    var tmpVale = removeSpecialChar(des.value);
+    if(tmpVale.length > 13){
+        tmpVale = tmpVale.slice(0,13);
+    }
+    des.value = tmpVale;
+    formatCurrency(e, des);
+    var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang);
+
+    var nodeNumTxt = document.getElementById("id.perShowTransaction");
+    nodeNumTxt.innerHTML = "<div>" + numStr + "</div>";
+}
+function handleInputAmount1 (e, des) {
+    var tmpVale = removeSpecialChar(des.value);
+    if(tmpVale.length > 13){
+        tmpVale = tmpVale.slice(0,13);
+    }
+    des.value = tmpVale;
+    formatCurrency(e, des);
+    var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang);
+
+    var nodeNumTxt = document.getElementById("id.showperDay");
+    nodeNumTxt.innerHTML = "<div>" + numStr + "</div>";
+}

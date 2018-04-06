@@ -1,0 +1,1247 @@
+/**
+ * Created by HuyNT2.
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+ 
+/*** HEADER ***/
+var gprsResp = new GprsRespObj("","","","");
+var tmpAcc = new AccountObj(); 
+var arrayCredits;
+var selectedCredit;
+var arrayCreditHis;
+var totalPage = 0;
+var pageIndex = 1;
+var itemsPerPage = 10;
+var xslCreditHisTable;
+var xslCreditListTable;
+var advSearchStatus = true;
+var selectedTransType = CONST_HIS_CREDIT_TRANS_TYPE_ID[0];
+var inputMinAmount = 'ALL';
+var inputMaxAmount = 'ALL';
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+	logInfo('credit list init');
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW LOAD SUCCESS ***/
+function viewBackFromOther() {
+    logInfo('Back from other view');
+}
+function viewDidLoadSuccess() {
+	logInfo('visa/TransMoth-list-scr load success');
+    logInfo(cardnumber);
+    navController.getActionBar().hideNavHeaderBar();
+	//arrayCredits = getArrayCardObjs();
+	//if(arrayCredits == undefined || arrayCredits.length > 0) 
+    navController.getActionBar().setTitleBarOnly(CONST_STR.get('GOLD_PRICE_HISTORY_TITLE246'));
+
+
+	viewCardDetail();
+	
+	//sendJSONRequest();
+    /*var arrBottom = new Array();
+    arrBottom.push(new MenuBottom('GOLD_PRICE_HISTORY_TITLE245', "icon-logo"));
+    arrBottom.push(new MenuBottom("GOLD_PRICE_HISTORY_TITLE246", "icon-logo"));
+    navController.initBottomBarWithCallBack("visa/TransMoth-list-scr", arrBottom, "transmoth_list", function (index) {
+        if(index==0)
+            showHistoryTransVisa();
+
+        else
+            return false;
+    });*/
+    var arrBottom = new Array();
+    // arrBottom.push(new MenuContent('GOLD_PRICE_HISTORY_TITLE245', 'visa/credit-list-scr'));
+    // arrBottom.push(new MenuContent('GOLD_PRICE_HISTORY_TITLE246', 'visa/TransMoth-list-scr'));
+    // navController.initBottomBarOnlyText(arrBottom[0].src, arrBottom, "id_TransMonth-list-src");
+
+}
+
+function goBreachList() {
+
+	
+	var tmpNodeDetail = document.getElementById('card-detail-info');
+	tmpNodeDetail.style.display = '';
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('credit will unload');
+}
+
+
+function sendJSONRequest() {
+	
+	var data = {};
+	var arrayArgs = new Array();
+	var _year = "";
+	_year = document.getElementById('yearchoose').value;
+	var _month = "";
+	_month = document.getElementById('monthchoose').value;
+	var month_tranfer = _year + _month;
+	if(_month == 'Select' || _month == "Chọn"){
+        showAlertText(CONST_STR.get('TRANS_ALERT_SHOW_MONTH'));
+        return;
+    }else if(_year == 'Select' || _year == "Chọn"){
+        showAlertText(CONST_STR.get('TRANS_ALERT_SHOW_YEAR'));
+        return;
+    }
+	arrayArgs.push(cardnumber);
+	arrayArgs.push(gCustomerNo);	
+	arrayArgs.push(month_tranfer);
+	
+		
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TRANS_MOTH_HIS_VISA"), "", "",gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	
+}
+/*** VIEW WILL UNLOAD END ***/
+
+/*** FUNCTION ***/
+
+function requestVisaList() {
+	
+	var tmpNodeDetail = document.getElementById('card-detail-info');
+	if(tmpNodeDetail != undefined) tmpNodeDetail.style.display = 'none';
+	
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(gCustomerNo);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOOKUP_VISA_CARD"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestVisaListMBServiceSuccess, requestVisaListMBServiceFail);
+}
+
+function goBackToList() {
+	//reset view
+	var tmpNodeDetail = document.getElementById('card-detail-info');
+	if(tmpNodeDetail != undefined) tmpNodeDetail.style.display = 'none';
+	
+	document.getElementById('credit-historyInfo').innerHTML = '';
+	document.getElementById('acc.pagination').innerHTML = '';
+	advSearchStatus = false;
+	showAdvandSearch();
+	advSearchStatus = true;
+	
+	//gen visa list
+	var tmpXmlDoc = genXmlCreditList(arrayCredits);
+	var tmpXslDoc = xslCreditListTable;
+	
+	//gen html
+	genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('credit-list-id');
+		tmpNode.innerHTML = oStr;
+		var tmpNodeDetail = document.getElementById('card-detail-info');
+		if(tmpNodeDetail != undefined) tmpNodeDetail.style.display = 'none';
+	});
+}
+
+function requestVisaListMBServiceSuccess(e) {
+	gprsResp = parserJSON(e);
+	arrayCredits = new Array();
+	
+	/*if ((gprsResp.respCode == RESP.get('COM_SUCCESS')) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get('CMD_LOOKUP_VISA_CARD')))) {
+		if(gprsResp.arguments && gprsResp.arguments.length > 0) {
+			for(var i=0; i<gprsResp.arguments.length; i++) {
+				var tmpStr = gprsResp.arguments[i];
+				var tmpArr = tmpStr.split('#');
+				var tmpVisaObj = new VisaCardObj();
+				tmpVisaObj.cardNumber = tmpArr[0];
+				tmpVisaObj.fullName = tmpArr[1];
+				tmpVisaObj.curLimit = tmpArr[2];
+				tmpVisaObj.cardGrantedLimit = tmpArr[3];
+				tmpVisaObj.cardMinRepay = tmpArr[4];
+				tmpVisaObj.curDebt = tmpArr[5];
+				tmpVisaObj.payDate = tmpArr[6];
+				tmpVisaObj.cardStateDebt = tmpArr[7];
+				tmpVisaObj.cardType = tmpArr[8];
+				tmpVisaObj.waitingAmount = tmpArr[9];
+				tmpVisaObj.currencyCode = tmpArr[10];
+				tmpVisaObj.currentStatus = tmpArr[11];
+				tmpVisaObj.description = tmpArr[12];
+				tmpVisaObj.ownerType = tmpArr[13];
+				tmpVisaObj.waitingPaidAmount = tmpArr[14];
+				tmpVisaObj.payCurBal = tmpArr[15];
+				if(tmpVisaObj.cardType == CONST_CARD_LOCK_TYPE_ID[0]) { // the credit
+					arrayCredits.push(tmpVisaObj);
+				}
+				
+				//arrayCredits.push(tmpVisaObj);
+				if(arrayCredits && arrayCredits.length > 0) setArrayCardObjs(arrayCredits); //store all card obj
+			}
+			
+			//gen xml
+			var tmpXmlDoc = genXmlCreditList(arrayCredits);
+			
+			//gen xsl
+			xslCreditListTable = getCachePageXsl("visa/credit-list-table");
+			var tmpXslDoc = xslCreditListTable;
+			
+			//gen html
+			genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+				var tmpNode = document.getElementById('credit-list-id');
+				tmpNode.innerHTML = oStr;
+			});
+		}
+		else {
+			showAlertText(CONST_STR.get('CREDIT_HIS_NO_CARD_MSG'));
+			var tmpPageName = navController.getDefaultPage();
+			var tmpPageType = navController.getDefaultPageType();
+			navController.initWithRootView(tmpPageName, true, tmpPageType);
+		}
+	}*/
+    if ((gprsResp.respCode == RESP.get('COM_SUCCESS')) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get('CMD_LOOKUP_VISA_CARD')))) {
+        if(gprsResp.arguments != undefined && gprsResp.arguments.length > 0) {
+            for(var i=0; i<gprsResp.arguments.length; i++) {
+                arrayCredits = new Array();
+                var tmpStr = gprsResp.arguments[i];
+                var tmpArr = tmpStr.split('#');
+
+                /*var tmpVisaObj = new VisaCardObj();
+                 tmpVisaObj.cardNumber = tmpArr[0];
+                 tmpVisaObj.fullName = tmpArr[1];
+                 tmpVisaObj.curLimit = tmpArr[2];
+                 tmpVisaObj.cardGrantedLimit = tmpArr[3];
+                 tmpVisaObj.cardMinRepay = tmpArr[4];
+                 tmpVisaObj.curDebt = tmpArr[5];
+                 tmpVisaObj.payDate = tmpArr[6];
+                 tmpVisaObj.cardStateDebt = tmpArr[7];
+                 tmpVisaObj.cardType = tmpArr[8];
+                 tmpVisaObj.waitingAmount = tmpArr[9];
+                 tmpVisaObj.currencyCode = tmpArr[10];
+                 tmpVisaObj.currentStatus = tmpArr[11];
+                 tmpVisaObj.description = tmpArr[12];
+                 tmpVisaObj.ownerType = tmpArr[13];
+                 tmpVisaObj.waitingPaidAmount = tmpArr[14];
+                 tmpVisaObj.payCurBal = tmpArr[15];*/
+                var row1 = [CONST_STR.get('CREDIT_NUMBER_TITLE'), tmpArr[0]];
+                var row2 = [CONST_STR.get('CREDIT_OWNER_NAME_TITLE'),tmpArr[1]];
+                var row3 = [CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'),formatNumberToCurrencyWithSymbol( tmpArr[3] , " " +  tmpArr[10])];
+                var tmpStrOwner = (parseInt(tmpArr[13]) == 0)? CONST_STR.get('CREDIT_PRI_OWNER_TYPE_TITLE') : CONST_STR.get('CREDIT_SLV_OWNER_TYPE_TITLE')+ tmpArr[12];
+                var row4 = [CONST_STR.get('CREDIT_TYPE_TITLE'), tmpStrOwner];
+                var tmpStatus = (tmpArr[11] == '0')? CONST_STR.get('CREDIT_ACTIVE_STATUS'): CONST_STR.get('CREDIT_DEACTIVE_STATUS');
+                var row5 = [CONST_STR.get('CREDIT_STATUS_TITLE'), tmpStatus];
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                    var recycler = new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                    var recycler = new RecyclerView({
+                        type: "NORMAL",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }
+                if(tmpArr[8] == CONST_CARD_LOCK_TYPE_ID[0]) { // the credit
+                    arrayCredits.push(row1);
+                    arrayCredits.push(row2);
+                    arrayCredits.push(row3);
+                    arrayCredits.push(row4);
+                    arrayCredits.push(row5);
+                    recycler.setData(arrayCredits);
+                    var divbg=document.createElement("div");
+                    divbg.setAttribute('onClick',"viewCardDetail(\'"+tmpArr[0]+"\',\'"+i+"\');this.className=\'active\';");
+                    divbg.innerHTML=recycler.init();
+                    contentHTML = contentHTML + divbg.outerHTML;
+                }
+            }
+
+            //arrayCredits.push(tmpVisaObj);
+            if(arrayCredits && arrayCredits.length > 0) setArrayCardObjs(arrayCredits); //store all card obj
+            else
+            {
+                showAlertText(CONST_STR.get('CREDIT_HIS_NO_CARD_MSG'));
+                var tmpPageName = navController.getDefaultPage();
+                var tmpPageType = navController.getDefaultPageType();
+                navController.initWithRootView(tmpPageName, true, tmpPageType);
+            }
+
+            //gen xml
+            //var tmpXmlDoc = genXmlCreditList(arrayCredits);
+
+            //gen xsl
+            //xslCreditListTable = getCachePageXsl("visa/credit-list-table");
+            //var tmpXslDoc = xslCreditListTable;
+
+            //gen html
+            /*genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+             var tmpNode = document.getElementById('credit-list-id');
+             tmpNode.innerHTML = oStr;
+             });*/
+
+
+            var tmpNode = document.getElementById('credit-list-id');
+            tmpNode.innerHTML = contentHTML;
+
+        }
+        else {
+            showAlertText(CONST_STR.get('CREDIT_HIS_NO_CARD_MSG'));
+            var tmpPageName = navController.getDefaultPage();
+            var tmpPageType = navController.getDefaultPageType();
+            navController.initWithRootView(tmpPageName, true, tmpPageType);
+
+        }
+    }
+	else {
+		showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+function requestVisaListMBServiceFail() {
+	showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+function genXmlCreditList(inCardArray, inCardNo) {
+	
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	
+	var tmpXmlRootNode = createXMLNode('credit', '', docXml);
+	var tmpXmlNodeTitle = createXMLNode('credittitle', '', docXml, tmpXmlRootNode);
+	var tmpChildNode = createXMLNode('creditnotitle', CONST_STR.get('CREDIT_NUMBER_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('creditownertitle', CONST_STR.get('CREDIT_OWNER_NAME_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('creditlimittitle', CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('credittypetitle', CONST_STR.get('CREDIT_TYPE_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('creditstatustitle', CONST_STR.get('CREDIT_STATUS_TITLE'), docXml, tmpXmlNodeTitle);
+	
+	if(inCardNo != undefined && inCardNo != null) {
+		for(var i = 0; i < inCardArray.length; i++) {
+			var tmpCardObj = inCardArray[i];
+			
+			if(inCardNo == tmpCardObj.cardNumber) {
+				selectedCredit = tmpCardObj;
+				
+				var tmpXmlNodeInfo = createXMLNode('creditinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('creditnotitle', CONST_STR.get('CREDIT_NUMBER_TITLE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('creditnocontent', tmpCardObj.cardNumber, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('creditownertitle', CONST_STR.get('CREDIT_OWNER_NAME_TITLE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('creditownercontent', tmpCardObj.fullName, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('creditlimittitle', CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('creditlimitcontent', formatNumberToCurrencyWithSymbol(tmpCardObj.cardGrantedLimit , " " + tmpCardObj.currencyCode), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('credittypetitle', CONST_STR.get('CREDIT_TYPE_TITLE'), docXml, tmpXmlNodeInfo);
+				var tmpStrOwner = (parseInt(tmpCardObj.ownerType) == 0)? CONST_STR.get('CREDIT_PRI_OWNER_TYPE_TITLE'): CONST_STR.get('CREDIT_SLV_OWNER_TYPE_TITLE');
+				tmpChildNode = createXMLNode('credittypecontent', tmpStrOwner + ' ' + tmpCardObj.description, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('creditstatustitle', CONST_STR.get('CREDIT_STATUS_TITLE'), docXml, tmpXmlNodeInfo);
+				var tmpStatus = (tmpCardObj.currentStatus == '0')? CONST_STR.get('CREDIT_ACTIVE_STATUS'): CONST_STR.get('CREDIT_DEACTIVE_STATUS');
+				tmpChildNode = createXMLNode('creditstatuscontent', tmpStatus, docXml, tmpXmlNodeInfo);
+				break;
+			}
+		}
+	}
+	else {
+		for(var i = 0; i < inCardArray.length; i++) {
+			var tmpCardObj = inCardArray[i];
+			var tmpXmlNodeInfo = createXMLNode('creditinfo', '', docXml, tmpXmlRootNode);
+			
+			tmpChildNode = createXMLNode('creditnotitle', CONST_STR.get('CREDIT_NUMBER_TITLE'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('creditnocontent', tmpCardObj.cardNumber, docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('creditownertitle', CONST_STR.get('CREDIT_OWNER_NAME_TITLE'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('creditownercontent', tmpCardObj.fullName, docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('creditlimittitle', CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('creditlimitcontent', formatNumberToCurrencyWithSymbol(tmpCardObj.cardGrantedLimit , " " + tmpCardObj.currencyCode), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('credittypetitle', CONST_STR.get('CREDIT_TYPE_TITLE'), docXml, tmpXmlNodeInfo);
+			var tmpStrOwner = (parseInt(tmpCardObj.ownerType) == 0)? CONST_STR.get('CREDIT_PRI_OWNER_TYPE_TITLE'): CONST_STR.get('CREDIT_SLV_OWNER_TYPE_TITLE');
+			tmpChildNode = createXMLNode('credittypecontent', tmpStrOwner + ' ' + tmpCardObj.description, docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('creditstatustitle', CONST_STR.get('CREDIT_STATUS_TITLE'), docXml, tmpXmlNodeInfo);
+			var tmpStatus = (tmpCardObj.currentStatus == '0')? CONST_STR.get('CREDIT_ACTIVE_STATUS'): CONST_STR.get('CREDIT_DEACTIVE_STATUS');
+			tmpChildNode = createXMLNode('creditstatuscontent', tmpStatus, docXml, tmpXmlNodeInfo);
+		}
+	}
+	return docXml;
+}
+
+/***
+	createXMLDoc(); //return XML document
+	
+	createXMLNode(nodeKey, nodeValue, inDocXml, nodeParent) //void
+		+ nodeKey: tag name (require)
+		+ nodeValue: node text or ""
+		+ inDocXml: XML document (require)
+		+ nodeParent: xml node or null
+		
+	setNodeText(inNode, inStr); //void
+		+ inNode: xml node
+		+ inStr: node content
+***/
+
+/*** HANDLE ONCLICK ROW ***/
+function requestDetailMBServiceSuccess(e)
+{
+    var inCardNo=cardnumber;
+    gprsResp = parserJSON(e);
+   // var html1=genTableInfo(cardnumber);
+
+    //gprsResp = parserJSON(e);
+    var index;
+    for(var i=0; i<gprsResp.arguments.length; i++) {
+        arrayCredits = new Array();
+        var tmpStr = gprsResp.arguments[i];
+        var tmpArr = tmpStr.split('#');
+        if(tmpArr[0]==inCardNo)
+        {
+            index=i;
+        }
+    }
+    var tmpStr = gprsResp.arguments[index];
+    var tmpArr = tmpStr.split('#');
+    if(tmpArr[13]=='0') {
+        //Thẻ chính
+        var contentHTML="";
+        var row1 = [CONST_STR.get('CREDIT_NUMBER_TITLE'), tmpArr[0]];
+        var row2 = [CONST_STR.get('CREDIT_OWNER_NAME_TITLE'),tmpArr[1]];
+        var row3 = [CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'),formatNumberToCurrencyWithSymbol( tmpArr[3] , " " +  tmpArr[10])];
+        var tmpStrOwner = (parseInt(tmpArr[13]) == 0)? CONST_STR.get('CREDIT_PRI_OWNER_TYPE_TITLE') + " " + tmpArr[12]: CONST_STR.get('CREDIT_SLV_OWNER_TYPE_TITLE')+ tmpArr[12];
+        var row4 = [CONST_STR.get('CREDIT_TYPE_TITLE'), tmpStrOwner];
+        var tmpStatus = (tmpArr[11] == '0')? CONST_STR.get('CREDIT_ACTIVE_STATUS'): CONST_STR.get('CREDIT_DEACTIVE_STATUS');
+        var row5 = [CONST_STR.get('CREDIT_STATUS_TITLE'), tmpStatus];
+        var row6 = [CONST_STR.get('CREDIT_CUR_LIMIT_TITLE'), formatNumberToCurrencyWithSymbol(tmpArr[2], " " + tmpArr[10])];//Hạn mức còn lại
+        var row7 = [CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'), formatNumberToCurrencyWithSymbol(tmpArr[3] , " " + tmpArr[10])];//Hạn mức được cấp
+        var row8 = [CONST_STR.get('CREDIT_MIN_REPAY_TITLE'), formatNumberToCurrencyWithSymbol(tmpArr[4], " " + tmpArr[10])];//Số tiền thanh toán tối thiểu còn lại
+        var row9 = [CONST_STR.get('CREDIT_CUR_DEBT_TITLE'), formatNumberToCurrencyWithSymbol(tmpArr[5], " " + tmpArr[10])];//Dư nợ hiện tại
+        var row10 = [CONST_STR.get('CREDIT_PAY_DATE_TITLE'), tmpArr[6]];//Thanh toán trước ngày
+        var row11 = [CONST_STR.get('CREDIT_STATE_DEBT_TITLE'), formatNumberToCurrencyWithSymbol(tmpArr[7], " " + tmpArr[10])];//Dư nợ trong kỳ sao kê
+        var row12 = [CONST_STR.get('CREDIT_WAITING_AMOUNT_TITLE'), formatNumberToCurrencyWithSymbol(tmpArr[9], " " + tmpArr[10])];//Dư nợ trong kỳ sao kê
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            var recycler = new RecyclerView({
+                type: "DESKTOP_GRID",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+        }else{
+            var recycler = new RecyclerView({
+                type: "NORMAL",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+        }
+        // the credit
+        arrayCredits.push(row1);
+        arrayCredits.push(row2);
+        arrayCredits.push(row3);
+        arrayCredits.push(row4);
+        arrayCredits.push(row5);
+        arrayCredits.push(row6);
+        arrayCredits.push(row7);
+        arrayCredits.push(row8);
+        arrayCredits.push(row9);
+        arrayCredits.push(row10);
+        arrayCredits.push(row11);
+        arrayCredits.push(row12);
+        recycler.setData(arrayCredits);
+        var divbg=document.createElement("div");
+        divbg.setAttribute('onClick',"viewCardDetail(\'"+tmpArr[0]+"\',\'"+i+"\');this.className=\'active\';");
+        divbg.innerHTML=recycler.init();
+        contentHTML = contentHTML + divbg.outerHTML;
+
+    }
+    else //Thẻ phụ
+    {
+        var contentHTML="";
+        var row1 = [CONST_STR.get('CREDIT_NUMBER_TITLE'), tmpArr[0]];
+        var row2 = [CONST_STR.get('CREDIT_OWNER_NAME_TITLE'),tmpArr[1]];
+        var row3 = [CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'),formatNumberToCurrencyWithSymbol( tmpArr[3] , " " +  tmpArr[10])];
+        var tmpStrOwner = (parseInt(tmpArr[13]) == 0)? CONST_STR.get('CREDIT_PRI_OWNER_TYPE_TITLE'): CONST_STR.get('CREDIT_SLV_OWNER_TYPE_TITLE')+ tmpArr[12];
+        var row4 = [CONST_STR.get('CREDIT_TYPE_TITLE'), tmpStrOwner];
+        var tmpStatus = (tmpArr[11] == '0')? CONST_STR.get('CREDIT_ACTIVE_STATUS'): CONST_STR.get('CREDIT_DEACTIVE_STATUS');
+        var row5 = [CONST_STR.get('CREDIT_STATUS_TITLE'), tmpStatus];
+        var row6 = [CONST_STR.get('CREDIT_CUR_LIMIT_TITLE'), formatNumberToCurrencyWithSymbol(tmpArr[2], " " + tmpArr[10])];//Hạn mức còn lại
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            var recycler = new RecyclerView({
+                type: "DESKTOP_GRID",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+        }else{
+            var recycler = new RecyclerView({
+                type: "NORMAL",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+        }
+        // the credit
+        arrayCredits.push(row1);
+        arrayCredits.push(row2);
+        arrayCredits.push(row3);
+        arrayCredits.push(row4);
+        arrayCredits.push(row5);
+        arrayCredits.push(row6);
+
+        recycler.setData(arrayCredits);
+        var divbg=document.createElement("div");
+        divbg.setAttribute('onClick',"viewCardDetail(\'"+tmpArr[0]+"\',\'"+i+"\');this.className=\'active\';");
+        divbg.innerHTML=recycler.init();
+        contentHTML = contentHTML + divbg.outerHTML;
+
+    }
+
+
+    var tmpNodeDetail = document.getElementById('card-detail-info');
+    if(tmpNodeDetail != undefined) tmpNodeDetail.style.display = '';
+    document.getElementById("credit-list-id").style.display="none";
+    var tmpNode = document.getElementById('credit-info-table');
+    tmpNode.innerHTML = contentHTML;
+    //cardnumber = inCardNo;
+    // flag_load_saoke = "1";
+    logInfo('selected index: ' + inCardNo);
+}
+function viewCardDetail() {
+    var data = {};
+    var arrayArgs = new Array();
+    arrayArgs.push(gCustomerNo);
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOOKUP_VISA_CARD"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+
+    requestMBService(data, true, 0, requestDetailMBServiceSuccess, requestVisaListMBServiceFail);
+    goBreachList();
+	/*logInfo('selected index: ' + inCardNo);
+	//GEN TABLE LIST
+	//gen xml
+	var tmpXmlDoc = genXmlCreditList(arrayCredits, inCardNo);
+	
+	//gen xsl
+	var tmpXslDoc = xslCreditListTable;//getCachePageXsl("visa/credit-list-table");
+	
+	//gen html
+	genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('credit-list-id');
+		tmpNode.innerHTML = oStr;
+	});
+	
+	//GEN TABLE DETAIL
+	//gen xml
+	var tmpXmlDoc2 = genCreditInfoXml(selectedCredit);
+	
+	//gen xsl
+	var tmpXslDoc2 = getCachePageXsl("visa/credit-info-table");
+	
+	//gen html
+	genHTMLStringWithXML(tmpXmlDoc2, tmpXslDoc2, function(oStr){
+		var tmpNode = document.getElementById('credit-info-table');
+		tmpNode.innerHTML = oStr;
+	});
+	
+	var tmpNodeDetail = document.getElementById('card-detail-info');
+	if(tmpNodeDetail != undefined) tmpNodeDetail.style.display = '';*/
+}
+
+function genCreditInfoXml(inCreditObj) {
+	var tmpXslDoc = getCachePageXsl("visa/credit-info-table");
+	
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	
+	var tmpXmlRootNode = createXMLNode('account', '', docXml);
+	
+	var inAccObj = inCreditObj;
+	
+	var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+	
+	if(inCreditObj.ownerType == '0') { //the chinh
+		var tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('CREDIT_OWNER_NAME_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.fullName, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('CREDIT_CUR_LIMIT_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(inAccObj.curLimit, " " + inAccObj.currencyCode), docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(inAccObj.cardGrantedLimit , " " + inAccObj.currencyCode), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('CREDIT_MIN_REPAY_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(inAccObj.cardMinRepay, " " + inAccObj.currencyCode), docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('CREDIT_CUR_DEBT_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(inAccObj.curDebt, " " + inAccObj.currencyCode), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('CREDIT_PAY_DATE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.payDate, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('hint_icon2', ' ', docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('CREDIT_STATE_DEBT_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(inAccObj.cardStateDebt, " " + inAccObj.currencyCode), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('hint_icon1', ' ', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('CREDIT_TYPE_TITLE'), docXml, tmpXmlNodeInfo);
+		var tmpStrOwner = (parseInt(inAccObj.ownerType) == 0)? CONST_STR.get('CREDIT_PRI_OWNER_TYPE_TITLE'): CONST_STR.get('CREDIT_SLV_OWNER_TYPE_TITLE');
+		tmpChildNode = createXMLNode('acccontent2', tmpStrOwner + ' ' + inAccObj.description, docXml, tmpXmlNodeInfo);
+		//tmpChildNode = createXMLNode('acccontent2', inAccObj.cardType + ' ' + inAccObj.description, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('CREDIT_WAITING_AMOUNT_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(inAccObj.waitingAmount, " " + inAccObj.currencyCode), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('CREDIT_STATUS_TITLE'), docXml, tmpXmlNodeInfo);
+		var tmpStatus = (inAccObj.currentStatus == '0')? CONST_STR.get('CREDIT_ACTIVE_STATUS'): CONST_STR.get('CREDIT_DEACTIVE_STATUS');
+		tmpChildNode = createXMLNode('acccontent2', tmpStatus, docXml, tmpXmlNodeInfo);
+	}
+	else { //the phu
+		var tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('CREDIT_OWNER_NAME_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.fullName, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('CREDIT_TYPE_TITLE'), docXml, tmpXmlNodeInfo);
+		var tmpStrOwner = (parseInt(inAccObj.ownerType) == 0)? CONST_STR.get('CREDIT_PRI_OWNER_TYPE_TITLE'): CONST_STR.get('CREDIT_SLV_OWNER_TYPE_TITLE');
+		tmpChildNode = createXMLNode('acccontent2', tmpStrOwner + ' ' + inAccObj.description, docXml, tmpXmlNodeInfo);
+		//tmpChildNode = createXMLNode('acccontent2', inAccObj.cardType + ' ' + inAccObj.description, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('CREDIT_GRANTED_LIMIT_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(inAccObj.cardGrantedLimit , " " + inAccObj.currencyCode), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('CREDIT_CUR_LIMIT_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(inAccObj.curLimit, " " + inAccObj.currencyCode), docXml, tmpXmlNodeInfo);
+	}
+	
+	return docXml;
+}
+
+function requestCreditHistory() {
+	var data = {};
+	var arrayArgs = new Array();
+	var nodeStartDate = document.getElementById('credit-startdate');
+	var nodeEndDate = document.getElementById('credit-enddate');
+	var cardNumber = selectedCredit.cardNumber;
+	var tmpStr = nodeStartDate.value;
+	var tmpArrayDate = tmpStr.split('/');
+	if(tmpArrayDate.length != 3 || tmpStr == 'dd/mm/yyyy') {
+		showAlertText(CONST_STR.get('ERR_INPUT_START_DATE'));
+		return;
+	}
+	
+	tmpStr = nodeEndDate.value;
+	tmpArrayDate = tmpStr.split('/');
+	if(tmpArrayDate.length != 3 || tmpStr == 'dd/mm/yyyy') {
+		showAlertText(CONST_STR.get('ERR_INPUT_END_DATE'));
+		return;
+	}
+	
+	if(!isValidDate(nodeStartDate.value) || !isValidDate(nodeEndDate.value)) {
+		showAlertText(CONST_STR.get('ACC_HIS_WRONG_DATE_FORMAT'));
+		return;
+	}
+	var numDays = getDiffDaysBetween(nodeStartDate.value, nodeEndDate.value, 'dd/MM/yyyy');
+	
+	var today = new Date();
+	var numDaysYear = getDiffDaysBetween(nodeStartDate.value, getStringFromDate(today), 'dd/MM/yyyy');
+	if(numDaysYear > 365 || numDays < 0 || numDaysYear < 0) {
+		showAlertText(CONST_STR.get('ACC_HIS_INVALID_QUERY_DATE'));
+		return;
+	}
+	if(numDays > 92) {//20170921 ngocdt3 chinh sua ngya tra cuu len 92
+		showAlertText(CONST_STR.get('ACC_HIS_DATE_OVER_90DAYS'));
+		return;
+	}
+	
+	arrayArgs.push(cardNumber);
+	arrayArgs.push(nodeStartDate.value);
+	arrayArgs.push(nodeEndDate.value);		
+	
+	arrayArgs.push(selectedTransType); //loai giao dich
+	
+	inputMinAmount = document.getElementById('credit-minamount').value;
+	if (inputMinAmount == undefined || inputMinAmount == '') inputMinAmount = 'ALL';
+	inputMaxAmount = document.getElementById('credit-maxamount').value;
+	if (inputMaxAmount == undefined || inputMaxAmount == '') inputMaxAmount = 'ALL';
+	if((inputMinAmount != 'ALL') && (inputMinAmount != 'ALL') && (inputMinAmount > inputMaxAmount)) {
+		showAlertText(CONST_STR.get('CREDIT_HIS_AMOUNT_WRONG_MIN_MAX'));
+		return;
+	}
+	if(inputMaxAmount == 'ALL') inputMinAmount = 'ALL';
+	arrayArgs.push(inputMinAmount);  //so tien min
+	arrayArgs.push(inputMaxAmount);  //so tien max
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOCKUP_VISA_HISTORY"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+function requestMBServiceSuccess(e) {
+	gprsResp = parserJSON(e);
+	//setRespObjStore(gprsResp); //store response
+		
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANS_MOTH_HIS_VISA")))) {
+		//gprsResp.arguments = [];
+		if(gprsResp.arguments != undefined && gprsResp.arguments.length > 0) {
+			arrayCreditHis = new Array();
+			for(var i=0; i<gprsResp.arguments.length; i++) {
+				var tmpStr = gprsResp.arguments[i];
+				var tmpArr = tmpStr.split('#');
+				var tmpVisaObj = new VisaHisTransactionObj();
+				if(i==0)
+				{
+						tmpVisaObj.cardNumber = tmpArr[0]; 
+						tmpVisaObj.fullName = tmpArr[1];
+						tmpVisaObj.address = tmpArr[2]; 
+						tmpVisaObj.accountNumber = tmpArr[3];
+						tmpVisaObj.creditLimit = tmpArr[4];
+						tmpVisaObj.statementDate = tmpArr[5];
+						tmpVisaObj.previousBalance = tmpArr[6]; 
+						tmpVisaObj.statementBalance = tmpArr[7]; 
+						tmpVisaObj.mininumPayment = tmpArr[8]; 
+						tmpVisaObj.paymentDueDate = tmpArr[9];
+						
+					}
+				else if (i==gprsResp.arguments.length - 1)
+				{
+					tmpVisaObj.totalDebit = tmpArr[0];
+					tmpVisaObj.totalCredit = tmpArr[1];
+					}
+				else 
+				{
+						tmpVisaObj.transDate = tmpArr[0]; 
+						tmpVisaObj.postDate = tmpArr[1];
+						tmpVisaObj.transAmount = tmpArr[2]; 
+						tmpVisaObj.debit = tmpArr[3];
+						tmpVisaObj.credit = tmpArr[4];
+						tmpVisaObj.transDesc = tmpArr[5];
+						
+					}
+			
+				
+				arrayCreditHis.push(tmpVisaObj);
+			}
+
+			if(arrayCreditHis.length > 0) {
+			//neu co du lieu thi gen
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                    genHTMLlistview(arrayCreditHis);
+                }else{
+				genHtmlSearchResult(arrayCreditHis);
+                }
+			}
+			else {
+				var tmpNodeHis = document.getElementById('credit-historyInfo');
+				tmpNodeHis.style.display = '';
+				tmpNodeHis.innerHTML = CONST_STR.get('CREDIT_HIS_NO_DATA');
+			}
+		}
+		else {
+			var tmpNodeHis = document.getElementById('credit-historyInfo');
+			tmpNodeHis.style.display = '';
+			tmpNodeHis.innerHTML = CONST_STR.get('CREDIT_HIS_NO_DATA');
+		}
+	}
+	else {
+		var tmpNodeHis = document.getElementById('credit-historyInfo');
+		tmpNodeHis.style.display = '';
+		tmpNodeHis.innerHTML = CONST_STR.get('CREDIT_HIS_NO_DATA');
+	}
+}
+function requestMBServiceFail(e) {
+	logInfo('request visa history fail');
+}
+
+function genHtmlSearchResult(arr) {
+	var docXsl = getCachePageXsl("visa/TransMoth-list-table-stament");
+	genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback, failPaggingCallback);	
+}
+
+function successPaggingCallback(strHtml) {
+	//return;
+	var div = document.getElementById("credit-historyInfo");
+	div.innerHTML = strHtml;
+	//document.getElementById('tableButton').style.display = '';
+}
+
+function failPaggingCallback() {
+	//navController.initWithRootView('account/account-scr', true);	
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+
+function genXmlDataPagging(arr) {
+	var tempTable = [];
+	var docXml = createXMLDoc();
+    logInfo(docXml);
+
+	var rootNode = createXMLNode('faml','',docXml);
+	
+	var childlistsavingNode = createXMLNode('lst_his_trans','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('trans','',docXml,childlistsavingNode);
+	
+	var childNodeTit = createXMLNode('transDatetit',CONST_STR.get('VISA_HIS_TRANSDATE'),docXml,titleTable);	
+	childNodeTit = createXMLNode('postDatetit',CONST_STR.get('VISA_HIS_POSTDATE'),docXml,titleTable);	
+	childNodeTit = createXMLNode('transAmounttit',CONST_STR.get('VISA_HIS_TRANSAMOUNT'),docXml,titleTable);
+	childNodeTit = createXMLNode('debittit',CONST_STR.get('VISA_HIS_DEBIT'),docXml,titleTable);
+	childNodeTit = createXMLNode('credittit',CONST_STR.get('VISA_HIS_CREDIT'),docXml,titleTable);
+	childNodeTit = createXMLNode('transDesctit',CONST_STR.get('VISA_HIS_DES'),docXml,titleTable);
+	for(var k in arr){
+        var valTable2 = createXMLNode('detail_tran2','',docXml, childlistsavingNode);
+        if(k ==0) tempTable[2] = [CONST_STR.get('TRANS_STATEMENT_BALANCE'), formatNumberToCurrencyWithSymbol(arr[k].statementBalance)];
+        if(k == arr.length - 1){
+            tempTable[0] = [CONST_STR.get('TRANS_TOTAL_DEDIT'), formatNumberToCurrencyWithSymbol(arr[k].totalDebit)];
+            tempTable[1] = [CONST_STR.get('TRANS_TOTAL_CREDIT'), formatNumberToCurrencyWithSymbol(arr[k].totalCredit)];
+
+                var recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+
+            recycler.setData(tempTable);
+            var contentHTML = recycler.init();
+            var nodeVal2 = createXMLNode('content',contentHTML,docXml,valTable2);
+        }
+    }
+//	for(var k in arr){
+//
+//	    var valTable2 = createXMLNode('detail_tran2','',docXml, childlistsavingNode);
+//        if(k == 0){
+//            nodeValStatementBalance = createXMLNode('statementBalance',formatNumberToCurrencyWithSymbol(arr[k].statementBalance), docXml,valTable2);
+//        }
+//		if(k == arr.length - 1)
+//		{
+//			var nodeVal2 =  createXMLNode('totalDebit',formatNumberToCurrencyWithSymbol(arr[k].totalDebit),docXml,valTable2);
+//
+//			    nodeVal2 = createXMLNode('totalCredit',formatNumberToCurrencyWithSymbol(arr[k].totalCredit), docXml,valTable2);
+//		}
+//	}
+	
+	for(var j in arr){
+	var valTable1 = createXMLNode('detail_tran1','',docXml, childlistsavingNode);
+				
+		if(j==0)
+		{
+            var row1 = [CONST_STR.get('TRANS_MONTH_STAMENT_NAME'), arr[j].fullName];
+            var row2 = [CONST_STR.get('TRANS_MONTH_STAMENT_ADDRESS'), arr[j].address];
+            var row3 = [CONST_STR.get('TRANS_MONTH_STAMENT_CARDNO'), arr[j].cardNumber];
+            var row4 = [CONST_STR.get('TRANS_MONTH_STAMENT_ACCNO'), arr[j].accountNumber];
+            var row5 = [CONST_STR.get('TRANS_MONTH_STAMENT_LIMIT'), formatNumberToCurrencyWithSymbol(arr[j].creditLimit)];
+            var row6 = [CONST_STR.get('TRANS_MONTH_STAMENT_AVAIABLE'), formatNumberToCurrencyWithSymbol(arr[j].previousBalance)];
+            var row7 = [CONST_STR.get('TRANS_AVAILBLE_NEED_PAY'), formatNumberToCurrencyWithSymbol(arr[j].statementBalance)];
+            var row8 = [CONST_STR.get('TRANS_MINIMUM_NEED_PAY'), formatNumberToCurrencyWithSymbol(arr[j].mininumPayment)];
+            var row9 = [CONST_STR.get('TRANS_PLEASE_PAY'), arr[j].paymentDueDate];
+            var row10 = [CONST_STR.get('TRANS_DATE_STATEMENT'), arr[j].statementDate];
+
+            var data = [row1, row2, row3, row4, row5, row6, row7, row8, row9, row10];
+
+                var recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+
+            recycler.setData(data);
+            var contentHTML = recycler.init();
+            var nodeVal1 = createXMLNode('content',contentHTML,docXml,valTable1);
+
+			/*var nodeVal1 = createXMLNode('fullName',arr[j].fullName,docXml,valTable1);
+			nodeVal1 = createXMLNode('address',arr[j].address,docXml,valTable1);
+			nodeVal1 = createXMLNode('previousBalance',formatNumberToCurrencyWithSymbol(arr[j].previousBalance), docXml,valTable1);
+			nodeVal1 = createXMLNode('statementBalance',formatNumberToCurrencyWithSymbol(arr[j].statementBalance), docXml,valTable1);
+			nodeVal1 = createXMLNode('cardNumber',arr[j].cardNumber, docXml,valTable1);
+			nodeVal1 = createXMLNode('mininumPayment',formatNumberToCurrencyWithSymbol(arr[j].mininumPayment), docXml,valTable1);
+			nodeVal1 = createXMLNode('accountNumber',arr[j].accountNumber,docXml,valTable1);
+			nodeVal1 = createXMLNode('paymentDueDate',arr[j].paymentDueDate, docXml,valTable1);
+			nodeVal1 = createXMLNode('creditLimit',formatNumberToCurrencyWithSymbol(arr[j].creditLimit), docXml,valTable1);
+			nodeVal1 = createXMLNode('statementDate',arr[j].statementDate, docXml,valTable1);*/
+		}
+		else
+		{
+			break;
+			}
+	}
+	//LIST 1
+	for(var i in arr){
+		if(i!=0  && i!=arr.length-1)
+		{
+			//alert("e da vao day roi nhe:"+i);
+			var valTable = createXMLNode('detail_tran','',docXml, childlistsavingNode);
+
+            var row1 = (gUserInfo.lang == 'EN')? ["Transaction Date", arr[i].transDate]:["Ngày giao dịch", arr[i].transDate];
+            var row2 = (gUserInfo.lang == 'EN')?["Post Date", arr[i].postDate]:["Ngày cập nhật", arr[i].postDate];
+            var row3 = (gUserInfo.lang == 'EN')?["Transaction Amount", formatNumberToCurrencyWithSymbol(arr[i].transAmount)]:["Số tiền giao dịch", formatNumberToCurrencyWithSymbol(arr[i].transAmount)];
+            var row4 = (gUserInfo.lang == 'EN')?["Debit", formatNumberToCurrencyWithSymbol(arr[i].debit)]:["Ghi nợ", formatNumberToCurrencyWithSymbol(arr[i].debit)];
+            var row5 = (gUserInfo.lang == 'EN')?["Credit", formatNumberToCurrencyWithSymbol(arr[i].credit)]:["Ghi có", formatNumberToCurrencyWithSymbol(arr[i].credit)];
+            var row6 = (gUserInfo.lang == 'EN')?["Transaction description", arr[i].transDesc]:["Mô tả giao dịch", arr[i].transDesc];
+
+            var data = [row1, row2, row3, row4, row5, row6];
+
+
+
+
+                var recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+
+
+            recycler.setData(data);
+            var contentHTML = recycler.init();
+            var str = "<div style='padding-bottom: 7px'>" + contentHTML + "</div>"
+            var nodeVal1 = createXMLNode('content',str,docXml,valTable);
+
+			/*var nodeVal = createXMLNode('transDate',arr[i].transDate,docXml,valTable);
+			//nodeVal = createXMLNode('transDatetit',CONST_STR.get('VISA_HIS_TRANSDATE'),docXml,valTable);
+			
+			nodeVal = createXMLNode('postDate',arr[i].postDate,docXml,valTable);
+			//nodeVal = createXMLNode('postDatetit',CONST_STR.get('VISA_HIS_POSTDATE'),docXml,valTable);
+	
+			nodeVal = createXMLNode('transAmount',formatNumberToCurrencyWithSymbol(arr[i].transAmount), docXml,valTable);
+			//nodeVal = createXMLNode('transAmounttit',CONST_STR.get('VISA_HIS_TRANSAMOUNT'),docXml,valTable);	
+			
+			nodeVal = createXMLNode('debit',formatNumberToCurrencyWithSymbol(arr[i].debit), docXml,valTable);
+			//nodeVal = createXMLNode('debittit',CONST_STR.get('VISA_HIS_DEBIT'),docXml,valTable);	
+			
+			nodeVal = createXMLNode('credit',formatNumberToCurrencyWithSymbol(arr[i].credit), docXml,valTable);
+			//nodeVal = createXMLNode('credittit',CONST_STR.get('VISA_HIS_CREDIT'),docXml,valTable);	
+			
+			nodeVal = createXMLNode('transDesc',arr[i].transDesc, docXml,valTable);
+			//nodeVal = createXMLNode('transDesctit',CONST_STR.get('VISA_HIS_DES'),docXml,valTable);	
+			//nodeVal = createXMLNode('flag',"1", docXml,valTable);
+			//alert("arr[i].transDate:"+arr[i].transDate);*/
+			}
+
+	}
+	
+	
+	return docXml;
+}
+/**GenDesktopListView**/
+function genHTMLlistview(arr){
+    var contentHTML ="";
+    var contentHTMLtb1 ="";
+    var contentHTMLuser="";
+    for(var j in arr){
+
+        if(j==0)
+        {
+            var row1 = [CONST_STR.get('TRANS_MONTH_STAMENT_NAME'), arr[j].fullName];
+            var row2 = [CONST_STR.get('TRANS_MONTH_STAMENT_ADDRESS'), arr[j].address];
+            var row3 = [CONST_STR.get('TRANS_MONTH_STAMENT_CARDNO'), arr[j].cardNumber];
+            var row4 = [CONST_STR.get('TRANS_MONTH_STAMENT_ACCNO'), arr[j].accountNumber];
+            var row5 = [CONST_STR.get('TRANS_MONTH_STAMENT_LIMIT'), formatNumberToCurrencyWithSymbol(arr[j].creditLimit)];
+            var row6 = [CONST_STR.get('TRANS_MONTH_STAMENT_AVAIABLE'), formatNumberToCurrencyWithSymbol(arr[j].previousBalance)];
+            var row7 = [CONST_STR.get('TRANS_AVAILBLE_NEED_PAY'), formatNumberToCurrencyWithSymbol(arr[j].statementBalance)];
+            var row8 = [CONST_STR.get('TRANS_MINIMUM_NEED_PAY'), formatNumberToCurrencyWithSymbol(arr[j].mininumPayment)];
+            var row9 = [CONST_STR.get('TRANS_PLEASE_PAY'), arr[j].paymentDueDate];
+            var row10 = [CONST_STR.get('TRANS_DATE_STATEMENT'), arr[j].statementDate];
+
+            var data = [row1, row2, row3, row4, row5, row6, row7, row8, row9, row10];
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_GRID",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+                recycler.setData(data);
+               var title ='<div align="center"  style="color:#F26300;padding-bottom: 10px;">'+'<span>'+CONST_STR.get('VISA_HIS_TITLE')+'</span>'+'</div>';
+                contentHTMLuser = title + recycler.init()+'<div  style="font-size:10pt;font-family:sans-serif;text-align: right;"><span>'+CONST_STR.get('UNIT_VND_CARD')+'</span></div>';
+                document.getElementById('credit-info-user').innerHTML=contentHTMLuser;
+        }
+        else
+        {
+            break;
+        }
+    }
+    var tempTable = new Array();
+    for(var k in arr){
+        if(k ==0) tempTable[2] = [CONST_STR.get('TRANS_STATEMENT_BALANCE'), formatNumberToCurrencyWithSymbol(arr[k].statementBalance)];
+        if(k == arr.length - 1){
+            tempTable[0] = [CONST_STR.get('TRANS_TOTAL_DEDIT'), formatNumberToCurrencyWithSymbol(arr[k].totalDebit)];
+            tempTable[1] = [CONST_STR.get('TRANS_TOTAL_CREDIT'), formatNumberToCurrencyWithSymbol(arr[k].totalCredit)];
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_GRID",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+                recycler.setData(tempTable);
+            var tblEnd ='<table align="center" style="font-size:12px;padding-bottom: 30px;">'+'<tr>'+   '<td style="font-size:10px;color:#F26300;">'+'<div align="center">***</div>'+
+                        '<div align="center" style="font-size:12px;color:#F26300;">'+'<span>'+CONST_STR.get('TRANS_STATEMENT_END')+'</span>'+'</div>'+'</td>'+
+                '</tr>'+'</table>';
+            contentHTMLtb1 = recycler.init()+tblEnd;
+            document.getElementById('credit-Info-total').innerHTML=contentHTMLtb1;
+
+
+        }
+    }
+    var arrTitle = new Array();
+    arrTitle.push(CONST_STR.get('VISA_HIS_TRANSDATE'));
+    arrTitle.push(CONST_STR.get('VISA_HIS_POSTDATE'));
+    arrTitle.push(CONST_STR.get('VISA_HIS_TRANSAMOUNT'));
+    arrTitle.push(CONST_STR.get('VISA_HIS_DEBIT'));
+    arrTitle.push(CONST_STR.get('VISA_HIS_CREDIT'));
+    arrTitle.push(CONST_STR.get('VISA_HIS_DES'));
+
+
+    var arrContentData = new Array();
+        arrContentData.push(arrTitle);
+    var arrItemContent;
+
+    for(i=1;i<arr.length-1;i++){
+        var tmphisobj =arr[i];
+      arrItemContent = new Array();
+      arrItemContent.push(tmphisobj.transDate);
+      arrItemContent.push(tmphisobj.postDate);
+      arrItemContent.push(formatNumberToCurrencyWithSymbol(tmphisobj.transAmount));
+      arrItemContent.push(formatNumberToCurrencyWithSymbol(tmphisobj.debit));
+      arrItemContent.push(formatNumberToCurrencyWithSymbol(tmphisobj.credit));
+      arrItemContent.push(tmphisobj.transDesc);
+
+      arrContentData.push(arrItemContent);
+
+    }
+    var recycler = new RecyclerView({
+        type: "DESKTOP_LIST",
+        typeTextAlign: "MIDLE",
+        title: "Tai khoan jumbo",
+        titleAlign:"LEFT",
+        opacity:false
+    });
+
+    recycler.setData(arrContentData);
+    contentHTML = recycler.init();
+    var div = document.getElementById("credit-historyInfo");
+    div.innerHTML ='<hr  size="1" align="center" color="#f6904e"/>'+ contentHTML+'<hr size="1"  align="center" color="#F26300"/>';
+
+}
+/*** HANDLE ONCLICK ROW ***/
+
+//EVENT SELECTED PAGE
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	pageIndex = selectedIdx;
+	
+	var arrMedial = new Array();
+	arrMedial = getItemsPerPage(arrayCreditHis, selectedIdx);
+	//gen xml
+	var tmpXmlDoc = genXMLHistoryDoc(arrMedial);
+	//gen xsl
+	var tmpXslDoc = xslCreditHisTable;
+	
+	genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('credit-historyInfo');
+		tmpNode.innerHTML = oStr;
+	});
+	
+}
+
+//GEN PAGGING
+
+function genPagging(arr, pageIdx) {
+	
+	var nodepage = document.getElementById('acc.pagination');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIdx));
+	nodepage.innerHTML = tmpStr;
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+//get items per page
+function getItemsPerPage(arrObj, pageIdx) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIdx - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}
+	}
+	return arrTmp;
+}
+
+
+function genXMLHistoryDoc(inHisArray) {
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	
+	var tmpXmlRootNode = createXMLNode('resptable', '', docXml);
+	var tmpXmlNodeTitle = createXMLNode('tabletitle', '', docXml, tmpXmlRootNode);
+	var tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('CREDIT_HIS_DATE_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('CREDIT_HIS_CONTENT_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('CREDIT_HIS_WAITREVIEW_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('CREDIT_HIS_WAITCONFIRM_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle5', CONST_STR.get('CREDIT_HIS_COMPLETE_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle6', CONST_STR.get('CREDIT_HIS_TRANSID_TITLE'), docXml, tmpXmlNodeTitle);
+	
+	for(var i = 0; i < inHisArray.length; i++) {
+		var tmpHisObj = inHisArray[i];
+		var tmpXmlNodeInfo = createXMLNode('tabletdetail', '', docXml, tmpXmlRootNode);
+		
+		tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('CREDIT_HIS_DATE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent1', tmpHisObj.transLocalDate, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('CREDIT_HIS_CONTENT_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent2', tmpHisObj.transContent, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('CREDIT_HIS_WAITREVIEW_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent3', formatNumberToCurrency(tmpHisObj.transWaitReview), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('CREDIT_HIS_WAITCONFIRM_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent4', formatNumberToCurrency(tmpHisObj.transWaitConfirm), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('coltitle5', CONST_STR.get('CREDIT_HIS_COMPLETE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent5', formatNumberToCurrency(tmpHisObj.transComplete), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('coltitle6', CONST_STR.get('CREDIT_HIS_TRANSID_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('colcontent6', tmpHisObj.refNumber, docXml, tmpXmlNodeInfo);
+	}
+	return docXml;
+}
+
+/*** SHOW ADVAND SEARCH ***/
+function showAdvandSearch() {
+	var tmpTransTypeBtn = document.getElementById('credit-transtype');
+	var tmpTransMinAmountBtn = document.getElementById('credithis-minamount');
+	var tmpTransMaxAmountBtn = document.getElementById('credithis-maxamount');
+	var tmpBtnAdvSearch = document.getElementById('credithis-btnAdvSearch');
+	var tmpBtnAdvSearch_link = document.getElementById('advandsearch_id');
+	if(advSearchStatus) {
+		tmpTransTypeBtn.style.display = 'table-row';
+		tmpTransMinAmountBtn.style.display = 'table-row';
+		tmpTransMaxAmountBtn.style.display = 'table-row';
+		document.getElementById('credithis-transtype').value = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+		advSearchStatus = false;
+		tmpBtnAdvSearch_link.innerHTML = CONST_STR.get('ACC_HIS_ADV_NOR_SEARCH_BTN');
+		tmpBtnAdvSearch.value = CONST_STR.get('ACC_HIS_ADV_SEARCH_BTN');
+		
+	}
+	else {
+		tmpTransTypeBtn.style.display = 'none';
+		tmpTransMinAmountBtn.style.display = 'none';
+		tmpTransMaxAmountBtn.style.display = 'none';
+		advSearchStatus = true;
+		tmpBtnAdvSearch_link.innerHTML = CONST_STR.get('ACC_HIS_ADV_SEARCH_BTN');
+		tmpBtnAdvSearch.value = CONST_STR.get('ACC_HIS_ADV_SEARCH_BTN');
+		document.getElementById('credit-minamount').value = '';
+		document.getElementById('credit-maxamount').value = '';
+		selectedTransType = 'ALL';
+	}
+}
+
+function showTransTypeSelection() {
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_HIS_CREDIT_TRANS_TYPE_EN: CONST_HIS_CREDIT_TRANS_TYPE_VN;
+	var tmpArray2 = CONST_HIS_CREDIT_TRANS_TYPE_ID;
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionTransTypeList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionTransTypeListClose, false);
+	showDialogList(CONST_STR.get('CREDIT_HIS_TRANS_TYPE_SELECTION_TITLE'), tmpArray1, tmpArray2, false);
+}
+
+//event: selection dialog list
+function handleSelectionTransTypeList(e) {
+	if (currentPage == "visa/credit-list-scr") {
+		handleSelectionTransTypeListClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("credithis-transtype");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectedTransType = e.selectedValue2;
+		}
+	}
+}
+
+function handleSelectionTransTypeListClose(e) {
+	if (currentPage == "visa/credit-list-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionTransTypeListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionTransTypeList, false);
+	}
+}
+
+function showHistoryTransVisa(){
+	navController.pushToView('visa/credit-list-scr', true, 'xsl');
+}
+//add by anhnn
+function showChooseMonth(){
+
+	//var tmpArray1 = (gUserInfo.lang == 'VN')? CONST_KEY_ESAVING_CHOOSE_RATE_NAME:CONST_KEY_ESAVING_CHOOSE_RATE_NAME_EN;
+	var tmpArray2 = CONST_KEY_MONTH_ID;
+	document.addEventListener("evtSelectionDialog", showInputMonthOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showInputMonthClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray2, false);
+}
+
+function showInputMonthOpen(e) {
+	if (currentPage == "visa/TransMoth-list-scr") {	
+	//alert(e.selectedValue1);	
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showInputMonthClose();
+			document.getElementById('monthchoose').value = e.selectedValue1;		
+		}		
+	}
+}
+
+function showInputMonthClose() {
+	if (currentPage == "visa/TransMoth-list-scr") {		
+		document.removeEventListener("evtSelectionDialog", showInputMonthOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showInputMonthClose, false);
+	}
+}
+//year
+function showChooseYear(){
+
+	//var tmpArray1 = (gUserInfo.lang == 'VN')? CONST_KEY_ESAVING_CHOOSE_RATE_NAME:CONST_KEY_ESAVING_CHOOSE_RATE_NAME_EN;
+	var tmpArray2 = CONST_KEY_YEAR_ID;
+	document.addEventListener("evtSelectionDialog", showInputYearOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showInputYearClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray2, false);
+}
+
+function showInputYearOpen(e) {
+	if (currentPage == "visa/TransMoth-list-scr") {	
+	//alert(e.selectedValue1);	
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showInputYearClose();
+			document.getElementById('yearchoose').value = e.selectedValue1;		
+		}		
+	}
+}
+
+function showInputYearClose() {
+	if (currentPage == "visa/TransMoth-list-scr") {		
+		document.removeEventListener("evtSelectionDialog", showInputYearOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showInputYearClose, false);
+	}
+}
+	 
+
+

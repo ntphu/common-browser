@@ -1,0 +1,606 @@
+/**
+ * Created by ThuanTM.
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+var arrSav;// = new Array();
+var amountSav = "";
+var rateSav   = "";
+var status_Open = false;
+
+applyVerticalScrollPage(true, -180);
+//get Loan from MBCore
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	status_Open = true;	
+	refreshArrayWhenBackpage();
+    refreshSwitchUICheckbox();
+}
+function showAll(){
+	document.getElementById("mainViewContent").style.display='';
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	navController.removePageInCache("com-review-result-scr");
+	  var pages = [
+				 "com-review-result-scr",
+				 "jumbo/jumbo_create_acc_components",
+				 "jumbo/jumbo_create_acc",
+				 "esaving/future-esaving-close",
+				 "loan/loan-adjust-term-confirm-scr",
+				 "loan/loan-active-authen-overdraft",
+                 "com-review-xsl-scr",
+                 "com-review-scr",
+                 "com-authentication-scr",
+				 "accountxsl/account-history-scr"];
+    navController.removePageInCache(pages);
+	navController.getActionBar().setTitleBarOnly(CONST_STR.get('LOAN_OPEN_SB_OD_TITLE'));
+	logInfo('transfer load success');
+	if(status_Open) {
+		logInfo('no load loan for open page');
+		status_Open = false;
+        refreshSwitchUICheckbox();
+	}
+	else {
+		getLoanInfoOpen();
+		var limit = document.getElementById('limitOD');
+		if(limit != null){
+			limit.value = "";
+		}
+		var od = document.getElementById('rateOD');
+		if(od !=null){
+			od.value = "";	
+		}
+	}
+}
+function refreshSwitchUICheckbox(){
+    var checkboxElArr = document.getElementsByTagName('INPUT');
+    for(i =0;i<checkboxElArr.length;i++){
+        if(checkboxElArr[i].type == 'checkbox'){
+            changeSwitchUI(checkboxElArr[i].parentNode);
+        }
+    }
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+function viewWillUnload() {
+	logInfo('transfer will unload');
+    document.removeEventListener("evtChangeWidthDesktop",fillDataToHTMLFile,false);
+    document.removeEventListener("evtChangeWidthMobile",fillDataToHTMLFile,false);
+}
+
+function getLoanInfoOpen(){
+	var data = {};
+	var arrayArgs = new Array();
+	gOverdraft = null;
+	var userCIFAccount = gCustomerNo;
+	arrayArgs.push(userCIFAccount);
+
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_SB_OVERDRAFT"), "", "", 
+								gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccess,requestMBServiceFail);
+};
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	//remove listener which added above (Callback function)
+	gprsResp = parserJSON(e);
+	gRespObj = gprsResp; 
+	if ((gprsResp.respCode == '0') 
+		&& (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_SB_OVERDRAFT")))) 
+	{	
+		showAll();		
+		parserLoanSaving();
+        refreshSwitchUICheckbox();
+		logInfo('request loan saving list successed');			
+	}
+	else if ((gprsResp.respCode != '0') && 
+	((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_SB_OVERDRAFT"))  
+	|| (gprsResp.responseType == '-1')))) {
+		
+		logInfo('gprsResp.respCode: ' + gprsResp.respCode);			
+		
+		//When click OK (Dialog) then Opening Left menu avaiable.
+		//navController.initWithRootView('account/account-scr', true);
+		
+		var tmpPageName = "";
+		var tmpPageType = "";
+				
+		if (gprsResp.respCode == '504')		
+		{
+			document.addEventListener('closeAlertView', gotoAdjustStandbyODPage, false);
+			return;			
+		}else
+		if (gprsResp.respCode == '505')		
+		{
+			document.addEventListener('closeAlertView', gotoEsavingOpen, false);
+			navController.getActionBar().setTitleBarOnly(CONST_STR.get("FUTURE_SAVING_ONLINE"));
+			return;		
+		}
+		else
+		{
+			tmpPageName = navController.getDefaultPage();
+			tmpPageType = navController.getDefaultPageType();	
+		}
+		
+		navController.pushToView(tmpPageName, true, tmpPageType);
+	}
+}
+function gotoAdjustStandbyODPage(e){
+	if ((e.type == "closeAlertView") && (currentPage == "loan/loan-open-standby-overdraft")) {
+		document.removeEventListener('closeAlertView', gotoAdjustStandbyODPage, false);
+		tmpPageName = "loan/loan-adjust-standby-overdraft";
+		tmpPageType = "xsl";
+		// navController.pushToView(tmpPageName, true, tmpPageType);
+		navController.getBottomBar().setSelectedtAtIndexWithID(2, 'loan-info-overdreaft');
+	}
+}
+function gotoEsavingOpen(e){
+	if ((e.type == "closeAlertView") && (currentPage == "loan/loan-open-standby-overdraft")) {
+		document.removeEventListener('closeAlertView', gotoEsavingOpen, false);
+		var tmpPageName =  'esaving/esaving-open-scr';//CONST_STR.get('MENU_ESAVING_OPEN');
+		var tmpPageType = 'xsl';
+		navController.pushToView(tmpPageName, true, tmpPageType);
+	}
+}
+//parser info
+function parserLoanSaving() {
+	
+	gLoanSaving = new Array();
+	
+	if((gRespObj.arguments == undefined) || (gRespObj.arguments == null) || (gRespObj.arguments.length==0)) {
+		document.addEventListener('closeAlertView', handleAlertEmptyLoan, false);
+		showAlertText(CONST_STR.get('BANK_INFO_REQUEST_FAIL'));//sửa ở đây
+		return;
+	}
+	//WE HAVE ONLY ONE ARGUMENT
+	for (var i=0; i<gRespObj.arguments.length; i++) {
+		var tmpLoan = new LoanSaving();		
+		var tmpArr = gRespObj.arguments[i].split("#");
+		//add loan object into Loan List
+		tmpLoan.accountSaving = tmpArr[0];
+		tmpLoan.amountConvert = tmpArr[1];
+		tmpLoan.currency	  = tmpArr[2];
+		tmpLoan.sendDate	  = tmpArr[3];
+		tmpLoan.dueDate		  = tmpArr[4];
+	
+		gLoanSaving.push(tmpLoan);	
+	}
+	
+	logInfo("Loan Saving done parser: " + gESavingObjs.length);
+
+	//update view
+	fillDataToHTMLFile();
+    document.addEventListener("evtChangeWidthDesktop",fillDataToHTMLFile,false);
+    document.addEventListener("evtChangeWidthMobile",fillDataToHTMLFile,false);
+	var node = document.getElementById('rateOD');
+	node.value = "80";
+	handleInputAmount(node);
+}
+
+//event listener: http request fail
+function requestMBServiceFail(e){
+	showAlertText(gprsResp.respContent);
+	//navController.initWithRootView('account/account-scr', true);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.pushToView(tmpPageName, true, tmpPageType);
+	document.addEventListener('closeAlertView', handleAlertEmptyLoan, false);
+};
+
+//event alert
+function handleAlertEmptyLoan(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "loan/loan-open-standby-overdraft")) {
+		document.removeEventListener('closeAlertView', handleAlertEmptyLoan, false);
+		//navController.initWithRootView('account/account-scr', true);
+		
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();		
+		
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+//=============called when change status of checkbox======================//
+
+function refreshListSelected(){
+	arrSav = new Array();
+	var tmpArr = document.getElementsByName('checkbox_name');
+	for (var i=0; i<tmpArr.length; i++) {		                                         		
+		if(tmpArr[i].checked) {                                                                 			
+			arrSav.push(gLoanSaving[i]);
+		}
+	}
+}
+
+function change_Saving(index, inNode)
+{
+	arrSav = new Array();				
+	var tmpArr = document.getElementsByName('checkbox_name');	
+	logInfo('So luong nut checkbox la  '+tmpArr.length);
+	for (var i=0; i<tmpArr.length; i++) {
+		var tmpNode = tmpArr[i];                                            
+		if(index ==i && inNode.type !="checkbox") {				
+			tmpNode.checked = !tmpNode.checked;
+			logInfo('Thay đổi status ====  '+tmpNode.checked);
+            changeSwitchUI((tmpNode.parentNode));
+		}
+		if(tmpNode.checked) {                                                                 
+			logInfo('Push vao mang');
+			arrSav.push(gLoanSaving[i]);
+		}else{
+			logInfo('Khong Push vao mang');
+		}
+	}
+	//==========refresh limit_od, rate_od========================//
+	logInfo('Do dai ='+arrSav.length +'  Tong so: = '+getTotalSaving());
+	if(arrSav.length>0){
+		handleInputBackUp(document.getElementById('rateOD'));
+	}else{
+		document.getElementById('limitOD').value = 0;
+	}
+}
+//this function to fill all data to HTML
+function fillDataToHTMLFile() {
+	if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var arrTitle = new Array();
+        var arrContentData = new Array();
+        var arrItemContent;
+        var contentHTML="";
+        arrTitle.push(CONST_STR.get('LOAN_AD_SAVING_ACC'));
+        arrTitle.push(CONST_STR.get('LOAN_AD_AMOUNT'));
+        arrTitle.push(CONST_STR.get('LOAN_AD_CURRENCY'));
+        arrTitle.push(CONST_STR.get('LOAN_TSDB_VALUE_DATE'));
+        arrTitle.push(CONST_STR.get('LOAN_TSDB_MATURITY_DATE'));
+        arrTitle.push(CONST_STR.get('LOAN_AD_SELECTION'));
+        arrContentData.push(arrTitle);
+        for(var i=0;i<gLoanSaving.length;i++){
+            arrItemContent = new Array();
+            arrItemContent.push(gLoanSaving[i].accountSaving);
+            arrItemContent.push(formatNumberToCurrency(gLoanSaving[i].amountConvert));
+            arrItemContent.push(gLoanSaving[i].currency);
+            arrItemContent.push(gLoanSaving[i].sendDate);
+            arrItemContent.push(gLoanSaving[i].dueDate);
+            arrItemContent.push('<div onClick = "change_Saving('+i+',this);" style="top:0px !important" class="custom-switch custom-switch-off" id="clickChange">' +
+                "<input type='checkbox' class='custom-switch-input custom-switch-input-on' value='false' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' target='"+i+"' name = 'checkbox_name'  id = "+gLoanSaving[i].accountSaving+" disabled='disabled'>"+
+                '<span class="custom-switch-label custom-switch-label-off" id="mng.payee.val" data-on="On" data-off="Off">off</span>'+
+                '<span class="custom-switch-handle custom-switch-handle-off"></span></div>');
+
+            arrContentData.push(arrItemContent);
+        }
+        var recycler = new RecyclerView({
+            type: "DESKTOP_LIST",
+            typeTextAlign: "MIDLE",
+            opacity:false
+        });
+        recycler.setData(arrContentData);
+        contentHTML = recycler.init();
+        var nodeReviewInfo = document.getElementById("loanSBOverdraftContent");
+        nodeReviewInfo.innerHTML =	contentHTML;
+
+    }else{
+	htmlReviewInfo = "<table width='98%' align='center' class='accinfo-table'>";
+	
+	// htmlReviewInfo += '<tr class="trow-title">'+ 
+	// 	'<th width="19%">' 
+	// 	+ CONST_STR.get('LOAN_AD_SAVING_ACC') +'</th><th width="19%">' 		
+	// 	+ CONST_STR.get('LOAN_AD_AMOUNT') + '</th><th  width="15%">' 
+	// 	+ CONST_STR.get('LOAN_AD_CURRENCY') + '</th><th width="15%">' 
+	// 	+ CONST_STR.get('LOAN_TSDB_VALUE_DATE')+'</th><th width="15%">' 
+	// 	+ CONST_STR.get('LOAN_TSDB_MATURITY_DATE')  + '</th>'+'<th width="8%">' 
+	// 	+ CONST_STR.get('LOAN_AD_SELECTION') + '</th></tr>';
+	
+	for(var i = 0; i<gLoanSaving.length; i++)
+	{
+		htmlReviewInfo = htmlReviewInfo + 
+		"<tr>" +   
+			'<td>'+ '<div class="recycler-list" id="recycler-list">' + '<table class="recycler-table-ebank" id="recycler-table-ebank">' +
+                                                                
+				'<tr class="recycler-row-as" onClick = "change_Saving('+i+',this);">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get('LOAN_AD_SAVING_ACC')  + '</td><td class="recycler-row-align-midle-right">' +gLoanSaving[i].accountSaving + '</td>' + '</tr>' +
+            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_AMOUNT') + '</td><td class="recycler-row-align-midle-right">' + formatNumberToCurrency(gLoanSaving[i].amountConvert)+ '</td>' + '</tr>' +
+            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_CURRENCY') + '</td><td class="recycler-row-align-midle-right">' +gLoanSaving[i].currency+ '</td>' + '</tr>' +
+            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_TSDB_VALUE_DATE') + '</td><td class="recycler-row-align-midle-right">' +gLoanSaving[i].sendDate+ '</td>' + '</tr>' +
+            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_TSDB_MATURITY_DATE') + '</td><td class="recycler-row-align-midle-right">' + gLoanSaving[i].dueDate + '</td>' + '</tr>' +
+            	'<tr class="recycler-row-parity" onClick = "change_Saving('+i+',this);">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_SELECTION') + '</td><td class="recycler-row-align-midle-right">' +
+            	// "<input type = 'checkbox' onchange ='change_Saving("+i+",this);' style='clear:both;margin:0 0 0;'  class='checkbox-accept' name = 'checkbox_name' target='"+i+"' id = '"+gLoanSaving[i].accountSaving+"'>"+ '</td>' + '</tr>' +
+
+            	'<div style="top:0px !important" class="custom-switch custom-switch-off" id="clickChange">' +
+            	"<input type='checkbox' class='custom-switch-input custom-switch-input-on' value='false' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' target='"+i+"' name = 'checkbox_name'  id = "+gLoanSaving[i].accountSaving+" disabled='disabled'>"+
+            	'<span class="custom-switch-label custom-switch-label-off" id="mng.payee.val" data-on="On" data-off="Off">off</span>'+
+            	'<span class="custom-switch-handle custom-switch-handle-off"></span></div>'+ '</td>' + '</tr>' +
+            	
+					'</table>'+
+				'</div>'+
+			'</td>'+
+
+
+
+     '</tr>';  
+	
+	}
+	
+	
+	htmlReviewInfo +="</table>";
+	var nodeReviewInfo = document.getElementById("loanSBOverdraftContent");
+	nodeReviewInfo.innerHTML =	htmlReviewInfo;
+}
+}
+
+//=============return total amount saving checked=============//
+function getTotalSaving(){
+	var total = 0;
+	//logInfo('Length = '+arrSav.length);
+	if(arrSav!= undefined && arrSav.length>0){
+		for(var i = 0; i<arrSav.length; i++){
+			logInfo(arrSav[i].amountConvert);
+			total =parseFloat(total) + parseFloat(arrSav[i].amountConvert);
+		}
+	}
+	return total;
+}
+
+function isNumberKey(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode != 46 && charCode > 31
+    && (charCode < 48 || charCode > 57))
+        return false;
+
+    return true;
+}
+
+function isNumberKeyNotDot(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+
+function handleInputBackUp(des){
+	logInfo('Vao 1');
+	var total = getTotalSaving();	
+	logInfo('Vao 2');
+	//var rateOD = document.getElementById('limitOD');
+	if(des.id == 'rateOD'){					
+		if(total>0){			
+			if(isNaN(des.value)){
+				//showAlertText(CONST_STR.get('LOAN_OPEN_ERR_08'));
+				//var tmpNode = document.createElement("input");
+				des.value = "";
+				
+				return;
+			}	
+			checkOverThreeNum(des);					
+			if(total>0){
+				var limitOD = document.getElementById('limitOD');								
+				var value = parseFloat(Math.floor((removeSpecialChar(des.value)*total)/10000000))*100000;
+				limitOD.value = formatNumberToCurrency(value);
+				//formatCurrency(e, limitOD);
+			}
+		}else{
+			des.value = "";
+		}
+	}
+}
+//KIỂM TRA XEM CÓ QUÁ 3 CHỮ SỐ KHÔNG
+function checkOverThreeNum(node){
+	var valueToCheck = node.value;
+	var index = String(valueToCheck).indexOf('.');
+	var strRateTmp = String(valueToCheck);				
+	if(index > 0)
+	{
+		var strTmp = strRateTmp.substr(parseInt(index)); 
+	
+		if (strTmp.length > 3)
+		{
+			node.value = strRateTmp.substring(0,strRateTmp.length-1);
+			showAlertText(CONST_STR.get('LOAN_OPEN_ERR_08'));
+			
+			return;
+		}
+	}
+	return;
+}
+
+//Format currency and pronounce to Vietnamese
+function handleInputAmount(des) {	
+	//logInfo('Thuan: '+e);
+	refreshListSelected();
+	var ptotal = getTotalSaving();
+	logInfo('Thuan Total: '+ ptotal);
+	//Neu textbox nhap la txtTien
+	var rateOD = document.getElementById('rateOD');
+	if(des.id == 'limitOD'){		
+		//formatCurrency(e, des);
+		//logInfo('Thuan formate: ');
+		des.value = formatNumberToCurrency(des.value);
+		if(ptotal>0){
+			
+			var tmpl = ((removeSpecialChar(des.value)/ptotal)*100);
+
+			if(tmpl == 0) {
+				rateOD.value  = "";
+			}else{
+				rateOD.value = roundToTwo(tmpl);
+			}
+		}else{
+			rateOD.value  = "";
+		}
+	}else
+	{
+		//Neu o textbox nhap la rate (%)
+		if(des.id == 'rateOD'){			
+			if(isNaN(des.value)){
+				//showAlertText(CONST_STR.get('LOAN_OPEN_ERR_08'));
+				//var tmpNode = document.createElement("input");
+				des.value = "";
+				
+				return;
+			}	
+			checkOverThreeNum(des);					
+			if(ptotal>0){
+				var limitOD = document.getElementById('limitOD');								
+				var value = parseFloat(Math.floor((removeSpecialChar(des.value)*ptotal)/10000000))*100000;
+				limitOD.value = formatNumberToCurrency(value);
+				//formatCurrency(e, limitOD);
+			}
+		}
+	}
+}
+//==============Next button clicked==================//
+function click_Next() {
+	var check = false;
+	check = validateLimitOd();
+	if(check)
+	{
+		amountSav =removeSpecialChar(document.getElementById('limitOD').value);
+		navController.pushToView('loan/loan-open-term-confirm-scr', true);
+	}
+} 
+
+//=====================Validate data============================================//
+function validateLimitOd()
+{
+	rateSav = "";
+	var limit_od = removeSpecialChar(document.getElementById('limitOD').value);
+	var rateTmp = removeSpecialChar(document.getElementById('rateOD').value);
+	try
+	{
+		if(limit_od == 0){
+			showAlertText(CONST_STR.get('LOAN_OPEN_ERR_10'));
+			return false;
+		}
+		if(arrSav==undefined ||arrSav == null || arrSav.length == 0)
+		{
+			showAlertText(CONST_STR.get('LOAN_OPEN_ERR_03'));
+			return false;
+		}
+
+		if(isNaN(parseFloat(limit_od))||parseFloat(limit_od)%100000 > 0)
+		{
+			showAlertText(CONST_STR.get('LOAN_OPEN_ERR_05'));
+			return false;
+		}
+
+		var rate_tmp = (limit_od/getTotalSaving())*100;
+		
+		if(parseFloat(rate_tmp) > 80)
+		{
+			showAlertText(CONST_STR.get('LOAN_OPEN_ERR_06'));
+			return false;
+		}else{
+			rateSav = roundToTwo(rate_tmp);
+		}
+		
+		if(parseFloat(rateTmp)>80){
+			showAlertText(CONST_STR.get('LOAN_OPEN_ERR_09'));
+			return false;
+		}
+		if(parseFloat(limit_od) > 1000000000)
+		{
+			showAlertText(CONST_STR.get('LOAN_OPEN_ERR_07'));
+			return false;
+		}
+		var index = String(rateTmp).indexOf('.');
+		var strRateTmp = String(rateTmp);				
+		if(index > 0)
+		{
+			var strTmp = strRateTmp.substr(parseInt(index)); 
+		
+			if (strTmp.length > 3)
+			{
+				showAlertText(CONST_STR.get('LOAN_OPEN_ERR_08'));
+				return false;
+			}
+		}
+		return true;
+	}catch(err)
+	{
+		return false;
+	}
+} 
+function roundToTwo(num) {    				
+	return (Math.floor(num * 100)) / 100;				
+}	
+function roundToOne(num) {
+	return (Math.floor(num * 10)) / 10;
+} 
+//REFRESH ARRAY WHEN BACK TO THIS PAGE
+function refreshArrayWhenBackpage(){
+	logInfo('Vao day de refresh');
+	arrSav = new Array();				
+	var tmpArr = document.getElementsByName('checkbox_name');		
+	for (var i=0; i<tmpArr.length; i++) {
+		var tmpNode = tmpArr[i];
+		if(tmpNode.type=="checkbox") {
+			if(tmpNode.checked) {	
+				logInfo("-->"+tmpNode.getAttribute('target'));
+				arrSav.push(gLoanSaving[tmpNode.getAttribute('target')]);
+			}
+		}
+	}
+	logInfo('Tong sau khi back lai la: '+getTotalSaving());
+}
+
+
+function scrollPrevious(){
+	//scrollToElement
+	var nodeAccList = document.getElementById("thelist").getElementsByTagName("li");
+	idxAcc--;
+	if (idxAcc >= 0) {
+		setTimeout(function(){
+			accountSelectScroll.scrollToElementIdx(idxAcc, 500);
+			var tmpAcc = new AccountObj();
+			tmpAcc = gESavingObjs[idxAcc];
+			updateAccDetail(tmpAcc);
+		}, 100);
+	}
+	else {
+		idxAcc = 0;
+	}
+}
+
+function scrollNext(){
+	//scrollToElement
+	var nodeAccList = document.getElementById("thelist").getElementsByTagName("li");
+	idxAcc++;
+	if (idxAcc < nodeAccList.length) {
+		setTimeout(function(){
+			accountSelectScroll.scrollToElementIdx(idxAcc, 500);
+			var tmpAcc = new AccountObj();
+			tmpAcc = gESavingObjs[idxAcc];
+			updateAccDetail(tmpAcc);
+		}, 100);
+	}
+	else {
+		idxAcc = nodeAccList.length - 1;
+	}
+}
+//event start unload page
+document.addEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+function handleStartUnloadPage(e) {
+	if ((e.type == "evtStartUnloadPage") && (currentPage == "loan/loan-open-standby-overdraft")) {
+		document.removeEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+		document.removeEventListener("evtScrollToIdx", handleScrollToLoanIdx, false);
+	}
+}
+//event scroll to index
+document.addEventListener("evtScrollToIdx", handleScrollToLoanIdx, false);
+
+function handleScrollToLoanIdx(e) {
+	 if ((e.type == "evtScrollToIdx") && (currentPage == "loan/loan-open-standby-overdraft")) {
+		/*setTimeout(function() {
+			document.removeEventListener("evtScrollToIdx", evtFunc);
+		}, 100);*/
+		idxAcc = e.scrolledToIdx;
+		var tmpAcc = new AccountObj();
+		tmpAcc = gESavingObjs[e.scrolledToIdx];
+		updateAccDetail(tmpAcc);
+	}
+}

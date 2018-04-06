@@ -1,0 +1,1479 @@
+// JavaScript Document
+/*
+ * Created by DungNT11
+ * User: DungNT11.Fsoft
+ * Date: 7/4/14
+ * Time: 5:05 PM
+ */
+var gLoyaltyManageObjs;
+var gSendFileObjs;
+var defaultChoice;
+var genderId = "";
+var enterId ="";
+var incomerId  = "";
+var depositTenorID = "";
+var tmpArray1 = [];
+var tmpArray2 = [];
+var mobiId="";
+var checkImage =0;
+var checkStatusUpload = 0;
+var checkStypeImage;
+var isFirst = true;
+var isSendReq = false;
+
+//take picture
+var imgSelected;
+var currentFile;
+var resultImage;
+var infoNode1 = document.getElementById('info1');
+var icropper1;
+var isSmallScrMode;
+var clientCusWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+var canvasImg = document.createElement("canvas");
+var ctxImg = canvasImg.getContext("2d");
+var scaledImage = null;
+var angleRotate = 0;
+
+//Fill data 
+
+var gUtiConditions = {	"amount":
+						{
+							"allow":"[,.0-9]",
+							"notallow":"",
+							"minlength":"0",
+							"maxlength":"18",
+							"func":""
+						},
+						"content":
+						{
+							"allow":"[a-zA-Z0-9]",
+							"notallow":"",
+							"minlength":"0",
+							"maxlength":"200",
+							"func":""
+						},
+						"date":
+						{
+							"allow":"",
+							"notallow":"",
+							"minlength":"1",
+							"maxlength":"10",
+							"func":"isValidDateCus"
+						},
+						"mobile":
+						{
+							"allow":"[0-9]",
+							"notallow":"",
+							"minlength":"0",
+							"maxlength":"16",
+							"func":""
+						},
+						"email":
+						{
+							"allow":"",
+							"notallow":"",
+							"minlength":"0",
+							"maxlength":"200",
+							"func":""
+						},						
+						"gender":
+						{
+							"allow":"[1-2]",
+							"notallow":"",
+							"minlength":"0",
+							"maxlength":"200",
+							"func":""
+						},
+					 }
+
+function showCal(objid,spanid) {
+	
+	var obj = document.getElementById(objid);
+	var spanobj = document.getElementById(spanid);
+	
+	var fromDate;
+	var strBwd = gUserInfo.lang == 'VN' ? 'Trước' : 'Previous';
+	var strFwd = gUserInfo.lang == 'VN' ? 'Sau' : 'Next';
+	var strHide = gUserInfo.lang == 'VN' ? 'Đóng' : 'Close';
+	var strMotu = gUserInfo.lang == 'VN' ? 'T2;T3;T4;T5;T6;T7;CN' : 'Mo;Tu;We;Th;Fr;Sa;Su';
+	var strFull = gUserInfo.lang == 'VN' ? 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12' : 'January;Feburary;March;April;May;June;July;August;September;October;November;December';
+ 	
+	fromDate = new DatePicker(					
+		{				
+			show : function(data) {},			
+			hide : function(data) {},			
+			seek : function(data) {},			
+			select : function(data, fn) {
+				obj.value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+				fromDate.hide();
+				}			
+		},				
+		{				
+			tmpl_field   : 'd/m/Y',			
+			range_min    : '01-01-1900',			
+			range_max    : '12-31-9999',			
+			//dom_id       : obj.id,			
+			//dom_field    : obj,			
+			
+			dom_field    : spanobj, //node make action
+			async_selection : true,
+			
+			dictionaries : {			
+				'custom' : {		
+					common : {	
+						bwd  : strBwd,
+						fwd  : strFwd, 
+						hide : strHide
+					},	
+					weekdays : {	
+						motu : strMotu
+					},	
+					monthes : {	
+						full : strFull
+					},	
+				}		
+			}			
+		}				
+	);	
+}
+
+function viewDidLoadSuccess() {
+	//add datetime picker
+	
+	/*
+	var dob = document.getElementById('id.dateOfBirth');
+	var spandob = document.getElementById('span.dateOfBirth');
+	showCal(dob,spandob);
+	
+	var doi = document.getElementById('id.dateOfIssue');
+	var spandoi = document.getElementById('span.dateOfIssue');
+	showCal(doi,spandoi);
+	*/
+		document.getElementById("btnFile").value = CONST_STR.get('TRANSFER_LIST_CHOICE_FILE');
+	
+	showCal('id.dateOfBirth','span.dateOfBirth');	
+	showCal('id.dateOfIssue','span.dateOfIssue');
+	
+	document.getElementById("id.enterInfo").value = (gUserInfo.lang == 'EN')? CONST_KEY_CHANGE_INFO_ENTER_EN[0]: CONST_KEY_CHANGE_INFO_ENTER_VN[0];
+	
+	//take picture
+	imgSelected = document.getElementById("id.fileUpload01");
+	resultImage = document.getElementById('cropperContainer1');
+	infoNode1 = document.getElementById('info1');
+	clientCusWidth -= 25;// padding size
+	if(gModeScreenView == CONST_MODE_SCR_SMALL) {
+		isSmallScrMode = true;
+	}
+	else {
+		isSmallScrMode = false;
+	}
+	imgSelected.onchange = function(e) {
+		
+		e.preventDefault();
+		var target = e.dataTransfer || e.target;
+		var file = target && target.files && target.files[0];
+		var options = {
+				maxWidth: resultImage.width,
+				canvas: true
+			};
+		if (!file) {
+			logInfo("Not exist file");
+			return;
+		}
+		//if(!file.type.match(/image.*/)){
+//			logInfo("Not an image: ", file.type);
+//			return;
+//		}
+		loadImage.parseMetaData(file, function (data) {
+			/*if (data.exif) {
+				options.orientation = data.exif.get('Orientation');
+				//displayExifData(data.exif);
+			}*/
+			displayImage(file, options);
+		});
+		fnChange(imgSelected);
+	}
+	
+	//only enable camera: ios > 5 & android > 4 & chrome moi
+	if(isAndroidBrowserAbove4 || iOSversion() > 5) {
+		document.getElementById('take-picture-icon').style.display = '';
+	}
+	else {
+		document.getElementById('take-picture-icon').style.display = 'none'
+	}
+}
+
+function showChoiceEnterInfo(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_CHANGE_INFO_ENTER_EN: CONST_KEY_CHANGE_INFO_ENTER_VN;
+	var tmpArray2 = CONST_KEY_CHANGE_INFO_ENTER_ID;
+	document.addEventListener("evtSelectionDialog", showChoiceEnterInfoPre, false);
+	document.addEventListener("evtSelectionDialogClose", showChoiceEnterInfoPreClose, false);
+	showDialogList(CONST_STR.get('ENTER_INFO_CHOICE'), tmpArray1, tmpArray2 , false);
+}
+
+function showChoiceEnterInfoPre(e) {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		showChoiceEnterInfoPreClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagAccNo = document.getElementById("id.enterInfo");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			enterId = e.selectedValue2;
+			if (enterId == 1){
+				document.getElementById("id.tableTitle").style.display='';
+				document.getElementById("id.tableIntroduce").style.display='';
+				document.getElementById("id.loadInfoCustomerEnter").style.display='';
+				document.getElementById("id.tableTitle1").style.display='none';
+				document.getElementById("id.loadInfoCustomerFile").style.display='none';
+				document.getElementById("div").style.display='none';
+				document.getElementById("id.btnsendImageAll").style.display='none';			
+			}else{	
+				if (enterId ==2){
+					document.getElementById("id.tableTitle1").style.display='';
+					document.getElementById("id.loadInfoCustomerFile").style.display='';
+					document.getElementById("id.tableTitle").style.display='none';
+					document.getElementById("id.tableIntroduce").style.display='none';
+					document.getElementById("id.loadInfoCustomerEnter").style.display='none';
+					document.getElementById("button_back").style.display='none';
+					document.getElementById("div").style.display = '';
+				}
+			}
+		}
+	}
+}
+
+function showChoiceEnterInfoPreClose() {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		document.removeEventListener("evtSelectionDialogClose", showChoiceEnterInfoPreClose, false);
+		document.removeEventListener("evtSelectionDialog", showChoiceEnterInfoPre, false);
+	}
+}
+// Fill data for gender
+function showChoiceGenderInfo(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_CHANGE_INFO_GENDER_EN: CONST_KEY_CHANGE_INFO_GENDER_VN;
+	var tmpArray2 = CONST_KEY_CHANGE_INFO_GENDER_ID;
+	document.addEventListener("evtSelectionDialog", showChoiceGenderInfoPre, false);
+	document.addEventListener("evtSelectionDialogClose", showChoiceGenderInfoPreClose, false);
+	showDialogList(CONST_STR.get('GENDER_BGN_CHOICE'), tmpArray1, tmpArray2 , false);
+}
+
+function showChoiceGenderInfoPre(e) {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		showChoiceGenderInfoPreClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagAccNo = document.getElementById("id.genderInfo");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			genderId = e.selectedValue2;
+		}
+	}
+}
+
+function showChoiceGenderInfoPreClose() {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		document.removeEventListener("evtSelectionDialogClose", showChoiceGenderInfoPreClose, false);
+		document.removeEventListener("evtSelectionDialog", showChoiceGenderInfoPre, false);
+	}
+}
+
+// Fill data for nationality
+
+function showChoiceNationalityInfo(){
+	var lengthcountries	= countries.data.length;
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	
+	/*
+	for (var i=0; i<lengthcountries; i++) {
+		tmpArray1.push(countries.data[i].description);
+		tmpArray2.push(countries.data[i].countryCode);		
+	}
+	*/
+	
+	logInfo("----- start sort -----");
+    countries.data.sort(dynamicSort("description"));
+	
+	for (var i=0; i<lengthcountries; i++) {
+		if (countries.data[i].countryCode == 'VN')
+		{		
+			tmpArray1.push(countries.data[i].description);
+			tmpArray2.push(countries.data[i].countryCode);	
+			break;
+		}
+	}
+	for (var i=0; i<lengthcountries; i++) {
+		if (countries.data[i].countryCode != 'VN')
+		{		
+			tmpArray1.push(countries.data[i].description);
+			tmpArray2.push(countries.data[i].countryCode);				
+		}
+	}
+	logInfo("----- finish sort -----");
+	
+ 	document.addEventListener("evtSelectionDialog",showChoiceNationalityInfoPre, false);
+	document.addEventListener("evtSelectionDialogClose", showChoiceNationalityInfoPreClose, false);
+    showDialogList(CONST_STR.get('NATIONALITY_BGN_CHOICE'), tmpArray1, tmpArray2 , false);
+}
+
+function dynamicSort(property) {
+    var sortOrder = 1;
+    if(property[0] === "-") {
+        sortOrder = -1;
+        property = property.substr(1);
+    }
+    return function (a,b) {
+        var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+        return result * sortOrder;
+    }
+}
+
+function showChoiceNationalityInfoPre(e) {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		showChoiceNationalityInfoPreClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			defaultChoice = e.selectedValue1;
+			
+			var tagAccNo = document.getElementById("id.nationality");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+			if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			depositTenorID = e.selectedValue2;
+		}
+	}
+}
+
+function showChoiceNationalityInfoPreClose() {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		document.removeEventListener("evtSelectionDialogClose", showChoiceNationalityInfoPreClose, false);
+		document.removeEventListener("evtSelectionDialog", showChoiceNationalityInfoPre, false);
+	}
+}
+
+// Fill data for nationality
+function showChoiceIncomeInfo(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_CHANGE_INFO_INCOME_EN: CONST_KEY_CHANGE_INFO_INCOME_VN;
+	var tmpArray2 = CONST_KEY_CHANGE_INFO_INCOME_ID;
+	document.addEventListener("evtSelectionDialog",showChoiceIncomeInfoPre, false);
+	document.addEventListener("evtSelectionDialogClose", showChoiceIncomeInfoPreClose, false);
+	showDialogList(CONST_STR.get('INCOME_BGN_CHOICE'), tmpArray1, tmpArray2 , false);
+}
+
+
+
+function showChoiceIncomeInfoPre(e) {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		showChoiceIncomeInfoPreClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			defaultChoice = e.selectedValue1;
+			
+			var tagAccNo = document.getElementById("id.incomeInfo");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			incomerId = e.selectedValue2;
+		}
+	}
+}
+
+
+function showChoiceIncomeInfoPreClose() {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		document.removeEventListener("evtSelectionDialogClose", showChoiceIncomeInfoPreClose, false);
+		document.removeEventListener("evtSelectionDialog", showChoiceIncomeInfoPre, false);
+	}
+}
+
+var isCompletedCheckingPassport;
+var isValidPassport;
+var invalidPassportMsg;
+
+function checkPassportValid() {
+	isCompletedCheckingPassport = false;
+	isValidPassport = false;
+	invalidPassportMsg = "";
+	
+	var arrayArgsCm = new Array();
+	arrayArgsCm.push("QSIDNO");
+	var passport = document.getElementById("id.passport");
+	arrayArgsCm.push(passport.value);
+	requestBacgroundMBService("SC_CHECK_CUSTOMER", arrayArgsCm, requestMBServiceSuccessPassport, requestMBServiceFailPassport);
+}
+
+var isCompletedCheckingMobile;
+var isValidMobile;
+var invalidMobileMsg;
+
+function checkMobileValid() {
+	isCompletedCheckingMobile = false;
+	isValidMobile = false;
+	invalidMobileMsg = "";
+	
+	var arrayArgsMb = new Array();
+	arrayArgsMb.push("QSPHONENUM");
+	var mobile = document.getElementById("id.mobileNumber");
+	arrayArgsMb.push(mobile.value);
+	requestBacgroundMBService("SC_CHECK_CUSTOMER", arrayArgsMb, requestMBServiceSuccessMobile, requestMBServiceFailMobile);
+}
+
+//event click button send
+function sendJSONRequest() {
+	var checkError = 0;
+	isSendReq = true;
+//if not complete checking passport
+	var passport = document.getElementById("id.passport");
+	tmpStr = passport.value;
+	if (tmpStr.length > 0){
+		if (!isCompletedCheckingPassport) {
+			//showAlertText("please wait for checking passport");
+			checkPassportValid();
+			return;
+		//if completed checking passport
+		} else if (!isValidPassport) {
+			showAlertText(invalidPassportMsg);
+			return;
+		}
+	}	
+	var mobileNumber = document.getElementById("id.mobileNumber");
+		tmpStr = mobileNumber.value;
+	if (tmpStr.length == 0){
+		document.getElementById("id.checkMobile").style.display='';
+		document.getElementById("id.lbCheckMobile").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}
+	else{
+		document.getElementById("id.checkMobile").style.display='none';	
+		if (!isCompletedCheckingMobile) {
+			//showAlertText("please wait for checking mobile");
+			checkMobileValid();
+			return;
+		//if completed checking passport
+		} else if (!isValidMobile) {
+			showAlertText(invalidMobileMsg);
+			return;
+		}
+	}
+		
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var tmpStr = "";
+	var stringInfo= "";
+	var arrayArgs = new Array();
+	var arrayArgs1 = new Array();
+	//arrayArgs.push(gCustomerNo);
+	var name = document.getElementById("id.fullName");
+	var genderInfo = document.getElementById("id.genderInfo");
+	var mobileNumber = document.getElementById("id.mobileNumber");
+	var dateOfBirth = document.getElementById("id.dateOfBirth");
+	var nationality = document.getElementById("id.nationality");
+	var dateOfIssue = document.getElementById("id.dateOfIssue");
+	var placeOfIssue = document.getElementById("id.placeOfIssue");
+	var homePhone = document.getElementById("id.homePhone");
+	var email = document.getElementById("id.email");
+	var address = document.getElementById("id.address");
+	var company = document.getElementById("id.company");
+	var position = document.getElementById("id.position");
+	var companyAddress = document.getElementById("id.companyAddress");
+	var incomeInfo = document.getElementById("id.incomeInfo");
+	var fileUpload01 = document.getElementById("id.fileUpload01");
+	
+	
+	
+	//Check mobile length 10 - 11 ky tu va bat dau so 0
+	if (document.getElementById("id.mobileNumber") != undefined)  
+	{
+		if (document.getElementById("id.mobileNumber").value.length != 0  
+			&& (document.getElementById("id.mobileNumber").value.length < 10 
+			|| document.getElementById("id.mobileNumber").value.length > 11 
+			|| !document.getElementById("id.mobileNumber").value.lastIndexOf('0', 0) == 0))
+		{	
+			document.getElementById("id.checkMobile").style.display='';
+			document.getElementById("id.lbCheckMobile").innerHTML = CONST_STR.get('K_INTRO_CUSTOMER_INPUT_INVALID_FORMAT');
+			checkError = 1;
+		}
+	}
+	
+	//Check cmnd length 8 - 12 ky tu	
+	if (document.getElementById("id.passport") != undefined)  
+	{
+		if (document.getElementById("id.passport").value.length != 0  
+			&& (document.getElementById("id.passport").value.length < 8 
+			|| document.getElementById("id.passport").value.length > 12))
+		{	
+			document.getElementById("id.checkPassport").style.display='';
+			document.getElementById("id.lbcheckPassport").innerHTML = CONST_STR.get('K_INTRO_CUSTOMER_INPUT_INVALID_FORMAT');
+			checkError = 1;
+		}
+	}
+	
+	
+	
+	//Check name
+	tmpStr = name.value;
+	if (!validateFunc(tmpStr, gUtiConditions["content"])) {
+		document.getElementById("id.checkName").style.display='';
+		document.getElementById("id.lbCheckName").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}
+	else {
+		document.getElementById("id.checkName").style.display='none';
+	}
+	stringInfo += tmpStr+"#";
+	
+	//check gender
+	tmpStr = genderId;
+	if ((tmpStr == undefined) || (tmpStr == null) || (tmpStr.length < 1)) {
+		document.getElementById("id.checkGender").style.display='';
+		document.getElementById("id.lbCheckGender").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}
+	else {
+		document.getElementById("id.checkGender").style.display='none';
+	}
+	stringInfo += tmpStr+"#";
+	
+	//Check mobile phone
+	tmpStr = mobileNumber.value;
+	stringInfo += tmpStr+"#";
+	
+	//Check date of birth
+	tmpStr = dateOfBirth.value;
+	var filter = /(((0[1-9]|[12][0-9]|3[01])([//])(0[13578]|10|12)([//])(\d{4}))|(([0][1-9]|[12][0-9]|30)([//])(0[469]|11)([//])(\d{4}))|((0[1-9]|1[0-9]|2[0-8])([//])(02)([//])(\d{4}))|((29)(\.|-|\/)(02)([//])([02468][048]00))|((29)([//])(02)([//])([13579][26]00))|((29)([//])(02)([//])([0-9][0-9][0][48]))|((29)([//])(02)([//])([0-9][0-9][2468][048]))|((29)([//])(02)([//])([0-9][0-9][13579][26])))/;
+	if (tmpStr.length < 1)
+	{
+		document.getElementById("id.checkDateOfBirth").style.display = '';
+		document.getElementById("id.lbcheckDateOfBirth").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}
+	else {
+		/*if (!filter.test(tmpStr)){
+		document.getElementById("id.checkDateOfBirth").style.display = '';
+		document.getElementById("id.lbcheckDateOfBirth").innerHTML = CONST_STR.get('ERR_INPUT_EMAIL_VALUE');
+		checkError = 1;
+	    }
+	    else{
+		    if (!validateFunc(tmpStr, gUtiConditions["date"])){
+				//document.getElementById("id.checkDateOfBirth").style.display='';
+				//document.getElementById("id.lbcheckDateOfBirth").innerHTML = CONST_STR.get('ERR_INPUT_DATEOFBIRTH');
+				
+				showAlertText(CONST_STR.get('ERR_INPUT_DATEOFBIRTH'));
+				
+				checkError = 1;
+			}
+			else {
+				document.getElementById("id.checkDateOfBirth").style.display = 'none';
+			}
+		}*/
+		
+		if (!checkDate1())
+			{
+				if(flagdatebirth ==2)
+				{
+					//alert("e da vao day");
+					document.getElementById("id.checkDateOfBirth").style.display = '';
+					document.getElementById("id.lbcheckDateOfBirth").innerHTML = CONST_STR.get('ERR_INPUT_VALUE');
+					checkError = 1;
+					}
+				if(flagdatebirth ==3)
+				{
+					document.getElementById("id.checkDateOfBirth").style.display = '';
+					document.getElementById("id.lbcheckDateOfBirth").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+					checkError = 1;
+					}
+				
+				//return false;
+			}
+			else
+			{
+				document.getElementById("id.checkDateOfBirth").style.display = 'none';
+			}
+			if(Kiemtratuoi())
+			{
+				//alert("e da vao day;Kiemtratuoi");
+				}
+			else
+			{
+				//alert("e da vao day;Kiemtratuoi-false");
+				document.getElementById("id.checkDateOfBirth").style.display = '';
+				document.getElementById("id.lbcheckDateOfBirth").innerHTML = CONST_STR.get('ERR_INPUT_DATEOFBIRTH');
+				checkError = 1;
+				}
+	}
+	stringInfo += tmpStr+"#";
+	
+	//check nationality
+	tmpStr = depositTenorID;
+	if (!validateFunc(tmpStr, gUtiConditions["content"])){
+		document.getElementById("id.checkNationality").style.display='';
+		document.getElementById("id.lbcheckNationality").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}else{
+		document.getElementById("id.checkNationality").style.display='none';
+	}
+	stringInfo += tmpStr + "#";
+	
+	//check passport
+	tmpStr = passport.value;
+	if (tmpStr.length < 1){	
+		document.getElementById("id.checkPassport").style.display='';
+		document.getElementById("id.lbcheckPassport").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}
+	else if (tmpStr.length < 8){	
+		document.getElementById("id.checkPassport").style.display='';
+		document.getElementById("id.lbcheckPassport").innerHTML = CONST_STR.get('K_INTRO_CUSTOMER_INPUT_INVALID_FORMAT');
+		checkError = 1;
+	}
+	else{
+		document.getElementById("id.checkPassport").style.display='none';
+		stringInfo += tmpStr+"#";
+	}
+	
+	tmpStr = dateOfIssue.value;
+	if (tmpStr.length < 1){
+		document.getElementById("id.checkDateOfIssue").style.display='';
+		document.getElementById("id.lbcheckDateOfIssue").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}
+	else{
+		if (!filter.test(tmpStr)){
+		document.getElementById("id.checkDateOfIssue").style.display = '';
+		document.getElementById("id.lbcheckDateOfIssue").innerHTML = CONST_STR.get('ERR_INPUT_EMAIL_VALUE');
+		checkError = 1;
+	    }
+		else{
+			document.getElementById("id.checkDateOfIssue").style.display='none';
+		}
+	}
+	stringInfo += tmpStr+"#";
+	
+ 	tmpStr = placeOfIssue.value;
+	if (!validateFunc(tmpStr, gUtiConditions["content"])){
+		document.getElementById("id.checkPlaceOfIssue").style.display='';
+		document.getElementById("id.lbcheckPlaceOfIssue").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}else{
+		document.getElementById("id.checkPlaceOfIssue").style.display='none';
+	}
+	stringInfo += tmpStr+"#";
+	
+	//check home phone
+	tmpStr = homePhone.value;
+	stringInfo += tmpStr+"#";
+
+	//check email	
+	tmpStr = email.value;
+	if (tmpStr.length < 1){
+		document.getElementById("id.checkEmail").style.display='';
+		document.getElementById("id.lbcheckEmailCTV").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}
+	else {
+	    var filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+		if (!filter.test(tmpStr))		
+		{
+			document.getElementById("id.checkEmail").style.display='';
+			document.getElementById("id.lbcheckEmailCTV").innerHTML = CONST_STR.get('ERR_INPUT_EMAIL_VALUE');
+			checkError = 1;
+		}
+		else {
+			document.getElementById("id.checkEmail").style.display='none';
+		}
+	} 			
+	stringInfo += tmpStr+"#";
+	
+	//check anddress
+	tmpStr = address.value;
+	if (!validateFunc(tmpStr, gUtiConditions["content"])){
+		document.getElementById("id.checkAddress").style.display='';
+		document.getElementById("id.lbcheckAddress").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}else{
+		document.getElementById("id.checkAddress").style.display='none';
+	}
+	stringInfo += tmpStr+"#";
+	
+	//check company
+	tmpStr = company.value;
+	if (!validateFunc(tmpStr, gUtiConditions["content"])){
+		document.getElementById("id.checkCompany").style.display='';
+		document.getElementById("id.lbcheckCompany").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}else{
+		document.getElementById("id.checkCompany").style.display='none';
+	}
+	stringInfo += tmpStr+"#";
+	
+	tmpStr = position.value;
+	if (!validateFunc(tmpStr, gUtiConditions["content"])){
+		document.getElementById("id.checkPosition").style.display='';
+		document.getElementById("id.lbcheckPosition").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}else{
+		document.getElementById("id.checkPosition").style.display='none';
+	}
+	stringInfo += tmpStr+"#";
+	
+	tmpStr = companyAddress.value;
+	stringInfo += tmpStr+"#";
+	
+	tmpStr = incomerId;
+	if ((tmpStr == undefined) || (tmpStr == null) || (tmpStr.length < 1)) {
+		document.getElementById("id.checkIncome").style.display='';
+		document.getElementById("id.lbcheckIncome").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		checkError = 1;
+	}else{
+		document.getElementById("id.checkIncome").style.display='none';
+	}
+	stringInfo += tmpStr+"#";
+	
+	tmpStr = fileUpload01.value;
+	var checkImage = tmpStr.split('.');
+	var checkTypeImage = checkImage[checkImage.length-1];
+	if (checkTypeImage != "" && checkTypeImage != "jpg" && checkTypeImage != "png" && checkTypeImage != "gif" && checkTypeImage != "JPG" && checkTypeImage != "PNG" && checkTypeImage != "GIF" ){
+		checkError = 1;
+		document.getElementById("id.checkFile").style.display='';
+		showAlertText(CONST_STR.get('ERR_INPUT_FILE_VALUE'));	
+		//document.getElementById("id.lbCheckFile").innerHTML = CONST_STR.get('ERR_INPUT_EMAIL_VALUE');		
+	}
+	else{
+		document.getElementById("id.checkFile").style.display='none';
+	}
+	isSendReq = false;
+	if (checkError == 1 ){
+		return;
+	}
+	//check file image upload
+    if ( fileUpload01.files && fileUpload01.files[0] ) {
+		var tmpResult = document.getElementById('cropperContainer1');
+		var tmpCanvas = tmpResult.getElementsByTagName('canvas')[0];
+		var base64string = tmpCanvas.toDataURL('image/jpeg');
+		var nameImg= document.getElementById("id.fileUpload01").value;
+		var nameImage = nameImg.split('\\');
+		var tmpStr = nameImage[nameImage.length-1];
+		stringInfo += tmpStr+"#";
+		//stringInfo += ""+"#";
+		stringInfo += "2"+"#";
+		stringInfo += gCustomerNo;
+		arrayArgs.push(stringInfo); 
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_INFO_CUSTOMER"), "", "", gUserInfo.lang, gUserInfo.sessionID,arrayArgs,encodeURIComponent(base64string));
+		data = getDataFromGprsCmd(gprsCmd);
+		requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+		
+        /*var FR = new FileReader();
+        FR.onload = function(e) {
+         	var base64string = e.target.result;
+			var nameImg= document.getElementById("id.fileUpload01").value;
+			var nameImage = nameImg.split('\\');
+			var tmpStr = nameImage[nameImage.length-1];
+			stringInfo += tmpStr+"#";
+			//stringInfo += ""+"#";
+			stringInfo += "2"+"#";
+			stringInfo += gCustomerNo;
+			arrayArgs.push(stringInfo); 
+		 	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_INFO_CUSTOMER"), "", "", gUserInfo.lang, gUserInfo.sessionID,arrayArgs,encodeURIComponent(base64string));
+			data = getDataFromGprsCmd(gprsCmd);
+			requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+		};
+		  FR.readAsDataURL( fileUpload01.files[0] );*/
+	}
+	else{
+			//Truyen vao tham so khach hang
+			stringInfo += ""+"#";
+			stringInfo += "2"+ "#";
+			stringInfo += gCustomerNo;
+		 	arrayArgs.push(stringInfo); 
+		 	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_INFO_CUSTOMER"), "", "", gUserInfo.lang, gUserInfo.sessionID,arrayArgs);
+			data = getDataFromGprsCmd(gprsCmd);
+			requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	}
+	isSendReq = false;
+}
+
+
+//add by anhnn
+
+function checkDate1()
+ 			 {
+  
+   			//alert("e da vao day roi nhe");
+    		 re = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    		var _temp1 = document.getElementById("id.dateOfBirth").value;
+			//alert("_temp1:"+_temp1);
+			//alert("_temp1"+_temp1);
+    		if(_temp1 != '') {
+				//alert("_temp12"+_temp1);
+     		 if(regs = _temp1.match(re)) {
+        	//alert("regs[1]:"+regs[1]);
+			//alert("regs[2]:"+regs[2]);
+			//alert("regs[3]:"+regs[3]);
+       		 if(regs[1] < 1 || regs[1] > 31) {
+         		 //alert("Sai giá trị ngày: " + regs[1]);
+		  		//OpenPopUp('%%K_CARNONAME_DATE_D%%'+regs[1])
+				flagdatebirth = 2;
+				//alert("flagdatebirth = 2:");
+          		return false;
+       			 }
+       
+        	if(regs[2] < 1 || regs[2] > 12) {
+         		
+				 //OpenPopUp('%%K_CARNONAME_DATE_M%%'+regs[2])
+				 flagdatebirth = 2;
+				// alert("flagdatebirth32 = 2:");
+         		 return false;
+       			 }
+      
+       		
+     		 } else {
+ 				 //OpenPopUp('%%K_CARNONAME_DATE_F%%'+_temp1)
+				 flagdatebirth = 2;
+				// alert("flagdatebirt2345h = 2:");
+         		 return false;     		 }
+		
+  		  }
+		  else
+		  {
+			  //alert("_temp3"+_temp1);
+			  flagdatebirth = 3;
+			 // alert("flagdatebirt34634h = 2:");
+			  return false;}
+	//alert("e toi day roi nhe");
+    return true;
+  }
+  
+ function Kiemtratuoi()
+  {
+	  
+	   re = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    		var _temp1 = document.getElementById("id.dateOfBirth").value;
+			
+    		if(_temp1 != '') {
+     		 if(regs = _temp1.match(re)) {
+        
+     		 } else {
+ 				 //OpenPopUp('%%K_CARNONAME_DATE_F%%'+_temp1)
+         		 return false;     		 }
+  		  }
+		  //alert("_temp1:"+_temp1);
+		 	var localTime = new Date();
+		  	var year= localTime.getFullYear();
+			var month= localTime.getMonth();
+			var date = localTime.getDate(); 
+			//alert("year:"+year);
+			if(year - regs[3] < 22)
+			{
+				 //alert("_temp2:"+year - regs[3]);
+				 return false;
+				}
+			if (year - regs[3] == 22)
+				{
+					 //alert("_temp3:"+year - regs[3]);
+					//neu thang nho hon thang hien tai
+					if (regs[2] > month)
+					{
+						 //alert("_temp4:"+year - regs[3]);
+						return false;
+						}
+					//neu thang bang thang hien tai
+					if (regs[2] == month)
+					{
+						 //alert("_temp5:"+year - regs[3]);
+						//neu ngay nho hon ngay hien tai
+						if (regs[1] > date)
+						{
+							//alert("_temp6:"+year - regs[3]);
+							return false;
+							}
+						}
+					}
+    return true;
+	
+	  }
+	  
+//event listener: http request success
+function requestMBServiceSuccess(e){   
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_INFO_CUSTOMER")))) {
+		var gCustomerManageObjs = new Array();
+		gCustomerManageObjs = gprsResp.arguments;
+		if(gCustomerManageObjs != null && gCustomerManageObjs.length > 0) {
+			localStorage['linkprint'] = gCustomerManageObjs[0];
+			navController.pushToView('introducexsl/success-introduce-customer', true,'xsl');
+		}
+	}
+	else{
+		//navController.initWithRootView('accountxsl/account-scr');	
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(){
+	//alert('fail')
+	//navController.initWithRootView('accountxsl/account-scr');	
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+};
+
+function requestMBServiceSuccessPassport(e){   
+	isCompletedCheckingPassport = true;
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(15))) {
+		var gLoyaltyManageObjs = new Array();
+		gLoyaltyManageObjs = gprsResp.arguments;
+		var tempArrStr = gLoyaltyManageObjs[0].split("#");
+		if(tempArrStr[0] == "QSIDNO" && tempArrStr[1] != null)
+		{
+			if (tempArrStr[2] == "2"){
+				invalidPassportMsg = CONST_STR.get('ERR_PASSPORT_MSG_INTRO');
+				showAlertText(invalidPassportMsg);
+		    	return;
+			}
+			if (tempArrStr[2] == "1"){
+				invalidPassportMsg = CONST_STR.get('ERR_PASSPORT_MSG_RE');
+				showAlertText(invalidPassportMsg);
+		    	return;
+			}
+		} 
+		isValidPassport = true;
+		if (isSendReq == true){
+			sendJSONRequestCustomer();
+			isSendReq = false;
+		}
+	}		
+}
+
+//event listener: http request fail
+function requestMBServiceFailPassport(){
+	isCompletedCheckingPassport = true;
+	invalidPassportMsg = "Không thực hiện được giao dịch";
+	//navController.initWithRootView('accountxsl/account-scr');	
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+	isSendReq = false;
+}
+
+function requestMBServiceSuccessMobile(e){   
+	isCompletedCheckingMobile = true;
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(15))) {
+		var gLoyaltyManageObjs = new Array();
+		gLoyaltyManageObjs = gprsResp.arguments;
+		var tempArrStr = gLoyaltyManageObjs[0].split("#");
+		if(tempArrStr[0] == "QSPHONENUM" && tempArrStr[1] != null)
+		{
+			if (tempArrStr[2] == "2"){
+				invalidMobileMsg = CONST_STR.get('ERR_MOBILE_MSG_INTRO');
+				showAlertText(invalidMobileMsg);
+		    	return;
+			}
+			if (tempArrStr[2] == "1"){
+				invalidMobileMsg = CONST_STR.get('ERR_MOBILE_MSG_RE');
+				showAlertText(invalidMobileMsg);
+		    	return;
+			}
+		} 
+		isValidMobile = true;
+		if (isSendReq == true){
+			sendJSONRequestCustomer();
+			isSendReq = false;
+		}
+	}		
+}
+
+//event listener: http request fail
+function requestMBServiceFailMobile(){
+	isCompletedCheckingMobile = true;
+	invalidMobileMsg = "Không thực hiện được giao dịch";
+	//navController.initWithRootView('accountxsl/account-scr');	
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+	isSendReq = false;
+}
+
+function isNumberKey(evt){
+    var charCode = (evt.which) ? evt.which : event.keyCode
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+
+function sendJSONRequestFile(){
+	var checkFile = 0;
+	var fileUpload02 = document.getElementById("id.fileUpload02");
+	var tempFileExcel = fileUpload02.value;
+	var checkFileExcel = tempFileExcel.split('.');
+	var checkTypeExcel = checkFileExcel[checkFileExcel.length-1];
+	if (tempFileExcel.length == 0){
+		document.getElementById("id.checkFileExcel").style.display='';
+		document.getElementById("id.lbCheckFileExcel").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');		
+	}
+	else{
+		if (checkTypeExcel != "xls" ){
+			checkFile = 1;
+			document.getElementById("id.checkFileExcel").style.display='';
+			//document.getElementById("id.lbCheckFileExcel").innerHTML = CONST_STR.get('ERR_INPUT_EMAIL_VALUE');
+			document.getElementById("id.lbCheckFileExcel").innerHTML = CONST_STR.get('ERR_INPUT_FILE_VALUE');	
+				
+		}
+		else{
+			document.getElementById("id.checkFileExcel").style.display='none';
+		}
+	}
+	if (checkFile == 1) {
+		return;
+	}
+    if ( fileUpload02.files && fileUpload02.files[0] ) {
+        var FR = new FileReader();
+        FR.onload = function(e) {
+            var base64string = e.target.result;
+                                                                                                                                                                                       var data = {};
+            var arrayArgs = new Array();
+                        
+             var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOAD_FILE_CUSTOMER"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs,encodeURIComponent(base64string));
+                                                
+             data = getDataFromGprsCmd(gprsCmd);
+             requestMBService(data, true, 0, uploadSuccess, uploadFail);                                                
+        };       
+        FR.readAsDataURL( fileUpload02.files[0] );
+    }
+}
+function uploadSuccess(e){   
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == CONSTANTS.get("CMD_LOAD_FILE_CUSTOMER"))) {
+		//document.getElementById("id.tableCustomerInfo").style.display = '';
+		gSendFileObjs = new Array();
+		gSendFileObjs = gprsResp.arguments;
+		
+		docXml = createXMLDoc();
+	    var tmpXmlRootNode = createXMLNode('intro', '', docXml);
+		var tmpXmlNodeInfo = null;
+    	
+		for(var i = 0; i < gSendFileObjs.length; i++){
+			tempArrStr = gSendFileObjs[i].split("#");
+			tmpXmlNodeInfo = createXMLNode('cusInfo', '', docXml, tmpXmlRootNode);
+			var childCusInfo = null;
+			childCusInfo = createXMLNode('fullNameColumn', tempArrStr[0], docXml, tmpXmlNodeInfo);
+			//childCusInfo = createXMLNode('dateOfBirthColumn', tempArrStr[1], docXml, tmpXmlNodeInfo);
+			childCusInfo = createXMLNode('genderColumn', tempArrStr[2], docXml, tmpXmlNodeInfo);
+			childCusInfo = createXMLNode('passportColumn', tempArrStr[3], docXml, tmpXmlNodeInfo);
+			childCusInfo = createXMLNode('mobileColumn', tempArrStr[4], docXml, tmpXmlNodeInfo);
+			childCusInfo = createXMLNode('emailColumn', tempArrStr[5], docXml, tmpXmlNodeInfo);
+			childCusInfo = createXMLNode('messageColumn', tempArrStr[6], docXml, tmpXmlNodeInfo);	
+			childCusInfo = createXMLNode('index', tempArrStr[7], docXml, tmpXmlNodeInfo);	
+		}
+		//var xmlAsString = new XMLSerializer().serializeToString( docXml );
+	    //logInfo(xmlAsString);
+		
+		var docXsl = getCachePageXsl("introducexsl/customer-introduce-ctv-tbl");
+	    genHTMLStringWithXML(docXml, docXsl, successCallTblback, failCallback);
+	}	
+};
+
+function successCallTblback(oStr){
+	var tabh = document.getElementById("div");
+	var show = false;
+	tabh.innerHTML = oStr;
+	document.getElementById("id.loadInfoCustomerFile").style.display = "none";
+    
+	
+		for(var i = 0; i < gSendFileObjs.length; i++){
+		
+		var tempArrStr = gSendFileObjs[i].split("#");
+			if(tempArrStr[6] ==""){
+			 show = true;
+			  }
+			  
+			}
+		//alert(show);	
+		if(show)
+		{
+		document.getElementById("id.btnsendImageAll").style.display = "";
+		}else{
+			//hidden
+		 document.getElementById("id.btnsendImageAll").style.display = "none";
+		
+		}
+}
+
+function failCallback(){
+}
+
+//event listener: http request fail
+function uploadFail(){
+	logInfo('upload fail')
+};
+
+function showErrorMessage(index){
+				var arr1 = [];
+	for(var i = 0; i < gSendFileObjs.length; i++){
+		var tempArrStr = gSendFileObjs[i].split("#");
+		
+		if (index == tempArrStr[7]){
+			var msg = tempArrStr[6].split("~");
+			for(var j = 0; j < msg.length; j++){
+				if(msg[j].length!=0){
+					arr1.push(msg[j]);
+					msg[j] = "";
+				}
+			}
+		}
+	}
+				document.addEventListener("evtSelectionDialog",showChoiceMessageInfoPre, false);
+			document.addEventListener("evtSelectionDialogClose", showChoiceMessageInfoPreClose, false);
+			showDialogList(CONST_STR.get('SHOW_MESSAGE'), arr1, false);
+}
+
+function enterImage(mobiId){
+	for(var i = 0; i < gSendFileObjs.length; i++){
+		var tempArrStr = gSendFileObjs[i].split("#");
+		if (mobiId == tempArrStr[4]){
+			var image = document.getElementById("id.loadImage-" + mobiId).value;
+			var checkImage = image.split('.');
+			var checkTypeImage = checkImage[checkImage.length-1];
+			if (checkTypeImage != "" && checkTypeImage != "jpg" && checkTypeImage != "png" && checkTypeImage != "gif" && checkTypeImage != "JPG" && checkTypeImage != "PNG" && checkTypeImage != "GIF"){
+				document.getElementById("id.checkFile-" + mobiId).style.display='';
+				document.getElementById("id.lbCheckFile-" + mobiId).innerHTML = CONST_STR.get('ERR_INPUT_EMAIL_VALUE');	
+			}
+			else{				
+				document.getElementById("id.checkFile-" + mobiId).style.display='none';
+			    /*document.getElementById("id.checkFile-" + mobiId).style.display='';
+				document.getElementById("id.lbCheckFile-" + mobiId).innerHTML = image.substr(0,3) + '...' + image.split(/(\\|\/)/g).pop();
+					document.getElementById("id.lbCheckFile-" + mobiId).title = image;*/
+			}
+		}
+	}
+}
+function showChoiceMessageInfoPre(e) {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		showChoiceMessageInfoPreClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagAccNo = document.getElementById("id.showError");
+			if (tagAccNo.nodeName == "INPUT") {
+				return;
+			}
+			//else {
+			//	alert('2');
+			//	tagAccNo.innerHTML = e.selectedValue1;
+			//}
+		}
+	}
+}
+
+function showChoiceMessageInfoPreClose() {
+	if (currentPage == "introducexsl/customer-introduce-ctv") {
+		document.removeEventListener("evtSelectionDialogClose", showChoiceMessageInfoPreClose, false);
+		document.removeEventListener("evtSelectionDialog", showChoiceMessageInfoPre, false);
+	}
+}
+
+function sendJSONRequestImageAll(){
+	checkStypeImage = 0;	
+	for(var i = 0; i < gSendFileObjs.length; i++){
+		
+		var tempArrStr = gSendFileObjs[i].split("#");
+			if(tempArrStr[6] ==""){
+		var image = document.getElementById("id.loadImage-" + tempArrStr[4]).value;
+		var checkImage = image.split('.');
+		var checkTypeImage = checkImage[checkImage.length-1];
+		if (checkTypeImage != "" && checkTypeImage != "jpg" && checkTypeImage != "png" && checkTypeImage != "gif" && checkTypeImage != "JPG" && checkTypeImage != "PNG" && checkTypeImage != "GIF"){
+			checkStypeImage = 1;	
+			break;
+		}
+		else {
+			loadImageToService();
+		}
+	 }
+	}
+	
+	if (checkStypeImage == 1){
+		
+		return;
+		
+	}
+	//while (checkImage < gSendFileObjs.length){
+		//loadImageToService();
+		//alert('112');	
+	//}
+	if (checkStatusUpload == 0 ){
+		navController.pushToView('introducexsl/success-introduce-customer-ctv', true,'xsl');
+		//alert('113');	
+		logInfo('upload image success');
+	}
+	else {
+		//alert("Upload false");
+		logInfo('upload image failed');
+	}
+}
+
+function updateToTable(){
+	var data = {};
+	var arrayArgs = new Array();
+
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_UPDATE_BATCH_CUSTOMER"), "", "", 
+								 gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0,  uploadListSuccess, uploadListFail);
+
+}
+function loadImageToService(){
+		var arrTmp;
+		if (gSendFileObjs[checkImage] == undefined || gSendFileObjs[checkImage] == null) {
+			return;
+		}
+		arrTmp = gSendFileObjs[checkImage].split("#");
+		
+		if(arrTmp != null && arrTmp.length > 0 && arrTmp[6].trim().length ==0){
+		     		
+			var loadImage = document.getElementById("id.loadImage-" + arrTmp[4]);
+				//alert(loadImage.files[0])
+			if(isFirst){
+				updateToTable();
+				isFirst = false;
+			}
+			
+			if (loadImage.files && loadImage.files[0] ) {
+				var FR = new FileReader();
+				FR.onload = function(e) {
+					var base64string = e.target.result;                                                                                                                                                                                       var data = {};
+					var arrayArgs = new Array();
+					var temp = "";
+					temp= gCustomerNo + "#";
+					temp += arrTmp[4] + "#";
+					var nameImg= loadImage.value; 
+					var nameImage = nameImg.split('\\');
+					var tmpStr = nameImage[nameImage.length-1];
+					temp += tmpStr;
+					arrayArgs.push(temp);                    
+					var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOAD_IMAGE_CUSTOMER"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs,encodeURIComponent(base64string));                                                
+					data = getDataFromGprsCmd(gprsCmd);
+					requestMBService(data, true, 0, uploadImageSuccess, uploadImageFail);
+
+				};   
+				FR.readAsDataURL( loadImage.files[0] );
+			}
+		}
+		checkImage = checkImage + 1;
+		sendJSONRequestImageAll();
+}
+
+function uploadImageSuccess(e){   
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == CONSTANTS.get("CMD_LOAD_IMAGE_CUSTOMER"))) {
+		checkStatusUpload = 0
+		sendJSONRequestImageAll();
+	}
+}
+function uploadImageFail(e){ 
+	checkStatusUpload = 1; 
+	sendJSONRequestImageAll();
+}
+
+function uploadListSuccess(e){   
+	return;
+}
+function uploadListFail(e){ 
+	return;
+}
+
+//
+function isValidDateCus(){
+	var tmpStr = document.getElementById("id.dateOfBirth").value;
+	var checkAge = tmpStr.split("/");
+	var currentTime = new Date();
+	var month = currentTime.getMonth()+ 1;
+	var day = currentTime.getDate();
+	var year = currentTime.getFullYear();
+	
+	if ((year - checkAge[2])*12 + (month - checkAge[1]) < 264){
+		return false;
+	}
+	else{
+		if ((year - checkAge[2])*12 + (month - checkAge[1]) == 264){
+			if (day < checkAge[0]){
+				return false;
+			}
+		}
+		else{
+			return true;
+		}
+	}	
+}
+
+/*upload file*/
+function fnChange(obj) {
+	resultUserImg.innerHTML = ''; //clear result loaded-file
+	var objTmp = document.getElementById("btnFile");
+	if(obj.value.trim().length > 0)  {
+	objTmp.value = obj.value;
+	} else {
+		objTmp.value = '';
+	}
+
+}
+function fnClick(obj) {
+	
+		obj.value = null;
+	
+
+}
+
+
+/* Take picture */
+
+function displayImage(file, options) {
+	document.getElementById('tb-prevPicture').style.display = '';
+	//alert('em day');
+	currentFile = file;
+		if (!loadImage(
+				file,
+				replaceResults
+			)) {
+			logInfo('Not support the URL or FileReader API');
+		}
+}
+
+function replaceResults(img) {
+	var content;
+	
+	if (!(img.src || img instanceof HTMLCanvasElement)) {
+		logInfo('Loading image file failed');
+	} else {
+		/*var scaledImage = loadImage.scale(
+			img, // img or canvas element
+			{
+				maxWidth: isSmallScrMode? clientCusWidth: 640,
+				canvas: true
+			}
+		);*/
+		var maxWidthImage = 600;
+		clientCusWidth = (clientCusWidth < maxWidthImage)? clientCusWidth: maxWidthImage; //limit image size
+		var tmpMaxWidth = isSmallScrMode? clientCusWidth: maxWidthImage;
+		var tmpRatio = img.height / img.width;
+		var tmpMaxSize = tmpMaxWidth;
+		scaledImage = loadImage.scale(
+			img, // img or canvas element
+			{
+				maxWidth: tmpMaxWidth,
+				canvas: true
+			}
+		);
+		if(img.height < img.width) {
+			resultImage.setAttribute('width', tmpMaxWidth);
+			resultImage.setAttribute('height', tmpMaxWidth);
+		}
+		else {
+			resultImage.setAttribute('width', tmpRatio * tmpMaxWidth);
+			resultImage.setAttribute('height', tmpRatio * tmpMaxWidth);
+			tmpMaxSize = tmpRatio * tmpMaxWidth;
+		}
+		//resultImage.setAttribute('width', tmpMaxWidth);
+		//resultImage.setAttribute('height', tmpRatio * tmpMaxWidth);
+		//scaledImage.setAttribute('width', tmpMaxWidth);
+		//scaledImage.setAttribute('height', tmpRatio * tmpMaxWidth);
+		//resultImage.innerHTML = ''; //clear result loaded-file
+		//resultImage.appendChild(scaledImage); //show loaded-file
+		
+		//dataURL = scaledImage.toDataURL();
+		//if(!isSmallScrMode) {
+			//setUpCropImage(dataURL);
+		//}
+		//else {
+			resultImage.innerHTML = ''; //clear result loaded-file
+			//resultImage.appendChild(scaledImage);
+			
+			//Canvas
+			//var canvasImg = document.createElement("canvas");
+			canvasImg.width = tmpMaxWidth;
+			canvasImg.height = tmpMaxWidth;
+    		//var ctxImg = canvasImg.getContext("2d");
+			ctxImg.drawImage(scaledImage, canvasImg.width/2-scaledImage.width/2, canvasImg.height/2-scaledImage.width/2);
+			resultImage.appendChild(canvasImg);
+		//}
+	}
+	/*if (img.getContext) { //check image ready
+		var ctx = img.getContext();
+		if(ctx) {
+			ctx.clearRect(0, 0, img.width, img.height);
+			ctx.drawImage(dataURL, 0, 0, img.width, img.height);
+			logInfo('show image replaced');
+		}
+	}*/
+}
+
+function setUpCropImage(inBlob) {
+	//iCropper
+	if(icropper1) icropper1.destroy(); //clear memory
+	document.getElementById('previewBig1').innerHTML = ''; //clear preview
+	resultImage.innerHTML = ''; //clear result loaded-file
+	icropper1 = new ICropper(
+		'cropperContainer1' //set workspace to crop
+		,{
+			ratio: 0.75
+			,image: inBlob
+			,onChange: function(info){	//onChange must be set when constructing.
+				//infoNode1.innerHTML = 'Left: ' + info.l + 'px, Top: '+ info.t + 'px, Width: ' + info.w + 'px, Height: ' + info.h+'px';
+				infoNode1.innerHTML = 'Width: ' + info.w + 'px, Height: ' + info.h+'px';
+			}
+			,preview: [
+				'previewBig1' //set preview node
+			]
+		});
+	
+}
+
+function rotateImageIntroCus(inDegree) {
+	angleRotate += inDegree;
+	ctxImg.clearRect(0,0,canvasImg.width,canvasImg.height);
+    ctxImg.save();
+	ctxImg.fillStyle = "#FFFFFF"; // blue
+	logInfo("Canvas gap size: " + Math.abs(canvasImg.height - canvasImg.width) / 2);
+    ctxImg.translate(canvasImg.width/2, canvasImg.height/2);
+    ctxImg.rotate(angleRotate*Math.PI/180);
+    ctxImg.drawImage(scaledImage,-scaledImage.width/2,-scaledImage.width/2 + Math.abs(scaledImage.height-scaledImage.width)/2);
+    ctxImg.restore();
+}
+
+/* Take picture end */
+function fnChangeList(obj) {
+	var objTmp = document.getElementById("btnFile");
+	if(obj.value.trim().length > 0)  {
+	objTmp.value = obj.value;
+	} else {
+		objTmp.value = '';
+	}
+
+}

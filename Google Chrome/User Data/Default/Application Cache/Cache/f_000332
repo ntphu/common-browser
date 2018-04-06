@@ -1,0 +1,471 @@
+/**
+ * Created by HuyNT2.
+ * Update: HuyNT2
+ * Date: 11/4/13
+ * Time: 5:35 PM
+ */
+//============Get list Acc block==============================//
+var flag_check = false;
+function viewDidLoadSuccess() {
+	navController.getBottomBar().hide();
+}
+function viewBackFromOther() {
+    logInfo('Back from other view');
+    flag_check = true;
+//	setDefaultInfo(newCusInfoObj);
+}
+function getAccListAD(){
+	var strAcc = "";
+	if(arrSav.length>0){
+		for (var i = 0; i<arrSav.length; i++){
+			strAcc = arrSav[i].accountSaving +"#"+strAcc;			
+		}	
+	}
+	return strAcc;
+}
+//get Loan from MBCore
+//Create function getLoanInfoContent and execute immediately.
+authenActive = function loanAuthenActive(){
+	var data = {};
+	var arrayArgs = new Array();
+	var test = getAccListAD();
+	arrayArgs.push(amountSav);
+	arrayArgs.push(gOverdraft.interestRateOD);
+	arrayArgs.push(destinationACC);	//List Acc Is null or not, to automatical open acc for user
+	arrayArgs.push(getAccListAD());     //List acc blocked.
+
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_ACTIVATE_AUTHEN_OVERDRAFT"), "", "", 
+								gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);		
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}();
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	gRespObj = gprsResp; 
+	setRespObjStore(gprsResp);
+	if ((gprsResp.respCode == '0') 
+		&& (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_ACTIVATE_AUTHEN_OVERDRAFT")))) 
+	{			
+		parserLoanConfirmSaving();
+        document.addEventListener('evtChangeWidthDesktop',parserLoanConfirmSaving,false);
+        document.addEventListener('evtChangeWidthMobile',parserLoanConfirmSaving,false);
+		genReviewScreen();
+		logInfo('request loan active successed');			
+	}
+	else if ((gprsResp.respCode != '0') && 
+	((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_ACTIVATE_AUTHEN_OVERDRAFT"))  
+	|| (gprsResp.responseType == '-1')))) {
+		//When click OK (Dialog) then Opening Left menu avaiable.
+		//navController.initWithRootView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(e){
+	//navController.initWithRootView('account/account-scr', true);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+	document.addEventListener('closeAlertView', handleAlertEmptyLoan, false);
+	showAlertText(CONST_STR.get('ERR_EMPTY_LOAN_ACCOUNT'));
+}
+function viewWillUnload(){
+    document.removeEventListener('evtChangeWidthDesktop',parserLoanConfirmSaving,false);
+    document.removeEventListener('evtChangeWidthMobile',parserLoanConfirmSaving,false);
+}
+
+//parser info
+function parserLoanConfirmSaving() {
+	var htmlContent = document.getElementById('reviewInfo');	
+	//var trans_id = gRespObj.arguments[0];
+	//var dateTrans = gRespObj.arguments[1];
+	//var amount = gRespObj.arguments[2];
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        htmlContent.innerHTML = gendesktopHTML();
+    }else{
+        htmlContent.innerHTML = displayContent();
+    }
+}
+
+
+function goBack() {
+	//logInfo('gLoanSaving before back = ' + gLoanSaving.length);
+	//logInfo('gOverdraft before back= ' + gOverdraft.limitODStandby);
+	navController.popView(true);
+}
+
+
+function goCancel() {
+	// navController.resetBranchView();
+	navController.popViewInit(true);
+}
+
+//GEN REVIEW FOR ACTIVATE SCREEN RESULT
+function gendesktopHTML(){
+
+        var data =new Array();
+        var row1 = [CONST_STR.get("LOAN_AD_TRANS_TYPE"), CONST_STR.get('LOAN_ACTIVE_SB_OD_TITLE')];
+        var row2 = [CONST_STR.get('LOAN_ACTIVATE_ACC_NO'), gRespObj.arguments[1]];
+        var row3 = [CONST_STR.get('LOAN_ACTIVATE_CURR_SB_OD_LIMIT'), formatNumberToCurrency(gOverdraft.limitODStandby)+" VND"];
+        var row4 = [CONST_STR.get('LOAN_ACTIVATE_AC_OD_LIMIT'),formatNumberToCurrency(gRespObj.arguments[2])+" VND"];
+        var row5 = [CONST_STR.get('LOAN_ACTIVATE_RATE'), gRespObj.arguments[3]+"%"];
+        var row6 = [CONST_STR.get('LOAN_ACTIVATE_DATE'),gRespObj.arguments[4]];
+        var row7 = [CONST_STR.get('LOAN_ACTIVATE_TOTAL_BLOCK'),formatNumberToCurrency(gRespObj.arguments[5])+" VND"];
+        var row8 = [CONST_STR.get('LOAN_ACTIVATE_TIME_TRANS'), gRespObj.arguments[4]];
+        data = [row1, row2, row3, row4,row5, row6, row7, row8];
+        var contentHTML = "";
+        console.log(CONST_BROWSER_MODE);
+            var recycler = new RecyclerView({
+                type: "DESKTOP_GRID",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+
+            recycler.setData(data);
+            var content = recycler.init();
+            contentHTML = "<table width='97%' align='center' class='accinfo-table'>"+"<tr>"+
+            "<td>"+
+                "<h5 class='info-title'><span>"+CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE')+"</span></h5>"+
+                "</td>"+
+            "</tr>"+"<tr><td align='center'>"+content+"</td></tr>"+
+                "<tr><td colspan='2'><table width='98%'><tr><td width='180px'><input type='submit' class='btnDesktopshadow btnHomeShadow btnback_desktop' onclick='clickHomeOrBack()' value='"+CONST_STR.get('REVIEW_BTN_BACK')+"' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'></td><td class='desktop-btn' ><input type='submit' style='background-color: rgba(162, 100, 187, 0.51);border-radius: 20px;float: right;' id='trCancel' class='btnshadow btn-primary btn-desktop1' onclick='goCancel()' value='"+CONST_STR.get('REVIEW_BTN_CANCEL')+"'></td><td class='desktop-btn'><input type='button' class='btnshadow btn-second btn-desktop1' onclick='sendRequestConfirm()' value='"+CONST_STR.get('REVIEW_BTN_NEXT')+"'></td></tr></tbody></table></td></tr>"+
+                "</table>";
+
+    return contentHTML;
+
+}
+function genReviewScreen() {
+	//var nodeReviewInfo = document.getElementById("panelContent");
+	var htmlReviewInfo = "";
+	
+	htmlReviewInfo = "<table width='97%' align='center' class='accinfo-table'>";
+
+	htmlReviewInfo = htmlReviewInfo + 
+	
+				"<tr>"+
+					"<td>"+
+						"<h5 class='info-title'><span>"+CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE')+"</span></h5>"+
+					"</td>"+
+             	"</tr>";				
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><td>"+
+					// "<table width='100%' align='center' class='background-blacktrans'>";
+					'<div class="recycler-list" id="recycler-list" style="margin-top: 15px">' + '<table class="recycler-table-ebank" id="recycler-table-ebank">' ;
+	//LOẠI GIAO DỊCH
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+				// 	"<td class='td-left'>" + 
+				// 		CONST_STR.get("LOAN_AD_TRANS_TYPE") +
+				// 	"</td>" + "<td class='td-right'>" + 
+				// 		CONST_STR.get('LOAN_ACTIVE_SB_OD_TITLE') + 
+				// "</td></tr>";
+				'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get('LOAN_AD_TRANS_TYPE') + '</td><td class="recycler-row-align-midle-right">' +CONST_STR.get('LOAN_ACTIVE_SB_OD_TITLE')+ '</td>' + '</tr>';
+				
+	//SỐ TK CẤP HẠN MỨC ỨNG STK			
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+				// 	"<td class='td-left'>" + 
+				// 		CONST_STR.get('LOAN_ACTIVATE_ACC_NO') +
+				// 	"</td>" + "<td class='td-right'>" + 
+				// 		gRespObj.arguments[1]+
+				// "</td></tr>";
+				'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_ACTIVATE_ACC_NO') + '</td><td class="recycler-row-align-midle-right">' +gRespObj.arguments[1]+ '</td>' + '</tr>';
+				
+	//HẠN MỨC ỨNG STK HIỆN TẠI			
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+				// 	"<td class='td-left'>" + 
+				// 		CONST_STR.get('LOAN_ACTIVATE_CURR_SB_OD_LIMIT') +
+				// 	"</td>" + "<td class='td-right'>" + 
+				// 		formatNumberToCurrency(gOverdraft.limitODStandby)+ " VND"+
+				// "</td></tr>";
+				'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get('LOAN_ACTIVATE_CURR_SB_OD_LIMIT') + '</td><td class="recycler-row-align-midle-right">' +formatNumberToCurrency(gOverdraft.limitODStandby)+ " VND"+ '</td>' + '</tr>';
+				
+	//HẠN MỨC ỨNG STK MUỐN KÍCH HOẠT
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+				// 	"<td class='td-left'>" + 
+				// 		CONST_STR.get('LOAN_ACTIVATE_AC_OD_LIMIT') +
+				// 	"</td>" + "<td class='td-right'>" + 
+				// 		formatNumberToCurrency(gRespObj.arguments[2])+" VND" +
+				// "</td></tr>";
+				'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_ACTIVATE_AC_OD_LIMIT') + '</td><td class="recycler-row-align-midle-right">' +formatNumberToCurrency(gRespObj.arguments[2])+" VND" + '</td>' + '</tr>';
+				
+	//LÃI SUẤT ỨNG STK
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+				// 	"<td class='td-left'>" + 
+				// 		CONST_STR.get('LOAN_ACTIVATE_RATE') +
+				// 	"</td>" + "<td class='td-right'>" + 
+				// 		gRespObj.arguments[3]+"%"+ 
+				// "</td></tr>";
+				'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get('LOAN_ACTIVATE_RATE') + '</td><td class="recycler-row-align-midle-right">' +gRespObj.arguments[3]+"%"+ '</td>' + '</tr>';
+				
+	//NGÀY HIỆU LỰC	
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+				// 	"<td class='td-left'>" + 
+				// 		CONST_STR.get('LOAN_ACTIVATE_DATE')+
+				// 	"</td>" + "<td class='td-right'>" + 
+				// 		gRespObj.arguments[4]+ 
+				// "</td></tr>";
+				'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_ACTIVATE_DATE') + '</td><td class="recycler-row-align-midle-right">' +gRespObj.arguments[4]+ '</td>' + '</tr>';
+				
+	//TỔNG TIỀN TIẾT KIỆM PHONG TỎA
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+				// 	"<td class='td-left'>" + 
+				// 		CONST_STR.get('LOAN_ACTIVATE_TOTAL_BLOCK') +
+				// 	"</td>" + "<td class='td-right'>" + 
+				// 		formatNumberToCurrency(gRespObj.arguments[5])+" VND"+ 
+				'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get('LOAN_ACTIVATE_TOTAL_BLOCK') + '</td><td class="recycler-row-align-midle-right">' +formatNumberToCurrency(gRespObj.arguments[5])+" VND"+ '</td>' + '</tr>'+
+				
+
+						
+				"</table></div></td></tr> </table></td></tr>";
+				
+	htmlReviewInfo = htmlReviewInfo + "<table width='97%' align='center'>"+
+	'<tr class="desktopmode" id="result-export-print" style="display:none;">'+
+            	'<td colspan="2">'+
+                	'<div align="right" style="padding-right: 5px;">'+
+                        '<a href="javascript:void(0)" onclick="printResultHistory();"><img title="In trang này" style="margin-right:5px;" src="css/img/print.png"/></a>'+
+                    '</div>'+
+                '</td>'+
+        '</tr>'+
+				"<tr><td >" +
+					"<div style='text-align:center'>" +
+						"<input id='trgoBack' type='submit' class='btnshadow-after btn-second-after' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK'/>" +
+					"</div>" +
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + "</table></td></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	
+	//gReviewHtml = htmlReviewInfo;
+	setReviewHtmlStore(htmlReviewInfo);
+}
+//this function to display content of each Loan
+function displayContent(){
+	var content = "";	
+	content= "<table width='100%' align='center' class='accinfo-table'>"+
+           /* "<tr>"+
+              "<td colspan='2'><h5 class = 'screen-title'><span>"+CONST_STR.get("REVIEW_TITLE_SCREEN")+"</span></h5>" +
+			  "<div class='line-separate'></div></td>"+
+            "</tr>"+*/
+			//AREA MAKE SEQUENCE FORM
+				<!--"<tr><td colspan='1'><div id='seqForm'><table xmlns='http://www.w3.org/1999/xhtml' width='463' align='center' cellspacing='0' cellpadding='0' border='0' style='margin:auto' class='sequence-form-402'><tbody><tr><td width='25%'><span>"+CONST_STR.get('ESAVING_CHANGEINFO_VF_ARR1')+"</span></td><td width='25%'  class='selected'><span>"+CONST_STR.get('ESAVING_CHANGEINFO_VF_ARR2')+"</span></td><td width='25%'><span>"+CONST_STR.get('ESAVING_CHANGEINFO_VF_ARR3')+"</span></td><td width='25%'><span>"+CONST_STR.get('ESAVING_CHANGEINFO_VF_ARR4')+"</span></td></tr></tbody></table></div></td></tr>"+-->
+				"<tr><td colspan='1'><div id='seqForm'><table xmlns='http://www.w3.org/1999/xhtml' width='463' align='center' cellspacing='0' cellpadding='0' border='0' style='margin:auto' class='sequence-form-302'><tbody><tr><td width='33%'><span>"+CONST_STR.get('SEQ_INPUT_TITLE')+"</span></td><td width='33%'  class='selected'><span>"+CONST_STR.get('SEQ_AUTHEN_TITLE')+"</span></td><td width='33%'><span>"+CONST_STR.get('SEQ_COMPLETE_TITLE')+"</span></td></tr></tbody></table></div></td></tr>"+
+				//FINISH SEQUENCE 
+            "<tr>"+
+                "<td colspan='2'>"+
+                	"<h5 align='left' class='info-title'><span>"+CONST_STR.get("COM_TXT_ACC_CONFIRM_TRANS_TITLE")+"</span></h5>"+
+                "</td>"+
+             "</tr>"+
+             "<tr>"+
+               		"<td colspan='2'>"+
+
+                    	// "<table width='100%' align='center' class='background-blacktrans'>"+
+                    	'<div class="recycler-list" id="recycler-list" style="margin-top: 15px">' + '<table class="recycler-table-ebank" id="recycler-table-ebank">' +
+                        	'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_AD_TRANS_TYPE") + '</td><td class="recycler-row-align-midle-right"><span id="trans_type">'+CONST_STR.get('LOAN_ACTIVE_SB_OD_TITLE')+'</span></td>' + '</tr>' +
+                        	'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_ACTIVATE_ACC_NO") + '</td><td class="recycler-row-align-midle-right"><span id="curr_od_limit">'+gRespObj.arguments[1]+'</span></td>' + '</tr>' +
+                        	'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_ACTIVATE_CURR_SB_OD_LIMIT") + '</td><td class="recycler-row-align-midle-right"><span id="new_od_limit">'+formatNumberToCurrency(gOverdraft.limitODStandby)+" VND" +'</span></td>' + '</tr>' +
+                        	'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_ACTIVATE_AC_OD_LIMIT") + '</td><td class="recycler-row-align-midle-right"><span id="trans_date">'+formatNumberToCurrency(gRespObj.arguments[2])+" VND"+'</span></td>' + '</tr>' +
+                        	'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_ACTIVATE_RATE") + '</td><td class="recycler-row-align-midle-right"><span id="trans_date">'+gRespObj.arguments[3]+"%"+'</span></td>' + '</tr>' +
+                        	'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_ACTIVATE_DATE") + '</td><td class="recycler-row-align-midle-right"><span id="trans_date">'+gRespObj.arguments[4]+'</span></td>' + '</tr>' +
+                        	'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_ACTIVATE_TOTAL_BLOCK") + '</td><td class="recycler-row-align-midle-right"><span id="trans_date">'+formatNumberToCurrency(gRespObj.arguments[5])+" VND"+'</span></td>' + '</tr>' +
+                        	'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_ACTIVATE_TIME_TRANS") + '</td><td class="recycler-row-align-midle-right"><span id="trans_date">'+gRespObj.arguments[4]+'</span></td>' + '</tr>' +
+
+
+
+
+                        	// "<tr class='trow-default'>"+
+                         //        "<td class='td-left'><span>"+CONST_STR.get("LOAN_AD_TRANS_TYPE")+"</span></td>"+
+                         //        "<td class='td-right'><span id='trans_type'>"+CONST_STR.get('LOAN_ACTIVE_SB_OD_TITLE')+"</span></td>"+
+                         //    "</tr>"+
+							
+                          // "<tr class='trow-default'>"+
+                          //   "<td class='td-left'><span>"+CONST_STR.get('LOAN_ACTIVATE_ACC_NO') +"</span></td>"+
+                          //   "<td class='td-right'><span id='curr_od_limit'>"+gRespObj.arguments[1]+"</span></td>"+
+                          // "</tr>"+
+						 
+                         //  "<tr class='trow-default'>"+
+                         //    "<td class='td-left'><span>"+CONST_STR.get('LOAN_ACTIVATE_CURR_SB_OD_LIMIT') +"</span></td>"+
+                         //    "<td class='td-right'><span id='new_od_limit'>"+formatNumberToCurrency(gOverdraft.limitODStandby)+" VND" +"</span></td>"+
+                         // "</tr>"+
+						 
+                         // "<tr class='trow-default'>"+
+                         //    "<td class='td-left'><span>"+CONST_STR.get('LOAN_ACTIVATE_AC_OD_LIMIT')+"</span></td>"+
+                         //    "<td class='td-right'><span id='trans_date'>"+formatNumberToCurrency(gRespObj.arguments[2])+" VND"+"</span></td>"+
+                         // "</tr>"+
+						 
+						 // "<tr class='trow-default'>"+
+       //                      "<td class='td-left'><span>"+CONST_STR.get('LOAN_ACTIVATE_RATE')+"</span></td>"+
+       //                      "<td class='td-right'><span id='trans_date'>"+gRespObj.arguments[3]+"%"+"</span></td>"+
+       //                   "</tr>"+
+						 
+						 // "<tr class='trow-default'>"+
+       //                      "<td class='td-left'><span>"+CONST_STR.get('LOAN_ACTIVATE_DATE')+"</span></td>"+
+       //                      "<td class='td-right'><span id='trans_date'>"+gRespObj.arguments[4]+"</span></td>"+
+       //                   "</tr>"+
+						 
+						  // "<tr class='trow-default'>"+
+        //                     "<td class='td-left'><span>"+CONST_STR.get('LOAN_ACTIVATE_TOTAL_BLOCK')+"</span></td>"+
+        //                     "<td class='td-right'><span id='trans_date'>"+formatNumberToCurrency(gRespObj.arguments[5])+" VND"+"</span></td>"+
+        //                  "</tr>"+
+						 
+						  // "<tr class='trow-default'>"+
+        //                     "<td class='td-left'><span>"+CONST_STR.get('LOAN_ACTIVATE_TIME_TRANS')+"</span></td>"+
+        //                     "<td class='td-right'><span id='trans_date'>"+gRespObj.arguments[4]+"</span></td>"+
+        //                  "</tr>"+
+						 
+                        "</table>"+
+                        "</div>"+
+                    "</td>"+
+               "</tr>"+
+             	
+          "</table>"+
+		  "<table width='98%'>"+
+          	 "<tr class='trow-space'></tr>"+
+            "<tr>"+
+			
+			/*	
+              "<td style='border:0px'>"+
+              	"<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='"+CONST_STR.get("INPUT_ACC_BTN_GOBACK")+"'/>"+
+              "</td>"+
+              "<td width='50%'><input ype='button' class='btnshadow btn-second' onClick='sendRequestConfirm()' value='"+CONST_STR.get("REVIEW_BTN_CONFIRM")+"'/></td>"+
+			*/
+			
+			"<td colspan=2>"+			  
+			  "<table width='98%'>"+			  
+			  "<tr>"+
+			  /*
+			  "<td width='10%' align='right'>"+
+			  	"<a style='font-weight:bold' onclick='goCancel()' href='JavaScript:void(0)' title='"+CONST_STR.get("REVIEW_BTN_CANCEL")+"'>"+CONST_STR.get("REVIEW_BTN_CANCEL")+"</a>" +
+			  "</td>"+*/
+			  "<td width='50%'>"+
+			  	"<input type='submit' style='background-color: rgba(162, 100, 187, 0.51);border-radius: 20px;' id='trCancel' class='btnshadow btn-primary' onClick='goCancel()' value='"+CONST_STR.get("REVIEW_BTN_CANCEL")+"'/>"+
+			  "</td>"+
+			  
+
+			  
+			  "<td width='50%'><input type='button' class='btnshadow btn-second' onClick='sendRequestConfirm()' value='"+CONST_STR.get("REVIEW_BTN_NEXT")+"'/>"+
+			  "</td>"+
+			  
+			  "</tr>"+			  
+			  "</table>"+
+			  "</td>"+
+			  
+            "</tr>"+
+          "</table>"
+		  ;
+		/*
+		content = content+			
+			"<table width='92%' align='center' class='background-blacktrans' style='margin-bottom:5px'>" + 
+				"<tr class='trow-default'> <td class='td-left' colspan = '2'><em>"+CONST_STR.get('LOAN_AD_CONFIRM_RULE')+"</em></td></tr>"+
+				"<tr class='trow-default'>" + "<td class='td-left'>" + 
+					CONST_STR.get('LOAN_AD_TRANS_TYPE')+
+				"</td>" + "<td class='td-right'>" + 
+					CONST_STR.get('LOAN_ACTIVE_SB_OD_TITLE') + //Hard fixed
+				"</td></tr>" + 
+				//3
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('LOAN_ACTIVATE_ACC_NO')+ 
+				"</td>" + "<td class='td-right'>" + 
+					gRespObj.arguments[1]+
+				"</td></tr>" + 
+				//4
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('LOAN_ACTIVATE_CURR_SB_OD_LIMIT')+
+				"</td>" + "<td class='td-right'>" + 
+					formatNumberToCurrency(gOverdraft.limitODStandby)+" VND"+
+				"</td></tr>" + 
+				//5
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('LOAN_ACTIVATE_AC_OD_LIMIT')+
+				"</td>" + "<td class='td-right'>" + 
+					formatNumberToCurrency(gRespObj.arguments[2])+" VND"+
+				"</td></tr>" + 
+				//6
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('LOAN_ACTIVATE_RATE')+
+				"</td>" + "<td class='td-right'>" + 
+					gRespObj.arguments[3]+"%"+ 
+				"</td></tr>" +
+				//7
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('LOAN_ACTIVATE_DATE')+
+				"</td>" + "<td class='td-right'>" + 
+					gRespObj.arguments[4]+ 
+				"</td></tr>" +
+				//8
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 				
+					CONST_STR.get('LOAN_ACTIVATE_TOTAL_BLOCK')+
+				"</td>" + "<td class='td-right'>" + 
+					formatNumberToCurrency(gRespObj.arguments[5])+" VND"+ 
+				"</td></tr>" +
+				//9
+				"<tr class='trow-default'>" + 
+				"<td class='td-left'>" + 
+					CONST_STR.get('LOAN_ACTIVATE_TIME_TRANS')+
+				"</td>" + "<td class='td-right'>" + 
+					gRespObj.arguments[4]+ 
+				"</td></tr>" +"</table>"
+				;
+	content = content +			
+				"<table width='98%' align='center'>"+
+            "<tr>"+
+                "<td width='50%'>"+
+                    "<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='Quay lại'/>"+
+                "</td>"+
+                "<td width='50%'>"+
+                    "<input type='button' class='btnshadow btn-second' onclick='sendRequestConfirm()' value='Tiếp tục' />"+
+                "</td> </tr></table>";*/
+	return content;
+}
+//=====================SEND REQUEST CONFIRM=================//
+function sendRequestConfirm(){
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var tmpRespObj;
+	tmpRespObj = getRespObjStore();
+	
+	arrayArgs.push(tmpRespObj.responseType); //confirm type
+	arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+	arrayArgs.push(""); //Token key --> demo
+	//arrayArgs.push("1"); //1: accept, 0: decline
+	arrayArgs.push(gUserInfo.valicationType); //user: authen type
+	setRespObjStore(tmpRespObj);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	//gGprsCmd = gprsCmd; //save to global variable-- confirm
+	setGprsCmdStore(gprsCmd);
+	xml_review='';
+	navController.pushToView('com-authentication-scr', true);
+	
+}
+//event start unload page
+document.addEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+
+function handleStartUnloadPage(e) {
+	if ((e.type == "evtStartUnloadPage") && (currentPage == "loan/loan-overdraft-info-detail")) {
+		document.removeEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+		document.removeEventListener("evtScrollToIdx", handleScrollToLoanIdx, false);
+	}
+}

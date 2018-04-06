@@ -1,0 +1,311 @@
+{
+   "12hour": {
+      "message": "12 Horas"
+   },
+   "24hour": {
+      "message": "24 Horas"
+   },
+   "AM": {
+      "message": "am"
+   },
+   "PM": {
+      "message": "pm"
+   },
+   "about": {
+      "message": "Acerca"
+   },
+   "aboutText": {
+      "message": "Esta extensão exibe o seu histórico recente, separadores fechados recentemente, páginas mais visitadas e marcadores recentes num pop-up."
+   },
+   "advanceOptions": {
+      "message": "Opções Avançadas"
+   },
+   "allHistory": {
+      "message": "Todo o Histórico"
+   },
+   "classic": {
+      "message": "Clássico"
+   },
+   "click1": {
+      "message": "Abrir no separador actual"
+   },
+   "click2": {
+      "message": "Abrir num novo separador"
+   },
+   "click3": {
+      "message": "Abrir num novo separador no fundo"
+   },
+   "currentHistory": {
+      "message": "Data Actual"
+   },
+   "deleteItems": {
+      "message": "Eliminar Itens"
+   },
+   "fridayLetter": {
+      "message": "S"
+   },
+   "help1": {
+      "message": "O número de itens do histórico recente no pop-up"
+   },
+   "help10": {
+      "message": "O URL da página situado abaixo do título do item"
+   },
+   "help11": {
+      "message": "O separador situado no fundo do item"
+   },
+   "help12": {
+      "message": "A informação extra junto ao URL da página (ex.: contagem de visitas e a data)"
+   },
+   "help13": {
+      "message": "Se activado irá exibir uma cor diferente para diferentes itens, como um URL marcado ou fixado no histórico recente e na lista de separadores fechados recentemente"
+   },
+   "help16": {
+      "message": "Os URLs que tenha removido da lista de mais visitados. Clique na cruz junto ao URL para restaurá-lo à lista."
+   },
+   "help17": {
+      "message": "Os URLs a partir dos nomes de domínio que deseja que não sejam exibidos na lista de histórico recente, ex.: foobar.com"
+   },
+   "help18": {
+      "message": "O que deve acontecer quando clica num item no pop-up"
+   },
+   "help2": {
+      "message": "O número de separadores fechados recentemente no pop-up"
+   },
+   "help20": {
+      "message": "O formato da hora utilizado em toda a extensão"
+   },
+   "help21": {
+      "message": "Isto adiciona um ícone de partilha próximo aos itens no menu pop-up ao editar"
+   },
+   "help3": {
+      "message": "O número de itens mais visitados no pop-up"
+   },
+   "help4": {
+      "message": "O número de itens marcados recentemente no pop-up"
+   },
+   "help5": {
+      "message": "A ordem na qual os itens especificados serão mostrados"
+   },
+   "help6": {
+      "message": "Qual o gestor de histórico que gostaria de utilizar"
+   },
+   "help7": {
+      "message": "O formato da data utilizado em toda a extensão"
+   },
+   "help8": {
+      "message": "A barra de pesquisa situada no topo do pop-up"
+   },
+   "loading": {
+      "message": "A Carregar..."
+   },
+   "mainOptions": {
+      "message": "Opções Principais"
+   },
+   "mondayLetter": {
+      "message": "S"
+   },
+   "mostVisited": {
+      "message": "Mais Visitados"
+   },
+   "no": {
+      "message": "Não"
+   },
+   "noResults": {
+      "message": "Não foram encontrados resultados"
+   },
+   "option1": {
+      "message": "Número de Itens no Histórico Recente"
+   },
+   "option10": {
+      "message": "Mostrar URL"
+   },
+   "option11": {
+      "message": "Mostrar Separador"
+   },
+   "option12": {
+      "message": "Mostrar Informação Extra"
+   },
+   "option13": {
+      "message": "Mostrar Cores de Fundo"
+   },
+   "option14": {
+      "message": "Ícone do Pop-up"
+   },
+   "option15": {
+      "message": "Largura do Pop-up"
+   },
+   "option16": {
+      "message": "Restaurar Itens para Mais Visitados"
+   },
+   "option17": {
+      "message": "Filtrar Domínios do Histórico Recente"
+   },
+   "option18": {
+      "message": "Acção do Clique Esquerdo do Rato"
+   },
+   "option19": {
+      "message": "Tema do Pop-up"
+   },
+   "option2": {
+      "message": "Número de Separadores Fechados Recentemente"
+   },
+   "option20": {
+      "message": "Formato da Hora"
+   },
+   "option21": {
+      "message": "Marcação Redes Sociais"
+   },
+   "option3": {
+      "message": "Número de Itens Mais Visitados"
+   },
+   "option4": {
+      "message": "Número de Itens Marcados Recentemente"
+   },
+   "option5": {
+      "message": "Ordem de Pop-up"
+   },
+   "option6": {
+      "message": "Página de Histórico"
+   },
+   "option7": {
+      "message": "Formato da Data"
+   },
+   "option8": {
+      "message": "Mostrar Barra de Pesquisa no Pop-up"
+   },
+   "option9": {
+      "message": "Pré-visualizar"
+   },
+   "options": {
+      "message": "Opções"
+   },
+   "original": {
+      "message": "Original"
+   },
+   "pink": {
+      "message": "Rosa"
+   },
+   "pinned": {
+      "message": "Fixados"
+   },
+   "recentBookmarks": {
+      "message": "Marcadores Recentes"
+   },
+   "recentHistory": {
+      "message": "Histórico Recente"
+   },
+   "recentlyClosedTabs": {
+      "message": "Separadores Fechados Recentemente"
+   },
+   "saturdayLetter": {
+      "message": "S"
+   },
+   "saveOptions": {
+      "message": "Guardar Opções"
+   },
+   "saved": {
+      "message": "Guardado!"
+   },
+   "saving": {
+      "message": "A Guardar..."
+   },
+   "showAllHistory": {
+      "message": "Mostrar Todo o Histórico"
+   },
+   "styleOptions": {
+      "message": "Opções de Estilo"
+   },
+   "successfullyInstalled": {
+      "message": "Instalado com Sucesso/Actualizado"
+   },
+   "sundayLetter": {
+      "message": "D"
+   },
+   "thursdayLetter": {
+      "message": "Q"
+   },
+   "tip1": {
+      "message": "Pop-up: Pode abrir um item num novo separador de fundo clicando sobre o item com o botão esquerdo enquanto pressiona e segura a tecla Ctrl."
+   },
+   "tip2": {
+      "message": "Pop-up: Ao clicar sobre as engrenagens junto ao título pode eliminar, fixar e partilhar itens."
+   },
+   "tip3": {
+      "message": "Opções: Pode premir as teclas de seta para cima e seta para baixo para aumentar e diminuir valores numéricos quando o campo é seleccionado."
+   },
+   "tip4": {
+      "message": "Opções: Pode premir Enter para adicionar um domínio para a lista filtrada."
+   },
+   "tip5": {
+      "message": "Histórico: Pode utilizar o Shift e clique para seleccionar vários itens."
+   },
+   "tip6": {
+      "message": "Histórico: Use os botões na barra de ferramentas azul para manipular a forma como os itens do histórico são mostrados."
+   },
+   "tips": {
+      "message": "Dicas Úteis"
+   },
+   "totalHistoryItems": {
+      "message": "Total de Itens no Histórico:"
+   },
+   "translation1": {
+      "message": "Por favor, ajude a melhorar o Recent History fornecendo-lhe novas e melhores traduções. Esta página foi criada para tornar mais fácil a tradução desta extensão."
+   },
+   "translation2": {
+      "message": "Por favor, siga os passo abaixo, para traduzir o Recent History para o seu idioma:"
+   },
+   "translation3": {
+      "message": "Vá até o final desta página."
+   },
+   "translation4": {
+      "message": "Preencha o formulário correctamente."
+   },
+   "translation5": {
+      "message": "Traduza todas as 'mensagens' para o seu idioma escolhido."
+   },
+   "translation6": {
+      "message": "Clique no botão 'Submit'."
+   },
+   "translation7": {
+      "message": "Concluído!"
+   },
+   "translations": {
+      "message": "Idiomas"
+   },
+   "tuesdayLetter": {
+      "message": "T"
+   },
+   "ui1": {
+      "message": "Fixar item?"
+   },
+   "ui2": {
+      "message": "Eliminar item do histórico?"
+   },
+   "ui3": {
+      "message": "Eliminar item dos separadores fechados recentemente?"
+   },
+   "ui4": {
+      "message": "Eliminar marcador?"
+   },
+   "ui5": {
+      "message": "Eliminar item da lista de mais visitados?"
+   },
+   "ui6": {
+      "message": "Desprender?"
+   },
+   "version": {
+      "message": "Versão"
+   },
+   "visits": {
+      "message": "Visitas"
+   },
+   "wednesdayLetter": {
+      "message": "Q"
+   },
+   "whatsNew": {
+      "message": "O que há de novo?"
+   },
+   "yes": {
+      "message": "Sim"
+   }
+}

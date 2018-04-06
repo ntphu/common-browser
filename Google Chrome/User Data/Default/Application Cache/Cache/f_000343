@@ -1,0 +1,973 @@
+var ArrMobile = new Array();
+var ArrCustomer = new Array();
+var ArrPayee = new Array();
+var ArrPayeeECPay = new Array();
+
+var sttID;
+var itemsPerPage=5;
+var pageIndex = 1;
+var currentPageIndex;
+var currentID;
+var periodicMNGObj;
+var docXml;
+var periodicResult;
+var keyResult;
+var keyResult1;
+var tmpTypetrans;
+function loadInitXML(){
+	return '';
+	
+}
+
+function viewDidLoadSuccess(){
+    getHistoryTrans();
+	//Init calendar
+	/*var today = new Date();						
+	var dd = today.getDate();						
+	var mm = today.getMonth()+1; //January is 0!						
+	var yyyy = today.getFullYear();						
+							
+	if(dd<10) {						
+		dd='0'+dd;					
+	} 						
+							
+	if(mm<10) {						
+		mm='0'+mm;					
+	} 						
+							
+	today = yyyy+'-'+mm+'-'+dd;						
+							
+	var fromDate;						
+	var toDate;						
+							
+	if (gUserInfo.lang == 'VN') {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('FurSav_begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				dom_field    : document.getElementById('span.begindate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('trans.enddate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',
+				dom_field    : document.getElementById('span.enddate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+							
+	}						
+	else {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('FurSav_begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',		
+				dom_field    : document.getElementById('span.begindate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('trans.enddate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',		
+				dom_field    : document.getElementById('span.enddate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);				
+	}*/
+	//end
+	sttID =CONST_MNG_VAL_STT[0];
+}
+//lay thong tin
+function getHistoryTrans(){
+	var data = {};
+	var arrayArgs = new Array();
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_HISTORY_AUTO_BILLING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestHistoryInfoSuccess, requestHistoryInfoFail);
+}
+
+function requestHistoryInfoSuccess(e){
+	gprsResp = parserJSON(e);
+	(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_HISTORY_AUTO_BILLING")))) {		
+	//By Pass Token
+		setRespObjStore(gprsResp);	
+	}else{
+		showAlertText(gprsResp.respContent);			
+	}
+	// re-initial array
+	ArrMobile = new Array();
+	ArrPayee = new Array();
+
+	// Push the "Tat ca" value in to array
+	ArrPayee.push(CONST_STR.get("TRANS_PERIODIC_BEN_ALL"));
+	ArrMobile.push(CONST_STR.get("TRANS_PERIODIC_BEN_ALL"));
+	
+	// Loop to split and processing two array (ArrMobile, ArrPayee)
+	for(var i =0; i<gprsResp.arguments.length; i++){
+		var tmpArr = gprsResp.arguments[i].split('#');
+		ArrMobile.push(tmpArr[0]);
+		if(tmpArr[1].length >0){
+			ArrPayee.push(tmpArr[1]);
+		}
+	}
+}
+function requestHistoryInfoFail(e){
+	document.addEventListener('closeAlertView', handleAlertEmpty, false);
+	showAlertText(CONST_STR.get('ESAVING_TRANS_FAILED'));	
+}
+
+//chon phuong thuc thanh toan
+function showTransType(){
+	var tmpArray1 = [];
+	tmpArray1.push((gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_MOBILE')] : [CONST_STR.get('AUTO_BILLING_MOBILE')]);
+	//tmpArray1.push((gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_ELECTRIC')] : [CONST_STR.get('AUTO_BILLING_ELECTRIC')]);
+	document.addEventListener("evtSelectionDialog", showTransTypeOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showTransTypeClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, false);
+}
+function showTransTypeOpen(e) {
+	if (currentPage == "paymentxsl/autobilling-manage") {
+		showTransTypeClose();
+		var transtype = document.getElementById('auto_transtype');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			if (transtype.nodeName == "INPUT") {
+				transtype.value = e.selectedValue1;
+			}
+			else {
+				transtype.innerHTML = e.selectedValue1;
+			}
+
+            var valueTranstype = document.getElementById('auto_transtype').value;
+            if(tmpTypetrans != null){
+                if (tmpTypetrans != valueTranstype)
+                {
+                    setValueById('auto_mobile', (gUserInfo.lang == 'VN') ? [CONST_STR.get('TRANS_PERIODIC_BEN_ALL')] : [CONST_STR.get('TRANS_PERIODIC_BEN_ALL')]);
+                    setValueById('auto_payee', (gUserInfo.lang == 'VN') ? [CONST_STR.get('TRANS_PERIODIC_BEN_ALL')] : [CONST_STR.get('TRANS_PERIODIC_BEN_ALL')]);
+                }
+            }    
+            var valueChoose = (gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_ELECTRIC')] : [CONST_STR.get('AUTO_BILLING_ELECTRIC')];
+            if (valueTranstype != valueChoose)
+            {
+                setValueById('transtype_title', (gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_MOBILE_NO')] : [CONST_STR.get('AUTO_BILLING_MOBILE_NO')]);
+                tmpTypetrans = (gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_MOBILE')] : [CONST_STR.get('AUTO_BILLING_MOBILE')];
+            } else
+            {
+                setValueById('transtype_title', (gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_USER_CODE')] : [CONST_STR.get('AUTO_BILLING_USER_CODE')]);
+                tmpTypetrans = (gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_ELECTRIC')] : [CONST_STR.get('AUTO_BILLING_ELECTRIC')];
+            }
+
+		}	
+	}
+}
+
+
+function setValueById(objId, objValue)
+{
+    var objIdTemp = document.getElementById(objId);
+    if (objIdTemp.nodeName == "INPUT")
+    {
+        objIdTemp.value = objValue;
+    }
+    else
+    {
+        objIdTemp.innerHTML = objValue;
+    }
+}
+
+function showTransTypeClose() {
+	if (currentPage == "paymentxsl/autobilling-manage") {		
+		document.removeEventListener("evtSelectionDialog", showTransTypeOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showTransTypeClose, false);
+	}
+}
+
+//chon so dien thoai
+function showMobileNo(){
+		var tmpArray1 = ArrMobile;		
+		document.addEventListener("evtSelectionDialog", showMobileNoOpen, false);
+		document.addEventListener("evtSelectionDialogClose", showMobileNoClose, false);
+		showDialogList(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'), tmpArray1, true);
+	}
+function showMobileNoOpen(e) {
+	if (currentPage == "paymentxsl/autobilling-manage") {
+		showMobileNoClose();
+		var MobileNo = document.getElementById('auto_mobile');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+	
+			if (MobileNo.nodeName == "INPUT") {
+				MobileNo.value = e.selectedValue1;
+			}
+			else {
+				MobileNo.innerHTML = e.selectedValue1;
+			}
+		}	
+	}
+}
+function showMobileNoClose(e) {
+	if (currentPage == "paymentxsl/autobilling-manage") {
+		document.removeEventListener("evtSelectionDialogClose", showMobileNoClose, false);
+		document.removeEventListener("evtSelectionDialog", showMobileNoOpen, false);
+	}
+}
+//chon ten goi nho
+function showPayeeName(){
+		var tmpArray1 = ArrPayee;		
+		document.addEventListener("evtSelectionDialog", showPayeeNameOpen, false);
+		document.addEventListener("evtSelectionDialogClose", showPayeeNameClose, false);
+		showDialogList(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'), tmpArray1, true);
+	}
+function showPayeeNameOpen(e) {
+	if (currentPage == "paymentxsl/autobilling-manage") {
+		showPayeeNameClose();
+		var PayeeName = document.getElementById('auto_payee');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+	
+			if (PayeeName.nodeName == "INPUT") {
+				PayeeName.value = e.selectedValue1;
+			}
+			else {
+				PayeeName.innerHTML = e.selectedValue1;
+			}
+		}
+	}
+}
+function showPayeeNameClose(e) {
+	if (currentPage == "paymentxsl/autobilling-manage") {
+		document.removeEventListener("evtSelectionDialogClose", showPayeeNameClose, false);
+		document.removeEventListener("evtSelectionDialog", showPayeeNameOpen, false);
+	}
+}
+//chon trang thai
+function ShowStatusType(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_MNG_KEY_STT_EN: CONST_MNG_KEY_STT_VN;
+	var tmpArray2 = CONST_MNG_VAL_STT;
+	document.addEventListener("evtSelectionDialog", ShowStatusTypeOpen, false);
+	document.addEventListener("evtSelectionDialogClose", ShowStatusTypeClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1,tmpArray2, false);
+}
+function ShowStatusTypeOpen(e) {
+	if (currentPage == "paymentxsl/autobilling-manage") {
+		ShowStatusTypeClose();
+		var StatusType = document.getElementById('auto_status');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+	
+			if (StatusType.nodeName == "INPUT") {
+				StatusType.value = e.selectedValue1;
+			}
+			else {
+				StatusType.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			sttID = e.selectedValue2;
+		}
+	}
+}
+
+function ShowStatusTypeClose() {
+	if (currentPage == "paymentxsl/autobilling-manage") {		
+		document.removeEventListener("evtSelectionDialog", ShowStatusTypeOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", ShowStatusTypeClose, false);
+	}
+}
+//function chuc nang
+function sendJSONRequest(){
+	var data = {};
+	var arrayArgs = new Array();
+	var transType = document.getElementById('auto_transtype').value;
+	var mobileNo = document.getElementById('auto_mobile').value;
+	var payeeName = document.getElementById('auto_payee').value;
+	var status = document.getElementById('auto_status').value;
+	//var fromdate = document.getElementById('FurSav_begindate').value;
+	//var todate = document.getElementById('trans.enddate').value;
+	if(mobileNo == CONST_STR.get('TRANS_PERIODIC_BEN_ALL')){
+		arrayArgs.push('');
+	}
+	else {
+		arrayArgs.push(mobileNo);
+	}
+	if(payeeName == CONST_STR.get('TRANS_PERIODIC_BEN_ALL')){
+		arrayArgs.push('');
+	}
+	else {
+		arrayArgs.push(payeeName);
+	}
+	if(sttID ==CONST_MNG_VAL_STT[0]){
+		arrayArgs.push('');
+	}
+	else{
+		arrayArgs.push(status);
+	}
+	
+	if ( transType == CONST_STR.get( 'AUTO_BILLING_MOBILE' ) ) {
+		arrayArgs.push( 'M' );
+	} else {
+		arrayArgs.push( 'E' );
+	}
+	
+	/*var sDateVal = fromdate.split('/');
+	var eDateVal = todate.split('/');
+	if(sDateVal[2] > eDateVal[2]){
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+		return;
+	} else
+	if(sDateVal[2] == eDateVal[2]){
+		if(sDateVal[1] > eDateVal[1]){
+			showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+			return;
+		}else if(sDateVal[1] == eDateVal[1]){                                                      
+			if(sDateVal[0] > eDateVal[0]){
+				showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+				return;
+			}
+		}
+	}	*/
+	/*arrayArgs.push(fromdate);
+	arrayArgs.push(todate);*/
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_QUERY_HISTORY_BILLING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);	
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+function clickInputAgain()
+{
+    setValueById('auto_mobile', (gUserInfo.lang == 'VN') ? [CONST_STR.get('TRANS_PERIODIC_BEN_ALL')] : [CONST_STR.get('TRANS_PERIODIC_BEN_ALL')]);
+    setValueById('auto_payee', (gUserInfo.lang == 'VN') ? [CONST_STR.get('TRANS_PERIODIC_BEN_ALL')] : [CONST_STR.get('TRANS_PERIODIC_BEN_ALL')]);
+    setValueById('transtype_title', (gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_MOBILE_NO')] : [CONST_STR.get('AUTO_BILLING_MOBILE_NO')]);
+    tmpTypetrans = (gUserInfo.lang == 'VN') ? [CONST_STR.get('AUTO_BILLING_MOBILE')] : [CONST_STR.get('AUTO_BILLING_MOBILE')];
+    setValueById('auto_transtype', tmpTypetrans);
+}
+
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_QUERY_HISTORY_BILLING")))) {
+		if(gprsResp.arguments ==null||gprsResp.arguments == undefined || gprsResp.arguments == '')
+		{
+		document.getElementById('id.historyInfo').style.display = 'none';
+		document.getElementById('pageIndicatorNums').style.display = 'none';
+		document.getElementById('tblButton').style.display = 'none'
+		showAlertText(CONST_STR.get("TRANS_PERIODIC_MNG_NO_DATA_MSG"));
+		return;
+		}
+		else
+		{
+		periodicMNGObj = new Array();
+		periodicMNGObj = gprsResp.arguments;
+		genXmlData();
+		docXsl = getCachePageXsl("paymentxsl/autobilling-search");
+		//logInfo(docXsl);
+		genHTMLStringWithXML(docXml, docXsl, genSuccessCallback, genFailCallback);
+		document.getElementById('id.historyInfo').style.display = '';
+		document.getElementById('pageIndicatorNums').style.display = '';
+		document.getElementById('tblButton').style.display = '';
+		}
+	}
+};
+
+function requestMBServiceFail(e){
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+};
+function genSuccessCallback(e){
+	var arrMedial = new Array();
+	arrMedial = getItemsPerPage(periodicResult, 1);
+	
+	genHtmlSearchResult(arrMedial);
+	
+	genPagging(arrMedial, 1);
+}
+
+function genFailCallback(){
+}
+function genXmlData(){
+	periodicResult = new Array();
+	keyResult = new Array();
+	keyResult1 = new Array();
+	docXml = createXMLDoc();
+	var rootNode = createXMLNode('account','',docXml);
+	var childNodeTitle = createXMLNode('title','',docXml, rootNode);
+	var childNodeTit = createXMLNode('rowtitle1', CONST_STR.get('AUTO_BILLING_TRANS_TYPE'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle2', CONST_STR.get('MENU_ACCOUNT_CATEGORY'),docXml,childNodeTitle);
+	
+	var transType = document.getElementById('auto_transtype').value;
+	if ( transType == CONST_STR.get( 'AUTO_BILLING_MOBILE' ) ) {
+		childNodeTit = createXMLNode('rowtitle3', CONST_STR.get('VIEW_FEEDBACK_TELEPHONE_TITLE'),docXml,childNodeTitle);
+	} else {
+		childNodeTit = createXMLNode('rowtitle3', CONST_STR.get('AUTO_BILLING_USER_CODE'),docXml,childNodeTitle);
+	}
+	
+	childNodeTit = createXMLNode('rowtitle4', CONST_STR.get('AUTO_BILLING_NAME_SAVE_TO_LIST'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle5', CONST_STR.get('TRANS_PERIODIC_MNG_STT'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle6', CONST_STR.get('AUTO_BILLING_PAY_BILL'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle7', CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle8', CONST_STR.get('TRANS_PERIODIC_CANC_TRANS'),docXml,childNodeTitle);
+	
+	var tempArrStr;
+	var objtemp = null;
+	if (periodicMNGObj != undefined && periodicMNGObj.length > 0)
+	{
+		document.getElementById('id.button.cancel').style.display = 'none';
+		for(var i=0;i<periodicMNGObj.length;i++){
+			tempArrStr = periodicMNGObj[i].split('#');
+			var childNodeCont = createXMLNode('accinfo','',docXml,rootNode)
+			var childNodeDeta = createXMLNode('acctitle1',CONST_STR.get('AUTO_BILLING_TRANS_TYPE'),docXml,childNodeCont);
+			//childNodeDeta = createXMLNode('acccontent1',CONST_STR.get('ACCOUNT_TYPE_DETAIL_TITLE'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acccontent1',document.getElementById('auto_transtype').value,docXml,childNodeCont);
+			
+			childNodeDeta = createXMLNode('acctitle2',CONST_STR.get('MENU_ACCOUNT_CATEGORY'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acccontent2',tempArrStr[1],docXml,childNodeCont);
+			
+			var transType = document.getElementById('auto_transtype').value;
+			if ( transType == CONST_STR.get( 'AUTO_BILLING_MOBILE' ) ) {
+				childNodeDeta = createXMLNode('acctitle3',CONST_STR.get('VIEW_FEEDBACK_TELEPHONE_TITLE'),docXml,childNodeCont);
+				childNodeDeta = createXMLNode('acccontent3',tempArrStr[2],docXml,childNodeCont);
+			} else {
+				childNodeDeta = createXMLNode('acctitle3',CONST_STR.get('AUTO_BILLING_USER_CODE'),docXml,childNodeCont);
+				childNodeDeta = createXMLNode('acccontent3',tempArrStr[2],docXml,childNodeCont);
+			}
+			
+			
+			childNodeDeta = createXMLNode('acctitle4',CONST_STR.get('AUTO_BILLING_NAME_SAVE_TO_LIST'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acccontent4',tempArrStr[3],docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acctitle5',CONST_STR.get('TRANS_PERIODIC_MNG_STT'),docXml,childNodeCont);
+			if(tempArrStr[4] =='A'){
+				childNodeDeta = createXMLNode('acccontent5',CONST_STR.get('AUTO_BILLING_TRANS_ACTIVE'),docXml,childNodeCont);
+			}
+			else if(tempArrStr[4] =='C'){
+				childNodeDeta = createXMLNode('acccontent5',CONST_STR.get('AUTO_BILLING_TRANS_EXPIRE'),docXml,childNodeCont);
+			}
+			childNodeDeta = createXMLNode('acctitle6',CONST_STR.get('AUTO_BILLING_PAY_BILL'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acccontent6',CONST_STR.get('TRANS_PERIODIC_DATE')+' ' + tempArrStr[5]+ ' '+CONST_STR.get('AUTO_BILLING_MONTH_FREQUENCY'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acctitle7',CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acccontent7',tempArrStr[6],docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acctitle8',CONST_STR.get('TRANS_PERIODIC_CANC_TRANS'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('hiddenval',tempArrStr[4],docXml,childNodeCont);
+			childNodeDeta = createXMLNode('keycb',tempArrStr[0],docXml,childNodeCont);
+			objtemp = new Object();
+			objtemp.transactionid =tempArrStr[0];
+			objtemp.accountNo = tempArrStr[1];
+			objtemp.mobileNo = tempArrStr[2];
+			objtemp.payeeName = tempArrStr[3];
+			objtemp.status = tempArrStr[4];
+			objtemp.startdate = tempArrStr[5];
+			objtemp.enddate = tempArrStr[6];
+			objtemp.keystt = tempArrStr[4];
+			periodicResult.push(objtemp);		
+			if(tempArrStr[4] == 'A'){
+				keyResult.push(tempArrStr[0]);
+			}
+			keyResult1.push(tempArrStr[0]);
+		}
+	}
+	else
+	{
+		document.getElementById('id.button.cancel').style.display = 'none';
+	}
+}
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}
+		
+	}
+	return arrTmp;
+}
+function genHtmlSearchResult(arr) {
+	var docXsl = getCachePageXsl("paymentxsl/autobilling-search");
+	logInfo(docXsl);
+
+	genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback, failPaggingCallback);
+}
+
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("id.historyInfo");
+	div.innerHTML = strHtml;
+
+	var tmpArr = new Array();
+	genPagging(periodicResult, pageIndex);
+}
+
+function failPaggingCallback() {
+	
+}
+
+/**
+ * 
+ * @param arr
+ * @return
+ */
+function genXmlDataPagging(arr) {
+	var docXml = createXMLDoc();
+	var rootNode = createXMLNode('account','',docXml);
+	var childNodeTitle = createXMLNode('title','',docXml, rootNode);
+	var childNodeTit = createXMLNode('rowtitle1', CONST_STR.get('AUTO_BILLING_TRANS_TYPE'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle2', CONST_STR.get('MENU_ACCOUNT_CATEGORY'),docXml,childNodeTitle);
+	var transType = document.getElementById('auto_transtype').value;
+	if ( transType == CONST_STR.get( 'AUTO_BILLING_MOBILE' ) ) {
+		childNodeTit = createXMLNode('rowtitle3', CONST_STR.get('VIEW_FEEDBACK_TELEPHONE_TITLE'),docXml,childNodeTitle);
+	} else {
+		childNodeTit = createXMLNode('rowtitle3', CONST_STR.get('AUTO_BILLING_USER_CODE'),docXml,childNodeTitle);
+	}
+	
+	childNodeTit = createXMLNode('rowtitle4', CONST_STR.get('AUTO_BILLING_NAME_SAVE_TO_LIST'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle5', CONST_STR.get('TRANS_PERIODIC_MNG_STT'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle6', CONST_STR.get('AUTO_BILLING_PAY_BILL'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle7', CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle8', CONST_STR.get('TRANS_PERIODIC_CANC_TRANS'),docXml,childNodeTitle);
+	
+	var tempArrStr;
+	var objtemp = null;
+	
+	for(var i in arr){
+		var childNodeCont = createXMLNode('accinfo','',docXml,rootNode)
+		var childNodeDeta = createXMLNode('acctitle1',CONST_STR.get('AUTO_BILLING_TRANS_TYPE'),docXml,childNodeCont);
+		//childNodeDeta = createXMLNode('acccontent1',CONST_STR.get('ACCOUNT_TYPE_DETAIL_TITLE'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent1',document.getElementById('auto_transtype').value,docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acctitle2',CONST_STR.get('MENU_ACCOUNT_CATEGORY'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent2',arr[i].accountNo,docXml,childNodeCont);
+		
+		var transType = document.getElementById('auto_transtype').value;
+		if ( transType == CONST_STR.get( 'AUTO_BILLING_MOBILE' ) ) {
+			childNodeDeta = createXMLNode('acctitle3',CONST_STR.get('VIEW_FEEDBACK_TELEPHONE_TITLE'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acccontent3',arr[i].mobileNo,docXml,childNodeCont);
+		} else {
+			childNodeDeta = createXMLNode('acctitle3',CONST_STR.get('AUTO_BILLING_USER_CODE'),docXml,childNodeCont);
+			childNodeDeta = createXMLNode('acccontent3',arr[i].mobileNo,docXml,childNodeCont);
+		}
+		
+		childNodeDeta = createXMLNode('acctitle4',CONST_STR.get('AUTO_BILLING_NAME_SAVE_TO_LIST'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent4',arr[i].payeeName,docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acctitle5',CONST_STR.get('TRANS_PERIODIC_MNG_STT'),docXml,childNodeCont);
+		if(arr[i].status =='A'){
+			childNodeDeta = createXMLNode('acccontent5',CONST_STR.get('AUTO_BILLING_TRANS_ACTIVE'),docXml,childNodeCont);	
+		}
+		else if(arr[i].status =='C'){
+			childNodeDeta = createXMLNode('acccontent5',CONST_STR.get('AUTO_BILLING_TRANS_EXPIRE'),docXml,childNodeCont);
+		}
+		
+		childNodeDeta = createXMLNode('acctitle6',CONST_STR.get('AUTO_BILLING_PAY_BILL'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent6',CONST_STR.get('TRANS_PERIODIC_DATE')+' ' + arr[i].startdate+ ' '+CONST_STR.get('AUTO_BILLING_MONTH_FREQUENCY'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acctitle7',CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent7',arr[i].enddate,docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acctitle8',CONST_STR.get('TRANS_PERIODIC_CANC_TRANS'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('hiddenval',arr[i].keystt,docXml,childNodeCont);
+		childNodeDeta = createXMLNode('keycb',arr[i].transactionid,docXml,childNodeCont);
+	}
+	return docXml;
+}
+
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	
+	pageIndex = selectedIdx;
+	currentPageIndex = selectedIdx;
+	var arrMedial = new Array();
+	arrMedial = getItemsPerPage(periodicResult, selectedIdx);
+	
+	genHtmlSearchResult(arrMedial);
+	
+	genPagging(periodicResult, selectedIdx);
+	
+}
+/*check one*/
+function showCancelCheck(inNode){
+	if(inNode.checked == true){
+		if(keyResult.length>0)
+		{
+			document.getElementById('id.button.cancel').style.display='block';
+		}
+		currentId = inNode.id;	
+	}else{
+		currentId ="";
+		if(keyResult.length>0)
+		{
+			document.getElementById('id.button.cancel').style.display = 'none';
+		}
+		return;
+	}
+	var lstName = document.getElementsByName("cancelcheck");
+	for(var i = 0; i<lstName.length; i++){
+		var node = lstName[i];
+		if(node.id != inNode.id){
+			node.checked = false;
+		}
+	}
+	
+}
+function genPagging(arr, pageIndex) {
+	var totalPage = calTotalPage(periodicResult);
+	//var nodePager = document.getElementById('pageIndicatorNums');
+	var nodepage = document.getElementById('pageIndicatorNums');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+}
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+//huy giao dich
+function sendRequestCancel(){
+	var data = {};
+	var arrayArgs = new Array();
+	if(keyResult == null){
+		showAlertText(CONST_STR.get('TRANS_PERIODIC_ERR_NO_EFFECT'));
+		return;
+	}
+	var idcb;
+	var tempStr = "";
+	var check = false;
+	var totalRow = keyResult1.length;
+	var vFrom = 0;
+	var vTo = 0;
+	if (currentPageIndex == null || currentPageIndex == undefined){
+		currentPageIndex = 1;
+	}
+	vFrom = itemsPerPage * (currentPageIndex - 1);
+	vTo = (vFrom + itemsPerPage > totalRow) ? totalRow : vFrom + itemsPerPage;
+	for(var i=vFrom;i<vTo;i++){
+		idcb = document.getElementById('cb-'+keyResult1[i]);
+		if(idcb != null && idcb != undefined && idcb.checked == true){
+			 check = true;
+			tempStr += i==0 ? keyResult1[i] : '#' + keyResult1[i];
+		}
+	}
+	if (!check)
+	{
+		showAlertText(CONST_STR.get('TRANS_PERIODIC_ERR_NO_CHECKBOX'));
+		return;
+	}
+	arrayArgs.push (removeSpecialChar(tempStr));
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_CANCEL_REG_BILLING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestCancelSuccess, requestCancelFail);
+}
+function requestCancelSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_CANCEL_REG_BILLING") || (gprsResp.responseType == '-1')))){
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_CANCEL_REG_BILLING")))) {
+		cancelid = gprsResp.arguments;
+		genReviewScreen();
+		docXsl = getCachePageXsl("paymentxsl/autobilling-manage");
+	}
+};
+
+function requestCancelFail(e){
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+};
+function genReviewScreen(){
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+
+	var tmpXmlNodeTable = createXMLNode('reviewtable', '', docXml, tmpXmlNodeInfo);
+	var tmpXmlNodeTitle = createXMLNode('reviewtabletitle', '', docXml, tmpXmlNodeTable);
+	tmpChildNode = createXMLNode('tbcol1', CONST_STR.get('AUTO_BILLING_TRANS_TYPE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('tbcol2', CONST_STR.get('MENU_ACCOUNT_CATEGORY'), docXml, tmpXmlNodeTitle);
+	
+	var transType = document.getElementById('auto_transtype').value;
+	if ( transType == CONST_STR.get( 'AUTO_BILLING_MOBILE' ) ) {
+		tmpChildNode = createXMLNode('tbcol3', CONST_STR.get('VIEW_FEEDBACK_TELEPHONE_TITLE'), docXml, tmpXmlNodeTitle);
+	} else {
+		tmpChildNode = createXMLNode('tbcol3', CONST_STR.get('AUTO_BILLING_USER_CODE'), docXml, tmpXmlNodeTitle);
+	}
+	
+	tmpChildNode = createXMLNode('tbcol4', CONST_STR.get('AUTO_BILLING_NAME_SAVE_TO_LIST'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('tbcol5', CONST_STR.get('TRANS_PERIODIC_MNG_STT'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('tbcol6', CONST_STR.get('AUTO_BILLING_PAY_BILL'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('tbcol7', CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE'), docXml, tmpXmlNodeTitle);
+	var idcb;
+	var totalRow = keyResult1.length;
+	var vFrom = 0;
+	var vTo = 0;
+	if (currentPageIndex == null || currentPageIndex == undefined){
+		currentPageIndex = 1;
+	}
+	vFrom = itemsPerPage * (currentPageIndex - 1);
+	vTo = (vFrom + itemsPerPage > totalRow) ? totalRow : vFrom + itemsPerPage;
+	for(var j=vFrom;j<vTo;j++){
+		idcb = document.getElementById('cb-'+keyResult1[j]);
+		var xRef = keyResult1[j];
+		if(idcb != null && idcb != undefined && idcb.checked == true){
+		for(var i = 0; i < periodicResult.length; i++) {
+				if (xRef == periodicResult[i].transactionid)
+				{
+					var tmp;
+					var tmpXmlNodeInfo = createXMLNode('reviewtabledetail', '', docXml, tmpXmlNodeTable);
+					tmpChildNode = createXMLNode('tbcol1', CONST_STR.get('AUTO_BILLING_TRANS_TYPE'), docXml, tmpXmlNodeInfo);
+					//tmpChildNode = createXMLNode('tbcontent1', CONST_STR.get('ACCOUNT_TYPE_DETAIL_TITLE'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('tbcontent1', document.getElementById('auto_transtype').value, docXml, tmpXmlNodeInfo);
+					
+					tmpChildNode = createXMLNode('tbcol2', CONST_STR.get('MENU_ACCOUNT_CATEGORY'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('tbcontent2', periodicResult[i].accountNo, docXml, tmpXmlNodeInfo);
+					
+					var transType = document.getElementById('auto_transtype').value;
+					if ( transType == CONST_STR.get( 'AUTO_BILLING_MOBILE' ) ) {
+						tmpChildNode = createXMLNode('tbcol3', CONST_STR.get('VIEW_FEEDBACK_TELEPHONE_TITLE'), docXml, tmpXmlNodeInfo);
+						tmpChildNode = createXMLNode('tbcontent3', periodicResult[i].mobileNo, docXml, tmpXmlNodeInfo);
+					} else {
+						tmpChildNode = createXMLNode('tbcol3', CONST_STR.get('AUTO_BILLING_USER_CODE'), docXml, tmpXmlNodeInfo);
+						tmpChildNode = createXMLNode('tbcontent3', periodicResult[i].mobileNo, docXml, tmpXmlNodeInfo);
+					}
+					
+					
+					tmpChildNode = createXMLNode('tbcol4', CONST_STR.get('AUTO_BILLING_NAME_SAVE_TO_LIST'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('tbcontent4', periodicResult[i].payeeName, docXml, tmpXmlNodeInfo);
+					
+					tmpChildNode = createXMLNode('tbcol5', CONST_STR.get('TRANS_PERIODIC_MNG_STT'), docXml, tmpXmlNodeInfo);
+					if(periodicResult[i].status ='A'){
+						tmpChildNode = createXMLNode('tbcontent5', CONST_STR.get('AUTO_BILLING_TRANS_ACTIVE'), docXml, tmpXmlNodeInfo);
+					}
+					else if(periodicResult[i].status ='C'){
+						tmpChildNode = createXMLNode('tbcontent5', CONST_STR.get('AUTO_BILLING_TRANS_EXPIRE'), docXml, tmpXmlNodeInfo);}
+						tmpChildNode = createXMLNode('tbcontentresult5', CONST_STR.get('AUTO_BILLING_TRANS_EXPIRE'), docXml, tmpXmlNodeInfo);
+		
+					tmpChildNode = createXMLNode('tbdisplay', 'review', docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('tbcol6', CONST_STR.get('AUTO_BILLING_PAY_BILL'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('tbcontent6', CONST_STR.get('TRANS_PERIODIC_DATE')+' ' + periodicResult[i].startdate+ ' '+CONST_STR.get('AUTO_BILLING_MONTH_FREQUENCY'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('tbcol7', CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('tbcontent7', periodicResult[i].enddate, docXml, tmpXmlNodeInfo);
+					break;
+				}
+			}
+		}
+	}
+	setReviewXmlStore(docXml);
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+function gotoDetailSrc(accid){
+	var gMobileNo =accid;
+	var data = {};
+	var arrayArgs = new Array();
+	for(var k =0; k<periodicResult.length; k++){
+		if(gMobileNo ==periodicResult[k].mobileNo){
+			arrayArgs.push(periodicResult[k].transactionid);
+		}
+	}
+//	arrayArgs.push(gMobileNo);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_QUERY_HISTORY_DETAIL"), "", "", 
+								 gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+}
+function requestMBServiceSuccesss(e){
+	//gHistoryDetail = new Array();
+	var TransDetail = new Array();   
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_QUERY_HISTORY_DETAIL") || (gprsResp.responseType == '-1')))){
+		//navController.initWithRootView('account/account-scr', true);	
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	if(gprsResp.arguments == undefined || gprsResp.arguments.length < 1) {
+		showAlertText(CONST_STR.get('AUTO_BILLING_TRANS_ERR'));
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+		return;
+	}
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_QUERY_HISTORY_DETAIL")))) {
+		//genXMLData();
+		for(var i=0; i<gprsResp.arguments.length; i++){
+		var tempArr =gprsResp.arguments[i].split('#')
+		objdetail = new Object();
+		objdetail.valuedate =tempArr[1];
+		objdetail.amount = tempArr[2];
+		objdetail.status = tempArr[3];
+		objdetail.reason = tempArr[4];
+		TransDetail.push(objdetail);
+		
+	}
+		//genHistoryDetail(TransDetail);
+		genXmlDataDetail(TransDetail);
+	}	
+}
+function requestMBServiceFail(e){
+	showAlertText(gprsResp.respContent);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+/*function genHistoryDetail(arr) {
+	var docXsl = getCachePageXsl("paymentxsl/autobilling-history-detail");
+	//logInfo(docXsl);
+
+	genHTMLStringWithXML(genXmlDataDetail(arr), docXsl, genHistoryDetailSuccess, genHistoryDetailFail);
+}*/
+function genXmlDataDetail(arr){
+			
+	var docXml = createXMLDoc();
+	var rootNode = createXMLNode('account','',docXml);
+	var childNodeTitle = createXMLNode('title','',docXml, rootNode);
+	var childNodeTit = createXMLNode('rowtitle1', CONST_STR.get('TRANSFER_LIST_STT'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle2', CONST_STR.get('AUTO_BILLING_VALUE_DATE'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle3', CONST_STR.get('AUTO_BILLING_AMOUNT'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle4', CONST_STR.get('AUTO_BILLING_STATUS'),docXml,childNodeTitle);
+	childNodeTit = createXMLNode('rowtitle5', CONST_STR.get('AUTO_BILLING_REASON'),docXml,childNodeTitle);
+	
+	for(var i in arr){
+		var childNodeCont = createXMLNode('accinfo','',docXml,rootNode)
+		var childNodeDeta = createXMLNode('acctitle1',CONST_STR.get('TRANSFER_LIST_STT'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent1',i,docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acctitle2',CONST_STR.get('AUTO_BILLING_VALUE_DATE'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent2',arr[i].valuedate,docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acctitle3',CONST_STR.get('AUTO_BILLING_AMOUNT'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent3',arr[i].amount,docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acctitle4',CONST_STR.get('AUTO_BILLING_STATUS'),docXml,childNodeCont);
+		if(arr[i].status =='C'){
+			childNodeDeta = createXMLNode('acccontent4',CONST_STR.get('AUTO_BILLING_STT_COMPLETE'),docXml,childNodeCont);
+		}
+		else if(arr[i].status =='F'){
+			childNodeDeta = createXMLNode('acccontent4',CONST_STR.get('AUTO_BILLING_STT_FAIL'),docXml,childNodeCont);
+		}
+		else if(arr[i].status =='P'){
+			childNodeDeta = createXMLNode('acccontent4',CONST_STR.get('AUTO_BILLING_STT_PROCESS'),docXml,childNodeCont);
+		}
+		
+		childNodeDeta = createXMLNode('acctitle5',CONST_STR.get('AUTO_BILLING_REASON'),docXml,childNodeCont);
+		childNodeDeta = createXMLNode('acccontent5',arr[i].reason,docXml,childNodeCont);
+	}
+	
+	logInfo(docXml);
+	//return docXml;
+	setReviewXmlStore(docXml);
+	navController.pushToView("paymentxsl/trans-history-detail", true, 'xsl');
+	
+}
+function genHistoryDetailSuccess() {
+}
+function genHistoryDetailFail() {
+	
+}

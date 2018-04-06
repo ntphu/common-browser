@@ -1,0 +1,672 @@
+/**
+ * Created by CongNT1.Fsoft
+ * User: 
+ * Date: 01/07/14
+ * Time: 5:35 PM
+ */
+
+/*** HEADER ***/
+var tmpDestinationAcc;
+var gprsResp = new GprsRespObj("","","","");
+var arrTransInfo = null;
+var arrListReceive = null;
+var tmpFeeAmount;
+var tmpEffectDate;
+var transType = "";
+var flag = false;
+var gBalanceAcct;
+var accNoTransListSelected;
+var gAccName;
+var gAccNo;
+var gAmount;
+var gDescription;
+
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+	
+	return '';
+}
+
+function viewTransferByList(){
+	navController.initWithRootView('transfer-by-list/view-transfer-by-list', true, 'xsl');
+}
+
+/*** INIT VIEW END ***/
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+var comboAcc;
+function initComboTextAccount(){
+    console.log("init combo text account");
+    try{document.getElementById("holder-account-info").innerHTML = "";}catch(e){}
+
+    var accountName = gUserInfo.accountName;
+    var accountNumber = gUserInfo.accountList[0].accountNumber;
+    var accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable)+'&nbsp'+gUserInfo.accountList[0].currency;
+    comboAcc = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountName : accountName, //account name
+        accountNumber : accountNumber, //account number
+        accountBalance : accountBalance, //account balance
+        borderColor : "yellow", // border color
+        containerPadding : "0px", // set padding to holder of combo
+        containerMargin : "0px",
+        showBorderTop : false,
+        fontSize : "15px",
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboAcc.show("holder-account-info");
+}
+/*** VIEW LOAD SUCCESS ***/
+
+//ham nay tuong duong event onload cho body
+function viewDidLoadSuccess() {
+    function MenuContent(title, src) {
+        this.title = title;
+        this.src = src;
+        this.keyLang = title;
+    }
+    var arrBottom = new Array();
+    arrBottom.push(new MenuContent('TRANS_PERIODIC_TRADE_TITLE', 'transfer-by-list/transfer-list-create-scr'));
+    arrBottom.push(new MenuContent('VIEW_TRANS_TITLE_SUB', 'transfer-by-list/view-transfer-by-list'));
+    navController.initBottomBarOnlyText(arrBottom[0].src ,arrBottom, "tranfer-list");
+
+	logInfo('transfer load success');
+	//handle input transfer content
+	//setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+	document.getElementById("btnFile1").value = CONST_STR.get('TRANSFER_LIST_CHOICE_FILE');
+	if(!flag) {
+		initData();
+        initComboTextAccount();
+		//document.getElementById("btnFile1").value = CONST_STR.get('TRANSFER_LIST_CHOICE_FILE');
+	} else {
+
+		//document.getElementById("btnFile1").value = CONST_STR.get('TRANSFER_LIST_CHOICE_FILE');
+		//gBalanceAcct = localStorage['gBalanceAcct'];
+		/*gBalanceAcct = gUserInfo.accountList[0].balanceAvailable;
+		accNoTransListSelected = gUserInfo.accountList[0].accountNumber;
+		document.getElementById("id.accountno").value = accNoTransListSelected;
+		var balanceAcct = document.getElementById("trans.sourceaccoutbalance");
+		balanceAcct.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(gBalanceAcct) + " VND" + "</div>";*/
+	}
+
+	var isIPad = navigator.userAgent.match(/iPad/i);
+	if(isIPad) keyboardEvent();
+	
+	genSequenceTransList();
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('transfer will unload');
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+/*** FUNCTIONS ***/
+function showTransTypeSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	tmpArray1.push(CONST_VALUE_TRANS_BY_LIST[0]);
+	tmpArray1.push(CONST_VALUE_TRANS_BY_LIST[1]);
+	tmpArray2.push("TK");
+	tmpArray2.push("TH");
+	document.addEventListener("evtSelectionDialog", handleSelectionTransType, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionTransTypeClose, false);
+	showDialogList(CONST_STR.get('TRANSFER_LIST_CHOICE_TYPE'), tmpArray1, tmpArray2, false);
+}
+function showAccountSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable) + '&nbsp' + tmpAcc.currency);
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+}
+
+function showInputAccScreen() {
+	document.addEventListener("evtLoadPageSuccess", loadLocalTransSuccess, false); // event using when load page success
+	
+	navController.pushToView('com-input-account', true);
+	gHistoryCode = CONST_HISTORY_CODE[1];
+	document.addEventListener("evtInputAccount", handleInputAcc, false);
+}
+
+
+//event listener: input account
+var statusInputAcc; //using check input account ready
+function handleInputAcc(e) {
+	document.removeEventListener("evtInputAccount", handleInputAcc, false);
+	tmpDestinationAcc = e.inputValue;
+	statusInputAcc = true;
+}
+
+
+function initData() {
+	var accNo = document.getElementById("id.accountno");
+	var balanceAcct = document.getElementById("trans.sourceaccoutbalance");
+
+	accNo.value = gUserInfo.accountList[0].accountNumber;
+	gBalanceAcct = gUserInfo.accountList[0].balanceAvailable;
+	
+	//balanceAcct.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + " VND</b>" + "</h6>";	
+	balanceAcct.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(gBalanceAcct) + " VND" + "</div>";
+	
+	
+}
+
+
+/*** VALIDATE INPUT ***/
+var conditions = gConditions; 
+
+function validate(inVal1) {
+	var transType = document.getElementById('id.transtype');
+	var fileTrans = document.getElementById('trans.targetaccount');
+	var hdnTransType = document.getElementById("hdnTransType").value;
+	//check selection trans type
+	/*if(hdnTransType == '' || hdnTransType == null) {
+		showAlertText(CONST_STR.get('ERR_INPUT_TRANS_TYPE'));
+		return false;
+	}*/
+	
+	if (!validateFunc(inVal1, conditions["account"])) {
+		showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+		return false;
+	}
+
+	//kiem tra so du kha dung > 0
+	if(Number(gBalanceAcct.replace(/,/g, "")) <= 0 || gBalanceAcct.trim() == "") {
+		showAlertText(CONST_STR.get('TRANSFER_ERROR_BALANCE_AMOUNT'));
+		return false;
+	}
+
+  	var extension = fileTrans.value.substr(fileTrans.value.lastIndexOf('.') + 1).toLowerCase();
+	//if(extension.indexOf('xls') == -1) {
+	if(extension.toLowerCase() != 'xls') {
+		showAlertText(CONST_STR.get('ERR_INPUT_TRANS_TYPE_FILE'));
+		return false;
+	}
+	return true;
+}
+
+function uploadFile() {
+	// collect the form data while iterating over the inputs
+	var accNo = document.getElementById("id.accountno").value;
+	if(validate(accNo)) {
+		var fileUpload01 = document.getElementById("trans.targetaccount");
+		var sourceAcc = document.getElementById("id.accountno").value;
+		sourcebatch =sourceAcc;
+		var v = document.getElementById("hdnTransType").value;
+		if ( fileUpload01.files && fileUpload01.files[0] ) {
+			var FR = new FileReader();
+			FR.onload = function(e) {
+						   var base64string = e.target.result;
+													var data = {};
+													var arrayArgs = new Array();
+																									
+													arrayArgs.push(v); //TRANSFER_BATCH                                           
+													arrayArgs.push(sourceAcc);
+													//
+																					
+													var gprsCmd = new GprsCmdObj("10", "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs,encodeURIComponent(base64string));
+													
+													data = getDataFromGprsCmd(gprsCmd);
+													requestMBService(data, true, 0, uploadSuccess, uploadFail);
+	
+	
+			};       
+			FR.readAsDataURL( fileUpload01.files[0] );
+		}
+		
+	}//end if validate
+	
+}
+
+function uploadSuccess(e) {
+	logInfo("Upload file success");
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	var strXml = gprsResp.respRaw;
+	logInfo("strXml: " + strXml);
+	var docXml = stringtoXML(strXml);
+	if("0" == gprsResp.respCode) {
+		
+		var docXsl = getCachePageXsl("transfer-by-list/transfer-list-content");
+		logInfo(docXsl);
+		genHTMLStringWithXML(docXml, docXsl, successCallback, failCallback);
+		//localStorage['gBalanceAcct'] = gBalanceAcct;
+	}
+	//divContentUpload
+}
+
+/*
+genHTMLStringWithXML(docXml, docXsl, function(e){
+	//success
+}, function(e){
+	//fail
+});
+*/
+
+function uploadFail() {
+	//showAlertText("loi roi");
+}
+
+function successCallback(strHtml) {
+	var div = document.getElementById("divContentUpload");
+	div.innerHTML = strHtml;
+	
+	loadData();
+	
+	genReviewScreen(arrTransInfo, arrListReceive);
+}
+
+
+function failCallback() {
+	
+}
+
+function fnChange(obj) {
+	var objTmp = document.getElementById("btnFile1");
+	if(obj.value.trim().length > 0)  {
+	objTmp.value = obj.value;
+	} else {
+		objTmp.value = CONST_STR.get('TRANSFER_LIST_CHOICE_FILE');
+	}
+
+}
+
+//event: selection dialog list
+function handleSelectionAccountList(e) {
+	if (currentPage == "transfer-by-list/transfer-list-create-scr") {
+		handleSelectionAccountListClose();
+		comboAcc.refresh({
+           accountNumber : e.selectedValue1,
+           accountBalance : e.selectedValue2
+        });
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			accNoTransListSelected = e.selectedValue1;
+			var tagAccNo = document.getElementById("id.accountno");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			//nodeAccBal.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <i>" + e.selectedValue2 + " VND</i>" + "</h6>";
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND" + "</div>";
+			
+			gBalanceAcct = e.selectedValue2;
+		}
+	}
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "transfer-by-list/transfer-list-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+
+
+function handleSelectionTransType(e) {
+	if (currentPage == "transfer-by-list/transfer-list-create-scr") {
+		handleSelectionTransTypeClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var transType = document.getElementById("id.transtype");
+			if (transType.nodeName == "INPUT") {
+				transType.value = e.selectedValue1;
+			}
+			else {
+				transType.innerHTML = e.selectedValue1;
+			}
+
+			//set hreft file
+			var fileTrans = document.getElementById("fileTrans");
+			
+			fileTrans.style.display = '';
+			
+			if(e.selectedValue2 == CONST_KEY_TRANS_BY_LIST[0]) {
+				//fileTrans.setAttribute("href", "pages/transfer-by-list/Danh_sach_Tai_khoan_TPBank_thu_huong.xls");
+				fileTrans.setAttribute("href", "javascript:void(0);");
+				fileTrans.setAttribute("onclick", "openLinkInWindows('./download/transfer-by-list/Danh_sach_Tai_khoan_TPBank_thu_huong.xls');");
+				document.getElementById("hdnTransType").value = "TRANSFER_BATCH";
+				transType = "TRANSFER_BATCH";
+			} 
+			else if(e.selectedValue2 == CONST_KEY_TRANS_BY_LIST[1]) {
+				//fileTrans.setAttribute("href", "pages/transfer-by-list/Danh_sach_The_thu_huong.xls");
+				fileTrans.setAttribute("href", "javascript:void(0);");
+				fileTrans.setAttribute("onclick", "openLinkInWindows('./download/transfer-by-list/Danh_sach_The_thu_huong.xls');");
+				transType = "TRANSFER_BATCH_CARD";
+				document.getElementById("hdnTransType").value = "TRANSFER_BATCH_CARD";
+			}
+			
+			
+
+		}
+	}
+}
+
+function handleSelectionTransTypeClose() {
+	if (currentPage == "transfer-by-list/transfer-list-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionTransTypeClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionTransType, false);
+	}
+}
+
+function loadData() {
+	arrTransInfo = new Array();
+	arrListReceive = new Array();
+	var tableInfo = document.getElementById("tblInfoTrans");
+	var tableList = document.getElementById("tblListReceive");
+	
+	for(var i = 0; i < tableInfo.rows.length; i++) {
+		arrTransInfo.push({
+			id: tableInfo.rows[i].cells[0].innerHTML
+		});
+	}
+
+	for(var i = 0; i < tableList.rows.length; i++) {
+		arrListReceive.push({
+			tbcontent1 : tableList.rows[i].cells[0].innerHTML,
+			tbcontent2 : tableList.rows[i].cells[1].innerHTML,
+			tbcontent3 : tableList.rows[i].cells[2].innerHTML,
+			tbcontent4 : tableList.rows[i].cells[3].innerHTML,
+			tbcontent5 : tableList.rows[i].cells[4].innerHTML,
+		});
+	}
+	arrOldListTrans =arrListReceive;
+}
+
+
+/*** GENARATE REVIEW SCREEN ***/
+function genReviewScreen(arrTrans, arrList) {
+	
+	var errFlag = false;
+	var arrTbcontent2 = null;
+	var arrTbcontent3 = null;
+	var arrTbcontent4 = null;
+	var arrTbcontent5 = null;
+	
+	var sourceAcc = document.getElementById("id.accountno");
+	var destinationAcc = document.getElementById("trans.targetaccount");
+	var transtype = document.getElementById("id.transtype").value;
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+
+	//trans type
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('MENU_TRANS_LIST'), docXml, tmpChildNodeAcc);
+
+	//tai khoan chuyen tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sourceAcc.value, docXml, tmpChildNodeAcc);
+	
+	//source account balance
+	var tmpAcc = null;
+	for (var idx=0; idx<gUserInfo.accountList.length; idx++) {
+		
+		tmpAcc = gUserInfo.accountList[idx];
+		if(tmpAcc.accountNumber == sourceAcc.value) {
+			tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE'), docXml, tmpChildNodeAcc);
+			tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(tmpAcc.balanceAvailable) + " VND", docXml, tmpChildNodeAcc);
+			tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //no display in result success
+			break;
+		}
+	}
+
+	for(var i in arrList) {
+		arrTbcontent2 = new Array();
+		arrTbcontent3 = new Array();
+		arrTbcontent4 = new Array();
+		arrTbcontent5 = new Array();
+
+		arrTbcontent2 = arrList[i].tbcontent2.split("#");
+		arrTbcontent3 = arrList[i].tbcontent3.split("#");
+		arrTbcontent4 = arrList[i].tbcontent4.split("#");
+		arrTbcontent5 = arrList[i].tbcontent5.split("#");
+
+		if(arrTbcontent2[0] == "1") {
+			errFlag = true;
+			
+		}
+		
+		if(arrTbcontent3[0] == "1") {
+			errFlag = true;
+		}
+		
+		if(arrTbcontent4[0] == "1") {
+			errFlag = true;
+		}
+		
+		if(arrTbcontent5[0] == "1") {
+			errFlag = true;
+		}
+		
+		if(errFlag) {
+			break;
+		}
+	}
+
+		tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+					
+		tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	if(errFlag == false) {
+		//so luong nguoi nhan
+		tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANSFER_LIST_NUMBER_PEOPEL_RECIVE'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('transinfocontent',arrTransInfo[3].id, docXml, tmpChildNodeTrans);
+
+		//amount
+		tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANSFER_LIST_TOTAL_AMOUNT'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(arrTransInfo[4].id) + " VND", docXml, tmpChildNodeTrans);
+	
+		//fee
+		tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANSFER_LIST_TOTAL_FEE'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(arrTransInfo[5].id) + " VND", docXml, tmpChildNodeTrans);
+		
+		//tong gia tri giao dich
+		tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANSFER_LIST_TOTAL_VALUE'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(arrTransInfo[6].id) + " VND", docXml, tmpChildNodeTrans);
+	
+	var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd
+    } 
+    if(mm<10){
+        mm='0'+mm
+    } 
+    var today = dd+'/'+mm+'/'+yyyy;	
+	
+	//execute date
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_DATE_TRANS'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', 'Ngày ' + today, docXml, tmpChildNodeTrans);
+	}
+
+	//danh sach nguoi nhan
+	var tmpXmlNodeInfoList = createXMLNode('reviewtable', '', docXml, tmpXmlNodeInfo);
+
+	var hdnTransType = document.getElementById("hdnTransType").value;
+	var accCardTitle = "";
+	if(hdnTransType == "TRANSFER_BATCH") {
+		accCardTitle = CONST_STR.get('ACCOUNT_ACC_NO_TITLE');
+	} else if(hdnTransType == "TRANSFER_BATCH_CARD") {
+		accCardTitle = CONST_STR.get('TRANSFER_LIST_CARD');
+	}
+
+
+	//title
+	tmpChildNodeTrans = createXMLNode('reviewtabletitle', '', docXml, tmpXmlNodeInfoList);
+	tmpChildNode = createXMLNode('tbcol1', CONST_STR.get('TRANSFER_LIST_STT'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('tbcol2', CONST_STR.get('TRANSFER_LIST_FULLNAME'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('tbcol3', accCardTitle, docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('tbcol4', CONST_STR.get('TRANS_LOCAL_AMOUNT_TITLE'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('tbcol5', CONST_STR.get('ACCOUNT_DESCRIPTION'), docXml, tmpChildNodeTrans);
+	if(errFlag ==true){
+		ItmpChildNode = createXMLNode('tbcol6', CONST_STR.get('INTRODUCE_INFO_CHOOSE'), docXml, tmpChildNodeTrans);
+	}
+	
+	//data review table
+	
+	
+	for(var i in arrList) {
+		tmpChildNodeTrans = createXMLNode('reviewtabledetail', '', docXml, tmpXmlNodeInfoList);
+		tmpChildNode = createXMLNode('tbcol1', CONST_STR.get('TRANSFER_LIST_STT'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('tbcol2', CONST_STR.get('TRANSFER_LIST_FULLNAME'), docXml, tmpChildNodeTrans);
+		
+		tmpChildNode = createXMLNode('tbcol3', accCardTitle, docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('tbcol4', CONST_STR.get('TRANS_LOCAL_AMOUNT_TITLE'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('tbcol5', CONST_STR.get('ACCOUNT_DESCRIPTION'), docXml, tmpChildNodeTrans);
+		//ngocdt3 bo sung
+		if(errFlag ==true){
+		ItmpChildNode = createXMLNode('tbcol6', CONST_STR.get('INTRODUCE_INFO_CHOOSE'), docXml, tmpChildNodeTrans);
+	}
+		
+		tmpChildNode = createXMLNode('tbcontent1', arrList[i].tbcontent1, docXml, tmpChildNodeTrans);
+		
+		arrTbcontent2 = new Array();
+		arrTbcontent3 = new Array();
+		arrTbcontent4 = new Array();
+		arrTbcontent5 = new Array();
+
+		arrTbcontent2 = arrList[i].tbcontent2.split("#");
+		arrTbcontent3 = arrList[i].tbcontent3.split("#");
+		arrTbcontent4 = arrList[i].tbcontent4.split("#");
+		arrTbcontent5 = arrList[i].tbcontent5.split("#");
+		if(arrTbcontent2[0]=='1' ){
+			tmpChildNode = createXMLNode('tbcontent2',"<span style='color: #ff8c29'>" +arrTbcontent2[1] +"</span>", docXml, tmpChildNodeTrans);
+			tmpChildNode = createXMLNode('tbcontent3', arrTbcontent3[1], docXml, tmpChildNodeTrans);
+			if(parseFloat(arrTbcontent4[1]) > 0) {
+				tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(arrTbcontent4[1]), docXml, tmpChildNodeTrans);
+			} else {
+				tmpChildNode = createXMLNode('tbcontent4', arrTbcontent4[1], docXml, tmpChildNodeTrans);
+			}
+			tmpChildNode = createXMLNode('tbcontent5', arrTbcontent5[1], docXml, tmpChildNodeTrans);
+		}
+        if(arrTbcontent3[0]=='1'){
+            tmpChildNode = createXMLNode('tbcontent2', arrTbcontent2[1], docXml, tmpChildNodeTrans);
+            tmpChildNode = createXMLNode('tbcontent3', "<span style='color: #ff8c29'>" +arrTbcontent3[1] +"</span>", docXml, tmpChildNodeTrans);
+            if(parseFloat(arrTbcontent4[1]) > 0) {
+                tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(arrTbcontent4[1]), docXml, tmpChildNodeTrans);
+            } else {
+                tmpChildNode = createXMLNode('tbcontent4', arrTbcontent4[1], docXml, tmpChildNodeTrans);
+            }
+            tmpChildNode = createXMLNode('tbcontent5', arrTbcontent5[1], docXml, tmpChildNodeTrans);
+        }
+        if(arrTbcontent4[0]=='1' ||arrTbcontent5[0]=='1'){
+            tmpChildNode = createXMLNode('tbcontent2', arrTbcontent2[1], docXml, tmpChildNodeTrans);
+            tmpChildNode = createXMLNode('tbcontent3', arrTbcontent3[1], docXml, tmpChildNodeTrans);
+            if(parseFloat(arrTbcontent4[1]) > 0) {
+                tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(arrTbcontent4[1]), docXml, tmpChildNodeTrans);
+            } else {
+                tmpChildNode = createXMLNode('tbcontent4', arrTbcontent4[1], docXml, tmpChildNodeTrans);
+            }
+            tmpChildNode = createXMLNode('tbcontent5', arrTbcontent5[1], docXml, tmpChildNodeTrans);
+        }
+
+		else{
+			tmpChildNode = createXMLNode('tbcontent2', arrTbcontent2[1], docXml, tmpChildNodeTrans);
+			tmpChildNode = createXMLNode('tbcontent3', arrTbcontent3[1], docXml, tmpChildNodeTrans);
+			if(parseFloat(arrTbcontent4[1]) > 0) {
+				tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(arrTbcontent4[1]), docXml, tmpChildNodeTrans);
+			} else {
+				tmpChildNode = createXMLNode('tbcontent4', arrTbcontent4[1], docXml, tmpChildNodeTrans);
+			}
+			tmpChildNode = createXMLNode('tbcontent5', arrTbcontent5[1], docXml, tmpChildNodeTrans);
+		}
+        //tmpChildNode = createXMLNode('tbcontentedit2', arrTbcontent2[1], docXml, tmpChildNodeTrans);
+       // tmpChildNode = createXMLNode('tbcontentedit3', arrTbcontent3[1], docXml, tmpChildNodeTrans);
+
+		/*if(arrTbcontent2[0] == "1") {
+			errFlag = true;
+			tmpChildNode = createXMLNode('errtbcontent2', "1", docXml, tmpChildNodeTrans);
+		}
+		
+		if(arrTbcontent3[0] == "1") {
+			errFlag = true;
+			tmpChildNode = createXMLNode('errtbcontent3', "1", docXml, tmpChildNodeTrans);
+		}
+		
+		if(arrTbcontent4[0] == "1") {
+			errFlag = true;
+			tmpChildNode = createXMLNode('errtbcontent4', "1", docXml, tmpChildNodeTrans);
+		}
+		
+		if(arrTbcontent5[0] == "1") {
+			errFlag = true;
+			tmpChildNode = createXMLNode('errtbcontent5', "1", docXml, tmpChildNodeTrans);
+		}
+		
+		tmpChildNode = createXMLNode('tbcontent2', arrTbcontent2[1], docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('tbcontent3', arrTbcontent3[1], docXml, tmpChildNodeTrans);
+		if(parseFloat(arrTbcontent4[1]) > 0) {
+			tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(arrTbcontent4[1]), docXml, tmpChildNodeTrans);
+		} else {
+			tmpChildNode = createXMLNode('tbcontent4', arrTbcontent4[1], docXml, tmpChildNodeTrans);
+		}
+		tmpChildNode = createXMLNode('tbcontent5', arrTbcontent5[1], docXml, tmpChildNodeTrans);*/
+	}
+
+	
+	//luu xml trong cache
+		logInfo(docXml);
+	setReviewXmlStore(docXml);
+	if(errFlag == false) {
+		navController.pushToView("com-review-xsl-scr", true, 'xsl');
+	} else {
+		navController.pushToView("transfer-by-list/review-error-xsl-scr", true, 'xsl');
+	}
+}
+//gen sequence form
+function genSequenceTransList() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	var tmpStepNo = 301;
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqFormTransList');
+		tmpNode.innerHTML = oStr;
+	});
+}
+

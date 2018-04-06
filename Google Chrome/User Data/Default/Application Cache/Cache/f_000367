@@ -1,0 +1,888 @@
+/**
+ * Created by CongNT1.Fsoft
+ * User:
+ * Date: 01/07/14
+ * Time: 5:35 PM
+ */
+
+/*** HEADER ***/
+var cityTPBArray;
+var atmTPBankArrayResponse;
+var branchCityCode = "";
+var tempProvinceList =new Array();
+var tempBankTPbankList =new Array();
+var strProvinceName = "";
+var strProvinceCode = "";
+var strDistrictName = "";
+var idBrn='';
+var timeBlockArr= new Array();
+var date_time_tmpl;
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+
+    return '';
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess(){
+    initComboTextAccount();
+    getCityTpbList();
+
+    var accNo = document.getElementById("id.accountno");
+    accNo.value = gUserInfo.accountList[0].accountNumber;
+    var blance = document.getElementById("id.balance");
+    blance.value = gUserInfo.accountList[0].balanceAvailable;
+    navController.getBottomBar().hide();
+
+}
+// show account
+var comboEl;
+function initComboTextAccount(){
+    var accountNumber = "Invalid";
+    var accountBalance = "Invalid";
+
+    try{
+        document.getElementById("holder-account-info").innerHTML = "";
+        accountNumber = gUserInfo.accountList[0].accountNumber;
+        accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable)+'&nbsp'+gUserInfo.accountList[0].currency;
+    }catch(e){
+        logInfo("khong load duoc thong tin tai khoan");
+    }
+
+    comboEl = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountNumber : accountNumber, //account number
+        accountBalance : accountBalance, //account balance
+        borderColor : "yellow", // border color
+        containerPadding : "0px", // set padding to holder of combo
+        containerMargin : "0px",
+        showBorderTop : false,
+        fontSize : "15px",
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+
+        }
+    });
+    comboEl.show("holder-account-info");
+}
+
+// loai giao dich
+function showTypeTrans(){
+    var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_SCHEDULE_BANK_TRANS_TYPE_EN: CONST_KEY_SCHEDULE_BANK_TRANS_TYPE_VN;
+    var tmpArray2 = CONST_KEY_SCHEDULE_BANK_TRANS_TYPE_ID;
+    document.addEventListener("evtSelectionDialog", handleSelectionScheduleTransType, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionScheduleTransTypeClose, false);
+    showDialogList(CONST_STR.get('SCHEDULE_BANK_TITLE_TRANSACTION'), tmpArray1,tmpArray2, false, false);
+}
+
+function handleSelectionScheduleTransType(e){
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        handleSelectionScheduleTransTypeClose();
+        var schedule = document.getElementById('trans.type');
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tmpArr = (gUserInfo.lang == 'EN')? CONST_KEY_SCHEDULE_BANK_TRANS_TYPE_EN: CONST_KEY_SCHEDULE_BANK_TRANS_TYPE_VN;
+
+            if (e.selectedValue1 == tmpArr[1]) {
+                // chuyen den man hinh tat toan so tiet kiem
+                navController.pushToView('schedule-bank/schedule-saving-stk-scr', true, 'xsl');
+
+            }
+            else if (e.selectedValue1 == tmpArr[2]) {
+                // chuyen den man hinh dang ky rut vang
+//                navController.pushToView('gold/gold-schedule-bank', true, 'xsl');
+                showAlertText(CONST_STR.get('SCHEDULE_GOLD_NOTE'));
+            }
+            else {
+                if (schedule.nodeName == "INPUT") {
+                    schedule.value = e.selectedValue1;
+                }
+                else {
+                    schedule.innerHTML = e.selectedValue1;
+                }
+            }
+        }
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            tmpschedule = e.selectedValue2;
+        }
+    }
+}
+
+function handleSelectionScheduleTransTypeClose() {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionScheduleTransTypeClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionScheduleTransType, false);
+    }
+}
+
+function showAccountSelection(){
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        tmpArray1.push(tmpAcc.accountNumber);
+        tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable) + '&nbsp'+ tmpAcc.currency);
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+
+    showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true,false);
+}
+//event: selection dialog list
+function handleSelectionAccountList(e) {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        handleSelectionAccountListClose();
+        var accountNumber = e.selectedValue1;
+        var accountBalance = e.selectedValue2;
+        comboEl.refresh({
+            accountNumber : accountNumber,
+            accountBalance : accountBalance
+        });
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("id.accountno");
+            var tagBalance = document.getElementById("id.balance");
+            if (tagAccNo.nodeName == "INPUT" || tagBalance.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+                tagBalance.value = e.selectedValue2;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+                tagBalance.innerHTML = e.selectedValue2;
+            }
+        }
+    }
+}
+
+function handleSelectionAccountListClose(e) {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    }
+}
+// end show account
+
+// format money
+function handleInputAmount (e, des) {
+    var tmpVale = removeSpecialChar(des.value);
+    if(tmpVale.length > 13){
+        tmpVale = tmpVale.slice(0,13);
+    }
+    des.value = tmpVale;
+    formatCurrency(e, des);
+    var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang);
+
+    var nodeNumTxt = document.getElementById("trans.amounttotext");
+    nodeNumTxt.innerHTML = "<div>" + numStr + "</div>";
+}
+// end format money
+
+// select date/ time
+function sendRequestGetDateTime(brn){
+    var data = {};
+    var arrayArgs = new Array();
+    arrayArgs.push(brn);
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_TIME_BLOCK"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+
+    requestMBService(data, true, 0, requestMBServiceDateTimeSuccess, requestMBServiceDateTimeFail);
+}
+
+function requestMBServiceDateTimeSuccess(e){
+    gprsResp = parserJSON(e);
+    strXml = gprsResp.respContent;
+    if(strXml == undefined || strXml.trim() == "" || "0" != gprsResp.respCode) {
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.initWithRootView(tmpPageName, true, tmpPageType);
+    }else if(gprsResp.respCode == "0") {
+        var docXmlDate = stringtoXML(strXml);
+        var docXslDateTime = getCachePageXsl("schedule-bank/schedule-gen-datetime");
+        genHTMLStringWithXML(docXmlDate, docXslDateTime, successCallbackGetDateTime, failCallbackGetDateTime);
+    }
+};
+function requestMBServiceDateTimeFail(){
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+function successCallbackGetDateTime(strHtml) {
+    var div = document.getElementById("divDateTime");
+
+    div.innerHTML = strHtml;
+    loadDateTime();
+}
+function failCallbackGetDateTime() {
+
+}
+function loadDateTime() {
+    arrDateTimes = new Array();
+    var table = document.getElementById("tblDateTime");
+    var objTableTmp = null;
+    var arrTimeTmp = null;
+    var objTmp = null;
+
+
+    var objTimeTmp = null;
+    var id = '';
+    var name = '';
+    var status = '';
+    for(var i = 0; i < table.rows.length; i++) {
+        objTmp = new Object();
+        objTmp.id = table.rows[i].cells[0].innerHTML;
+        arrTimeTmp = new Array();
+        objTableTmp = document.getElementById("tblTime-"+objTmp.id);
+        if (objTableTmp != null && objTableTmp != undefined)
+        {
+            var rows = Array.prototype.slice.call(document.getElementById("tblTime-"+ objTmp.id).getElementsByTagName("tr"));
+            var cells = null;
+            for(var j in rows){
+                cells = rows[j].cells;
+                id = cells[0].innerHTML;
+                name = cells[1].innerHTML;
+                status = cells[2].innerHTML;
+
+                //nếu còn chỗ trống
+                if(status == "") {
+                    objTimeTmp = new Object();
+                    objTimeTmp.id = id;
+                    objTimeTmp.name = name;
+                    objTimeTmp.status = status;
+                    arrTimeTmp.push(objTimeTmp);
+                }
+            }
+        }
+        objTmp.objTime = arrTimeTmp;
+        arrDateTimes.push(objTmp);
+    }//end for
+
+    return arrDateTimes;
+}
+var flagCal = 0;
+function initDialogCal(divappend){
+    comCalendar = divappend;
+    var content = document.getElementById(divappend);
+    var valueDate = null;
+    if(content!=undefined){
+        var value = content.value;
+        if(value!=undefined && value.length>0 ){
+            var arr = new Array(); arr = value.split('/');
+            valueDate = new Date(arr[2],(arr[1]-1),arr[0]);
+        }else{
+            var arr = new Array(); arr = (arrDateTimes[0].id).split('/');
+            var date = arr[1]+ '/'+arr[0]+'/'+arr[2];
+            valueDate = new Date(date);
+
+        }
+        loadCalendar(false,callbackCloseDialogCal,valueDate);
+    }
+
+    if (flagCal == 0)
+    {
+        loadCalendar(false,callbackCloseDialogCal,valueDate);
+        flagCal = 1;
+    }
+    showCalendar();
+    document.getElementById("id.time").value=CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+}
+function loadCalendar(isMultiple, calendarDateChange,values) {
+    document.getElementById("calendarShowExactly").innerHTML = '';
+    var calendarShow = document.getElementById("calendarShow");
+    var calendarVitual = document.getElementById("calendarShowVitual");
+    var img = document.getElementById('user-background-image'),
+        style = img.currentStyle || window.getComputedStyle(img, false),
+        imgResource = style.backgroundImage.slice(4, -1).replace(/"/g, "");
+
+    //calendarVitual.style.backgroundImage = "url('" + imgResource + "')";
+    scaleAnimationFullTo(document.getElementById("calendarShowExactly"), 0.6);
+    document.getElementById("exitcalender").addEventListener('click', function () {
+        hideCalendar();
+
+    });
+    initMyCalendar(isMultiple, calendarDateChange,"#calendarShowExactly",values);
+}
+function callbackCloseDialogCal(param){
+
+    if (comCalendar != "" || comCalendar != null)
+    {
+        var noteContent = document.getElementById(comCalendar);
+        if(noteContent !=undefined){
+            noteContent .value = param;
+        }
+    }
+    actionbar.showActionBar();
+}
+function showCalendar() {
+
+    var cEx = document.getElementById("calendarShowExactly");
+    document.getElementById("mask-blacktrans").style.display = 'block';
+    document.getElementById("calendarShow").style.display = 'block';
+    cEx.style.display = 'block';
+
+    setTimeout(function () {
+        scaleAnimationToFull(cEx);
+        fadeInAnimation(cEx);
+    }, 100);
+
+}
+function scaleAnimationFullTo(ele, percent) {
+
+    ele.style.transform = 'scale(' + percent + ')';
+    ele.style['-o-transform'] = 'scale(' + percent + ')';
+    ele.style['-webkit-transform'] = 'scale(' + percent + ')';
+    ele.style['-moz-transform'] = 'scale(' + percent + ')';
+    ele.style['-webkit-transition-duration'] = '' + 0.6 + 's';
+    ele.style['-moz-transition-duration'] = '' + 0.6 + 's';
+    ele.style['-o-transition-duration'] = '' + 0.6 + 's';
+}
+function scaleAnimationToFull(ele) {
+
+    ele.style.transform = 'scale(' + 1 + ')';
+    ele.style['-o-transform'] = 'scale(' + 1 + ')';
+    ele.style['-webkit-transform'] = 'scale(' + 1 + ')';
+    ele.style['-moz-transform'] = 'scale(' + 1 + ')';
+    ele.style['-webkit-transition-duration'] = '' + 0.6 + 's';
+    ele.style['-moz-transition-duration'] = '' + 0.6 + 's';
+    ele.style['-o-transition-duration'] = '' + 0.6 + 's';
+
+
+}
+function fadeInAnimation(element) {
+    var op = 0.2;  // initial opacity
+    var timer = setInterval(function () {
+        if (op >= 1) {
+            clearInterval(timer);
+
+        }
+        element.style.opacity = op;
+        element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+        op += op * 0.1;
+
+    }, 10);
+}
+function fadeOutAnimation(element) {
+    var op = 1;  // initial opacity
+    var timer = setInterval(function () {
+        if (op <= 0.1) {
+            clearInterval(timer);
+
+        }
+        element.style.opacity = op;
+        element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+        op -= op * 0.2;
+
+    }, 10);
+}
+function fomatDateForCalendar(values) {
+    var date;
+    if (isNaN(values)) {
+        date = new Date(values);
+    } else {
+        date = new Date(Number(values));
+    }
+
+    var day = date.getDate();
+
+    var monthIndex = date.getMonth();
+    var year = date.getFullYear();
+    var content = ((day<10)?('0' + day ) : day)+ "/" + (((monthIndex+1)<10)?('0'+(monthIndex + 1)): (monthIndex + 1))+ "/" + year;
+
+    return content;
+}
+function getDataCalendar(dataCalendar, callback) {
+    callback(dataCalendar);
+
+}
+var dd;
+var mm;
+var yyyy;
+var selected;
+function hideCalendar() {
+
+    var cEx = document.getElementById("calendarShowExactly");
+    document.getElementById("mask-blacktrans").style.display = 'none';
+    scaleAnimationFullTo(cEx, 0.6);
+    fadeOutAnimation(cEx);
+    setTimeout(function () {
+        document.getElementById("calendarShow").style.display = 'none';
+        cEx.style.display = 'none';
+    }, 500);
+    selected = document.getElementsByClassName("picker-calendar-day-selected")[0]||"";
+
+    dd = (selected == undefined )?"":selected.getAttribute("data-day");
+    mm = (selected == undefined )?"":selected.getAttribute("data-month");
+    yyyy = (selected == undefined )?"":selected.getAttribute("data-year");
+
+    if(dd < 10){
+        dd = "0" + dd;
+    }
+    mm = (parseInt(mm) + 1);
+    if(mm < 10){
+        mm = "0" + mm;
+    }
+
+    document.getElementById(comCalendar).value = dd + "/" + mm + "/" + yyyy;
+}
+function initMyCalendar(isMultiple, calendarDateChange, initID,values) {
+    var isDate = false;
+    if(values != undefined && values instanceof Date){
+        if(isNaN(values.getTime())){
+            isDate = false;
+        }
+        else {
+            isDate = true;
+        }
+    }
+    if(arrDateTimes.length <=3){
+        var arr = new Array(); arr = (arrDateTimes[0].id).split('/');
+        var date1 = arr[1]+ '/'+arr[0]+'/'+arr[2];
+        var arr1 = new Array(); arr1 = (arrDateTimes[2].id).split('/');
+        var date2 = arr1[1]+ '/'+arr1[0]+'/'+arr1[2];
+        var date3 = null;
+        var date4 = null;
+    }else
+    if(arrDateTimes.length <=4){
+        var arr = new Array(); arr = (arrDateTimes[0].id).split('/');
+        var date1 = arr[1]+ '/'+arr[0]+'/'+arr[2];
+        var arr1;
+        var date2;
+        if(arrDateTimes[3].objTime.length == 0){
+            arr1 = new Array(); arr1 = (arrDateTimes[2].id).split('/');
+            date2 = arr1[1]+ '/'+arr1[0]+'/'+arr1[2];
+        }else{
+            arr1 = new Array(); arr1 = (arrDateTimes[3].id).split('/');
+            date2 = arr1[1]+ '/'+arr1[0]+'/'+arr1[2];
+        }
+        var date3 = null;
+        var date4 = null;
+    }
+    else{
+        for(var i in arrDateTimes){
+            var arr = new Array(); arr = (arrDateTimes[0].id).split('/');
+            var date1 = arr[1]+ '/'+arr[0]+'/'+arr[2];
+            var arr1 = new Array(); arr1 = (arrDateTimes[3].id).split('/');
+            var date2 = arr1[1]+ '/'+arr1[0]+'/'+arr1[2];
+            var arr2 = new Array(); arr2 = (arrDateTimes[4].id).split('/');
+            var date3 = arr2[1]+ '/'+arr2[0]+'/'+arr2[2];
+            var arr3 = new Array(); arr3 = (arrDateTimes[i].id).split('/');
+            var date4 = arr3[1]+ '/'+arr3[0]+'/'+arr3[2];
+        }
+    }
+    var inlineCalendar = myApp.calendar({
+        container:initID,
+        value:(isDate) ? ([values]) : ((isMultiple)?'':[new Date()]),
+        // value:values,
+        monthNames:((gUserInfo.lang == 'EN') ? CONST_KEY_CALENDAR_MONTHNAME_EN : CONST_KEY_CALENDAR_MONTHNAME_VN),
+        monthNamesShort:((gUserInfo.lang == 'EN') ? CONST_KEY_CALENDAR_MONTHNAME_SHORT_EN : CONST_KEY_CALENDAR_MONTHNAME_SHORT_VN),
+        dayNames:((gUserInfo.lang == 'EN') ? CONST_KEY_CALENDAR_DAYNAME_EN : CONST_KEY_CALENDAR_DAYNAME_VN),
+        dayNamesShort:((gUserInfo.lang == 'EN') ? CONST_KEY_CALENDAR_DAYNAME_SHORT_EN : CONST_KEY_CALENDAR_DAYNAME_SHORT_VN),
+        firstDay:0, // First day of the week, Monday
+        weekendDays:[0], // Sunday
+        multiple:isMultiple,
+        rangePicker:false,
+        dateFormat:'dd/mm/yyyy',
+        direction:'horizontal', // or 'vertical'
+        minDate:new Date(date1),
+        maxDate:new Date(date2),
+        disabled:{
+            from:new Date(date3),
+            to:new Date(date4)
+        }, // dates range of disabled days
+        events:null, // dates range of days with events
+        rangesClasses:null, //array with custom classes date ranges
+        touchMove:true,
+        animate:true,
+        closeOnSelect:false,
+        monthPicker:true,
+        monthPickerTemplate:'<div class="picker-calendar-month-picker">' +
+            '<a href="#" class="link icon-only picker-calendar-prev-month"><i class="icon-back"></i></a>' +
+            '<span class="current-month-value"></span>' +
+            '<a href="#" class="link icon-only picker-calendar-next-month"><i class="icon-arrowright"></i></a>' +
+            '</div>',
+        yearPicker:true,
+        yearPickerTemplate:'<div class="picker-calendar-year-picker">' +
+            '<a href="#" class="link icon-only picker-calendar-prev-year"><i class="icon-back"></i></a>' +
+            '<span class="current-year-value"></span>' +
+            '<a href="#" class="link icon-only picker-calendar-next-year"><i class="icon-arrowright"></i></a>' +
+            '</div>',
+        weekHeader:true,
+        // Common settings
+        closeByOutsideClick:true,
+        scrollToInput:true,
+        inputReadOnly:true,
+        convertToPopover:true,
+        onlyInPopover:false,
+        toolbar:true,
+        toolbarCloseText:CONST_STR.get('TRANSFER_REMITTANCE_DONE_BUTTON'),
+        headerPlaceholder:'Select date',
+        header:true,
+        footer:true,
+        toolbarTemplate:'<div class="toolbar">' +
+            '<div class="toolbar-inner">' +
+            '{{monthPicker}}' +
+            '{{yearPicker}}' +
+            '</div>' +
+            '</div>',
+        headerTemplate:'<div class="picker-header">' +
+            CONST_STR.get('VISA_SELECT_DATE_TITLE')+
+            '</div>',
+        footerTemplate:'<div class="picker-footer">' +
+            '<div onclick="hideCalendar();" class="button close-picker destop">{{closeText}}</div>' +
+            '</div>',
+        onChange:function (p, values, displayValues) {
+
+
+            var contentData = new Array();
+            var length = values.length;
+            if (isMultiple) {
+                for (var i = 0; i < length; i++) {
+                    contentData.push(fomatDateForCalendar(values[i]));
+                }
+
+            } else {
+
+                contentData = fomatDateForCalendar(values);
+            }
+
+            if (typeof calendarDateChange !== 'undefined') {
+                getDataCalendar(contentData, calendarDateChange);
+            }
+        }
+    });
+}
+
+function showTimeSelection() {
+    var idDate = document.getElementById("id.date").value;
+    date_time_tmpl = idDate;
+
+    loadTimes(idDate, loadDateTime());
+    document.getElementById("id.date").value = date_time_tmpl;
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+
+    for(var i in arrTimes) {
+        tmpArray1.push(arrTimes[i].name);
+        tmpArray2.push(arrTimes[i].id);
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionTime, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionTimeClose, false);
+    showDialogList(CONST_STR.get('SCHEDULE_BANK_CHOICE_TIME'), tmpArray1, tmpArray2, false,false);
+}
+function handleSelectionTime(evt) {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+
+        var time = document.getElementById("id.time");
+        handleSelectionTimeClose();
+
+        if ((evt.selectedValue1 != undefined) && (evt.selectedValue1 != null)) {
+
+            if (time.nodeName == "INPUT") {
+                document.getElementById("id.time").value = evt.selectedValue1;
+            }
+        }
+
+        document.getElementById("hdnTime").value = evt.selectedValue2;
+    }
+
+}
+
+function handleSelectionTimeClose() {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionTimeClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionTime, false);
+    }
+}
+function loadTimes(id, arr) {
+    arrTimes = new Array();
+    for(var i in arr) {
+        if(id == arr[i].id) {
+            arrTimes = arr[i].objTime;
+        }
+    }
+    return arrTimes;
+}
+// end select date/ time
+
+// select tinh/ thanh
+function getCityTpbList() {
+    var arrayArgs = new Array();
+    requestBacgroundMBService("CMD_GET_PROVINCE_INFO", arrayArgs, requestMBServiceCityListSuccess, requestMBServiceCityListFail);
+}
+function requestMBServiceCityListSuccess(e){
+    var gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp);
+
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_PROVINCE_INFO")))) {
+        cityTPBArray = gprsResp.arguments;
+        for (var i =0; i< cityTPBArray.length; i++) {
+            var tmpArrArgsCity = cityTPBArray[i].split("#");
+
+            objtemp = new Object();
+            objtemp.province_code = tmpArrArgsCity[0];
+            objtemp.province_name = tmpArrArgsCity[1];
+            tempProvinceList.push(objtemp);
+        }
+        getBankTpbList();
+    }
+};
+
+
+//parser info
+function requestMBServiceCityListFail() {
+    logInfo("request city fail");
+}
+function showCitySelection() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    for (var m=0; m<tempProvinceList.length; m++) {
+        tmpArray1.push(tempProvinceList[m].province_name);
+        tmpArray2.push(tempProvinceList[m].province_code);
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionCityList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionCityListClose, false);
+    showDialogList(CONST_STR.get('SCHEDULE_BANK_SELECTION_CITY'), tmpArray1, tmpArray2, false, false);
+}
+
+function handleSelectionCityList(e) {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        handleSelectionCityListClose(e);
+
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("id.city");
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+            strProvinceName=e.selectedValue1;
+        }
+
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            strProvinceCode = e.selectedValue2;
+            document.getElementById("id.provinceschedule").value = strProvinceCode;
+            document.getElementById("id.branch").value=CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+        }
+    }
+}
+
+function handleSelectionCityListClose(e) {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionCityListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionCityList, false);
+    }
+}
+
+function getBankTpbList() {
+    var arrayArgs = new Array();
+    requestBacgroundMBService("CMD_GET_BRANCH_INFO", arrayArgs, requestMBServiceBranchListSuccess, requestMBServiceBranchListFail);
+}
+//event listener: http request success
+function requestMBServiceBranchListSuccess(e){
+    var gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp);
+
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_BRANCH_INFO")))) {
+        atmTPBankArrayResponse = gprsResp.arguments;
+        for (var k = 0; k<atmTPBankArrayResponse.length; k++) {
+            var tmpArrArgsBank = atmTPBankArrayResponse[k].split("#");
+            objtemp = new Object();
+            objtemp.bank_code = tmpArrArgsBank[3];
+            objtemp.bank_name = (tmpArrArgsBank[1] +", " + tmpArrArgsBank[2]);
+            objtemp.idBrn = tmpArrArgsBank[0];
+            tempBankTPbankList.push(objtemp);
+        }
+    }
+};
+
+function requestMBServiceBranchListFail(e){
+};
+function showBranchSelection(){
+    if(strProvinceCode == ""){
+        return;
+    }
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    for (var i=0; i<tempBankTPbankList.length; i++) {
+        var tempDistrict = tempBankTPbankList[i];
+        if(tempDistrict.bank_code == strProvinceCode){
+            tmpArray1.push(tempDistrict.bank_name);
+            tmpArray2.push(tempDistrict.idBrn);
+        }
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionBranchList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionBranchListClose, false);
+    showDialogList(CONST_STR.get('SCHEDULE_BANK_SELECTION_BRANCH'), tmpArray1, tmpArray2, false, false);
+}
+
+function handleSelectionBranchList(e) {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        handleSelectionBranchListClose(e);
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("id.branch");
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+            strDistrictName=e.selectedValue1;
+        }
+
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            idBrn = e.selectedValue2;
+            document.getElementById("id.brn").value= idBrn;
+        }
+    }
+    sendRequestGetDateTime(idBrn);
+}
+function handleSelectionBranchListClose() {
+    if (currentPage == "schedule-bank/schedule-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionBranchListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionBranchList, false);
+    }
+}
+function checkDayBooking(arr, val){
+    return arr.some(function(arrVal) {
+        return val === arrVal;
+    });
+}
+// dat lich
+function sendJSONRequest(){
+    var data = {};
+    var arrayArgs = new Array();
+
+    var sourceAcc = document.getElementById("id.accountno").value;
+    var balance = removeSpecialChar(document.getElementById("id.balance").value);
+    var amountTrans = removeSpecialChar(document.getElementById("trans.amount").value);
+    var time = document.getElementById("id.time").value;
+    var city = document.getElementById("id.city").value;
+    var branch = document.getElementById("id.branch").value;
+    var timeBooking = document.getElementById("hdnTime").value;
+    var dayBooking = document.getElementById("id.date").value;
+    var brn = document.getElementById("id.brn").value;
+    if ((parseInt(amountTrans) <= 0) || (amountTrans.length < 1)) {
+        showAlertText(CONST_STR.get('SCHEDULE_BANK_ENTER_AMOUNT'));
+        return;
+    }
+    if(parseInt(balance) < parseInt(amountTrans) ){
+        showAlertText(CONST_STR.get('SCHEDULE_BANK_BALANCE_LIMIT'));
+        return;
+    }
+    if (city == '' || city == undefined || city == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')) {
+        showAlertText(CONST_STR.get('SCHEDULE_CHOOSE_PROVINCE'));
+        return;
+    }
+    if (branch == '' || branch == undefined || branch == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')) {
+        showAlertText(CONST_STR.get('SCHEDULE_CHOOSE_PROVINCE'));
+        return;
+    }
+    if(!dayBooking || dayBooking==undefined || dayBooking ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER_DATE')){
+        showAlertText(CONST_STR.get('SCHEDULE_BANK_ENTER_DATETIME'));
+        return;
+    }
+    var dayAvailability = [];
+    for(var i in arrDateTimes){
+        dayAvailability.push(arrDateTimes[i].id);
+    }
+    if(checkDayBooking(dayAvailability, dayBooking) == false){
+        showAlertText('Ngày đặt lịch không hợp lệ');
+        return;
+    }
+    if (time == '' || time == undefined || time == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')) {
+        showAlertText(CONST_STR.get('SCHEDULE_BANK_ENTER_DATETIME'));
+        return;
+    }
+
+    if (parseInt(amountTrans) >= 3000000000) {
+        showAlertText(CONST_STR.get('SCHEDULE_BANK_AMOUNT_WARNING'));        
+    }
+
+
+    arrayArgs.push("MONEY");
+    arrayArgs.push(sourceAcc);
+    arrayArgs.push(balance);
+    arrayArgs.push(amountTrans);
+    arrayArgs.push(dayBooking);
+    arrayArgs.push(timeBooking);
+    arrayArgs.push(brn);
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_ECOUNTER_BOOKING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+function requestMBServiceSuccess(e){
+    var gprsResp = parserJSON(e);
+    if ((checkResponseCodeSuccess(gprsResp.respCode))&& (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_ECOUNTER_BOOKING")))){
+        setRespObjStore(gprsResp);
+        genReviewScreen();
+    }else{
+        showAlertText(gprsResp.respContent);
+        return;
+    }
+}
+function requestMBServiceFail(e){
+
+}
+function genReviewScreen(){
+    var htmlReviewInfo = "";
+
+    var sourceAcc = document.getElementById("id.accountno").value;
+    var blance = removeSpecialChar(document.getElementById("id.balance").value);
+    var amount = removeSpecialChar(document.getElementById("trans.amount").value);
+    var date = document.getElementById("id.date").value;
+    var time = document.getElementById("id.time").value;
+    var branch = document.getElementById("id.branch").value;
+
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode;
+     tmpXmlRootNode = createXMLNode('review', '', docXml);
+    var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+
+     tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+    var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlNodeInfo);
+    tmpXmlNodeTransTitle = createXMLNode('reviewtransdisplay', 'review', docXml, tmpXmlNodeInfo);
+
+    //trans type
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('SCHEDULE_BANK_AMOUNT_TERM'), docXml, tmpChildNodeAcc);
+
+    //so tai khoan
+    var tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('SCHEDULE_BANK_SOURCE_ACC'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', sourceAcc, docXml, tmpChildNodeTrans);
+
+    // so du kha dung
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('SCHEDULE_BANK_AVAILABLE_SURPLUS'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(blance)+ ' ' + 'VND', docXml, tmpChildNodeTrans);
+
+    // dang ky rut
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('SCHEDULE_BANK_WITHDRAW_REGISTER_TITLE'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(amount)+ ' ' + 'VND' , docXml, tmpChildNodeTrans);
+
+    // thoi gian
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('SCHEDULE_BANK_TIMES'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', time +', Ngày '+ date, docXml, tmpChildNodeTrans);
+
+    // dia diem hen
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('SCHEDULE_BANK_PLACE'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', branch, docXml, tmpChildNodeTrans);
+
+    logInfo(docXml);
+    setReviewXmlStore(docXml);
+
+    navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}

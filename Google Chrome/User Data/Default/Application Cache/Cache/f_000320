@@ -1,0 +1,1266 @@
+﻿<style>
+
+	table.links a{
+
+    	/*color: #000000;*/
+
+		text-align:justify;
+
+	}
+
+	table.links a:active { 
+
+			outline-color: -moz-use-text-color;
+
+			outline-style: none;
+
+			outline-width: 0;
+
+			text-align:justify;
+
+		}
+
+	table.links a:focus {
+
+			outline-color: -moz-use-text-color;
+
+			outline-style: none;
+
+			outline-width: 0;
+
+			text-align:justify;
+
+		}
+
+	div.title_Q
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/		
+
+		font-size:16px;
+
+		font-weight:bold;
+
+		margin-bottom:25px;
+
+	}
+
+	div.title_KH
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/		
+
+		font-size:14px;
+
+		font-weight:bold;
+
+		margin-bottom:25px;
+
+	} 
+
+	.title
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/		
+
+		font-size:13px;
+
+		font-weight:bold;
+
+		/*color:#7030A0;*/
+
+		margin-bottom:20px;
+
+		padding-right:35px;
+
+	}
+
+	.title_list
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/	
+
+		font-size:12px;	
+
+		font-weight:bold;
+		
+		/*color:#7030A0;*/
+
+		margin-bottom:20px;
+
+ 	    /*padding-right:50px;*/
+		padding-right:10px;
+		
+		text-align: left;
+
+	}
+
+	.content
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/	
+
+		line-height:20px;
+
+		font-size:12px;	
+
+		margin-bottom:20px;
+
+		/*padding-right:50px;*/
+		padding-right:10px;
+
+		text-align:justify;		
+		
+		/*color:#000000;*/
+	}
+
+	
+
+	div.list_content ul
+
+	{	
+
+  		 padding:0px;		
+
+    	 /*padding-right:50px;*/ 
+		 padding-right:10px;
+
+		 text-align:justify;		
+
+	}
+
+	div.list_content ul li
+
+	{		 
+
+  		 padding:0px;
+
+		 text-align:left;
+
+   		 padding-right:35px;
+
+		 text-align:justify;		
+
+	}
+
+	
+
+	.stickdiv {
+
+			position:fixed;
+
+			top:10px;
+
+		
+
+		}
+
+</style>
+	
+<div id="mainViewContent" class="main-layout-subview">
+	    <div class="question">
+        <table width="90%" cellpadding="0" cellspacing="0">
+			<!--<tr>-->
+				<!--<td>-->
+					<!--<div style="float:left;">-->
+						<!--<div class="icon-back btnshadow btn-second btn-round-15" onclick="window.open('./index-non-ebank.html?menu=support','_self');"></div>						-->
+					<!--</div>-->
+				<!--</td>-->
+			<!--</tr>-->
+            <tr>
+                <td>
+                    <div style="text-align: center">
+                        <div style="font-size: 20px; padding-bottom: 20px; padding-top: 20px">
+                        </div>
+                        <div class="title_Q">
+                            MỘT SỐ HỎI ĐÁP THƯỜNG GẶP VỀ DỊCH VỤ NGÂN HÀNG ĐIỆN TỬ</div>
+                        <div class="title_KH">
+                            Dành cho Khách hàng cá nhân</div>
+                        <div style="font-size: 20px">
+                            ********</div>
+                    </div>
+                    <!--div tieu de -->
+                </td>
+            </tr>
+        </table>
+        <table cellpadding="4px" cellspacing="4px" class="links" style="margin-right: 0px;
+            padding-right: 0px; text-align: justify">
+            <tr>
+                <td class="title">
+                    I. TỔNG QUAN VỀ DỊCH VỤ</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#tong_quan_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('tong_quan_title_1'),500);">1. Dịch vụ Ngân hàng điện tử của TPBank là gì?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#tong_quan_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('tong_quan_title_2'),500);">2. Các kênh giao dịch trên Ngân hàng điện tử của TPBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#tong_quan_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('tong_quan_title_3'),500);">3. Lợi ích của dịch vụ đem lại cho khách hàng?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    II. ĐĂNG KÝ SỬ DỤNG DỊCH VỤ
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_1'),500);">1. Ai có thể đăng ký dịch vụ? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_2'),500);">2. Tôi có thể nhờ người đăng ký dịch vụ hộ tôi không?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_3'),500);">3. Đăng ký dịch vụ ở đâu? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_4'),500);">4. Thủ tục đăng ký như thế nào?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="dang_ky_title_5" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_5'),500);">5. Cần những gì để có thể sử dụng dịch vụ? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_6" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_6'),500);">6. Tôi có nhiều tài khoản tại TPBank, vậy tôi có cần đăng
+                        ký dịch vụ ngân hàng điện tử cho từng tài khoản của tôi tại TPBank không?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="dang_ky_title_7" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_7'),500);">7. Sau khi đăng ký dịch vụ, làm thế nào để tôi có thể bắt
+                        đầu sử dụng dịch vụ</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_8" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_8'),500);">8. Khi đi nước ngoài, tôi có thể sử dụng dịch vụ eBank của
+                        TPBank không?</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    III. ĐĂNG NHẬP DỊCH VỤ
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_nhap_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_nhap_title_1'),500);">1. Phải làm gì nếu tôi quên Tài khoản đăng nhập và mật
+                        khẩu của dịch vụ?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_nhap_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_nhap_title_2'),500);">2. Tôi đã đăng ký dịch vụ nhưng đến giờ vẫn chưa nhận được
+                        mật khẩu của dịch vụ để sử dụng, tôi phải làm gì? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_nhap_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_nhap_title_3'),500);">3. Tôi cần làm gì trong lần đăng nhập đầu tiên? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_nhap_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_nhap_title_4'),500);">4. Tôi muốn có nhiều tên đăng nhập có được không?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    IV. BẢO MẬT DỊCH VỤ</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bao_mat_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('bao_mat_title_1'),500);">1. TPBank làm gì để đảm bảo tính an toàn và bảo mật của dịch
+                        vụ cho Khách hàng?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bao_mat_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('bao_mat_title_2'),500);">2. OTP là gì? Khi nào tôi phải sử dụng OTP?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bao_mat_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('bao_mat_title_3'),500);">3. Các phương thức xác thực mà TPBank đang cung cấp cho Khách
+                        hàng?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bao_mat_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('bao_mat_title_4'),500);">4. Tôi cần làm gì để bảo mật Dịch vụ Ngân hàng điện tử của
+                        tôi?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    V. BIỂU PHÍ DỊCH VỤ</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bieu_phi_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('bieu_phi_title_1'),500);">1. Sử dụng dịch vụ Ngân hàng điện tử của TPBank, tôi phải
+                        trả những phí gì?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bieu_phi_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('bieu_phi_title_2'),500);">2. Những loại phí nào TPBank đang miễn cho Khách hàng khi
+                        sử dụng dịch vụ này?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    VI. HẠN MỨC GIAO DỊCH</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#han_muc_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('han_muc_title_1'),500);">1. Tôi sử dụng gói OTP SMS thì mỗi ngày và mỗi lần giao dịch
+                        tôi được giao dịch tối đa bao nhiêu tiền?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#han_muc_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('han_muc_title_2'),500);">2. Giao dịch giá trị lớn là gì?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#han_muc_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('han_muc_title_3'),500);">3. Tôi sử dụng Token key thì mỗi ngày và mỗi lần giao dịch
+                        tôi được giao dịch tối đa là bao nhiêu?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#han_muc_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('han_muc_title_4'),500);">4. Tôi muốn tăng hạn mức giao dịch có được không? Nếu có,
+                        tôi phải làm thủ tục gì không?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    VII. CÁC DỊCH VỤ CUNG CẤP TRÊN INTERNET BANKING</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_1'),500);">1. Có những dịch vụ gì cung cấp trên eBank của TPBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_2'),500);">2. Tôi có thể xem và in sao kê tài khoản thanh toán của tôi trong
+                        bao lâu?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_3'),500);">3. Mỗi lần xem lịch sử giao dịch của tài khoản, tôi có thể xem
+                        được bao nhiêu giao dịch của tài khoản?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_4'),500);">4. Tôi có thể xem thông tin các sổ tiết kiệm tôi đã gửi tại quầy
+                        trên eBank không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_5" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_5'),500);">5. Có quy định về số tiền tối thiểu khi gửi tiết kiệm điện tử
+                        không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_6" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_6'),500);">6. Tôi có thể theo dõi lịch trả nợ trên eBank cho khoản vay của tôi tại TPBank không</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_7" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_7'),500);">7. Tôi có thể vay vốn tại TPBank thông qua eBank không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_8" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_8'),500);">8. Trên eBank, tôi có thể chuyển tiền tới ngân hàng
+                        khác có thể nhanh như chuyển tiền trong cùng hệ thống TPBank không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_9" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_9'),500);">9. Tôi có thể chuyển tiền tới nhiều người thụ hưởng chỉ với 1
+                        lệnh chuyển khoản không? Nếu có, tôi có bị giới hạn số lượng người nhận trong 1
+                        lệnh chuyển khoản không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_10" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_10'),500);">10. Mỗi lần chuyển khoản xong hệ thống eBank của TPBank
+                        có tự động lưu lại thông tin người nhận tiền không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_11" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_11'),500);">11. Tôi có thể lấy biên lai/xác nhận giao dịch để chứng minh
+                        đã thực hiện giao dịch chuyển tiền không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_12" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_12'),500);">12. Nếu tôi nạp tiền điện thoại qua dịch vụ Ngân hàng điện tử
+                        của TPBank thì tôi có được hưởng các chương trình khuyến mãi của nhà mạng không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_13" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_13'),500);">13. Tôi có thể nạp tiền cho những mạng di động nào?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_14" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_14'),500);">14. Tôi có thể thanh toán các loại hóa đơn dịch vụ trả sau/cước
+                        thuê bao nào?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_15" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_15'),500);">15. Tôi không có thẻ tín dụng thì có thể thực hiện mua hàng hóa
+                        trên mạng và thanh toán qua TPBank eBank không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_16" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_16'),500);">16. Tôi có thể thực hiện những giao dịch gì liên quan đến dịch
+                        vụ Vàng vật chất tại TPBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_17" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_17'),500);">17. Tôi muốn trả nợ cho các khoản chi tiêu bằng thẻ tín dụng
+                        của tôi để được hoàn hạn mức thẻ tín dụng thì có thể thực hiện trên eBank 
+                        không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_18" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_18'),500);">18. TPBank có cho phép Khách hàng chủ động đăng ký hạn mức chi tiêu trên mạng cho thẻ tín dụng của Khách hàng không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_19" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_19'),500);">19. Tôi có thể theo dõi điểm thưởng của tôi và thực hiện đổi quà ngay trên eBank không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_20" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_20'),500);">20. Tôi có thể tìm kiếm các thông tin về lãi suất, tỷ giá, giá vàng và các chương trình ưu đãi của TPBank ngay trên eBank không?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_21" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_21'),500);">21. Tôi muốn được tư vấn về 1 số dịch vụ của TPBank ngay trên eBank thì có được không?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    VIII. HỖ TRỢ VÀ TRA SOÁT, KHIẾU NẠI</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#ho_tro_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('ho_tro_title_1'),500);">1. Tôi có thể nhận được sự hỗ trợ từ TPBank thông qua các
+                        kênh nào?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#ho_tro_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('ho_tro_title_2'),500);">2. Tôi muốn tra soát, khiếu nại thì phải làm như thế nào?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#ho_tro_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('ho_tro_title_3'),500);">3. Thời gian xử lý tra soát, khiếu nại là bao lâu?</a></td>
+            </tr>
+        </table>
+        <!--table danh sach link -->
+        <br />
+        <div style="text-align: center">
+            <div style="font-size: 20px; padding-bottom: 20px; padding-top: 20px">
+            </div>
+            <div class="title_Q">
+                MỘT SỐ HỎI ĐÁP THƯỜNG GẶP VỀ DỊCH VỤ NGÂN HÀNG ĐIỆN TỬ</div>
+            <div class="title_KH">
+                Dành cho Khách hàng cá nhân</div>
+            <div style="font-size: 20px">
+                ********</div>
+        </div>
+        <!--div tieu de -->
+        <div>
+            <div class="title" id="tong_quan">
+                I. TỔNG QUAN VỀ DỊCH VỤ
+            </div>
+            <div>
+                <div>
+                    <div class="title_list" id="tong_quan_title_1">
+                        1. Dịch vụ Ngân hàng điện tử của TPBank là gì?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="tong_quan_content_1">
+                        TPBank eBank là sản phẩm ngân hàng điện tử của TPBank, cung cấp các dịch vụ trực tuyến, giúp Khách hàng thực hiện giao dịch ngân hàng và các giao dịch thương mại điện tử, thanh toán trực tuyến thông qua các kênh giao dịch điện tử do TPBank cung cấp.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--1.	Dịch vụ Ngân hàng điện tử của TPBank là gì? -->
+                <div>
+                    <div class="title_list" id="tong_quan_title_2">
+                        2. Các kênh giao dịch trên Ngân hàng điện tử của TPBank?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="tong_quan_content_2">
+                        Khách hàng có thể thực hiện các giao dịch trực tuyến với TPBank qua 2 kênh giao dịch:
+                        <br />
+                        <ul class="list_content">
+                            <li>Internet Banking: Khách hàng sử dụng máy tính có kết nối internet, truy cập đường dẫn <a onclick="openLinkInWindows('https://ebank.tpb.vn');">https://ebank.tpb.vn </a>để giao dịch </li>
+                            <li>Mobile Banking: Khách hàng sử dụng điện thoại di động có kết nối Internet thông qua GPRS/3G/Wifi để giao dịch trên 2 phiên bản Mobile Banking của TPBank là:
+                                <ul>
+                                    <li>Mobile Application: Khách hàng thực hiện tải và cài đặt ứng dụng “TPB Mobile” trên điện thoại di động</li>
+                                    <li>Mobile Wap: Khách hàng truy cập Mobile Banking từ trình duyệt web triên điện thoại di động, truy cập đường dẫn https://ebank.tpb.vn để giao dịch <a onclick="openLinkInWindows('https://ebank.tpb.vn');">https://ebank.tpb.vn</a>
+                                        để giao dịch. </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--2. -->
+                <div>
+                    <div class="title_list" id="tong_quan_title_3">
+                        3. Lợi ích của dịch vụ đem lại cho khách hàng?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="tong_quan_content_3">
+                        -	Thực hiện các giao dịch với Ngân hàng 24/7, mọi lúc, mọi nơi
+                        <br />
+                        -	Tiết kiệm thời gian, tiết kiệm chi phí, đồng thời hưởng nhiều ưu đãi về phí và lãi so với các giao dịch tại quầy<br />
+                        -	Quản lý tài chính và đầu tư hiệu quả <br /> 
+                        -	An toàn, bảo mật thông tin, dễ sử dụng, thao tác đơn giản.s
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--3. -->
+            </div>
+            <!--I.	TỔNG QUAN VỀ DỊCH VỤ -->
+            <div>
+                <div class="title" id="dang_ky">
+                    II. ĐĂNG KÝ SỬ DỤNG DỊCH VỤ
+                </div>
+                <div>
+                    <div>
+                        <div class="title_list" id="dang_ky_title_1">
+                            1. Ai có thể đăng ký dịch vụ?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_ky_content_1">
+                            -	Các cá nhân từ đủ 18 tuổi trở lên có đầy đủ năng lực  hành vi dân sự 
+                            <br />
+                            -	Có sử dụng email và điện thoại di động.<br />
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--1. -->
+                    <div>
+                        <div class="title_list" id="dang_ky_title_2">
+                            2. Tôi có thể nhờ người đăng ký dịch vụ hộ tôi không?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_ky_content_2">
+                            Không. Quý khách vui lòng đăng ký dịch vụ trực tiếp với TPBank để đảm bảo tính bảo mật thông tin cho tài khoản của Quý khách.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--2. -->
+                    <div>
+                        <div class="title_list" id="dang_ky_title_3">
+                            3. Đăng ký dịch vụ ở đâu?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_ky_content_3">
+                         -	Quý khách có thể đăng ký dịch vụ tại Chi nhánh/Phòng giao dịch TPBank gần nhất. Địa chỉ cụ thể, vui lòng xem <a onclick="openLinkInWindows('./download/Branch network - TPBank.pdf');" target="_blank">
+                                Tại đây</a>
+                            <br />
+                            -	Hoặc đăng ký dịch vụ trực tuyến tại đường dẫn <a onclick="openLinkInWindows('http://applynow.tpb.vn');" >http://applynow.tpb.vn
+                            </a>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--3. -->
+                    <div>
+                        <div class="title_list" id="dang_ky_title_4">
+                            4. Thủ tục đăng ký như thế nào?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_ky_content_4">
+                            -	Quý khách vui lòng mang CMND/Hộ chiếu còn hiệu lực tới Chi nhánh/Phòng giao dịch TPBank gần nhất để được hướng dẫn đăng ký theo mẫu biểu của Ngân hàng. Quý khách cũng có thể điền thông tin trước khi mang tới Ngân hàng. Biểu mẫu đăng ký <a onclick="openLinkInWindows('./download/Giay dang ky su dung dich vu eBANK.pdf');" target="_blank">Tại đây</a>
+                            <br />
+                           -	Hoặc thực hiện theo các bước đăng ký trên trang đăng ký dịch vụ trực tuyến <a onclick="openLinkInWindows('http://applynow.tpb.vn);" target="_blank">
+                                http://applynow.tpb.vn </a>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--4. -->
+                    <div>
+                        <div class="title_list" id="dang_ky_title_5">
+                            5. Cần những gì để có thể sử dụng dịch vụ?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_ky_content_5">
+                            Quý khách chỉ cần:
+                            <br />
+                            -	1 Thiết bị truy cập có kết nối Internet (máy tính, điện thoại, máy tính bảng…),
+                            <br />
+                            -	Tài khoản đăng nhập và Mật khẩu tĩnh do TPBank cung cấp sau khi Quý khách đăng ký dịch vụ
+                            <br />
+                            -	1 thiết bị cung cấp mật khẩu xác thực một lần cho Quý khách (có thể là điện thoại di động của Quý khách hoặc thiết bị do TPBank cung cấp)
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--5. -->
+                    <div>
+                        <div class="title_list" id="dang_ky_title_6">
+                            6. Tôi có nhiều tài khoản tại TPBank, vậy tôi có cần đăng ký dịch vụ ngân hàng điện
+                            tử cho từng tài khoản của tôi tại TPBank không?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_ky_content_6">
+                            Không. Quý khách chỉ cần đăng ký dịch vụ Ngân hàng điện tử 1 lần duy nhất để theo dõi và quản lý tất cả các tài khoản của mình tại TPBank.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--6. -->
+                    <div>
+                        <div class="title_list" id="dang_ky_title_7">
+                            7. Sau khi đăng ký dịch vụ, làm thế nào để tôi có thể bắt đầu sử dụng dịch vụ
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_ky_content_7">
+                            Sau khi đăng ký dịch vụ, Quý khách sử dụng Tài khoản đăng nhập và Mật khẩu do TPBank cung cấp để đăng nhập vào trình duyệt máy tính/điện thoại hoặc ứng dụng Mobile Banking là có thể bắt đầu sử dụng dịch vụ
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--7. -->
+                    <div>
+                        <div class="title_list" id="dang_ky_title_8">
+                            8. Khi đi nước ngoài, tôi có thể sử dụng dịch vụ eBank của TPBank không?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_ky_content_8">
+                            Có. Quý khách vẫn sử dụng dịch vụ eBank của TPBank tại bất kỳ nơi nào có kết nối Internet. Nếu Quý khách thường xuyên đi nước ngoài, Quý khách nên sử dụng gói xác thực Token để thuận tiện trong quá trình giao dịch.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--8. -->
+                </div>
+            </div>
+            <!-- DANG KY DICH VU -->
+            <div>
+                <div class="title" id="dang_nhap">
+                    III. ĐĂNG NHẬP DỊCH VỤ
+                </div>
+                <div>
+                    <div class="title_list" id="dang_nhap_title_1">
+                        1. Phải làm gì nếu tôi quên Tài khoản đăng nhập và mật khẩu của dịch vụ?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dang_nhap_content_1">
+                        Quý khách có thể lựa chọn 1 trong các cách sau để lấy lại thông tin Tài khoản đăng nhập và Mật khẩu:
+                        <ul class="list_content">
+                            <li>Tới Chi nhánh/Phòng giao dịch gần nhất của TPBank (mang theo CMND/Hộ chiếu) để được hỗ trợ</li>
+                            <li>Liên hệ với Trung tâm dịch vụ khách hàng theo số điện thoại: 04 37 683 683 hoặc 1800 58 58 85 bằng chính số điện thoại Quý khách đã đăng ký</li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--1. -->
+                <div>
+                    <div class="title_list" id="dang_nhap_title_2">
+                        2. Tôi đã đăng ký dịch vụ nhưng đến giờ vẫn chưa nhận được mật khẩu của dịch vụ
+                        để sử dụng, tôi phải làm gì?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dang_nhap_content_2">
+                        Quý khách vui lòng thực hiện theo 1 trong các cách sau:
+                        <ul class="list_content">
+                            <li>Tới Chi nhánh/Phòng giao dịch gần nhất của TPBank (mang theo CMND/Hộ chiếu) để được hỗ trợ</li>
+                            <li>Liên hệ với Trung tâm dịch vụ khách hàng theo số điện thoại: 04 37 683 683 hoặc 1800 58 58 85 bằng chính số điện thoại Quý khách đã đăng ký</li>
+                            <li>Sử dụng email đã đăng ký để gửi yêu cầu cấp lại mật khẩu đến Trung tâm dịch vụ khách hàng  <a href="dichvu_khachhang@tpb.com.vn">dichvu_khachhang@tpb.com.vn.</a> Trong email Quý khách vui lòng cung cấp các thông tin xác thực bao gồm: tên đăng nhập; họ tên; ngày sinh; số CMND, ngày cấp, nơi cấp; địa chỉ. </li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--2. -->
+                <div>
+                    <div class="title_list" id="dang_nhap_title_3">
+                        3. Tôi cần làm gì trong lần đăng nhập đầu tiên?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dang_nhap_content_3">
+                        Quý khách vui lòng đổi mật khẩu trong lần đăng nhập đầu tiên để đảm bảo tính an toàn và bảo mật cho thông tin tài khoản, tài chính của Quý khách.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--3. -->
+                <div>
+                    <div class="title_list" id="dang_nhap_title_4">
+                        4. Tôi muốn có nhiều tài khoản đăng nhập có được không?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dang_nhap_content_4">
+                        Mỗi khách hàng tại TPBank chỉ có 1 tài khoản đăng nhập duy nhất.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--4. -->
+            </div>
+        </div>
+        <!--III.	ĐĂNG NHẬP DỊCH VỤ -->
+        <div>
+            <div class="title" id="bao_mat">
+                IV. BẢO MẬT DỊCH VỤ</div>
+            <div>
+                <div>
+                    <div class="title_list" id="bao_mat_title_1">
+                        1. TPBank làm gì để đảm bảo tính an toàn và bảo mật của dịch vụ cho Khách hàng?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="bao_mat_content_1">
+                        -  Bên cạnh việc cung cấp lớp bảo mật tĩnh, gồm Tài khoản đăng nhập và mật khẩu đăng nhập cho Quý khách, chúng tôi hợp tác với các đối tác về công nghệ bảo mật uy tín hàng đầu trên thế giới để trang bị thêm lớp bảo mật động với nhiều phương thức xác thực cho Quý khách lựa chọn
+                        <br />
+                        -  Chúng tôi thiết lập hạn mức giao dịch tối đa cho một lần giao dịch và cho một ngày giao dịch của Quý khách tương ứng với từng phương thức xác thực mà Quý khách sử dụng
+                        <br />
+                        -  Chúng tôi đưa ra những gợi ý về cách thiết lập một mật khẩu an toàn và cảnh báo về mức độ an toàn của mật khẩu đăng nhập mà Quý khách vừa thiết lập để Quý khách có thể tự trang bị cho mình một mật khẩu thực sự an toàn
+                        <br />
+                        -  Chúng tôi luôn nhắc Quý khách về việc đổi mật khẩu định kỳ khi đến thời hạn đổi mật khẩu để tránh việc mật khẩu đăng nhập của Quý khách có thể bị lộ nếu sử dụng quá lâu
+                        <br />
+                        -  Để bảo đảm rằng nếu Quý khách sử dụng dịch vụ xong nhưng quên không đăng xuất dịch vụ và tránh việc tài khoản đăng nhập của Quý khách có thể bị lợi dụng, Chúng tôi sẽ tự động đăng xuất dịch vụ khi Quý khách ngừng thao tác sử dụng dịch vụ sau 2 phút. 
+                        <br />
+                        -  Quý khách thường xuyên giao dịch với giá trị lớn sẽ được chúng tôi khuyên dùng phương thức bảo mật Token và mỗi lần Quý khách giao dịch với giá trị lớn, chúng tôi sẽ gửi thêm miễn phí một mật khẩu xác thực nữa qua điện thoại di động của Quý khách để xác minh giao dịch đó là do chính Quý khách thực hiện
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--1. -->
+                <div>
+                    <div class="title_list" id="bao_mat_title_2">
+                        2. OTP là gì? Khi nào tôi phải sử dụng OTP?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="bao_mat_content_2">
+                        OTP (One Time Password): là mật khẩu sử dụng một lần, là lớp bảo mật động được sinh ra từ các phương thức xác thực của TPBank, sử dụng trong việc xác thực các giao dịch thanh toán/chuyển tiền ra ngoài tài khoản của Khách hàng và một số giao dịch khác theo quy định của TPBank.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--2. -->
+                <div>
+                    <div class="title_list" id="bao_mat_3">
+                        3. Các phương thức xác thực mà TPBank đang cung cấp cho Khách hàng?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="bao_mat_content_3">
+                        - OTP-SMS: Nhận OTP qua SMS được gửi tới số điện thoại mà Quý khách đăng ký
+                        <br />
+                        - Token-key: Là một thiết bị bảo mật cung cấp OTP được gắn và sử dụng với duy nhất một tài khoản đăng nhập. Quý khách bấm nút trên thiết bị này để lấy OTP cho mỗi lần xác thực giao dịch. Thiết bị có thể sử dụng trong 2-5 năm tùy theo mức độ sử dụng thường xuyên của Quý khách. Với thiết bị này, Quý khách có thể dễ dàng sử dụng dịch vụ eBank của TPBank ngay cả khi đi nước ngoài.
+                        <br />
+                        - Thẻ mật khẩu (Matrix Card): Là một chiếc thẻ có 45 mã OTP được đánh dấu theo kiểu ma trận. Thẻ mật khẩu được gắn duy nhất cho một tài khoản đăng nhập. Khi thẻ mật khẩu được sử dụng hết, Quý khách cần mua một thẻ khác để gắn với tài khoản đăng nhập của mình và tiếp tục sử dụng. Quý khách có thể giao dịch qua eBank của TPBank ngay cả khi ở nước ngoài nếu sử dụng phương thức xác thực này. 
+                        <br />
+                        - Soft Token: Là một phần mềm cung cấp mã OTP được cài trên điện thoại di động của Quý khách và gắn duy nhất với tài khoản đăng nhập eBank của Quý khách. Phần mềm chỉ hết giá trị sử dụng khi Quý khách hủy dịch vụ Ngân hàng điện tử với TPBank. Soft token vẫn có thể được sử dụng để lấy OTP và xác thực giao dịch của Quý khách khi Quý khách ở nước ngoài.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--3. -->
+                <div>
+                    <div class="title_list" id="bao_mat_title_4">
+                        4. Tôi cần làm gì để bảo mật Dịch vụ Ngân hàng điện tử của tôi?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="bao_mat_content_4">
+                        Để bảo mật dịch vụ Ngân hàng điện tử, Quý khách vui lòng:
+                        <ul class="list_content">
+                            <li>Không bao giờ tiết lộ Mật khẩu cho bất kỳ ai, tại bất kỳ đâu, vào bất cứ lúc nào</li>
+                            <li>Không chọn Mật khẩu dễ đoán như Họ tên, Ngày sinh, số điện thoại… </li>
+                            <li>Không lưu lại Tài khoản đăng nhập và Mật khẩu tại phần mềm có tính năng lưu lại tự động</li>
+                            <li>Bảo quản và giữ an toàn cho Token-key, Thẻ mật khẩu, Thiết bị nhận OTP-SMS và Thiết bị cài đặt Soft Token. Trường hợp Thiết bị lấy OTP bị mất cắp, thất lạc, Khách hàng phải thông báo ngay cho TPBank và liên hệ với TPBank để cấp lại Thiết bị lấy OTP</li>
+                            <li>Mỗi lần đăng nhập dịch vụ, Quý khách không được rời khỏi máy tính/thiết bị truy cập hoặc để người khác sử dụng máy tính/thiết bị truy cập cho đến khi thoát ra khỏi dịch vụ. Khách hàng có trách nhiệm đảm bảo thoát ra khỏi dịch vụ sau mỗi lần truy cập.</li>
+                            <li>Khi phát hiện hoặc nghi ngờ việc truy cập trái phép Dịch vụ hoặc có người biết Mật khẩu của mình, Quý khách vui lòng thông báo bằng hình thức nhanh nhất cho TPBank. Số hotline: 04 37 683 683 hoặc 1800 58 58 85</li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--4. -->
+            </div>
+        </div>
+        <!--IV.	BẢO MẬT DỊCH VỤ -->
+        <div>
+            <div class="title" id="bieu_phi">
+                V. BIỂU PHÍ DỊCH VỤ</div>
+            <div>
+                <div>
+                    <div class="title_list" id="bieu_phi_title_1">
+                        1. Sử dụng dịch vụ Ngân hàng điện tử của TPBank, tôi phải trả những phí gì?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="bieu_phi_content_1">
+                        - TPBank cung cấp dịch vụ Ngân hàng điện tử cho Quý khách với mức phí duy trì dịch vụ hàng tháng là 5.000 VND (chưa VAT).
+                        <br />
+                        - Các loại phí liên quan tới dịch vụ Ngân hàng điện tử, Quý khách vui lòng xem thêm
+                        <a onclick="openLinkInWindows('./download/Bieu phi dich vu eBank.pdf');" target="_blank">Tại đây </a>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--1. -->
+                <div>
+                    <div class="title_list" id="bieu_phi_title_2">
+                        2. Những loại phí nào TPBank đang miễn cho Khách hàng khi sử dụng dịch vụ này?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="bieu_phi_content_2">
+                        Khi sử dụng dịch vụ Ngân hàng điện tử của TPBank, Quý khách được miễn những loại phí sau:
+                        <ul class="list_content">
+                            <li>Phí đăng ký</li>
+                            <li>Phí gửi OTP-SMS</li>
+                            <li>Phí khôi phục dịch vụ</li>
+                            <li>Phí các giao dịch chuyển tiền nội bộ, chuyển tiền tới tài khoản chứng khoán FPTS, gửi tiền/tất toán tiết kiệm điện tử; thanh toán dư nợ thẻ tín dụng; nạp tiền; thanh toán hóa đơn điện thoại/điện/nước/ADSL/truyền hình cáp; các giao dịch truy vấn; in sao kê và một số các giao dịch khác…</li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--2. -->
+            </div>
+        </div>
+        <!--Bieu phi -->
+        <div>
+            <div class="title">
+                VI. HẠN MỨC GIAO DỊCH</div>
+            <div>
+                <div>
+                    <div class="title_list" id="han_muc_title_1">
+                        1. Tôi sử dụng phương thức xác thực OTP SMS thì mỗi ngày và mỗi lần giao dịch tôi
+                        được giao dịch tối đa bao nhiêu tiền?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="han_muc_content_1">
+                        - Hạn mức giao dịch ngày là 100.000.000 VND
+                        <br />
+                        - Hạn mức giao dịch lần là 50.000.000 VND
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--1. -->
+                <div>
+                    <div class="title_list" id="han_muc_title_2">
+                        2. Giao dịch giá trị lớn là gì?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="han_muc_content_2">
+                        Giao dịch giá trị lớn là giao dịch có số tiền giao dịch vượt hạn mức của 1 lần xác thực do TPBank quy định theo từng thời kỳ. Hiện nay, giao dịch có giá trị trên 300.000.000 VND được coi là giao dịch có giá trị lớn. Khi thực hiện giao dịch giá trị lớn, khách hàng phải xác thực 2 lần, 1 lần bằng OTP-SMS, 1 lần xác thực bằng OTP do thiết bị cung cấp OTP sinh ra.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--2. -->
+                <div>
+                    <div class="title_list" id="han_muc_title_3">
+                        3. Tôi sử dụng Token key thì tôi được giao dịch tối đa mỗi lần và mỗi ngày là bao
+                        nhiêu?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="han_muc_content_3">
+                        Hạn mức giao dịch của Quý khách là:
+                        <table cellspacing="2" cellpadding="2" border="1">
+                            <tr>
+                                <td>
+                                </td>
+                                <td style="text-align: center">
+                                    Hạn mức/lần</td>
+                                <td style="text-align: center">
+                                    Hạn mức/ngày</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center">
+                                    Hạn mức cho 1 lần xác thực</td>
+                                <td style="text-align: center">
+                                    300.000.000 VND
+                                    <br />
+                                    (Ba trăm triệu đồng)
+                                </td>
+                                <td style="text-align: center">
+                                    600.000.000 VND
+                                    <br />
+                                    (Sáu trăm triệu đồng)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center">
+                                    Hạn mức cho 2 lần xác thực</td>
+                                <td style="text-align: center">
+                                    500.000.000 VND
+                                    <br />
+                                    (Năm trăm triệu đồng)</td>
+                                <td style="text-align: center">
+                                    1 tỷ
+                                    <br />
+                                    (Một tỷ đồng)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--3. -->
+                <div>
+                    <div class="title_list" id="han_muc_title_4">
+                        4. Tôi muốn tăng hạn mức giao dịch có được không? Nếu có, tôi phải làm thủ tục gì
+                        không?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="han_muc_content_4">
+                        Có. Quý khách vui lòng liên hệ với Chi nhánh/Phòng giao dịch TPBank gần nhất để được hướng dẫn thủ tục tăng hạn mức giao dịch.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--4. -->
+            </div>
+        </div>
+        <!--VI.	HẠN MỨC GIAO DỊCH -->
+        <div>
+            <div class="title" id="dv">
+                VII. CÁC DỊCH VỤ CUNG CẤP TRÊN INTERNET BANKING</div>
+            <div>
+                <div>
+                    <div class="title_list" id="dv_title_1">
+                        1. Có những dịch vụ gì cung cấp trên eBank của TPBank?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_1">
+                        eBank của TPBank cung cấp cho khách hàng đa dạng và phong phú các dịch vụ:
+                        <ul class="list_content">
+                            <li>Tài khoản: Tra cứu thông tin và giao dịch tài khoản, xem và in sao kê tài khoản</li>
+                            <li>Tiết kiệm: Tra cứu, thay đổi thông tin tiết kiệm, mở và tất toán tiết kiệm trực tuyến</li>
+                            <li>Tín dụng: Tra cứu thông tin khoản vay, lịch trả nợ, đăng ký, điều chỉnh và kích hoạt hạn mức ứng sổ tiết kiệm  </li>
+                            <li>Chuyển tiền: chuyển tiền trong hệ thống; chuyển tiền thông thường tới ngân hàng khác; chuyển tiền nhanh qua số thẻ, số tài khoản; chuyển tiền định kỳ; chuyển tiền theo danh sách; chuyển tiền tới tài khoản chứng khoán, xem lệnh chuyển tiền…</li>
+                            <li>Dịch vụ thanh toán: Nạp tiền, thanh toán hóa đơn điện thoại/điện/ADSL/Vé máy bay trả sau/truyền hình cáp, mua hàng trực tuyến…</li>
+                            <li>Dịch vụ vàng: Theo dõi bảng giá vàng trực tuyến; quản lý thông tin kho vàng giữ hộ; lịch sử giao dịch mua bán vàng; đăng ký rút vàng</li>
+                            <li>Dịch vụ thẻ: Tra cứu thông tin và sao kê thẻ tín dụng, thanh toán dư nợ thẻ….</li>
+                            <li>Tích điểm – đổi quà, theo dõi thông tin ngân hàng, đặt lịch hẹn tới ngân hàng, giới thiệu bạn bè và nhiều tiện ích khác</li>
+                            
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--1. -->
+            </div>
+            <div>
+                <div class="title_list" id="dv_title_2">
+                    2. Tôi có thể xem và in sao kê tài khoản thanh toán của tôi trong bao lâu?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_2">
+                    Quý khách có thể xem và in sao kê tài khoản thanh toán trong vòng 1 năm gần nhất.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--2. -->
+            <div>
+                <div class="title_list" id="dv_title_3">
+                    3. Mỗi lần xem lịch sử giao dịch của tài khoản, tôi có thể xem được bao nhiêu giao
+                    dịch của tài khoản?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_3">
+                    Quý khách có thể xem được số lượng giao dịch trong khoảng thời gian 90 ngày, không giới hạn về số lượng.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--3. -->
+            <div>
+                <div class="title_list" id="dv_title_4">
+                    4. Tôi có thể xem thông tin các sổ tiết kiệm tôi đã gửi tại quầy trên eBank không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_4">
+                    Có. Quý khách có thể xem thông tin các số tiết kiệm tại quầy và các sổ tiết kiệm mở trực tuyến trên eBank.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--4. -->
+            <div>
+                <div class="title_list" id="dv_title_5">
+                    5. Có quy định về số tiền tối thiểu khi gửi tiết kiệm điện tử không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_5">
+                    Có. Số tiền gửi tối thiểu của tiết kiệm điện tử là 1.000.000 VND
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--5. -->
+            <div>
+                <div class="title_list" id="dv_title_6">
+                    6. Tôi có thể xem lịch trả nợ trên eBank cho khoản vay của tôi tại TPBank
+                    không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_6">
+                    Có. Quý khách có thể xem lịch trả nợ cho tất cả các khoản vay của mình trên eBank của TPBank.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--6. -->
+            <div>
+                <div class="title_list" id="dv_title_7">
+                    7. Tôi có thể vay vốn tại TPBank thông qua eBank không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_7">
+                    Quý khách có thể đăng ký và kích hoạt hạn mức ứng sổ tiết kiệm trên eBank. Quý khách cũng có thể gửi câu hỏi tư vấn đến TPBank về thủ tục vay vốn và nhu cầu vay vốn của Quý khách. TPBank cũng đang xây dựng tính năng đăng ký vay vốn để đáp ứng nhu cầu gửi yêu cầu vay vốn của Quý khách.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--7. -->
+            <div>
+                <div class="title_list" id="dv_title_8">
+                    8. Trên TPBank eBank, tôi có thể chuyển tiền tới ngân hàng khác nhanh như chuyển
+                    tiền trong cùng hệ thống TPBank không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_8">
+                    Có. Quý khách có thể lựa chọn phương thức chuyển tiền nhanh tới ngân hàng khác qua số thẻ hoặc số tài khoản, chỉ trong 8s tiền sẽ được chuyển tới tài khoản tại Ngân hàng khác.
+                    <br />
+                    Danh sách các Ngân hàng nhận tiền vui lòng xem <a onclick="openLinkInWindows('./download/Danh sach NH nhan chuyen tien qua the.pdf');" target="_blank">Tại đây</a>
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--8. -->
+            <div>
+                <div class="title_list" id="dv_title_9">
+                    9. Tôi có thể chuyển tiền tới nhiều người thụ hưởng chỉ với 1 lệnh chuyển khoản
+                    không? Nếu có, tôi có bị giới hạn số lượng người nhận trong 1 lệnh chuyển khoản
+                    không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_9">
+                    Nhờ tính năng Chuyển tiền theo danh sách, Quý khách có thể chuyển tiền tới nhiều tài khoản tại TPBank khác chỉ bằng 1 lệnh chuyển khoản. Quý khách không bị giới hạn số lượng người nhận trong 1 lệnh chuyển khoản. Tuy nhiên với những danh sách chuyển tiền lên tới hàng trăm người thụ hưởng, Quý khách có thể chia nhỏ hơn để đảm bảo quá trình xử lý giao dịch được nhanh chóng
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--9. -->
+            <div>
+                <div class="title_list" id="dv-title_10">
+                    10. Mỗi lần chuyển khoản xong hệ thống eBank của TPBank có tự động lưu lại thông tin người nhận tiền không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_10">
+                    Với mỗi giao dịch tài chính được thực hiện, Quý khách có thể chọn lưu thông tin người thụ hưởng vào danh sách người thụ hưởng hoặc lưu mẫu chuyển tiền.
+                    <ul class="list_content">
+                        <li>Khi lưu người thụ hưởng, các thông tin liên quan đến người thụ hưởng sẽ được lưu lại để sử dụng cho những lần giao dịch sau</li>
+                        <li>Khi chọn lưu mẫu chuyển tiền, Khách hàng cần đặt tên cho mẫu. Các thông tin liên quan đến người thụ hưởng và cả các thông tin giao dịch (Số tiền, nội dung giao dịch) sẽ được lưu lại sau khi Khách hàng hoàn tất giao dịch để sử dụng cho những lần sau. Như vậy với những giao dịch giống nhau thường xuyên được thực hiện nhưng không theo một chu kỳ định kỳ nào thì Khách hàng vẫn có thể dễ dàng thực hiện mà không cần phải thao tác, nhập nhiều thông tin lặp lại nhờ chức năng này.</li>
+                    </ul>
+                    Trong trường hợp Quý khách muốn thay đổi/xóa/sửa thông tin về người thụ hưởng, Quý khách vui lòng vào chức năng “Quản lý danh sách người thụ hưởng” thuộc nhóm dịch vụ “Tiện ích khác”. Để xem/chỉnh sửa/xóa mẫu chuyển tiền, Quý khách vui lòng vào chức năng “Mẫu chuyển tiền” thuộc nhóm dịch vụ “Chuyển tiền”
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--10. -->
+            <div>
+                <div class="title_list" id="dv_title_11">
+                    11. Tôi có thể lấy biên lai/xác nhận giao dịch để chứng minh đã thực hiện giao dịch
+                    chuyển tiền không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_11">
+                    Có. Quý khách hoàn toàn có thể xem lại, in xác nhận giao dịch chuyển tiền đã thực hiện bằng cách sử dụng chức năng Chuyển tiền\Xem lệnh chuyển tiền.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--11. -->
+            <div>
+                <div class="title_list" id="dv_title_12">
+                    12. Nếu tôi nạp tiền điện thoại qua dịch vụ Ngân hàng điện tử của TPBank thì tôi
+                    có được hưởng các chương trình khuyến mãi của nhà mạng không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_12">
+                    Có. Quý khách vẫn được hưởng tất cả các chương trình khuyến mãi của nhà mạng như nạp tiền bằng thẻ cào. Không những thế, TPBank thường xuyên có các chương trình ưu đãi cho khách hàng khi thực hiện nạp tiền điện thoại qua eBank.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--11. -->
+            <div>
+                <div class="title_list" id="dv_title_13">
+                    13. Tôi có thể nạp tiền cho những mạng di động nào?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_13">
+                    Quý khách có thể nạp tiền cho tất cả các mạng di động tại Việt Nam hiện nay.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--12. -->
+            <div>
+                <div class="title_list" id="dv_title_14">
+                    14. Tôi có thể thanh toán các loại hóa đơn dịch vụ trả sau/cước thuê bao nào?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_14">
+                    Quý khách có thể thanh toán các loại hóa đơn/dịch vụ sau:
+                    <ul class="list_content">
+                        <li>Cước điện thoại trả sau</li>
+                        <li>Cước điện thoại cố định</li>
+                        <li>Cước Internet – ADSL</li>
+                        <li>Thanh toán tiền điện</li>
+                        <li>Thanh toán tiền nước</li>
+                        <li>Thanh toán truyền hình cáp</li>
+                        <li>Thanh toán vé máy bay trả sau</li>
+                    </ul>
+                    TPBank sẽ tiếp tục kết nối thanh toán nhiều dịch vụ hơn nữa để đáp ứng nhu cầu của khách hàng.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--13. -->
+            <div>
+                <div class="title_list" id="dv_title_15">
+                    15. Tôi không có thẻ tín dụng thì có thể thực hiện mua hàng hóa trên mạng và thanh
+                    toán qua TPBank eBank không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_15">
+                    Có. Tại hơn 300 website chấp nhận thanh toán bằng thẻ ATM của TPBank, Quý khách có thể thực hiện mua hàng hóa online và thanh toán qua eBank của TPBank.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--14. -->
+            <div>
+                <div class="title_list" id="dv_title_16">
+                    16. Tôi có thể thực hiện những giao dịch gì liên quan đến dịch vụ Vàng vật chất
+                    tại TPBank?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_16">
+                    Quý khách có thể thực hiện:
+                    <ul class="list_content">
+                        <li>Theo dõi bảng giá vàng Việt Nam và quốc tế được cập nhật liên tục</li>
+                        <li>Quản lý thông tin kho vàng giữ hộ của Quý khách đang có tại TPBank</li>
+                        <li>Xem lịch sử giao dịch vàng của Quý khách và lịch sử giá mua bán vàng</li>
+                        <li>Đăng ký rút vàng</li>
+                    </ul>
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--15. -->
+            <div>
+                <div class="title_list" id="dv_title_17">
+                    17. Tôi muốn trả nợ cho các khoản chi tiêu bằng thẻ tín dụng của tôi để được hoàn
+                    hạn mức thẻ tín dụng thì có thể thực hiện trên TPBank eBank không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_17">
+                    Có. Quý khách có thể trả nợ cho thẻ tín dụng của chính mình bằng cách sử dụng chức năng Dịch vụ thẻ\Thanh toán dư nợ thẻ tín dụng.
+                    <br />
+                    Thông thường hạn mức của Quý khách sẽ được hoàn vào ngày liền kề sau khi thực hiện thanh toán dư nợ thẻ tín dụng.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--16. -->
+            <div>
+                <div class="title_list" id="dv_title_18">
+                    18. TPBank có cho phép Khách hàng chủ động đăng ký hạn mức chi tiêu trên mạng cho thẻ tín dụng của Khách hàng không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_18">
+                    Có. Bất cứ khi nào có nhu cầu sử dụng với hạn mức chi tiêu là bao nhiêu hay bất cứ khi nào không có nhu cầu sử dụng hạn mức chi tiêu thẻ tín dụng trên mạng, Quý khách có thể truy cập TPBank eBank để đăng ký hạn mức sử dụng hoặc khóa hạn mức để bảo đảm an toàn cho thẻ.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--17. -->
+            <div>
+                <div class="title_list" id="dv_title_19">
+                    19.	Tôi có thể theo dõi điểm thưởng của tôi và thực hiện đổi quà ngay trên TPBank eBank không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_19">
+                    Có. Quý khách có thể theo dõi điểm thưởng, việc đổi quà tại quầy và trên eBank của mình, đồng thời thực hiện đổi quà ngay trên eBank của TPBank.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--18. -->
+            <div>
+                <div class="title_list" id="dv_title_20">
+                    20.	Tôi có thể tìm kiếm các thông tin về lãi suất, tỷ giá, giá vàng và các chương trình ưu đãi của TPBank ngay trên eBank không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_20">
+                    Có. eBank của TPBank cung cấp đầy đủ các thông tin về lãi suất, tỷ giá, giá vàng, các chương trình ưu đãi khuyến mại của TPBank để Quý khách tiện theo dõi.
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--19. -->
+            <div>
+                <div class="title_list" id="dv_title_21">
+                    21.	Tôi muốn được tư vấn về 1 số dịch vụ của TPBank ngay trên eBank thì có được không?
+                </div>
+                <!--div tieu de -->
+                <div class="content" id="dv_content_21">
+                    Có. Qúy khách được tư vấn về dịch vụ vay vốn và dịch vụ thẻ trên eBank của TPBank. Hoặc bất kỳ các câu hỏi, phản hồi nào về dịch vụ, Quý khách có thể liên hệ với Trung tâm dịch vụ khách hàng 24/7 của TPBank thông qua số điện thoại tư vấn, hoặc email, live chat…
+                </div>
+                <!--div mo ta -->
+            </div>
+            <!--20. -->
+           
+        </div>
+        <!--VII.	CÁC DỊCH VỤ CUNG CẤP TRÊN INTERNET BANKING -->
+        <div>
+            <div class="title" id="ho_tro">
+                VIII. HỖ TRỢ VÀ TRA SOÁT, KHIẾU NẠI</div>
+            <div>
+                <div>
+                    <div class="title_list" id="ho_tro_title_1">
+                        1. Tôi có thể nhận được sự hỗ trợ từ TPBank thông qua các kênh nào?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="ho_tro_content_1">
+                         Quý khách có thể liên hệ với TPBank thông qua:
+                        <ul class="list_content">
+                            <li>Chi nhánh/Phòng giao dịch TPBank gần nhất. Địa chỉ cụ thể, xem <a onclick="openLinkInWindows('./download/Branch network - TPBank.pdf');" target="_blank">Tại đây</a> </li>
+                            <li>Gọi điện/email tới Trung tâm dịch vụ khách hàng TPBank
+                                <ul>
+                                    <li>Số điện thoại: 04 37 683 683</li>
+                                    <li>Email: <a href="mailto: dichvu_khachhang@tpb.com.vn?Subject=Hỏi đáp" target="_top">
+                                        dichvu_khachhang@tpb.com.vn</a> </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--1. -->
+            </div>
+            <div>
+                <div>
+                    <div class="title_list" id="ho_tro_title_2">
+                        2. Tôi muốn tra soát, khiếu nại về dịch vụ Ngân hàng điện tử thì phải làm như thế
+                        nào?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="ho_tro_content_2">
+                        Quý khách vui lòng mang theo CMND/Hộ chiếu/Giấy tờ tương đương tới Chi nhánh/Phòng
+                        giao dịch gần nhất hoặc liên hệ Trung tâm dịch vụ khách hàng TPBank để được hỗ trợ
+                        <br />
+                        <br />
+                        Quý khách có thể điền thông tin vào <a href="./download/Yeu cau tro giup dich vu eBANK.pdf"
+                            target="_blank">Phiếu yêu cầu hỗ trợ </a>trước khi mang tới TPBank
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--2. -->
+                <div>
+                    <div class="title_list" id="ho_tro_title_3">
+                        3. Thời gian xử lý tra soát, khiếu nại về dịch vụ Ngân hàng điện tử là bao lâu?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="ho_tro_content_3">
+                        Thời gian xử lý tra soát, khiếu nại phụ thuộc vào nội dung yêu cầu của khách hàng.
+                        TPBank cam kết sẽ hỗ trợ Quý khách trong thời gian sớm nhất có thể:
+                        <ul>
+                            <li>Với các giao dịch chuyển tiền nội bộ: Trong vòng 24h kể từ khi tiếp nhận yêu cầu</li>
+                            <li>Với các giao dịch chuyển tiền thông thường tới ngân hàng khác, giao dịch nạp tiền điện thoại/thanh toán hóa đơn/mua hàng trực tuyến: Thời gian phụ thuộc vào thời gian xử lý của các đối tác, các trung gian thanh toán/Ngân hàng nhà nước và ngân hàng nhận tiền, tối đa 7 ngày làm việc kể từ khi TPBank tiếp nhận yêu cầu của Quý khách</li>
+                            <li>Với các chuyển tiền nhanh tới ngân hàng khác: Thời gian xử lý phụ thuộc vào quy trình xử lý của đối tác thứ 3, có thể lên tới 15 ngày làm việc</li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                    <br />
+                    <br />
+                    <br />
+                </div>
+                <!--3. -->
+            </div>
+            <!-- VIII.	HỖ TRỢ VÀ TRA SOÁT, KHIẾU NẠI-->
+        </div>
+        <div width="32%">
+            <input type="submit" style="width:18%;" class="btnDesktopshadow btnHomeShadow" onclick="clickHomeOrBack()" value="CM_BTN_GOBACK" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="off"/>
+        </div>
+    </div>
+</div>

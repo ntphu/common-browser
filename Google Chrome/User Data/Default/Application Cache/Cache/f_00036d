@@ -1,0 +1,421 @@
+/**
+ * Created by NgocDT3
+ * User: 
+ * Date: 16/01/06
+ * Time: 5:35 PM
+ */
+var gprsResp = new GprsRespObj("","","","");
+var tmpSelectedAuthenTypeName;
+var tmpSelectedAuthenType;
+var curAuthenType;
+var arrayAuthTypeName = ['OTP', 'Token card', 'Matrix card','mCA'];//ngocdt3 bo sung them mobile cA
+var arrayAuthType = ['OTP', 'TOKEN', 'MTX', 'mCA'];
+var flag_check = false;//check quay lại hay hủy
+//var jsontype='{"argtype":[{"Type":"MCA", "Contents":"Xác thực bằng OTP từ thiết bị bảo mật Token Key (Token key hoặc Thẻ mật khẩu, hoặc Soft token)"},{"Type":"OTP", "Contents":"Xác thực bằng OTP nhận qua tin nhắn điện thoại (OTP SMS)"},{"Type":"VAS", "Contents":"Xac thuc ban VAS"},{"Type":"MTX", "Contents":"Xac thuc ban MTX"}]}'; 
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag_check = true;
+}
+//ham nay tuong duong event onload cho body
+function viewDidLoadSuccess() {
+    logInfo('transfer load success');
+    genSequenceForm();
+    actionbar.addListSequence("setting/setting-auth-type");
+    loadInfo();
+    navController.getActionBar().setTitleBarOnly(CONST_STR.get("SETTING_AUTH_TYPE"));
+}
+
+function changeBottomBar(typeBottom) {
+    if(typeBottom==true){
+        function MenuContent(title, src) {
+    this.title = title;
+    this.src = src;
+    this.keyLang = title;
+        }
+        var arrBottom = new Array();
+        arrBottom.push(new MenuContent('AUTH_TYPE_CHANGE_AUTH', 'setting/setting-auth-type'));
+        arrBottom.push(new MenuContent('AUTH_TYPE_ACTIVE_AUTH', 'setting/setting-auth-type-active'));
+
+        navController.initBottomBarOnlyText(arrBottom[0].src ,arrBottom, "setting-auth-mk");
+    }else{
+        function MenuContent(title, src) {
+            this.title = title;
+            this.src = src;
+            this.keyLang = title;
+        }
+        var arrBottom = new Array();
+        arrBottom.push(new MenuContent('AUTH_TYPE_CHANGE_AUTH', 'setting/setting-auth-type'));
+        arrBottom.push(new MenuContent('AUTH_TYPE_REGITER_AUTH', 'setting/setting-auth-type-mk'));
+
+        navController.initBottomBarOnlyText(arrBottom[0].src ,arrBottom, "setting-auth-mk");
+    }
+}
+
+function loadInfo(){
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(gCustomerNo); //CIF
+	arrayArgs.push(curAuthenType); // selected type
+	arrayArgs.push("VIEW");
+	var deviceID = "ON_BROWSER";
+	try {
+		deviceID = device.uuid;
+	} catch (err) {
+		deviceID = "ON_BROWSER";
+	}
+	arrayArgs.push(deviceID);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_CHANGE_AUTHEN_TYPE"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, loadInfoSuccess, loadInfoFail);
+}
+
+/*
+function loadFingerprintAuthTypeInfo() {
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(gCustomerNo); //CIF
+	arrayArgs.push(device.uuid); // device ID
+	arrayArgs.push("CHECK_STATUS"); // device ID
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_FINGERPRINT_AUTH_INFO"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, loadInfoSuccess, loadInfoFail);
+}
+*/
+
+function loadInfoSuccess(e){
+	gprsResp = parserJSON(e);
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CHANGE_AUTHEN_TYPE")))) {
+		var allow_change = gprsResp.arguments[2];
+		curAuthenType = gprsResp.arguments[1];
+        tmpSelectedAuthenType = curAuthenType;
+		//gUserInfo.valicationType = curAuthenType;
+        var tokentypelst = gprsResp.arguments[3].trim().split('~');
+        console.log(gprsResp.arguments[3]);
+        var isMKS =  gprsResp.arguments[3].indexOf("MKS")>=0;
+        changeBottomBar(isMKS);
+		var txthtml='';
+			txthtml+='<table cellpadding="5" cellspacing="10" width="100%">';
+		for (var i = 0; i < tokentypelst.length; i++) {
+			txthtml+='<tr onclick="onSelected(this);"><td style="width:10px;">';
+                if (tokentypelst[i].trim()== tmpSelectedAuthenType)
+					txthtml+='<input value="'+tokentypelst[i]+'" checked="true" name="token" type="radio" onclick="onSelected(this);"></td>';
+			    else{
+			    	txthtml+='<input value="'+tokentypelst[i]+'" name="token" type="radio" onclick="onSelected(this);"></td>';
+			    }
+			    if (tokentypelst[i].trim()=='RSA')
+              		txthtml+='<td><span>'+CONST_STR.get('AUTHEN_TYPE_NOTE_RSA')+'</span></td></tr>' ;
+              	if (tokentypelst[i].trim()=='VAS')
+          			txthtml+='<td><span>'+CONST_STR.get('AUTHEN_TYPE_NOTE_VAS')+'</span></td></tr>' ;   
+          		if (tokentypelst[i].trim()=='MCA')
+          			txthtml+='<td><span>'+CONST_STR.get('AUTHEN_TYPE_NOTE_MCA')+'</span></td></tr>' ;   
+          		if (tokentypelst[i].trim()=='OTP')
+          			txthtml+='<td><span>'+CONST_STR.get('AUTHEN_TYPE_NOTE_OTP')+'</span></td></tr>' ;   
+          		if (tokentypelst[i].trim()=='MTX')
+          			txthtml+='<td><span>'+CONST_STR.get('AUTHEN_TYPE_NOTE_MTX')+'</span></td></tr>' ;
+				if (tokentypelst[i].trim()=='PUS')
+          			txthtml+='<td><span>'+CONST_STR.get('AUTHEN_TYPE_NOTE_PUS')+'</span></td></tr>' ;
+                if (tokentypelst[i].trim()=='MKS')
+                {
+                    navController.getBottomBar().hide();
+                    txthtml+='<td><span>'+CONST_STR.get('AUTHEN_TYPE_NOTE_MKS')+'</span></td></tr>' ;
+                    document.getElementById('tab02').style.display = 'none';
+                }
+
+		};
+			txthtml+='</table>';
+	    document.getElementById("id_otptype").innerHTML = txthtml;
+        document.getElementById("id_otptype").style.display='block';  
+
+		document.getElementById('id.AuthSuccess').style.display = 'none';
+		if (allow_change == 'Y'){
+			document.getElementById('id.allowchange').style.display = 'table';
+			document.getElementById('id.notallowchange').style.display = 'none';
+			document.getElementById('dynaRow.submitBtn').style.display = 'table-row';			
+			document.getElementById('id.AuthHeader').style.display = 'table-row';
+
+		}
+		else {
+			document.getElementById('id.allowchange').style.display = 'none';
+			document.getElementById('id.notallowchange').style.display = 'table';
+		}
+		
+		if (gprsResp.arguments[4] == 'NONE_REGISTER') {
+			//var pin = document.getElementById('checkOD_fingerprint');
+			//pin.checked = false;
+			//changeSwitchUI(document.getElementById("menu_switch_fingerprint"));
+			//document.getElementById('div.fingerprint.auth').style.display = '';
+			//document.getElementById('div.fingerprint.tittle').style.display = '';
+		} else if (gprsResp.arguments[4] == 'REGISTERED') {
+			//var pin = document.getElementById('checkOD_fingerprint');
+			//pin.checked = true;
+			//changeSwitchUI(document.getElementById("menu_switch_fingerprint"));
+			//document.getElementById('div.fingerprint.auth').style.display = '';
+			//document.getElementById('div.fingerprint.tittle').style.display = '';
+			
+		}
+	}
+}
+
+function loadInfoFail(e){
+	
+}
+function onSelected(inNode){
+	if(inNode.type =="radio"){
+		return;
+	}
+	var tmpArr = inNode.getElementsByTagName('input');
+	for (var i=0; i<tmpArr.length; i++) {
+		var tmpNode = tmpArr[i];
+		if(tmpNode.type=="radio") {
+			tmpNode.checked = true; 
+			tmpSelectedAuthenType = tmpNode.value;
+			break;
+		}
+	}
+	/*
+	var ck_otp =  document.getElementById('ck_OTP');
+	var ck_vas =  document.getElementById('ck_TOKEN');
+	
+	if (ck_otp!= null && ck_otp != undefined && document.getElementById('ck_OTP').checked == true){
+		tmpSelectedAuthenType = 'OTP';		
+	}
+	if (ck_vas != null && ck_vas != undefined && document.getElementById('ck_TOKEN').checked == true){
+		tmpSelectedAuthenType = 'TOKEN';		
+	}
+	*/
+}
+
+function onFingerprintAuthChange() {
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(gCustomerNo); //CIF
+	arrayArgs.push(device.uuid); // device ID
+	arrayArgs.push("CHANGE_STATUS");
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_FINGERPRINT_AUTH_INFO"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	if(tmpSelectedAuthenType==undefined ||tmpSelectedAuthenType==null||tmpSelectedAuthenType==curAuthenType){
+		showAlertText(CONST_STR.get('CHANGE_AUTHEN_MCA_ERR'));
+		return;
+	}
+	arrayArgs.push(gCustomerNo); //CIF
+	arrayArgs.push(tmpSelectedAuthenType); // selected type
+	arrayArgs.push("UPDATE");
+	arrayArgs.push("ON_BROWSER");
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_CHANGE_AUTHEN_TYPE"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CHANGE_AUTHEN_TYPE")))) {
+		setRespObjStore(gprsResp);
+		
+		if(gprsResp.arguments[1]=="OTP"){
+			tmpArr= gprsResp.arguments[5].split('#');
+			amountFee = parseInt(tmpArr[1])+ parseInt(tmpArr[2]);
+		if(amountFee=='1650'){
+			showAlertAppText2(CONST_STR.get('LOGIN_NOTIFICATION'),CONST_STR.get('CHANGE_OTP_ACC_CONFIRM_NV'), CONST_STR.get('AUTOBILL_ALERT_CANCEL_OK'), CONST_STR.get('REVIEW_BTN_CANCEL'));
+			
+			//showAlertAppText1(CONST_STR.get('LOGIN_NOTIFICATION'),CONST_STR.get('CHANGE_OTP_ACC_CONFIRM_NV'),CONST_STR.get('REVIEW_BTN_CANCEL'),CONST_STR.get('AUTOBILL_ALERT_CANCEL_OK'));
+		}
+		else{
+			showAlertAppText2(CONST_STR.get('LOGIN_NOTIFICATION'),CONST_STR.get('CHANGE_OTP_ACC_CONFIRM_KH'),CONST_STR.get('REVIEW_BTN_CANCEL'),CONST_STR.get('AUTOBILL_ALERT_CANCEL_OK'));
+		}
+			
+    document.addEventListener('alertAppConfirmOK', showChoiceConfirmPre, false);
+    document.addEventListener('alertAppConfirmCancel', showChoiceConfirmPreClose, false);
+		}else{
+			curAuthenType = gprsResp.arguments[1];
+			AuthenTypeNew =curAuthenType;
+			genReviewScreen();
+		}
+		
+	}
+	else if((gprsResp.respCode == '3') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CHANGE_AUTHEN_TYPE")))){
+		var tmpArr = new Array();
+		tmpArr= gprsResp.arguments[5].split('#');
+		amountFee = parseInt(tmpArr[1])+ parseInt(tmpArr[2]);
+		if(amountFee=='1650'){
+			showAlertText(CONST_STR.get('CHANGE_OTP_ACC_WRONG_NV'));
+			return;
+		}
+		else{
+			showAlertText(CONST_STR.get('CHANGE_OTP_ACC_WRONG_KH'));
+			return;
+		}
+		}
+	else if((gprsResp.respCode == '2') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CHANGE_AUTHEN_TYPE")))){
+		showAlertText(CONST_STR.get('CHARGE_FEE_ACCOUNT_ERR'));
+		return;
+	}
+	}
+function showChoiceConfirmPre(){
+	if (currentPage == "setting/setting-auth-type") {
+		showChoiceConfirmPreClose();
+		curAuthenType = gprsResp.arguments[1];
+		AuthenTypeNew =curAuthenType;
+		genReviewScreen();
+	}
+}
+function showChoiceConfirmPreClose() {
+	if (currentPage == "setting/setting-auth-type") {
+		document.removeEventListener("alertAppConfirmCancel", showChoiceConfirmPreClose, false);
+		document.removeEventListener("alertAppConfirmOK", showChoiceConfirmPre, false);
+	}
+}
+//event listener: http request fail
+function requestMBServiceFail(e){
+	//roll back
+};
+
+function changeSwitchUI(e) {
+
+    var tmpCheckNode = e.getElementsByTagName('input')[0];
+    var switchBackground = e;
+    var switchHandle = e.getElementsByClassName("custom-switch-handle")[0];
+    var switchLabel = e.getElementsByClassName("custom-switch-label")[0];
+
+    
+
+    console.log("checked: ", tmpCheckNode.checked);
+
+    if (switchBackground != null) {
+        if (!tmpCheckNode || (tmpCheckNode && tmpCheckNode.checked)) {
+            // switch
+            if (!switchBackground.classList.contains('custom-switch-on')) {
+                switchBackground.classList.add('custom-switch-on');
+                switchBackground.getElementsByClassName("custom-switch-label").innerHTML = "on";
+            }
+            if (switchBackground.classList.contains('custom-switch-off')) {
+                switchBackground.classList.remove('custom-switch-off');
+            }
+            // handle
+            if (!switchHandle.classList.contains('custom-switch-handle-on')) {
+                switchHandle.classList.add('custom-switch-handle-on');
+            }
+            if (switchHandle.classList.contains('custom-switch-handle-off')) {
+                switchHandle.classList.remove('custom-switch-handle-off');
+            }
+            // label
+            switchLabel.innerHTML = "on";
+            if (!switchLabel.classList.contains('custom-switch-label-on')) {
+                switchLabel.classList.add('custom-switch-label-on');
+            }
+            if (switchLabel.classList.contains('custom-switch-label-off')) {
+                switchLabel.classList.remove('custom-switch-label-off');
+            }
+        } else {
+            if (!switchBackground.classList.contains('custom-switch-off')) {
+                switchBackground.classList.add('custom-switch-off');
+                switchBackground.getElementsByClassName("custom-switch-label").innerHTML = "off";
+            }
+            if (switchBackground.classList.contains('custom-switch-on')) {
+                switchBackground.classList.remove('custom-switch-on');
+            }
+            // handle
+            if (!switchHandle.classList.contains('custom-switch-handle-off')) {
+                switchHandle.classList.add('custom-switch-handle-off');
+            }
+            if (switchHandle.classList.contains('custom-switch-handle-on')) {
+                switchHandle.classList.remove('custom-switch-handle-on');
+            }
+            // label
+            switchLabel.innerHTML = "off";
+            if (!switchLabel.classList.contains('custom-switch-label-off')) {
+                switchLabel.classList.add('custom-switch-label-off');
+            }
+            if (switchLabel.classList.contains('custom-switch-label-on')) {
+                switchLabel.classList.remove('custom-switch-label-on');
+            }
+        }
+    } else {}
+};
+
+
+function genReviewScreen(){
+	var authentypeReview;
+	if(curAuthenType=='VAS' || curAuthenType=='RSA' ){
+		authentypeReview="TOKEN";
+	}
+	else if(curAuthenType=='MKS'){
+		authentypeReview="TPBank eToken";
+	}
+    else if(curAuthenType=='MTX'){
+        authentypeReview=CONST_STR.get('MTX');
+    }
+    else if(curAuthenType=='PUS'){
+        authentypeReview=CONST_STR.get('PUS');
+    }
+	else{
+		authentypeReview=curAuthenType;
+	}
+	var htmlReviewInfo = "";
+	htmlReviewInfo = "<table width='98%' align='center'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header' style='padding-top: 20px;'>" +
+					CONST_STR.get('SETTING_AUTH_TYPE') + 
+				"</h5>" + "</tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><td><div id='recycler_list' class='recycler-list'><table id='recycler_table_ebank' class='recycler-table-ebank'>" +
+					"<tr class='recycler-row-parity'>" + "<td class='recycler-row-align-midle-left-opacity'>" +
+						CONST_STR.get('CHANGE_AUTHEN_TYPE_NEW') + 
+					"</td>" + "<td class='recycler-row-align-midle-right-opacity'>" +
+						authentypeReview + 
+					"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + "</table></div></td></tr>";
+	htmlReviewInfo = htmlReviewInfo + "<span style='margin-left:5%'>";
+	htmlReviewInfo = htmlReviewInfo + "<table width='100%'>";
+	htmlReviewInfo = htmlReviewInfo + "<tr>" +
+											"<td>"+
+    											"<div style='text-align: center;'>"+
+                                                    "<input id='trCancel' type='submit' class='btnshadow-after btn-second-desktop-after' onClick='clickHomeOrBack()' value='INPUT_ACC_BTN_GOBACK'/>" +
+    												"<input id='trgoBack' type='submit' class='btnshadow-after btn-second-after btn-changecolor' onClick='btnCancelClick()' value='REVIEW_BTN_CANCEL'/>" +
+        											"<input id='trNext' type='button' class='btnshadow-after btn-second-after' onClick='sendJSONRequest()' value='REVIEW_BTN_CONFIRM'/>" +
+    											"</div>"+
+											"</td>"
+            							"</tr>";
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	setReviewHtmlStore(htmlReviewInfo);
+	
+	navController.pushToView("com-review-scr", true);
+}
+function genSequenceForm() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	//var tmpStepNo = 401;
+	var tmpStepNo = 301;
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqFormInterBank');
+		tmpNode.innerHTML = oStr;
+	});
+}
+function showauthenregiterpage(){
+
+    navController.initWithRootView('setting/setting-auth-type-mk', true, 'xsl');
+
+}

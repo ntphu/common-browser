@@ -1,0 +1,412 @@
+/**
+ * Created by HuyNT2
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+
+var dateTrans = "";
+function viewDidLoadSuccess() {
+	navController.getBottomBar().hide();
+}
+function viewBackFromOther() {
+    logInfo('Back from other view');
+
+//	setDefaultInfo(newCusInfoObj);
+}
+//get Loan from MBCore
+//Create function getLoanInfoContent and execute immediately.
+if(!(navCheckPageCachedStatus('loan/loan-adjust-term-confirm-scr'))) {
+	auLoanSaving = function confirmLoanSaving(){
+		var data = {};
+		var arrayArgs = new Array();
+		arrayArgs.push(amountSav);
+		arrayArgs.push(rateSav);
+		arrayArgs.push(getAccListAD());	
+		arrayArgs.push(isIncrease);	//Loại giao dịch (2 là tăng, 3 là giảm)
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_CONFIRMADJUST_SB_OVERDRAFT"), "", "", 
+									gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+		data = getDataFromGprsCmd(gprsCmd);		
+		requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	}();
+
+}
+
+function setChecked() {
+	//var check = document.getElementById('checkOD');
+	//check.checked = !check.checked;
+    var obj = document.getElementById('checkOD');
+    if(obj.className == "icon-checkbox-unchecked") {
+        obj.className = "icon-checked";
+    } else {
+        obj.className = "icon-checkbox-unchecked";
+    }
+}
+function getAccListAD(){
+	var strAcc = "";
+	if(arrSav.length>0){
+		for (var i = 0; i<arrSav.length; i++){
+			strAcc = arrSav[i].accountSaving +"#"+strAcc;			
+		}
+		return strAcc;
+	}
+	
+	return strAcc;	
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	gRespObj = gprsResp; 
+	setRespObjStore(gprsResp);
+	if ((gprsResp.respCode == '0') 
+		&& (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CONFIRMADJUST_SB_OVERDRAFT")))) 
+	{			
+		parserLoanConfirmSaving();
+		genReviewScreen();
+		logInfo('request loan confirm successed');			
+	}
+	else if ((gprsResp.respCode != '0') && 
+	((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CONFIRMADJUST_SB_OVERDRAFT"))  
+	|| (gprsResp.responseType == '-1')))) {
+		//When click OK (Dialog) then Opening Left menu avaiable.
+		//navController.initWithRootView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+};
+
+//parser info
+function parserLoanConfirmSaving() {
+	var htmlContent = document.getElementById('reviewInfo');	
+	
+	var trans_id = gRespObj.arguments[0];
+	var dateTrans = gRespObj.arguments[1];
+	var amount = gRespObj.arguments[2];
+		
+	htmlContent.innerHTML = createContentConfirm(dateTrans, amount);
+}
+
+//event listener: http request fail
+function requestMBServiceFail(e){
+	//navController.initWithRootView('account/account-scr', true);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+	document.addEventListener('closeAlertView', handleAlertEmptyLoan, false);
+	showAlertText(CONST_STR.get('ERR_EMPTY_LOAN_ACCOUNT'));
+}
+
+function goBack() {
+	navController.popView(true);
+}
+
+function goCancel() {
+	navController.popViewInit(true);
+}
+
+function getTypeOfTrans(type){
+	if (type ==2) return CONST_STR.get("LIFT_MY_OD_LIMIT");
+	if (type ==3) return CONST_STR.get("LOWER_MY_OD_LIMIT");
+}
+
+function showConfirmSelection() {
+    var obj = document.getElementById('checkOD');
+    if(obj.className == "icon-checkbox-unchecked") {
+        showAlertText(CONST_STR.get('ERR_CHECK_ACCEPT_OD_TERM'));
+        return false;
+    } else {
+    // collect the form data while iterating over the inputs
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var tmpRespObj;
+	tmpRespObj = getRespObjStore();
+	
+	arrayArgs.push(tmpRespObj.responseType); //confirm type
+	arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+	arrayArgs.push(""); //Token key --> demo
+	//arrayArgs.push(""); //1: accept, 0: decline
+	arrayArgs.push(gUserInfo.valicationType); //user: authen type
+	setRespObjStore(tmpRespObj);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	//gGprsCmd = gprsCmd; //save to global variable-- confirm
+	setGprsCmdStore(gprsCmd);
+	xml_review='';
+	navController.pushToView('com-authentication-scr', true);
+    }
+}
+
+//GEN REVIEW FOR ADJUST SCREEN RESULT
+function genReviewScreen() {
+	//var nodeReviewInfo = document.getElementById("panelContent");
+	var htmlReviewInfo = "";
+	
+	htmlReviewInfo = "<table width='97%' align='center'>";
+
+	htmlReviewInfo = htmlReviewInfo + 
+				
+				
+				"<tr>"+
+					"<td>"+
+						"<h5 align='left' class='info-title'><span>"+CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE')+"</span></h5>"+
+						
+					"</td>"+
+             	"</tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='97%' align='center' class='accinfo-table lapnv123'>"+
+					"<tr>"+
+					"<td>"+
+					'<div class="recycler-list" id="recycler-list" style="margin-top: 15px">' + '<table class="recycler-table-ebank" id="recycler-table-ebank">'
+				;
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+    //             "<td class='td-left'>" + 
+				// 	CONST_STR.get("LOAN_AD_TRANS_TYPE") +
+				// "</td>" + "<td class='td-right'>" + 
+				// 	getTypeOfTrans(isIncrease) + 
+				// "</td></tr>";
+				'<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get('LOAN_AD_TRANS_TYPE') + '</td><td class="recycler-row-align-midle-right">' +getTypeOfTrans(isIncrease)+ '</td>' + '</tr>';
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+    //             "<td class='td-left'>" + 
+				// 	CONST_STR.get("LOAN_AD_CURR_OD_LIMIT") +
+				// "</td>" + "<td class='td-right'>" + 
+				// 	gOverdraft.limitODStandby+  " VND"+
+				// "</td></tr>";
+				'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_CURR_OD_LIMIT') + '</td><td class="recycler-row-align-midle-right">' +gOverdraft.limitODStandby+" VND" + '</td>' + '</tr>';
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				// "<tr class='trow-default'>" + 
+    //             "<td class='td-left'>" + 
+				// 	CONST_STR.get("LOAN_AD_NEW_OD_LIMIT") +
+				// "</td>" + "<td class='td-right'>" + 
+				// 	formatNumberToCurrency(amountSav)+ " VND" +
+				// "</td></tr>"+ 
+				'<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get('LOAN_AD_NEW_OD_LIMIT') + '</td><td class="recycler-row-align-midle-right">' +formatNumberToCurrency(amountSav)+ " VND" + '</td>' + '</tr>'+
+
+
+				"</table></div>"+
+				"</td>"+
+             	"</tr>"+
+				"</table></td></tr>";
+				
+	htmlReviewInfo = htmlReviewInfo + "<table width='97%' align='center' class='background-blacktrans'>"+				
+		'<tr class="desktopmode" id="result-export-print" style="display:none;">'+
+            	'<td colspan="2">'+
+                	'<div align="right" style="padding-right: 5px;">'+
+                        '<a href="javascript:void(0)" onclick="printResultHistory();"><img title="In trang này" style="margin-right:5px;" src="css/img/print.png"/></a>'+
+                    '</div>'+
+                '</td>'+
+        '</tr>';
+	htmlReviewInfo = htmlReviewInfo + "</table></td></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table>";			
+	
+	htmlReviewInfo+="<table width='100%'>"+
+						"<tr class='trow-space'></tr>"+	
+						"<tr><td>" +
+							"<div style='text-align:center'>" +
+								"<input id ='trgoBack' type='button' class='btnshadow-after btn-second-after' onClick='goBack()' onclick='' value='INPUT_ACC_BTN_GOBACK' />" +
+								"<input id ='trNext' type='button' class='btnshadow-after btn-second-after' onClick='sendJSONRequest()' onclick='' value='REVIEW_BTN_CONFIRM' />" +
+							"</div>"+
+						"<td></tr>"+					
+					"</table>";
+	
+	//gReviewHtml = htmlReviewInfo;
+	setReviewHtmlStore(htmlReviewInfo);
+}
+
+
+function createContentConfirm(dateTrans, amountSav){
+	
+	//Content of HTML
+	var	htmlConfirm = "";
+	//create header
+	/*if(gOverdraft!=null){		
+		//========================Display for adjust overdraft confirm===============================//
+		htmlConfirm = htmlConfirm+ 
+					"<tr>"+
+								"<h5 align='left' style='font-weight:bold;'>" + 
+									CONST_STR.get("LOAN_AD_CONFIRM_RULE") +
+								"</h5><div class='line-separate'></div></tr>"+
+					"<tr class='trow-default'>" + 
+						"<td class='td-header' width ='70%'>" +
+									CONST_STR.get("LOAN_AD_TRANS_TYPE") +
+						"</td>"+
+						"<td class='td-header' width = '30%'>" +
+									getTypeOfTrans(isIncrease)+ 
+						"</td>"+
+					"</tr>"
+					+
+					"<tr class='trow-default'>" + 
+						"<td class='td-header' width ='70%'>" +
+									CONST_STR.get("LOAN_AD_CURR_OD_LIMIT") +
+						"</td>"+
+						"<td class='td-header' width = '30%'>" +
+									gOverdraft.limitODStandby+ " VND" +
+						"</td>"+
+					"</tr>"
+					+
+					"<tr class='trow-default'>" + 
+						"<td class='td-header' width ='70%'>" +
+									CONST_STR.get("LOAN_AD_NEW_OD_LIMIT") +
+						"</td>"+
+						"<td class='td-header' width = '30%'>" +
+									formatNumberToCurrency(amountSav)+ " VND" +
+						"</td>"+
+					"</tr>"
+					+
+					"<tr class='trow-default'>" + 
+						"<td class='td-header' width ='70%'>" +
+									CONST_STR.get("LOAN_AD_TRANS_DATE") +
+						"</td>"+
+						"<td class='td-header' width = '30%'>" +
+									dateTrans+
+						"</td>"+
+					"</tr></table>";
+	}*/
+	htmlConfirm= "<table width='100%' align='center'>"+
+           /* "<tr>"+
+              "<td colspan='2'><h5 class = 'screen-title'><span>"+CONST_STR.get("REVIEW_TITLE_SCREEN")+"</span></h5>" +
+			  "<div class='line-separate'></div></td>" +
+            "</tr>"+*/
+			//AREA MAKE SEQUENCE FORM
+				"<tr><td colspan='1'><div id='seqForm'><table xmlns='http://www.w3.org/1999/xhtml' width='463' align='center' cellspacing='0' cellpadding='0' border='0' style='margin:auto' class='sequence-form-402'><tbody><tr><td width='25%'><span>"+CONST_STR.get('ESAVING_CHANGEINFO_VF_ARR1')+"</span></td><td width='25%'  class='selected'><span>"+CONST_STR.get('ESAVING_CHANGEINFO_VF_ARR2')+"</span></td><td width='25%'><span>"+CONST_STR.get('ESAVING_CHANGEINFO_VF_ARR3')+"</span></td><td width='25%'><span>"+CONST_STR.get('ESAVING_CHANGEINFO_VF_ARR4')+"</span></td></tr></tbody></table></div></td></tr>"+
+				"<tr><td colspan='1'><div id='seqForm'><table xmlns='http://www.w3.org/1999/xhtml' width='463' align='center' cellspacing='0' cellpadding='0' border='0' style='margin:auto' class='sequence-form-302'><tbody><tr><td width='33%'><span>"+CONST_STR.get('SEQ_INPUT_TITLE')+"</span></td><td width='33%'  class='selected'><span>"+CONST_STR.get('SEQ_AUTHEN_TITLE')+"</span></td><td width='33%'><span>"+CONST_STR.get('SEQ_COMPLETE_TITLE')+"</span></td></tr></tbody></table></div></td></tr>"+
+				//FINISH SEQUENCE 
+            "<tr>"+
+                "<td colspan='2'>"+
+                	// "<h5 align='left' class='info-title'><span>"+CONST_STR.get("LOAN_AD_CONFIRM_RULE")+"</span></h5>"+
+                "</td>"+
+             "</tr>"+
+             "<tr>"+
+             "<td>"+
+             	"<table width='100%' align='center' class='accinfo-table'>"+
+             		"<tr>"+
+            			 // "<td>"+
+
+
+               		"<td colspan='2'>"+
+               		'<div class="recycler-list" id="recycler-list" style="margin-top: 15px">' + '<table class="recycler-table-ebank" id="recycler-table-ebank"  class="accinfo-table">' +
+            '<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_AD_TRANS_TYPE")+ '</td><td class="recycler-row-align-midle-right" id="trans_type">' +getTypeOfTrans(isIncrease)+ '</td>' + '</tr>' +
+            '<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get("LOAN_AD_CURR_OD_LIMIT") + '</td><td class="recycler-row-align-midle-right"  id="curr_od_limit">' +gOverdraft.limitODStandby+ " VND" + '</td>' + '</tr>' +
+            '<tr class="recycler-row-as">' +'<td class="recycler-row-align-midle-left">' + CONST_STR.get("LOAN_AD_NEW_OD_LIMIT")+ '</td><td class="recycler-row-align-midle-right" id="new_od_limit">' +formatNumberToCurrency(amountSav)+ " VND" +'</td>' + '</tr>' +
+            '<tr class="recycler-row-parity">' +'<td class="recycler-row-align-midle-left">'  + CONST_STR.get("LOAN_AD_TRANS_DATE") + '</td><td class="recycler-row-align-midle-right"  id="trans_date">' +dateTrans+ '</td>' + '</tr>' +
+
+                    	// "<table width='100%' align='center' class='background-blacktrans'>"+
+                     //    	 "<tr class='trow-default'>"+
+                     //            "<td class='td-left'><span>"+CONST_STR.get("LOAN_AD_TRANS_TYPE")+"</span></td>"+
+                     //            "<td class='td-right'><span id='trans_type'>"+getTypeOfTrans(isIncrease)+"</span></td>"+
+                     //        "</tr>"+
+                     //        "<tr class='trow-default'>"+
+                     //        "<td class='td-left'><span>"+CONST_STR.get("LOAN_AD_CURR_OD_LIMIT") +"</span></td>"+
+                     //        "<td class='td-right'><span id='curr_od_limit'>"+gOverdraft.limitODStandby+ " VND"+"</span></td>"+
+                     //     "</tr>"+
+                     //     "<tr class='trow-default'>"+
+                     //        "<td class='td-left'><span>"+CONST_STR.get("LOAN_AD_NEW_OD_LIMIT") +"</span></td>"+
+                     //        "<td class='td-right'><span id='new_od_limit'>"+formatNumberToCurrency(amountSav)+ " VND" +"</span></td>"+
+                     //     "</tr>"+
+                     //     "<tr class='trow-default'>"+
+                     //        "<td class='td-left'><span>"+CONST_STR.get("LOAN_AD_TRANS_DATE")+"</span></td>"+
+                     //        "<td class='td-right'><span id='trans_date'>"+dateTrans+"</span></td>"+
+                     //     "</tr>"+
+                     //    "</table>"+
+                    "</td>"+
+
+               "</tr>"+
+               "</tr>"+
+               "</table>"+
+               "</td>"+
+             	
+          "</table>"+
+		  "<table width='100%' align='center'>"+
+		  	"<tr>"+
+						"<td>"+"<div style = 'height:5px'> </div>"+
+							"<h5 align='left' class='info-title'><span>"+CONST_STR.get("LOAN_AD_TERM_RULE")+"</span></h5>"+
+						"</td>"+
+             "</tr>"+
+		  "</table>"+
+		  
+          "<div class='td-text' style='margin:4px;' >"+
+          //"<iframe src='/download/loan/dieu_khoan_thau_chi.html' class='div-condition'></iframe>"+
+          "</div>"+
+          "<table width='100%'>"+
+          			
+			"<tr>"+
+				"<td colspan='2' id='goldterm.shortnotice'>"+
+				
+//					"<input id='checkOD' type='checkbox' class='checkbox-accept' onchange='setChecked()'/>"+
+                    "<div style='padding-left:7px;' onclick='setChecked()'>"+
+                    " <span class='icon-checkbox-unchecked' style='font-size:14px; font-weight: bold' id='checkOD'></span>"+
+                    " <span class='goldterm-shortnotice' style=' padding-left:5px; font-weight: normal;'>"+CONST_STR.get("LOAN_AD_CONFIRM_RULE_CHECK")+"</span>"+
+					"</div>"+
+
+				"</td>"+
+			"</tr>"+
+          "</table>"+
+          "<table width='98%'>"+
+			/*
+            "<tr>"+
+              "<td style='border:0px;width:65%'>"+
+			  "<table width='100%'>"+
+			  "<tr>"+
+			  "<td align='right'>"+
+			  	"<a style='font-weight:bold' onclick='goBack()' href='JavaScript:void(0)' title='"+CONST_STR.get("REVIEW_BTN_CANCEL")+"'>"+CONST_STR.get("REVIEW_BTN_CANCEL")+"</a>" +
+			  "</td>"+
+			  "<td>"+
+			  	"<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='"+CONST_STR.get("INPUT_ACC_BTN_GOBACK")+"'/>"+
+			  "</td>"+
+			  "</tr>"+
+			  "</table>"+
+              "</td>"+
+              "<td width='35%'><input ype='button' class='btnshadow btn-second' onClick='showConfirmSelection()' value='"+CONST_STR.get("REVIEW_BTN_CONFIRM")+"'/></td>"+
+            "</tr>"+
+			*/ 
+			"<tr>"+
+              "<td colspan=2>"+			  
+			  "<table width='98%'>"+			  
+			  //"<tr>"+
+			  /*
+			  "<td width='10%' align='right'>"+
+			  	"<a style='font-weight:bold' onclick='goCancel()' href='JavaScript:void(0)' title='"+CONST_STR.get("REVIEW_BTN_CANCEL")+"'>"+CONST_STR.get("REVIEW_BTN_CANCEL")+"</a>" +
+			  "</td>"+*/
+//			   "<td width='33%'>"+
+//			  	"<input type='submit' style='background-color: rgba(162, 100, 187, 0.51);border-radius: 20px; float: right;' class='btnshadow btn-primary' onClick='goCancel()' value='"+CONST_STR.get("REVIEW_BTN_CANCEL")+"'/>"+
+//			  "</td>"+
+
+                "<tr>" +
+					"<td colspan='2'>" +
+						"<table width='100%'>" +
+							"<tr>" +
+								"<td class='desktop-btn tdbtndesktop'>" +
+									"<input type='submit' class='btnDesktopshadow btnHomeShadow btnback_desktop' onclick='clickHomeOrBack()' value='"+CONST_STR.get('REVIEW_BTN_BACK')+"' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'>" +
+								"</td>" +
+								"<td class='desktop-btn' >" +
+									"<input type='submit' style='background-color: rgba(162, 100, 187, 0.51);border-radius: 20px;float: right;' id='trCancel' class='btnshadow btn-primary btn-desktop1' onclick='goCancel()' value='"+CONST_STR.get('REVIEW_BTN_CANCEL')+"'>" +
+								"</td>" +
+								"<td class='desktop-btn'>" +
+									"<input type='button' class='btnshadow btn-second btn-desktop1' onclick='showConfirmSelection()' value='"+CONST_STR.get('REVIEW_BTN_NEXT')+"'>" +
+								"</td>" +
+							"</tr>" +
+						"</table>" +
+					"</td>" +
+				"</tr>"+
+//			  "<td width='33%'><input type='button' class='btnshadow btn-second' onClick='showConfirmSelection()' value='"+CONST_STR.get("REVIEW_BTN_NEXT")+"'/>"+
+			  "</td>"+
+			  
+			 // "</tr>"+			  
+			  "</table>"+
+			  "</td>"+
+            "</tr>"+
+          "</table>";
+		return htmlConfirm;
+}

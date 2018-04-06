@@ -1,0 +1,576 @@
+/**
+ * Created by HuyNT2
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+
+
+var tmpDestinationAcc;
+var flag = false;
+
+/*** INIT VIEW END ***/
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+/*** VIEW LOAD SUCCESS ***/
+
+function initTextAreaMessage(){
+    try{
+        var txtArea = document.getElementById('trans.content');
+        if(txtArea!==null){
+            return false;
+        }
+        document.getElementById("holder-transfer-message").innerHTML = "";
+    }catch(e){}
+
+
+    var textAreaEl = new TextArea({
+        containerMargin : "0px",
+        idTextArea : "trans.content",
+        placeholder : CONST_STR.get("PLACEHOLDER_TRANSFER_CONTENT"),
+        iconClass : "icon-content-note",
+        lengthmax : "40",
+
+        //borderColor : "rgba(255, 255, 255, 0.2)",
+        //showBorderBottom : false,
+       // showBorderTop : false,
+        fontSizeIcon : "24px!important",
+        validateInput : function(){
+            console.log("validate function");
+        }
+    });
+    textAreaEl.show("holder-transfer-message");
+}
+//ham nay tuong duong event onload cho body
+function viewDidLoadSuccess() {
+	logInfo('transfer load success');	
+	
+	//handle input transfer content
+	setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+	
+	if(!flag) {
+		initTextAreaMessage();
+			var accNo = document.getElementById("id.accountno");
+	var balanceAcct = document.getElementById("trans.sourceaccoutbalance");
+	if(accNo !=null){
+		accNo.value = gUserInfo.accountList[0].accountNumber;
+	}
+	
+	//balanceAcct.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + " VND</b>" + "</h6>";
+	balanceAcct.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + " VND" + "</div>";
+	
+			/*var desAccNo = document.getElementById("trans.desaccountno");
+	var desBalanceAcct = document.getElementById("trans.desaccoutbalance");
+	desAccNo.value = gUserInfo.accountList[1].accountNumber;
+	desBalanceAcct.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + formatNumberToCurrency(gUserInfo.accountList[1].balanceAvailable) + " VND</b>" + "</h6>";	*/
+	}
+	var isIPad = navigator.userAgent.match(/iPad/i);
+	if(isIPad) keyboardEvent();
+	
+	//genSequenceTransList();
+	genSequenceForm();
+    actionbar.addListSequence("transfer/transfer-local-create-scr");
+}
+
+//handle input transfer content
+//setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+
+if(gUserInfo.accountList.length < 2 && gUserInfo.accountListLocalTrans.length < 1) {
+	showAlertText(CONST_STR.get('ERR_INPUT_NOT_ENOUGH_ACC'));
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+//genSequenceForm();
+
+function showAccountSelection() {
+	if(gUserInfo.accountList.length < 1) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NOT_ENOUGH_ACC'));
+	}
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	var tmpNodeDesAcc = document.getElementById('trans.desaccountno');
+	var tmpDesAcc = '';
+	if((tmpNodeDesAcc.value != undefined) && (tmpNodeDesAcc.value.length == 11)) {
+		tmpDesAcc = tmpNodeDesAcc.value;
+	}
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		//if(tmpDesAcc != tmpAcc.accountNumber) {
+			tmpArray1.push(tmpAcc.accountNumber);
+			tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+		//}	
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+}
+
+function showDesAccountSelection() {
+	if(gUserInfo.accountListLocalTrans.length < 1) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NOT_ENOUGH_ACC'));
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	var tmpNodeSouAcc = document.getElementById('trans.accountno');
+	var tmpSouAcc = '';
+	if((tmpNodeSouAcc.value != undefined) && (tmpNodeSouAcc.value.length == 11)) {
+		tmpSouAcc = tmpNodeSouAcc.value;
+	}
+	/*for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		if(tmpSouAcc != tmpAcc.accountNumber) {
+			tmpArray1.push(tmpAcc.accountNumber);
+			tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+		}
+	}*/
+	for (var i=0; i<gUserInfo.accountListLocalTrans.length; i++) {
+		var tmpAcc = gUserInfo.accountListLocalTrans[i];
+		if(tmpSouAcc != tmpAcc.accountNumber) {
+			tmpArray1.push(tmpAcc.accountNumber);
+			tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+		}
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionDesAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionDesAccountListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+}
+
+//tranfer type selection
+function showTransTypeSelection() {
+	var tmpArray1 = [];
+	tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_LOCAL_TPBANK_EN: CONST_KEY_LOCAL_TPBANK_VN;
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionTransLocalAccList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionTransLocalAccListClose, false);	
+	
+	showDialogList(CONST_STR.get('TRANS_TYPE_BLOCK_TITLE'), tmpArray1, '', true);
+}
+
+function handleSelectionTransLocalAccList(e) {
+	if (currentPage == "transfer/transfer-local-cusno-create-scr") {
+		handleSelectionTransLocalAccListClose();
+		//alert('input value: ' + e.inputValue);
+		//tmpDestinationAcc = e.inputValue;
+		if(e.selectedValue1 == CONST_KEY_LOCAL_TPBANK_VN[1] || e.selectedValue1 == CONST_KEY_LOCAL_TPBANK_EN[1]) {
+			updateAccountListInfo(); 
+			navController.initWithRootView('transfer/transfer-local-create-scr', true, 'xsl');
+		}
+	}
+}
+function handleSelectionTransLocalAccListClose() {
+	if (currentPage == "transfer/transfer-local-cusno-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionTransLocalAccListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionTransLocalAccList, false);
+	}
+}
+
+//Format currency and pronounce to Vietnamese
+
+function handleInputAmount (e, des) {
+	var tmpVale = des.value;
+	formatCurrency(e, des);
+	//des.value = formatNumberToCurrency(des.value);
+	var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang); 
+	
+	var nodeNumTxt = document.getElementById("trans.amounttotext");
+	
+	//nodeNumTxt.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";	
+	//nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": " + numStr + "</div>";
+	nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+}
+
+//Send request
+var gprsResp = new GprsRespObj("","","","");
+
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	if(gUserInfo.accountList.length < 1) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NOT_ENOUGH_ACC'));
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	var data = {};
+	var arrayArgs = new Array();
+	var sourceAcc = document.getElementById("trans.accountno");
+	var destinationAcc = document.getElementById("trans.desaccountno");
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	
+	var tmpStrSrc = sourceAcc.value;
+	if (tmpStrSrc.length != 11) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_ACC'));
+		return;
+	}
+	arrayArgs.push(sourceAcc.value);
+	var tmpStr = destinationAcc.value;
+	
+	if (!tmpStr || tmpStr == '' || tmpStr == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')) {
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_DES_ACC'));
+		return;
+	}
+	if (tmpStr.length != 11) {
+		showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+		return;
+	}
+	if ((tmpStrSrc == tmpStr) || (tmpStrSrc.substring(0, 8).indexOf(tmpStr.substring(0, 8)) == -1)) {
+		showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+		return;
+	}
+	arrayArgs.push(destinationAcc.value);
+	tmpStr = amountTrans.value;
+	var amount = removeSpecialChar(amountTrans.value);
+	if ((parseInt(amount) <= 0) || (tmpStr.length < 1)) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_AMOUNT'));
+		return;
+	}
+	arrayArgs.push(amount);
+	tmpStr = contentTrans.value;
+	if (tmpStr.length < 1) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_CONTENT'));
+		return;
+	}
+	if(!checkAvailableChar(contentTrans.value)) {
+		showAlertText(CONST_STR.get('ERR_INCORRECT_TRANS_CONTENT'));
+		return;
+	}
+	
+	//contentTrans.value = maskCardNumber(tmpStr); //check and mask visa card
+	arrayArgs.push(contentTrans.value);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_LOCAL_TRANSFER_CUSTOMER"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	//document.addEventListener("evtHttpSuccess", requestMBServiceSuccess, false);
+	//document.addEventListener("evtHttpFail", requestMBServiceFail, false);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	
+	//update account change after success
+	//updateAccountInfoIfNeed(sourceAcc.value, CONSTANTS.get("CMD_TYPE_LOCAL_TRANSFER_CUSTOMER"));
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '1013') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LOCAL_TRANSFER_CUSTOMER")))) {
+		parserLocalTrans();
+		genReviewScreen();
+	}
+	else if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH")))) {
+		//parser quick query account name
+		parserQuickQueryAccount();
+	}
+	/*logInfo('request transfer local customer create success');
+	if ((e.type == "evtHttpSuccess") && (currentPage == "transfer/transfer-local-cusno-create-scr")) {
+		document.removeEventListener("evtHttpSuccess", requestMBServiceSuccess, false);
+	}*/
+};
+
+//event listener: http request fail
+function requestMBServiceFail(){
+	/*if ((e.type == "evtHttpFail") && (currentPage == "transfer/transfer-local-cusno-create-scr")) {
+		document.removeEventListener("evtHttpFail", requestMBServiceFail, false);
+		//alert("Http request fail!");
+	}*/
+};
+
+
+
+//event: selection dialog list
+function handleSelectionAccountList(e) {
+	if (currentPage == "transfer/transfer-local-cusno-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("trans.accountno");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+			var desAccNo = document.getElementById("trans.desaccountno");
+			if (desAccNo.value == tagAccNo.value)
+			{
+				//for (var i=0; i<gUserInfo.accountList.length; i++) {
+				for (var i=0; i<gUserInfo.accountListLocalTrans.length; i++) {
+					var tmpAcc = gUserInfo.accountList[i];
+					if(tagAccNo.value != tmpAcc.accountNumber) {
+						desAccNo.value = tmpAcc.accountNumber;
+						var nodeAccBal = document.getElementById("trans.desaccoutbalance");
+						if (desAccNo.value != undefined && desAccNo.value != '') {
+							
+							//nodeAccBal.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + formatNumberToCurrency(tmpAcc.balanceAvailable) + "</b></h6>";
+							nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(tmpAcc.balanceAvailable) + " VND</div>";
+							
+						}
+						break;
+					}
+				}
+			}
+		}
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			//nodeAccBal.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + e.selectedValue2 + "</b></h6>";
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND</div>";
+		}
+		
+		
+		
+	}
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "transfer/transfer-local-cusno-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+
+//event: selection dialog list
+function handleSelectionDesAccountList(e) {
+	if (currentPage == "transfer/transfer-local-cusno-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleSelectionDesAccountList, false);
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionDesAccountListClose, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("trans.desaccountno");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		var nodeAccBal = document.getElementById("trans.desaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			//nodeAccBal.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + e.selectedValue2 + "</b></h6>";
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND</div>";
+		}
+	}
+}
+
+function handleSelectionDesAccountListClose(e) {
+	if (currentPage == "transfer/transfer-local-cusno-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionDesAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionDesAccountList, false);
+	}
+}
+
+function parserLocalTrans() {
+	//parser info
+	//gprsResp
+}
+
+//gen sequence form
+function genSequenceForm() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpStepNo = 301;
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+		if(tmpNode !=null){
+			tmpNode.innerHTML = oStr;
+		}
+	});
+}
+
+//gen review screen
+function genReviewScreen() {
+	//var nodeReviewInfo = document.getElementById("panelContent");
+	var htmlReviewInfo = "";
+	
+	var sourceAcc = document.getElementById("trans.accountno");
+	var destinationAcc = document.getElementById("trans.desaccountno");
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	
+	htmlReviewInfo = "<table width='98%' align='center'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_INFO_TITLE') + 
+				"</h5>" + "</tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='97%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('TRANS_TYPE') + 
+					"</td>" + "<td class='td-right'>" + 
+						CONST_STR.get('MENU_TRANS_LOCAL_CUSTOMER') + 
+					"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				//"<tr><table width='97%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('TRANS_LOCAL_ACC_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						sourceAcc.value + 
+					"</td></tr>";
+	
+	var balance = 0;
+	for (var idx=0; idx<gUserInfo.accountList.length; idx++) {
+		var tmpAcc = new AccountObj();
+		tmpAcc = gUserInfo.accountList[idx];
+		if(tmpAcc.accountNumber == sourceAcc.value) {
+			htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default' scrinfo='review'>" + 
+					"<td class='td-left'>" + 
+						CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrencyWithSymbol(tmpAcc.balanceAvailable,' VND') + 
+					"</td></tr></table></tr>";
+			balance = tmpAcc.balanceAvailable;
+		}
+	}
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE') + 
+				"</h5></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='97%' align='center' class='background-blacktrans'>";
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION') + 
+				"</td>" + "<td class='td-right'>" + 
+					destinationAcc.value + 
+				"</td></tr>";
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION_TITLE') + 
+				"</td>" + "<td class='td-right'>" + 
+					gCustomerNanme + 
+				"</td></tr>";
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_AMOUNT_TITLE') + 
+				"</td>" + "<td class='td-right'>" + 
+					amountTrans.value + ' VND'
+				"</td></tr>";
+	var amount = removeSpecialChar(amountTrans.value);
+	logInfo('amountTrans.value: ' + amountTrans.value + ' amount: ' + amount);
+	var balanceCont = balance - amount;
+	logInfo('balance: ' + balance + ' balanceCont: ' + balanceCont);
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_FEE') + 
+				"</td>" + "<td class='td-right'>" + 
+					'0 VND'
+				"</td></tr>";
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default' scrinfo='review'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_BALANCE_CONT') + 
+				"</td>" + "<td class='td-right'>" + 
+					formatNumberToCurrencyWithSymbol(balanceCont,' VND')
+				"</td></tr>";
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_ACC_CONTENT') + 
+				"</td>" + "<td class='td-right'>" + 
+					contentTrans.value + 
+				"</td></tr>";
+				
+	var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd
+    } 
+    if(mm<10){
+        mm='0'+mm
+    } 
+    var today = dd+'/'+mm+'/'+yyyy;	
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_DATE_TRANS') + 
+				"</td>" + "<td class='td-right'>" + 
+					today + 
+				"</td></tr>";
+
+htmlReviewInfo = htmlReviewInfo + 					
+            "<tr class='desktopmode' id='result-export-print' style='display:none;'>" +
+            	"<td colspan='2'>" +
+                	"<div align='right' style='padding-right: 5px;'>" +
+                        "<a href='javascript:void(0)' onclick='printResultHistory();'><img title='In trang này' style='margin-right:5px;' src='css/img/print.png'/></a>" +
+                    "</div></td></tr>";
+htmlReviewInfo = htmlReviewInfo + 					
+            "<tr id='sendmail' style='display:none;'>" +
+            	"<td colspan='2'>" +
+                	CONST_STR.get('BENEFIC_SEND_MAIL_NOTE') +//send mail
+                        "<a href='javascript:void(0)' onclick='sendmail();'><img width='35px' src='./assets/images/email.png'/></a>" +
+                    "</td></tr>";
+
+				
+	/*htmlReviewInfo = htmlReviewInfo + 
+				"<tr><td width='50%'>" +
+					"<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK'/>" +
+				"</td><td width='50%'>" +
+					"<input type='button' class='btnshadow btn-second' onClick='sendJSONRequest()' onclick='' value='REVIEW_BTN_CONFIRM' />" +
+				"</td></tr>";*/
+	htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	htmlReviewInfo = htmlReviewInfo + "<span style='margin-left:5%'>";
+	htmlReviewInfo = htmlReviewInfo + "<table width='96%'>";
+	htmlReviewInfo = htmlReviewInfo + "<tr>" +
+	         /*
+                "<td width='10%' align='right' id='trCancel'>" +
+                    "<a style='font-weight:bold' onclick='btnCancelClick()' href='JavaScript:void(0)'><span>REVIEW_BTN_CANCEL</span></a>" +
+                "</td>" +*/
+			
+				 "<td width='32%' id='trCancel'><input type='submit' class='btnshadow btn-primary' onClick='btnCancelClick()' value='REVIEW_BTN_CANCEL'/></td>" +
+              "<td width='32%'><input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK'/></td>" +
+              "<td width='32%'><input type='button' class='btnshadow btn-second' onClick='sendJSONRequest()' value='REVIEW_BTN_CONFIRM'/></td>" +
+            "</tr>";
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+   htmlReviewInfo = htmlReviewInfo + "</span>";
+	//gReviewHtml = htmlReviewInfo;
+	setReviewHtmlStore(htmlReviewInfo);
+	
+	navController.pushToView("com-review-scr", true);
+}
+
+document.addEventListener("evtLoadPageSuccess", function(e){
+	
+	if (currentPage == "transfer/transfer-local-cusno-create-scr") {
+		document.getElementById('trans.accountno').value = gUserInfo.accountList[0].accountNumber;
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		
+		//nodeAccBal.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + "</b>"+"<b> VND</b>"+"</h6>";
+		nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + " VND"+"</div>";
+		
+		gSourceVal = gUserInfo.accountList[0].balanceAvailable;
+	}
+}, false);

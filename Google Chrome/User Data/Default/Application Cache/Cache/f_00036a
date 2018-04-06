@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:template match="/">
+  <!--<xsl:for-each select="menuroot/menurole">
+  <xsl:choose>
+  	<xsl:when test="usertype = 'ADVANDCE'">-->
+    <li id="mHomePage">
+      <div onClick="updateAccountListInfo(); gotoHomePage();" id='homepagexsl/homepage-scr'><em class="icon-homepage"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_HOME_PAGE</div>
+        <span>1</span></div>              
+    </li>
+    <!--</xsl:when>-->
+    <li id="mAccInfo">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-account"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_ACCOUNT_CATEGORY</div>
+        <span>1</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_mAccInfo" class="wrapper">
+          <div>
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('accountxsl/account-scr', true, 'xsl');" id='accountxsl/account-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_ACCOUNT_INFO</div>
+                <span></span></div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="transfer">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-transfer"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_TRANS_CATEGORY</div>
+        <span>7</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_transfer" class="wrapper">
+          <div>
+            <!--<li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer/transfer-local-cusno-create-scr', true);" id='transfer/transfer-local-cusno-create-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_TRANS_LOCAL_CUSTOMER</div>
+                <span></span></div>
+              
+            </li>
+            <li style="while-space:pre-wrap;width:90%;">
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer/transfer-local-create-scr', true, 'xsl');" id='transfer/transfer-local-create-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_TRANS_LOCAL</div>
+                <span></span></div>
+            </li>-->
+            <li style="while-space:pre-wrap;width:90%;">
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer/transfer-local-create-scr', true, 'xsl');" id='transfer/transfer-local-create-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_TRANS_LOCAL_TPBANK</div>
+                <span></span></div>
+            </li>
+             <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer/transfer-inter-create-scr', true)" id='transfer/transfer-inter-create-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_TRANS_INTER</div>
+                <span></span></div>
+            </li>
+            
+             <!--<li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer/transfer-card-create-scr', true, 'xsl')" id='transfer/transfer-card-create-scr' class='menu-func-two-line'>
+              <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_FAST_TRANS</div>
+                <span
+                    class="no_child"></span></div>
+            </li>-->
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer/transfer-card-create-scr', true, 'xsl')" id='transfer/transfer-card-create-scr'>
+              <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_FAST_TRANS</div>
+                <span
+                    class="no_child"></span></div>
+            </li>
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer/transfer-periodic-create-scr', true, 'xsl');" id='transfer/transfer-periodic-create-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_TRANS_PERIODIC</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer/transfer-fpts-create-scr', true, 'xsl');" id='transfer/transfer-fpts-create-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_TRANS_FPTS</div>
+                <span></span></div>
+            </li>
+            <li class="desktopmode">
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('transfer-by-list/transfer-list-create-scr', true, 'xsl')" id='transfer-by-list/transfer-list-create-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_TRANS_LIST</div>
+                <span
+                    class="no_child"></span></div>
+            </li>
+<li>
+              <div onClick="navController.initWithRootView('transfer/view-fundstransfer-scr', true, 'xsl');" id='transfer/view-fundstransfer-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_VIEW_FUNDSTRANSFER</div>
+                <span></span></div>
+            </li>
+                                 
+             <li>
+              <div onClick="navController.initWithRootView('transfer/remittance-template-scr', true, 'xsl')" id='transfer/remittance-template-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">TRANSFER_REMITTANCE_TEMPLATE</div>
+                <span class="no_child"></span></div>
+            </li>
+            
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="payment">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-payment"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_PAY_CATEGORY</div>
+        <span>3</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_payment" class="wrapper">
+          <div>
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('paymentxsl/payment-topup-create-scr', true, 'xsl')" id='paymentxsl/payment-topup-create-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_PAY_TOPUP</div>
+                <span></span></div>
+            </li>
+            <!--<li><div onclick="applyScrollForMe(this.parentNode);"><em data-icon="&#x1008;"></em>Thanh toán hóa đơn<span>4</span></div></li>-->
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('paymentxsl/payment-billing-create-scr', true, 'xsl')" id='paymentxsl/payment-billing-create-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_PAY_BILLING</div>
+                <span></span></div>
+            </li>
+            <!--<li>
+              <div onclick="navController.initWithRootView('payment/payment-mobile-create-scr', true)"><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_PAY_POST_MOBILE</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onclick="navController.initWithRootView('payment/payment-homephone-create-scr', true)"> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_PAY_HOME_PHONE</div>
+                <span></span></div>
+            </li>
+            -->
+            <!--<li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('payment/payment-evnhcm-create-scr', true)" id='payment/payment-evnhcm-create-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_PAY_EVN_HCM</div>
+                <span></span></div>
+            </li>-->
+            <li>
+              <div onClick="navController.initWithRootView('paymentxsl/payment-online-shopping-create', true,'xsl')" id='paymentxsl/payment-online-shopping-create'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">ONLINE_SHOPPING</div>
+                <span></span></div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="esaving">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-eSaving"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_ESAVING_CATEGORY</div>
+        <span>4</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_esaving" class="wrapper">
+          <div>
+            <li>
+              <div onClick="navController.initWithRootView('esaving/esaving-information', true,'xsl');" id='esaving/esaving-information'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_ESAVING_INFORMATION</div>
+                <span></span></div>
+            </li>
+            <li>
+              <!--<div onClick="navController.initWithRootView('esaving/esaving-open-scr', true, 'xsl');" id='esaving/esaving-open-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_ESAVING_OPEN</div>
+                <span></span></div>-->
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('esaving/esaving-open-scr', true);" id='esaving/esaving-open-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_ESAVING_OPEN</div>
+                <span></span></div>
+            </li>
+            <!--<li>
+              <div onclick="navController.initWithRootView('esaving/esaving-view-scr', true)"><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_ESAVING_VIEW_WITHDRAW</div>
+                <span></span></div>
+            </li>-->
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('esaving/esaving-close-scr-new', true,'xsl')" id='esaving/esaving-close-scr-new'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">ESAVING_CLOSE_TITLE</div>
+                <span></span></div>
+            </li>
+          
+            <!--<li>
+              <div onclick="navController.initWithRootView('esaving/esaving-normal-scr', true)"><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_ESAVING_VIEW_NORMAL</div>
+                <span></span></div>
+            </li>-->
+            <li>
+              <div onClick="navController.initWithRootView('esaving/esaving-changeinfo-input-scr', true, 'xsl');" id='esaving/esaving-changeinfo-input-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">ESAVING_DETAIL_MENUINFO_TITLE</div>
+                <span></span></div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="mLoan">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-loan"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_LOAN_CATEGORY</div>
+        <span>6</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_mLoan" class="wrapper">
+          <div>
+            <li>
+              <div onClick="navController.initWithRootView('loan/loan-main-scr', true);" id='loan/loan-main-scr'><em
+                                class="icon-arrowright"></em>
+                <div class="langNoStyle" >LOAN_INFORMATION_TITLE</div>
+                <span></span> </div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('loan/loan-info-sb-od', true);" id='loan/loan-info-sb-od'><em class="icon-arrowright"></em>
+                <div class="langNoStyle">LOAN_MENU_PARENT</div>
+                <span></span> </div>
+            </li>                   
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('loan/loan-advisory-scr', true,'xsl');" id='loan/loan-advisory-scr'><em
+                                class="icon-arrowright"></em>
+                <div class="langNoStyle">LOAN_REGISTER_SCR</div>
+                <span></span></div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    
+    <li id="cardservice">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-cardservice"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_CARD_SEVICE_CATEGORY_MENU</div>
+        <span>6</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_loyalty" class="wrapper">
+          <div>
+            <li>
+              <div onClick="navController.initWithRootView('visa/credit-list-scr', true, 'xsl');flag_load_saoke='0';" id='visa/credit-list-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">CREDIT_DETAIL_SCR_TITLE</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="updateAccountListInfo(); navController.initWithRootView('visa/payment-credit-card-create-scr', true, 'xsl')" id='visa/payment-credit-card-create-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_PAY_CREDIT_CARD</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('cardservicexsl/card-setup-payment', true, 'xsl');" id='cardservicexsl/card-setup-payment'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_SETUP_CARD_ONLINE_MENU</div>
+                <span></span></div>
+            </li>
+            <!-- an munu theo common
+            <li>
+              <div onClick="navController.initWithRootView('cardservicexsl/change-repayment-account-credit', true, 'xsl');" id='cardservicexsl/change-repayment-account-credit'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_CHANGE-REPAYMENT-ACCOUNT-CREDIT</div>
+                <span></span></div>
+            </li>-->
+            <li>
+              <div onClick="navController.initWithRootView('cardservicexsl/change-repayment-limit-credit_account', true, 'xsl');" id='cardservicexsl/change-repayment-limit-credit_account'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_CHANGE_REPAYMENT_LIMIT</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('visa/card-lock-scr', true, 'xsl');" id='visa/card-lock-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">CARD_LOCK_SCR_TITLE</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('cardservicexsl/card-issuance-scr', true, 'xsl');" id='cardservicexsl/card-issuance-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_CARD_ISSUANCE_IDX</div>
+                <span></span></div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="goldTrade">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-eGold"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_GOLD_CATEGORY</div>
+        <span>4</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_goldTrade" class="wrapper">
+          <div>
+            <li>
+              <!--<div onClick="navController.initWithRootView('egold/gold-rate-scr', true ,'xsl');" id='egold/gold-rate-scr'><em class="icon-arrowright" id='egold/gold-rate-scr'></em>
+                <div class="langNoStyle">MENU_GOLD_RATE</div>
+              </div>-->
+                <div onClick="navController.initWithRootView('egold/gold-price-scr', true, 'xsl');" id='egold/gold-price-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_GOLD_RATE</div>
+                <span></span></div>
+            </li>
+            <li>
+                 <div onClick="navController.initWithRootView('egold/gold-store-main-scr-new-noterm', true,'xsl');" id='egold/gold-store-main-scr-new-noterm'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">GOLD_STORE_MAIN_SCREEN_NEW_TITLE</div>
+                <span></span></div>
+              
+            </li>
+            
+            <!--<li>
+            <div onclick="showTab('tab3');"><em class="icon-arrowright"></em><div class="langNoStyle">MENU_GOLD_BUY</div></div>
+        </li>
+        <li>
+            <div onclick="showTab('tab4');"><em class="icon-arrowright"></em><div class="langNoStyle">MENU_GOLD_SELL</div></div>
+        </li>
+        <li>
+            <div onclick="showTab('tab5');"><em class="icon-arrowright"></em><div class="langNoStyle">MENU_GOLD_BUDGET</div></div>
+        </li>-->
+            <li>
+              <div onClick="navController.initWithRootView('egold/gold-withdraw-main-scr-noterm-new', true, 'xsl');" 
+                    id='egold/gold-withdraw-main-scr-noterm-new'><em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_GOLD_WITHDRAWN</div>
+              </div>
+            </li>
+            <!--<li>
+            <div onclick="applyScrollForMe(this.parentNode);"><em class="icon-arrowright"></em><div class="langNoStyle">MENU_GOLD_CANCEL_WITHDRAWN</div></div>
+        </li>-->
+            <li>
+              <div onClick="navController.initWithRootView('egold/gold-trans-select-date-scr', true);" id='egold/gold-trans-select-date-scr'><em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_GOLD_HISTORY</div>
+              </div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="loyalty">
+
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-loyalty"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_LOYALTY_CATEGORY</div>
+        <span>3</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_loyalty" class="wrapper">
+          <div>
+            <li>
+              <div onClick="navController.initWithRootView('loyaltyxsl/loyalty-point-manage-scr', true, 'xsl');" id='loyaltyxsl/loyalty-point-manage-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_LOYALTY_MANAGE</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('loyalty-register/loyalty-regis-create-scr', true, 'xsl')" id='loyalty-register/loyalty-regis-create-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_LOYALTY_CLAIM</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('loyaltyxsl/gift-exchange-history-scr', true, 'xsl')" id='loyaltyxsl/gift-exchange-history-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_LOYALTY_HISTORY</div>
+                <span></span></div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="introduce">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-introcus"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_INTRODUCE_CATEGORY</div>
+        <span>2</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_loyalty" class="wrapper">
+          <div>
+            <li>
+              <div onClick="navController.initWithRootView('introducexsl/introduce-rule-customer', true, 'xsl');" id='introducexsl/introduce-rule-customer'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_INTRODUCE_CREATE</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('introducexsl/introduce-new-customer-management-scr', true, 'xsl');" id='introducexsl/introduce-new-customer-management-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_INTRODUCE_MANAGE</div>
+                <span></span></div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="utilities">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-utility"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_UTILITIES_CATEGORY</div>
+        <span>4</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_utilities" class="wrapper">
+          <div>
+            <li>
+              <div onClick="navController.initWithRootView('utilitiesxsl/change-personal-info-scr', true, 'xsl');" id='utilitiesxsl/change-personal-info-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_UTILITIES_CHANGE_PERSONAL_INFO</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('schedule-bank/schedule-create-scr', true, 'xsl');" id='schedule-bank/schedule-create-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">SCHEDULE_BANK_TITLE</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('benefic-manage/benefic-manage-create-scr', true, 'html');" id='benefic-manage/benefic-manage-create-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_BENEFIC_MANAGE</div>
+                <span></span></div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('utilitiesxsl/utilities-manage-scr', true, 'xsl');" id='utilitiesxsl/utilities-manage-scr'> <em class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_UTILITIES_CALCULATOR</div>
+                <span></span></div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="setting">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-setting"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_SETTING_CATEGORY</div>
+        <span>2</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_setting" class="wrapper">
+          <div>
+            <li>
+              <div onClick="navController.initWithRootView('setting/setting-auth-type', true)" id='setting/setting-auth-type'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_SETTING_AUTH_TYPE</div>
+              </div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('accountxsl/account-change-password-scr', true, 'xsl')" id='accountxsl/account-change-password-scr'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_SETTING_CHANGE_PASSWORD</div>
+              </div>
+            </li>
+            <!--<li><div onclick="navController.initWithRootView('setting/setting-auth-type', true)"><em data-icon="&#x1008;"></em>Đổi mật khẩu</div></li>-->
+            <li>
+              <div onClick="navController.initWithRootView('setting/setting-change-language', true)" id='setting/setting-change-language'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_SETTING_LANGUAGE</div>
+              </div>
+            </li>
+          </div>
+        </div>
+      </ul>
+    </li>
+    <li id="bankInfo">
+      <div onClick="applyScrollForMe(this.parentNode);"><em class="icon-bankinfo"></em>
+        <div class="langNoStyle" style="font-weight:bold">MENU_BANK_INFO_CATEGORY</div>
+        <span>5</span></div>
+      <ul class="menu-layout-contents-sub">
+        <div id="wrapper_bankInfo" class="wrapper">
+          <div>
+            <li>
+              <div onClick="navController.initWithRootView('bankinfo/exchange-rate', true)" id='bankinfo/exchange-rate'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_BANK_INFO_EXCHANGE</div>
+              </div>
+            </li>
+            <li>
+              <div onClick="navController.initWithRootView('bankinfo/interest-rate', true)" id='bankinfo/interest-rate'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_BANK_INFO_INTEREST</div>
+              </div>
+            </li>
+            
+            <!--chi nhanh TPBank begin-->
+           
+            <li>					
+                  <div onClick="navController.initWithRootView('bankinfo/branch-info', true)" id='bankinfo/branch-info'><em
+                        class="icon-arrowright"></em>
+                    <div class="langNoStyle">MENU_BANK_INFO_BRANCH</div>
+                  </div>
+            </li>
+            
+            <li>
+              <div onClick="navController.initWithRootView('bankinfo/atm-info', true)" id='bankinfo/atm-info'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_BANK_INFO_TPB_ATM</div>
+              </div>
+            </li>
+            <!--atm TPBank end-->
+            
+            <!--atm Bank khac begin-->
+            <!--<li>
+              <div onClick="navController.initWithRootView('bankinfo/bank-info-other-atm-city', true)" id='bankinfo/bank-info-other-atm-city'><em
+                    class="icon-arrowright"></em>
+                <div class="langNoStyle">MENU_BANK_INFO_OTHER_ATM</div>
+              </div>
+            </li>-->
+            <!--atm Bank khac end-->
+            
+          </div>
+        </div>
+      </ul>
+    </li>
+    <!--</xsl:choose>
+    </xsl:for-each>-->
+  </xsl:template>
+</xsl:stylesheet>

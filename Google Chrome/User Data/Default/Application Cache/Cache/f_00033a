@@ -1,0 +1,727 @@
+var comboEl;
+var flag = false;
+var bankcode = "";
+var KEY_UPDATE = "U";
+var tmpBankInfoSelectedEdit;
+var tmpCityInfoSelectedEdit;
+var tmpBranchInfoSelectedEdit;
+var tmpBankCodeEdit;
+var statusInputBank = false;
+function showBankSelect(){
+    flg_edit_template_transfer = true;
+    flag = true;
+    navController.pushToView("transfer/trans-input-bank", true);
+    document.addEventListener("evtSelectedBranchEdit", handleInputBankBranchEdit, false);
+}
+function handleInputBankBranchEdit(e) {
+    document.removeEventListener("evtSelectedBranchEdit", handleInputBankBranchEdit, false);
+    tmpBankInfoSelectedEdit = e.bankInfo;
+    tmpCityInfoSelectedEdit = e.bankCityInfo;
+    tmpBranchInfoSelectedEdit = e.bankBranchInfo;
+    tmpBankCodeEdit = tmpBankInfoSelectedEdit;
+    statusInputBank = true;
+
+}
+function initComboTextAccount(){
+
+    try{
+        document.getElementById("holder-account-info").innerHTML = "";
+    }catch(e){}
+    var accountName = gUserInfo.accountName;
+    var accountNumber = gUserInfo.accountList[0].accountNumber;
+    var accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable)+'&nbsp'+gUserInfo.accountList[0].currency;
+    comboEl = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountName : accountName, //account name
+        accountNumber : accountNumber, //account number
+        accountBalance : accountBalance, //account balance
+        borderColor : "yellow", // border color
+        containerPadding : "0px", // set padding to holder of combo
+        containerMargin : "0px",
+        showBorderTop : false,
+        fontSize : "15px",
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboEl.show("holder-account-info");
+}
+
+var comboBankInfo;
+function initComboTransferBankInfo(){
+    try{document.getElementById("holder-transfer-bank-infor").innerHTML = "";}catch(e){}
+    var accountName = CONST_STR.get("TRANSFER_BANK");
+    comboBankInfo = new Combo({
+        containerId : "cb-container-bank-infor", //holder of combo
+        accountName : accountName, //account name
+        borderColor : "yellow", // border color
+        containerPadding : "0px", // set padding to holder of combo
+        containerMargin : "0px",
+        showBorderTop : false,
+        paddingIcon : "0%",
+        fontSize : "15px",
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboBankInfo.show("holder-transfer-bank-infor");
+}
+
+function initTextAreaMessage(){
+    try{
+        document.getElementById("holder-transfer-message").innerHTML = "";
+    }catch(e){}
+
+
+    var textAreaEl = new TextArea({
+        containerMargin : "0px",
+        idTextArea : "trans.content",
+        placeholder : CONST_STR.get("PLACEHOLDER_TRANSFER_CONTENT"),
+        iconClass : "icon-content-note",
+
+        //borderColor : "rgba(255, 255, 255, 0.2)",
+        //showBorderBottom : false,
+        // showBorderTop : false,
+        fontSizeIcon : "24px!important",
+        lengthmax : "210",
+        validateInput : function(){
+            console.log("validate function");
+        }
+    });
+    textAreaEl.show("holder-transfer-message");
+}
+
+function viewBackFromOther() {
+    logInfo('Back from other view');
+    flag = true;
+}
+var count = 0;
+function viewDidLoadSuccess() {
+    if(count == 1) {return};
+    logInfo("viewDidLoadSuccess");
+    if(flg_edit_template_transfer){
+        //update giao dien
+        console.log('back from input branch');
+        var arr=tmpBranchInfoSelectedEdit.split("#");
+        var name_bank =arr[1] ;
+        var bank_code = arr[0];
+        //Thiếu lấy ra tên ngân hàng, chọn ngân hàng
+
+        if(gEdit==2){
+            document.getElementById("spanbankname").innerHTML = name_bank;
+            document.getElementById("lnh.bankname").value = name_bank;
+            bankCode = bank_code;
+        }
+        if(gEdit==5){
+            document.getElementById("cmt.span.bankname").innerHTML = name_bank;
+            document.getElementById("cmt.bankname").value = name_bank;
+            bankCode = bank_code;
+        }
+        setTimeout(function (e) {
+            statusInputBank = false;
+            flg_edit_template_transfer = false;
+        }, 1000); //fix
+    }
+    else if (typeof flag == undefined || !flag) {
+        //alert('clear data');
+        initComboTextAccount();
+        initTextAreaMessage();
+        //initComboTransferBankInfo();
+        navController.getActionBar().setTitleBarOnly(CONST_STR.get('TRANSFER_REMITTANCE_EDIT'));
+        navController.getActionBar().hideNavHeaderBar();
+
+        // get value from XML
+        var tmpXml = getReviewXmlStore();
+
+        showDisplayScreen();
+        loadInformation(tmpXml);
+    }
+    count = count+ 1;
+
+}
+function goBack() {
+    navController.popView(true);
+}
+
+function requestQuickMBServiceSuccess(e){
+    var gprsResp = parserJSON(e);
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH")))) {
+        if(!gprsResp || !gprsResp.arguments[0]) {
+            document.getElementById("trans.accountName").value = "";
+            return;
+        }
+        document.getElementById("trans.accountName").value = gprsResp.arguments[0];
+    }
+};
+
+function refreshLocalTranAccountName(){
+    var arrayArgs = new Array();
+    arrayArgs.push("QSNAME");
+    arrayArgs.push(document.getElementById("trans.targetaccount").value);
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH"), "", "", "VN", gUserInfo.sessionID, arrayArgs);
+    requestBacgroundMBService("CMD_TYPE_QUICK_SEARCH", arrayArgs, requestQuickMBServiceSuccess, requestQuickMBServiceFail);
+}
+
+function showDisplayScreen() {
+    setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+    if (gEdit == 1) {
+        // show giao dien trong TPB
+        document.getElementById("trongtpb").style.display = 'block';
+        document.getElementById("liennganhang").style.display = 'none';
+        document.getElementById("quathe").style.display = 'none';
+        document.getElementById("quatkck").style.display = 'none';
+        document.getElementById("quacmnd").style.display = 'none';
+        document.getElementById("trans.targetaccount").onchange = function(){
+            refreshLocalTranAccountName();
+        }
+        setTimeout(function(){
+            refreshLocalTranAccountName();
+        },1000);
+    } else if (gEdit == 2) {
+        // show giao dien lien ngan hang
+        document.getElementById("trongtpb").style.display = 'none';
+        document.getElementById("liennganhang").style.display = 'block';
+        setInputCharNumberAndUpcase('lnh.accountName', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+        document.getElementById("quathe").style.display = 'none';
+        document.getElementById("quatkck").style.display = 'none';
+        document.getElementById("quacmnd").style.display = 'none';
+    } else if (gEdit == 3) {
+        // show giao dien qua the
+        document.getElementById("trongtpb").style.display = 'none';
+        document.getElementById("liennganhang").style.display = 'none';
+        document.getElementById("quathe").style.display = 'block';
+        document.getElementById("quatkck").style.display = 'none';
+        document.getElementById("quacmnd").style.display = 'none';
+    } else if (gEdit == 4) {
+        // show giao dien qua TKCK
+        document.getElementById("trongtpb").style.display = 'none';
+        document.getElementById("liennganhang").style.display = 'none';
+        document.getElementById("quathe").style.display = 'none';
+        document.getElementById("quatkck").style.display = 'block';
+        document.getElementById("quacmnd").style.display = 'none';
+    } else if (gEdit == 5) {
+        // show giao dien qua CMND
+        document.getElementById("trongtpb").style.display = 'none';
+        document.getElementById("liennganhang").style.display = 'none';
+        document.getElementById("quathe").style.display = 'none';
+        document.getElementById("quatkck").style.display = 'none';
+        document.getElementById("quacmnd").style.display = 'block';
+
+        setInputCharNumberAndUpcase('cmt.id',CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+        setInputOnlyNumber('cmt.begindate',CONST_STR.get("ERR_INPUT_ONLY_NUMBER"));
+        setInputOnlyASCII('cmt.place', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+        setInputCharNumberAndUpcase('cmt.nameReceive', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+    }
+}
+//Hàm request đến services update mẫu chuyển tiền
+function sendJSONRequestUpdate(args){
+    var data = {};
+    var arrayArgs = args;
+
+    //arrayArgs.push(KEY_PARAMETERS_NAME);//TÊN
+    //arrayArgs.push(keyOption);//OPTION
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TRANSFER_TEMPLATE_UPDATE"), "", "",
+        gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceUpdateSuccesss, requestMBServiceUpdateFail);
+
+}
+function requestMBServiceUpdateSuccesss(e){
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANSFER_TEMPLATE_UPDATE") || (gprsResp.responseType == '-1')))){
+
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.initWithRootView(tmpPageName, true, tmpPageType);
+        return;
+    }
+    showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_SAVE_SAMPLE'));
+}
+
+function requestMBServiceUpdateFail(e){
+    showAlertText(gprsResp.respContent);
+    /*var tmpPageName = navController.getDefaultPage();
+     var tmpPageType = navController.getDefaultPageType();
+     navController.initWithRootView(tmpPageName, true, tmpPageType);*/
+}
+
+//Hàm Update mẫu chuyển tiền
+function updatedModify(){
+    //Khai báo các thuộc tính chung
+    var name=document.getElementById('id.tenmau');
+    var accTrans = document.getElementById('id.accountno');
+    var content = document.getElementById('trans.content');
+    var amount = document.getElementById('trans.amount');
+    //Trong TPBank
+    if (gEdit == 1){
+    var accReceived = document.getElementById('trans.targetaccount');
+    var nameChanged = document.getElementById('trans.accountName');
+    if(validateContentEdit()){
+        var arrayArgs = new Array();
+        arrayArgs.push(KEY_UPDATE);
+        arrayArgs.push(name.value);
+        arrayArgs.push(accTrans.value);
+        arrayArgs.push(nameChanged.value);
+        arrayArgs.push(accReceived.value);
+        arrayArgs.push(removeSpecialChar(amount.value));
+        arrayArgs.push(content.value);
+        arrayArgs.push("");//bankcode
+        arrayArgs.push("");//bankname
+        sendJSONRequestUpdate(arrayArgs);
+    }
+
+}
+    //Liên ngân hàng
+    else if(gEdit==2){
+        var accReceived = document.getElementById('lnh.targetaccount');
+        var nameChanged = document.getElementById('lnh.accountName');
+        var bankName = document.getElementById('lnh.bankname');
+
+        if(validateContentEdit()){
+            var arrayArgs = new Array();
+            arrayArgs.push(KEY_UPDATE);
+            arrayArgs.push(name.value);
+            arrayArgs.push(accTrans.value);
+            arrayArgs.push(nameChanged.value);
+            arrayArgs.push(accReceived.value);
+            arrayArgs.push(removeSpecialChar(amount.value));
+            arrayArgs.push(content.value);
+            arrayArgs.push(bankCode);
+            arrayArgs.push(bankName.value);
+            sendJSONRequestUpdate(arrayArgs);
+        }
+    }
+    //Qua Thẻ
+    else if(gEdit==3){
+        var targetaccountcard = document.getElementById('quathe.accountcard');
+        if(validateContentEdit()){
+            var arrayArgs = new Array();
+            arrayArgs.push(KEY_UPDATE);
+            arrayArgs.push(name.value);//Tên mẫu
+            arrayArgs.push(accTrans.value);//Số tài khoản chuyển
+            arrayArgs.push("");//Tên người nhận
+            arrayArgs.push(targetaccountcard.value);//Số tài khoản người nhận
+            arrayArgs.push(removeSpecialChar(amount.value));//Số tiền
+            arrayArgs.push(content.value);//Nội dung Chuyển tiền
+            arrayArgs.push("");//Bank Code
+            arrayArgs.push("");// Bank Name
+            sendJSONRequestUpdate(arrayArgs);
+        }
+    }
+    //Qua TKCK
+    else if(gEdit==4){
+        var tai_khoan_dich=document.getElementById("tkck.fpts.acc.no");
+        var ten_tai_khoan_dich= document.getElementById("tkck.fpts.accname");
+        if(validateContentEdit()){
+            var arrayArgs = new Array();
+            arrayArgs.push(KEY_UPDATE);
+            arrayArgs.push(name.value);//Tên mẫu
+            arrayArgs.push(accTrans.value);//Số tài khoản chuyển
+            arrayArgs.push(ten_tai_khoan_dich.value);//Tên người nhận
+            arrayArgs.push(tai_khoan_dich.value);//Số tài khoản người nhận
+            arrayArgs.push(removeSpecialChar(amount.value));//Số tiền
+            arrayArgs.push(tai_khoan_dich.value+'-'+ten_tai_khoan_dich.value+'-'+content.value);//Nội dung Chuyển tiền
+            arrayArgs.push("");//Bank Code
+            arrayArgs.push("");// Bank Name
+            sendJSONRequestUpdate(arrayArgs);
+        }
+    }
+
+    //Qua CMTND
+    else if(gEdit==5){
+        var so_cmnd=document.getElementById("cmt.id");
+        var noi_cap_cmnd=document.getElementById("cmt.place");
+        var ngay_cap_cmnd=document.getElementById("cmt.begindate");
+        var so_dien_thoai=document.getElementById("cmt.numReceive");
+        var ten_tai_khoan_dich=document.getElementById("cmt.nameReceive");
+        var bankname=document.getElementById("cmt.span.bankname");
+        if(validateContentEdit()){
+            var arrayArgs = new Array();
+            arrayArgs.push(KEY_UPDATE);
+            arrayArgs.push(name.value);//Tên mẫu
+            arrayArgs.push(accTrans.value);//Số tài khoản chuyển
+            arrayArgs.push(ten_tai_khoan_dich.value+'~'+ngay_cap_cmnd.value+'~'+noi_cap_cmnd.value+'~'+so_dien_thoai.value);//Tên người nhận
+            arrayArgs.push(so_cmnd.value);//Số tài khoản người nhận-Số chứng minh thư nd
+            arrayArgs.push(removeSpecialChar(amount.value));//Số tiền
+            arrayArgs.push(content.value);//Nội dung Chuyển tiền
+            arrayArgs.push(bankCode);//Bank Code
+            arrayArgs.push(bankname.innerText);// Bank Name
+            sendJSONRequestUpdate(arrayArgs);
+        }
+    }
+}
+//Hàm validate form khi sửa mẫu chuyển tiền
+function validateContentEdit(){
+    var amount = document.getElementById('trans.amount');
+
+    if(gEdit==1){
+    var accReceived = document.getElementById('trans.targetaccount');
+    var nameChanged = document.getElementById('trans.accountName');
+
+    //Kiểm tra tài khoản nhận khác rỗng
+    if(accReceived !=null){
+        if(accReceived.value.length <=0){
+            showAlertText(CONST_STR.get('ERR_INCORRECT_DESTINATION_ACC'));
+            return false;
+        }
+    }
+    if(nameChanged !=null){
+        if(nameChanged.value.length <=0){
+            showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_USER'));
+            return false;
+        }
+    }
+    //Kiểm tra số lượng khác rỗng
+    if(amount !=null){
+        if(amount.value.length <=0){
+            showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_AMOUNT'));
+            return false;
+        }
+    }
+    return true;
+    }
+    else if(gEdit==2)
+    {
+        var amount = document.getElementById('trans.amount');
+        if(amount !=null){
+            if(amount.value.length <=0){
+                showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_AMOUNT'));
+                return false;
+            }
+        }
+        var accReceived = document.getElementById('lnh.targetaccount');
+        var nameChanged = document.getElementById('lnh.accountName');
+        if(accReceived !=null){
+            if(accReceived.value.length <=0){
+                showAlertText(CONST_STR.get('ERR_INCORRECT_DESTINATION_ACC'));
+                return false;
+            }
+        }
+        if(nameChanged !=null){
+            if(nameChanged.value.length <=0){
+                showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_USER'));
+                return false;
+            }
+        }
+
+        return true;
+    }
+    else if(gEdit==3)
+    {
+        var targetaccountcard = document.getElementById('quathe.accountcard');
+        if(targetaccountcard !=null){
+            if(targetaccountcard.value.length <=0){
+                showAlertText(CONST_STR.get('ERR_INCORRECT_DESTINATION_ACC'));
+                return false;
+            }
+        }
+        //Kiểm tra số lượng khác rỗng
+        if(amount !=null){
+            if(amount.value.length <=0){
+                showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_AMOUNT'));
+                return false;
+            }
+        }
+        return true;
+    }
+    else if(gEdit==4)
+    {
+
+        //Kiểm tra số lượng khác rỗng
+        if(amount !=null){
+            if(amount.value.length <=0){
+                showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_AMOUNT'));
+                return false;
+            }
+        }
+        var acc_no=document.getElementById("tkck.fpts.acc.no");
+        if(acc_no !=null){
+            if(acc_no.value.length <=0){
+                showAlertText(CONST_STR.get('TRANS_FPTS_ERR_ACC_NO'));
+                return false;
+            }
+        }
+        var acc_name=document.getElementById("tkck.fpts.accname");
+        if(acc_name !=null){
+            if(acc_name.value.length <=0){
+                showAlertText(CONST_STR.get('TRANS_FPTS_ERR_ACC_NAME'));
+                return false;
+            }
+        }
+        return true;
+    }
+    else if(gEdit==5)
+    {
+        var so_cmnd=document.getElementById("cmt.id");
+        if(so_cmnd !=null){
+            if(so_cmnd.value.length <=0){
+                showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_CUSTID'));
+                return false;
+            }
+        }
+        var noi_cap_cmnd=document.getElementById("cmt.place");
+        if(noi_cap_cmnd !=null){
+            if(noi_cap_cmnd.value.length <=0){
+                showAlertText(CONST_STR.get('TRANS_EMPTY_PLACE'));
+                return false;
+            }
+        }
+        var ngay_cap_cmnd=document.getElementById("cmt.begindate");
+        if(ngay_cap_cmnd !=null){
+            if(ngay_cap_cmnd.value.length <=0){
+                showAlertText(CONST_STR.get('TRANS_EMPTY_DATE'));
+                return false;
+            }
+        }
+        var so_dien_thoai=document.getElementById("cmt.numReceive");
+        if(so_dien_thoai !=null){
+            if(so_dien_thoai.value.length <=0){
+                showAlertText(CONST_STR.get('TRANS_EMPTY_MOBILENO'));
+                return false;
+            }
+        }
+        var ten_tai_khoan_dich=document.getElementById("cmt.nameReceive");
+        if(ten_tai_khoan_dich !=null){
+            if(ten_tai_khoan_dich.value.length <=0){
+                showAlertText(CONST_STR.get('TRANS_EMPTY_NAME_RECEIVE'));
+                return false;
+            }
+        }
+        //Kiểm tra số lượng khác rỗng
+        if(amount !=null){
+            if(amount.value.length <=0){
+                showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_AMOUNT'));
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+function showInputTransDesaccount() {
+    var tmpArray1 = (gUserInfo.lang == 'VN')? CONST_KEY_FPTS_ACCOUNT_VN:CONST_KEY_FPTS_ACCOUNT_EN;
+    var tmpArray2 = CONST_VAL_FPTS_ACCOUNT;
+    document.addEventListener("evtSelectionDialog", handleInputDesAccount1, false);
+    document.addEventListener("evtSelectionDialogClose", handleInputDesAccountClose1, false);
+    showDialogList(CONST_STR.get('TRANS_FPTS_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, false);
+}
+
+function handleInputDesAccount1(e)
+{
+    if (currentPage == "transfer/template-transfer-doc-edit") {
+        handleInputDesAccountClose1();
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var desAcc = document.getElementById('trans.desaccount');
+            if (desAcc.nodeName == "INPUT") {
+                desAcc.value = e.selectedValue1;
+            }
+            else {
+                desAcc.innerHTML = e.selectedValue1;
+            }
+
+        }
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            var desAccNoVal = document.getElementById('id.value.trans.des.accno');
+            if (desAccNoVal.nodeName == "INPUT") {
+                desAccNoVal.value = e.selectedValue2;
+            }
+            else {
+                desAccNoVal.innerHTML = e.selectedValue2;
+            }
+        }
+    }
+
+}
+
+function handleInputDesAccountClose1() {
+    if (currentPage == "transfer/template-transfer-doc-edit") {
+        document.removeEventListener("evtSelectionDialogClose1", handleInputDesAccountClose1, false);
+        document.removeEventListener("evtSelectionDialog1", handleInputDesAccount1, false);
+    }
+}
+function loadInformation(tmpXml) {
+    var parser = new DOMParser();
+    xmlDoc = parser.parseFromString(XMLToString(tmpXml),"text/xml");
+    var type = xmlDoc.getElementsByTagName("type")[0].firstChild.nodeValue;
+    var tagXMLElement = xmlDoc.getElementsByTagName("element")[0];
+    var ten_mau = tagXMLElement.getElementsByTagName("ten_mau")[0].firstChild.nodeValue;
+    var tai_khoan_nguon = tagXMLElement.getElementsByTagName("taikhoannguon")[0].firstChild.nodeValue;
+    //accTrans=tai_khoan_nguon;
+    var so_tien = tagXMLElement.getElementsByTagName("sotien")[0].firstChild.nodeValue;
+    var tai_khoan_dich;
+    if(tagXMLElement.getElementsByTagName("taikhoandich")[0].textContent!="")
+    {
+        tai_khoan_dich = tagXMLElement.getElementsByTagName("taikhoandich")[0].firstChild.nodeValue;
+    }
+    else{
+        tai_khoan_dich="0";
+    }
+    var ten_tai_khoan_dich;
+    if(tagXMLElement.getElementsByTagName("tentaikhoandich")[0].textContent!="")
+    {
+     ten_tai_khoan_dich = tagXMLElement.getElementsByTagName("tentaikhoandich")[0].firstChild.nodeValue;
+    }
+    else{
+         ten_tai_khoan_dich="-";
+    }
+    var noi_dung="";
+    if(tagXMLElement.getElementsByTagName("noidung")[0].textContent!="")
+    { noi_dung= tagXMLElement.getElementsByTagName("noidung")[0].firstChild.nodeValue;}
+	else{
+        noi_dung="";
+    }
+	
+    // start load value
+    document.getElementById("id.tenmau").value  = ten_mau;
+
+    var newBalance = getBalanceByAccNo(tai_khoan_nguon);
+    comboEl.refresh({
+//        accountName : obj.name,
+        accountNumber : tai_khoan_nguon,
+        accountBalance :  formatNumberToCurrency(newBalance)
+    });
+    var accNo = document.getElementById("id.accountno");
+    accNo.value = tai_khoan_nguon;
+
+    //Số tiền
+    document.getElementById('trans.amount').value= formatNumberToCurrency(so_tien);
+    var numStr = convertNum2WordWithLang(removeSpecialChar(so_tien), gUserInfo.lang);
+    var nodeNumTxt = document.getElementById("trans.amounttotext");
+    nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+    document.getElementById("trans.content").value  = noi_dung;
+
+    //1. trong tpb, 2. lien ngan hang, 3. qua the, 4. qua tkck, 5. qua cmnd
+    if (gEdit == 1) {
+        document.getElementById("trans.targetaccount").value = tai_khoan_dich;
+        document.getElementById("trans.accountName").value = ten_tai_khoan_dich;
+
+    } else if (gEdit == 2) {
+		var bank_name = tagXMLElement.getElementsByTagName("nganhangnhan")[0].firstChild.nodeValue;
+		var bank_code = tagXMLElement.getElementsByTagName("bank_code")[0].firstChild.nodeValue;
+        document.getElementById("lnh.targetaccount").value = tai_khoan_dich;
+        document.getElementById("lnh.accountName").value = ten_tai_khoan_dich;
+        //Thiếu lấy ra tên ngân hàng, chọn ngân hàng
+        document.getElementById("spanbankname").innerHTML =bank_name;
+        document.getElementById("lnh.bankname").value =bank_name;
+        bankCode = bank_code;
+
+		
+    } else if (gEdit == 3) {
+        document.getElementById("quathe.accountcard").value = tai_khoan_dich;
+
+    } else if (gEdit == 4) {
+        document.getElementById("tkck.span.fpts").innerText =(gUserInfo.lang == 'EN') ? CONST_KEY_FPTS_ACCOUNT_EN : CONST_KEY_FPTS_ACCOUNT_VN;
+        document.getElementById("tkck.fpts.acc.no").value = tai_khoan_dich;
+        document.getElementById("tkck.fpts.accname").value = ten_tai_khoan_dich;
+    } else if (gEdit == 5) {
+        if(tagXMLElement.getElementsByTagName("so_dien_thoai")[0].firstChild){
+            var so_dien_thoai = tagXMLElement.getElementsByTagName("so_dien_thoai")[0].firstChild.nodeValue;
+        }
+        if(tagXMLElement.getElementsByTagName("so_cmnd")[0].firstChild){
+            var so_cmnd = tagXMLElement.getElementsByTagName("so_cmnd")[0].firstChild.nodeValue;
+        }
+         if(tagXMLElement.getElementsByTagName("noi_cap_cmnd")[0].firstChild){
+             var noi_cap_cmnd = tagXMLElement.getElementsByTagName("noi_cap_cmnd")[0].firstChild.nodeValue;
+         }
+         if(tagXMLElement.getElementsByTagName("ngay_cap_cmnd")[0].firstChild){
+             var ngay_cap_cmnd = tagXMLElement.getElementsByTagName("ngay_cap_cmnd")[0].firstChild.nodeValue;
+         }
+         if(tagXMLElement.getElementsByTagName("ngan_hang_nhan")[0].firstChild){
+             var nganhangnhan = tagXMLElement.getElementsByTagName("ngan_hang_nhan")[0].firstChild.nodeValue;
+         }
+          if(tagXMLElement.getElementsByTagName("bankcode")[0].firstChild){
+              var bank_code = tagXMLElement.getElementsByTagName("bankcode")[0].firstChild.nodeValue;
+          }
+
+        bankCode = bank_code;
+        document.getElementById("cmt.span.bankname").innerText = nganhangnhan;
+        document.getElementById("cmt.bankname").value = nganhangnhan;
+        document.getElementById("cmt.id").value=so_cmnd;
+        document.getElementById("cmt.place").value=noi_cap_cmnd;
+        document.getElementById("cmt.begindate").value=ngay_cap_cmnd;
+        if(so_dien_thoai == undefined || so_dien_thoai == null){
+            document.getElementById("cmt.numReceive").value="";
+        }else{
+            document.getElementById("cmt.numReceive").value=so_dien_thoai;
+        }
+
+        document.getElementById("cmt.nameReceive").value=ten_tai_khoan_dich;
+
+    }
+
+}
+
+function GetElementInsideContainer(containerID, childID) {
+    var elm = document.getElementById(childID);
+    var parent = elm ? elm.parentNode : {};
+    return (parent.id && parent.id === containerID) ? elm : {};
+}
+
+function showAccountSelection() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        tmpArray1.push(tmpAcc.accountNumber);
+        tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable)+ '&nbsp'+ tmpAcc.currency);
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+
+    showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true, false);
+}
+
+function handleSelectionAccountList(e) {
+    if (currentPage == "transfer/template-transfer-doc-edit") {
+        handleSelectionAccountListClose();
+        var accountNumber = e.selectedValue1;
+        var accountBalance = formatNumberToCurrency(e.selectedValue2);
+        comboEl.refresh({
+            accountNumber : accountNumber,
+            accountBalance : accountBalance
+        });
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("id.accountno");
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+        }
+        var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+        if (e.selectedValue2 != undefined) {
+            //nodeAccBal.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + e.selectedValue2 + "</b></h6>";
+            nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND</div>";
+        }
+    }
+}
+
+function handleSelectionAccountListClose(e) {
+    if (currentPage == "transfer/template-transfer-doc-edit") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    }
+}
+
+function getBalanceByAccNo(accNo){
+
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        if(accNo == tmpAcc.accountNumber){
+            return gUserInfo.accountList[i].balanceAvailable;
+        }
+    }
+    return '0';
+}
+
+function LuuMauChuyenTien() {
+    logInfo("LuuMauChuyenTien");
+    updatedModify();
+}

@@ -1,0 +1,635 @@
+var currentData = {
+	savingType: "",
+	moneyType: "",
+	amount: "",
+	term: "",
+	rate: "",
+	inputDate: "",
+	maturityDate: "",
+	status: "",
+	amountBlock: "",
+	purposeBlock: "",
+	tag: "",
+	accNo: "",
+	seri: "",
+	owner: ""
+};
+
+function loadInitXML() {
+}
+
+function reloadStk(){
+    bottomBar.hide();
+	console.log("reload stk");
+    logInfo('anhntt: load success');
+  
+    document.getElementById('footerSlide').style.display = 'none';
+    navController.getActionBar().hideNavHeaderBar();
+    navController.getActionBar().setHavingBackground(false);
+    // navController.getActionBar().setTitleBarOnly(CONST_STR.get("QRCODE_SAVING_INFO_SEARCH"));
+	var tempData = getReviewXmlStore();
+	console.log("data here: ", tempData);
+
+	if(tempData == 'not_found'){
+		setDataNull();
+		requestQRSuccess();
+		showSavingInfo(true);
+		showAlertText(CONST_STR.get('SAVINGS_NOT_FOUND_OR_SETTLED'));
+		return;
+	} else if (tempData.indexOf('incorrect-qrcode') > -1) {
+		var dataArr = tempData.split('#');
+
+		var inner = "";
+		inner = inner + "<tr class='mobile-mode'>";
+		inner = inner + "<td><h5>" + dataArr[1] + "</h5></td></tr>";
+		// inner = inner + "<tr><td td width='50%' align='center'><div style='margin-top:30px' class='btnshadow btn-primary' onclick='navController.popView(true);'><span>" + CONST_STR.get("CM_BTN_GOBACK") + "</span></div></td> <td width='50%' align='center'>  <div onclick='showQRCodeView();' class='btnshadow btn-primary' style='margin-top:30px'><span>"+ CONST_STR.get("CM_BTN_SEND_REQ") + "</span>   </div> </td></tr>";
+		inner = inner + "<tr><td colspan='2' width='100%' align='center'>  <div onclick='showQRCodeView();' class='btnshadow btn-primary' style='margin-top:30px;margin-left: auto;margin-right: auto;width: 50%;'><span>"+ CONST_STR.get("CM_BTN_SEND_REQ") + "</span>   </div> </td></tr>";
+
+		document.getElementById("saving_info").innerHTML = inner;
+		showSavingInfo(true);
+		return;
+	} else if (tempData == "SELF_INPUT") {
+		initCalendarStk();
+
+		showSavingInfo(false);
+		return;
+	} else if(tempData == "TIME_OUT"){
+		initCalendarStk();
+
+		showSavingInfo(false);
+		showAlertAppText(CONST_STR.get('QRCODE_NOT_FOUND_ALERT'), CONST_STR.get('BENEFIC_LIST_YES'), CONST_STR.get('BENEFIC_LIST_NO'));
+		//document.addEventListener('alertAppConfirmOK', showSavingInfo(false), false);
+		//document.addEventListener('alertAppConfirmCancel', goBack(), false);
+
+		document.getElementById('btnAlertAppOk').addEventListener('click',function() {
+				showSavingInfo(false);
+			}
+		);
+
+		document.getElementById('btnAlertAppCancel').addEventListener('click',function() {
+				goBack();
+			}
+		);
+
+		return;
+	}
+	//HARDCODE
+	// tempData = new Array();
+	// tempData[0] = '1000000';
+	// tempData[1] = '2002-2-20';
+	// tempData[2] = '1';
+	// tempData[3] = '1';
+	// tempData[4] = '2';
+	// tempData[5] = '2';
+	// tempData[6] = 'Y';
+	// tempData[7] = 'usd';
+	// tempData[8] = '2202-12-20';
+	// tempData[9] = '1';
+	// tempData[10] = '100000';
+	// tempData[11] = '-';
+	// tempData[12] = '';
+
+	currentData = {
+		savingType: "",
+		moneyType: "",
+		amount: "",
+		term: "",
+		rate: "",
+		inputDate: "",
+		maturityDate: "",
+		status: "",
+		amountBlock: "",
+		purposeBlock: "",
+		tag: "",
+		accNo: "",
+		seri: "",
+		owner: ""
+	};
+
+	currentData.amount = tempData[0];
+	currentData.inputDate = convertFormatDate(tempData[1]);
+
+	currentData.term = getTenor(tempData[2], tempData[3], tempData[4]);
+
+	//if(tempData[4] != '0'){
+	//	if (gUserInfo.lang == 'EN' && tempData[4]>1){
+	//		currentData.term += tempData[4] + ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR') + 's ';
+	//	} else {
+	//		currentData.term += tempData[4] + ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR') + ' ';
+	//	}
+	//}
+	//if(tempData[3] != '0'){
+	//	if (gUserInfo.lang == 'EN' && tempData[3]>1){
+	//		currentData.term += tempData[3] + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH') + 's ';
+	//	} else {
+	//		currentData.term += tempData[3] + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH') + ' ';
+	//	}
+	//}
+	//if(tempData[2] != '0'){
+	//	if (gUserInfo.lang == 'EN' && tempData[2]>1){
+	//		currentData.term += tempData[2] + ' ' + CONST_STR.get('TRANS_PERIODIC_DATE') + 's ';
+	//	} else {
+	//		currentData.term += tempData[2] + ' ' + CONST_STR.get('TRANS_PERIODIC_DATE') + ' ';
+	//	}
+	//}
+
+
+
+	currentData.rate = tempData[5] + '%';
+	if(tempData[6] == 'N'){
+		currentData.status = CONST_STR.get('SAVINGS_STATUS_ACTIVE');
+	} else if(tempData[6] == 'Y') {
+		currentData.status = CONST_STR.get('SAVINGS_STATUS_BLOCKED');
+	}
+
+	currentData.moneyType = tempData[7];
+	if(tempData[8]!= ""){
+		currentData.maturityDate = convertFormatDate(tempData[8]);
+	}
+	else{
+		currentData.maturityDate = "";
+	}
+	currentData.savingType = tempData[9];
+	currentData.amountBlock = tempData[10];
+	currentData.purposeBlock = tempData[11];
+	currentData.tag = tempData[12];
+	currentData.accNo = tempData[20];
+	currentData.seri = tempData[13];
+	currentData.owner = tempData[14];
+	//20160422 ngocdt3 chinh sua cho so tiet kiem tai loc
+	currentData.accountClass = tempData[15];
+	currentData.authorizeStatus = tempData[16];
+	currentData.blockStatus = tempData[17];
+	currentData.blockEnd = tempData[18];
+	currentData.blockReason = tempData[19];
+	
+	if(currentData.tag == 'C'){
+		setDataNull();
+		requestQRSuccess();
+		showAlertText(CONST_STR.get('SAVINGS_NOT_FOUND_OR_SETTLED'));
+	} else {
+		requestQRSuccess();
+	}
+}
+function viewDidLoadSuccess() {
+	logInfo('saving load success');
+	//requestSavingInfo();
+	reloadStk();
+}
+
+function viewWillUnload() {
+}
+
+function requestSavingInfo() {
+	var data = {};
+	requestMBService(data, true, 0, requestQRSuccess, requestQRFail);
+}
+
+function requestQRSuccess(e) {
+	var inner = "";
+		var inner = "";
+	var flag_check_block=currentData.status;
+	if(currentData.accountClass =='T5A003'||currentData.accountClass =='TEA001'||currentData.accountClass =='T5A004'){
+		document.getElementById('tl_note').style.display="";
+	}
+	else{
+		document.getElementById('tl_note').style.display='none';
+	}
+//	inner = inner + "<tr class='mobile-mode'><td colspan='2'><h4>" + CONST_STR.get("SAVINGS_TITLE") + "</h4><hr /></td></tr>";
+	/*inner = inner + "<tr class='mobile-mode'><td width='50%'><h5>" + CONST_STR.get("SAVING_OWNER_TITLE") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.owner + "</h6></td></tr>";*/
+	inner = inner + "<tr class='mobile-mode'><td width='50%'><h5>" + CONST_STR.get("SAVINGS_TYPE") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.savingType + "</h6></td></tr>";
+	inner = inner + "<tr class='mobile-mode'><td width='50%'><h5>" + CONST_STR.get("SAVING_NUMBER") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.seri + "</h6></td></tr>";
+	inner = inner + "<tr class='mobile-mode'><td width='50%'><h5>" + CONST_STR.get("SAVING_ACCOUNT_NO") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.accNo + "</h6></td></tr>";
+	inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_MONEY_TYPE") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.moneyType + "</h6></td></tr>";
+	inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_AMOUNT") + "</h5></td>";
+	inner = inner + "<td><h6>" + formatNumberToCurrency(currentData.amount) + "</h6></td></tr>";
+	inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_TERM") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.term + "</h6></td></tr>";
+	inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_INTEREST_RATE") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.rate + "</h6></td></tr>";
+	inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_INPUT_DATE") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.inputDate + "</h6></td></tr>";
+	inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_MATURITY_DATE") + "</h5></td>";
+	inner = inner + "<td><h6>" + currentData.maturityDate + "</h6></td></tr>";
+	
+	if(currentData.authorizeStatus =="A" && currentData.blockStatus =="O" && currentData.blockEnd==""){
+		flag_check_block=CONST_STR.get("SAVINGS_STATUS_BLOCKED");}
+		else{
+			flag_check_block=CONST_STR.get("SAVINGS_STATUS_ACTIVE");
+		}
+	if(currentData.accountClass =='T5A003'||currentData.accountClass =='TEA001'||currentData.accountClass =='T5A004'){
+		if(currentData.blockReason != "000007" && currentData.authorizeStatus =="A" && currentData.blockStatus =="O" && currentData.blockEnd=="" ) {
+			flag_check_block=CONST_STR.get("SAVINGS_STATUS_BLOCKED");
+		}
+		else {
+			flag_check_block=CONST_STR.get("SAVINGS_STATUS_ACTIVE");
+		}
+		
+	}
+	inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_STATUS") + "</h5></td>";
+	inner = inner + "<td><h5 style='font-weight:bold; color:#ff7300;'>" + flag_check_block + "</h5></td></tr>";
+	//ngocdt3 end
+	if (flag_check_block == CONST_STR.get("SAVINGS_STATUS_BLOCKED")) {
+			inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_AMOUNT_BLOCK") + "</h5></td>";
+			inner = inner + "<td><h6>" + formatNumberToCurrency(currentData.amountBlock) + "</h6></td></tr>";
+			inner = inner + "<tr class='mobile-mode'><td><h5>" + CONST_STR.get("SAVINGS_PURPOSE_BLOCK") + "</h5></td>";
+			inner = inner + "<td><h6>" + currentData.purposeBlock + "</h6></td></tr>";   
+	}
+
+	// inner = inner + "<tr><td width='50%' align='center'><div style='margin-top:30px' class='btnshadow btn-primary' onclick='navController.popView(true);'><span>" + CONST_STR.get("CM_BTN_GOBACK") + "</span></div></td> <td width='50%' align='center'>  <div onclick='showQRCodeView();' class='btnshadow btn-primary' style='margin-top:30px'><span>"+ CONST_STR.get("CM_BTN_SEND_REQ") + "</span>   </div> </td></tr>";
+	inner = inner + "<tr><td colspan='2' width='100%' align='center'><div onclick='showQRCodeView();' class='btnshadow btn-primary' style='margin-top:30px;margin-left: auto;margin-right: auto;width: 50%;'><span>"+ CONST_STR.get("CM_BTN_SEND_REQ") + "</span>   </div> </td></tr>";
+	document.getElementById("saving_info").innerHTML = inner;
+
+	showSavingInfo(true);
+}
+
+function requestQRFail(e) {
+	logInfo('request fail');
+}
+
+function goBack() {
+	navController.popView(true);
+}
+
+function convertFormatDate(_date){
+	var y = _date.substring(0, _date.indexOf('-'));
+	var m = _date.substring(_date.indexOf('-')+1, _date.lastIndexOf('-'));
+	var d = _date.substring(_date.lastIndexOf('-')+1, _date.length);
+
+	return (d + '/' + m + '/' + y);
+}
+
+function setDataNull() {	
+	currentData.savingType = '-';
+	currentData.moneyType = '-';
+	currentData.amount = '-';
+	currentData.term = '-';
+	currentData.rate = '-';
+	currentData.inputDate = '-';
+	currentData.maturityDate = '-';
+	currentData.status = '-';
+	currentData.amountBlock = '-';
+	currentData.purposeBlock = '-';
+	currentData.accNo = '-';
+	currentData.seri = '-';
+	currentData.owner = '-';
+}
+
+
+function handleInputAmount (e, des) {
+	var tmpVale = des.value;
+	formatCurrency(e, des);
+	//des.value = formatNumberToCurrency(des.value);
+	//var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang);
+
+	//var nodeNumTxt = document.getElementById("trans.amounttotext");
+
+	//nodeNumTxt.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";
+	//ngocdt3 chinh sua bo bang chu
+	//nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": " + numStr + "</div>";
+	//nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+}
+
+function showSavingInfo(_status){
+	if(_status){
+		 navController.getActionBar().setTitleBarOnly(CONST_STR.get("QRCODE_SCAN_TITLE"));
+	}else{
+		 navController.getActionBar().setTitleBarOnly(CONST_STR.get("QRCODE_SAVING_INFO_SEARCH"));
+	}
+	 
+	var node = document.getElementById("saving_info");
+	if(node != null){
+		node.style.display = _status?"":"none";
+	}
+
+	var node = document.getElementById("stk_query_form");
+	if(node != null){
+		node.style.display = _status?"none":"";
+	}
+}
+
+function initCalendarStk(){
+	var today = new Date();
+	var dd = today.getDate();
+	var mm = today.getMonth()+1; //January is 0!
+	var yyyy = today.getFullYear();
+
+	if(dd<10) {
+		dd='0'+dd;
+	}
+
+	if(mm<10) {
+		mm='0'+mm;
+	}
+
+	today = yyyy+'-'+mm+'-'+dd;
+
+	var fromDate;
+	var toDate;
+
+	if (gUserInfo.lang == 'VN') {
+		fromDate = new DatePicker(
+			{
+				show : function(data) {},
+				hide : function(data) {},
+				seek : function(data) {},
+				select : function(data, fn) {
+					document.getElementById('trans.begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}
+			},
+			{
+				tmpl_field   : 'd/m/Y',
+				range_min    : '01-01-2008',
+				range_max    : '12-31-2999',
+				//range_min    : '01/05/2008',
+				//range_max    : '31/12/2050',
+
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.begindate'), //node make action
+				async_selection : true,
+
+				dictionaries : {
+					'custom' : {
+						common : {
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},
+						weekdays : {
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},
+						monthes : {
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},
+					}
+				}
+			}
+		);
+
+	}
+	else {
+		fromDate = new DatePicker(
+			{
+				show : function(data) {},
+				hide : function(data) {},
+				seek : function(data) {},
+				select : function(data, fn) {
+					document.getElementById('trans.begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}
+			},
+			{
+				tmpl_field   : 'd/m/Y',
+				range_min    : '01-01-2008',
+				range_max    : '12-31-2999',
+				//range_min    : '01/05/2008',
+				//range_max    : '31/12/2050',
+
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.begindate'), //node make action
+				async_selection : true,
+
+				dictionaries : {
+					'custom' : {
+						common : {
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},
+						weekdays : {
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},
+						monthes : {
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},
+					}
+				}
+			}
+		);
+	}
+}
+
+
+function showMoneyTypeSelection() {
+	var tmpArray1 = [];
+	//tmpArray1 = ['VND', 'USD'];
+	tmpArray1 = ['VND', 'AUD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'HKD', 'JPY', 'KRW', 'NZD', 'RUB', 'SGD', 'THB', 'USD'];
+
+	document.addEventListener("evtSelectionDialog", onDidChangeMoneyType, false);
+	document.addEventListener("evtSelectionDialogClose", onDidChangeMoneyTypeClose, false);
+
+	showDialogList(CONST_STR.get('ACC_CURRENCY_TITLE'), tmpArray1, '', true);
+}
+
+function onDidChangeMoneyType(e){
+	console.log("onDidChangeMoneyType: ", e);
+	console.log("onDidChangeMoneyType: ", e.selectedValue1);
+
+	var node = document.getElementById("stk_loai_tien");
+	if(node != null){
+		node.value = e.selectedValue1;
+	}
+
+	//if (currentPage == "transfer/transfer-local-create-scr") {
+	//	handleSelectionTransLocalListClose();
+	//	//alert('input value: ' + e.inputValue);
+	//	//tmpDestinationAcc = e.inputValue;
+	//	if(e.selectedValue1 == CONST_KEY_LOCAL_TPBANK_VN[0] || e.selectedValue1 == CONST_KEY_LOCAL_TPBANK_EN[0]) {
+	//		updateAccountListInfo();
+	//		navController.initWithRootView('transfer/transfer-local-cusno-create-scr', true);
+	//	}
+	//}
+}
+
+
+function onDidChangeMoneyTypeClose(){
+	console.log("onDidChangeMoneyTypeClose");
+}
+
+function findStk() {
+	var soSo = document.getElementById("stk_so_so").value;
+	var soTaiKhoan = document.getElementById("stk_so_tai_khoan").value;
+	var nguoiGui = document.getElementById("stk_nguoi_gui").value;
+	var soTien = document.getElementById("stk_so_tien").value.replace(/[|&;$%@"<>()+,]/g, '');
+	var loaiTien = document.getElementById("stk_loai_tien").value;
+	var ngayGui = document.getElementById("trans.begindate").value;
+
+	console.log("findStk: ", soSo, soTaiKhoan, nguoiGui, soTien, loaiTien, ngayGui);
+
+	// Validate
+	//if(soSo.length == 0)
+	//{		showAlertText(CONST_STR.get('ERR_EMPTY_SAVING_NUMBER'));
+	//	return;
+	//}
+	if(soTaiKhoan.length == 0)
+	{		showAlertText(CONST_STR.get('ERR_EMPTY_SAVING_ACCOUNT_NO'));
+		return;
+	}
+	if(nguoiGui.length == 0)
+	{		showAlertText(CONST_STR.get('ERR_EMPTY_SAVING_OWNER'));
+		return;
+	}
+	if(soTien.length == 0)
+	{		showAlertText(CONST_STR.get('ERR_EMPTY_SAVING_AMOUNT'));
+		return;
+	}
+	if(ngayGui.length == 0)
+	{		showAlertText(CONST_STR.get('ERR_EMPTY_SAVING_START_DATE'));
+		return;
+	}
+
+	var data = {};
+	arrayArgs = new Array();
+	arrayArgs.push('NONE_QRCODE_SAVING');
+	arrayArgs.push(removeAccent(soSo) + "#" + soTaiKhoan + "#" + removeAccent(nguoiGui) + "#" + soTien + "#" + loaiTien + "#" + ngayGui);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_QRCODE_INFO"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceQRStkSuccesss, requestMBServiceQRStkFail);
+}
+
+function requestMBServiceQRStkSuccesss(e){
+	gprsResp = parserJSON(e);
+	console.log("result here: ", gprsResp);
+
+	if (checkResponseCodeSuccess(gprsResp.respCode) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_QRCODE_INFO")))) {
+		var respArgs = gprsResp.arguments;
+		//respArgs = ['C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C'];
+		setReviewXmlStore(respArgs);
+		if (currentPage == "stk") {
+			if(respArgs[12] == 'C'){
+				showAlertText(CONST_STR.get('SAVINGS_SETTLED'));
+				return;
+			}
+			reloadStk();
+		} else {
+			navController.pushToView('stk', true, 'html');
+		}
+	} else if(gprsResp.respCode == '2009' && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_QRCODE_INFO")))){
+		document.addEventListener("alertConfirmOK", alertConfirmOK, false);
+		document.addEventListener("alertConfirmCancel", alertConfirmCancel, false);
+
+		document.getElementById("btnAlertConfirmCancel").value = CONST_STR.get("SAVING_TRY_AGAIN");
+		document.getElementById("btnAlertConfirmOk").value = CONST_STR.get("SAVING_CANCEL");
+		showAlertConfirmText(CONST_STR.get('SAVING_NOT_FOUND_ALERT_TRY_AGAIN'), alertConfirmOK, alertConfirmCancel);
+	}
+
+}
+function alertConfirmCancel() {
+	if (currentPage == "stk") {
+
+		setTimeout(function(){
+			document.getElementById("btnAlertConfirmCancel").value = CONST_STR.get("ALERT_BTN_CANCEL_TITLE");
+			document.getElementById("btnAlertConfirmOk").value = CONST_STR.get("ALERT_BTN_OK_TITLE");
+		}, 500);
+
+		document.removeEventListener("alertConfirmCancel", alertConfirmCancel, false);
+		document.removeEventListener("alertConfirmOK", alertConfirmOK, false);
+	}
+}
+function alertConfirmOK() {
+	if (currentPage == "stk") {
+		navController.popView(true);
+	}
+}
+function requestMBServiceQRStkFail(e){
+	setReviewXmlStore('not_found');
+	reloadStk();
+}
+
+
+
+//
+//function getTenor(tenor_day, tenor_month, tenor_year){
+//	var tenorday = parseInt(tenor_day);
+//	var tenormonth = parseInt(tenor_month);
+//	var tenoryear = parseInt(tenor_year);
+//	var counttenor = tenorday + 30 * tenormonth + 365 * tenoryear;
+//	var tenor = "";
+//	if(counttenor > 0){
+//		if(tenorday < 1){
+//			if(tenormonth > 0){
+//				if(tenoryear > 0){
+//					tenor = (tenoryear * 12 + tenormonth) + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+//				}
+//				else {
+//					tenor = tenormonth + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+//				}
+//			}
+//			else if(tenormonth < 1){
+//				tenor= tenoryear + ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR');
+//			}
+//		}
+//		else if(tenorday > 0){
+//			if(tenormonth > 0){
+//				if(tenoryear > 0){
+//					tenor =  (tenoryear * 365 + tenormonth * 30 + tenorday) + ' ' + CONST_STR.get('TRANS_PERIODIC_DATE1');
+//				}
+//				else {
+//					tenor = (tenormonth * 30 + tenorday) + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+//				}
+//			}
+//			else if(tenormonth < 1){
+//				if(tenoryear >0){
+//					tenor =  (tenoryear * 365 + tenorday) + ' ' + CONST_STR.get('TRANS_PERIODIC_DATE1');
+//				}
+//				else{
+//					tenor = tenorday + ' ' + CONST_STR.get('TRANS_PERIODIC_DATE1');
+//				}
+//			}
+//
+//		}
+//	}
+//	return tenor;
+//}
+
+function getTenor(tenor_day, tenor_month, tenor_year){
+	var tenor = "";
+	var tenorday = parseInt(tenor_day);
+	var tenormonth = parseInt(tenor_month);
+	var tenoryear = parseInt(tenor_year);
+	var counttenor = tenorday + 30 * tenormonth + 365 * tenoryear;
+	if(counttenor > 0){
+		if(tenorday < 1){
+			if(tenormonth > 0){
+				if(gUserInfo.lang == 'EN' && (tenoryear * 12 + tenormonth)>1){
+					tenor = (tenoryear * 12 + tenormonth) + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH') + 's';
+				}else {
+					tenor = (tenoryear * 12 + tenormonth) + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+				}
+			}
+			else if(tenormonth < 1){
+				if(gUserInfo.lang == 'EN') {
+					tenor = (tenoryear * 12) + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH') + 's';
+				}else {
+					tenor = (tenoryear * 12) + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+				}
+			}
+		}
+		else if(tenorday > 0){
+			if(tenormonth > 0){
+				if(tenoryear > 0){
+					tenor =  (tenoryear * 365 + tenormonth * 30 + tenorday) + ' ' + CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+				else {
+					tenor = (tenormonth * 30 + tenorday) + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+			}
+			else if(tenormonth < 1){
+				if(tenoryear >0){
+					tenor =  (tenoryear * 365 + tenorday) + ' ' + CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+				else{
+					tenor = tenorday + ' ' + CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+			}
+		}
+	}
+
+	return tenor;
+}

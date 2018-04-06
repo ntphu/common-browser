@@ -1,0 +1,564 @@
+/**
+ * Created by HuyNT2.
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+applyVerticalScrollPage(true, -180);
+var status_View_Loan = false;
+var htmlReviewInfo = "";
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	status_View_Loan = true;
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	//document.getElementById('titlePage').innerHTML ="Thông tin khoản vay".toUpperCase();
+		getLoanInfoContent();
+		bottomBar.hide();
+	
+}
+
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+function viewWillUnload() {
+	//document.getElementById('titlePage').innerHTML ="Ngân hàng điện tử".toUpperCase();
+	logInfo('transfer will unload');
+    selectionOnTableWithIdClose();
+}
+function getLoanInfoContent(){
+	//alert('ok dang test');
+	var data = {};
+	var arrayArgs = new Array();
+	var userCIFAccount = gCustomerNo;
+	arrayArgs.push(userCIFAccount);
+
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_VIEW_LOAN"), "", "", 
+		gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+};
+
+//event scroll to index
+document.addEventListener("evtScrollToIdx", handleScrollToLoanIdx, false);
+function handleScrollToLoanIdx(e) {
+	 if ((e.type == "evtScrollToIdx") && (currentPage == "loan/loan-main-scr")) {
+		/*setTimeout(function() {
+			document.removeEventListener("evtScrollToIdx", evtFunc);
+		}, 100);*/
+		idxAcc = e.scrolledToIdx;
+		var tmpAcc = new AccountObj();
+		tmpAcc = gESavingObjs[e.scrolledToIdx];
+		updateAccDetail(tmpAcc);
+	}
+}
+
+//event start unload page
+document.addEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+function handleStartUnloadPage(e) {
+	if ((e.type == "evtStartUnloadPage") && (currentPage == "loan/loan-main-scr")) {
+		document.removeEventListener("evtStartUnloadPage", handleStartUnloadPage, false);
+		document.removeEventListener("evtScrollToIdx", handleScrollToLoanIdx, false);
+	}
+}
+
+//handle
+//event listener: http request success
+function requestMBServiceSuccess(e){
+    document.addEventListener('evtSelectionOnTable',selectionOnTableWithId, false);
+    document.addEventListener('evtSelectionOnTableClose',selectionOnTableWithIdClose, false);
+	//remove listener which added above (Callback function)		
+	gprsResp = parserJSON(e);
+	gRespObj = gprsResp; 
+	//alert('status:'+gprsResp.respCode);
+	if ((gprsResp.respCode == '0') 
+		&& (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_LOAN")))) 
+	{		
+		if(checkEmptyData()){
+			parserViewLoanContent();
+			logInfo('request loan list successed');		
+		}
+		//Trans successed and no data found.
+		else{
+			logInfo('empty loan data');	
+			showAlertText(CONST_STR.get('ERR_EMPTY_LOAN_ACCOUNT'));
+			//navController.initWithRootView('account/account-scr', true);
+			navController.popView();
+		// 	var tmpPageName = navController.getDefaultPage();
+		// 	var tmpPageType = navController.getDefaultPageType();
+		// 	navController.initWithRootView(tmpPageName, true, tmpPageType);
+		 }
+	}
+	else if ((gprsResp.respCode != '0') && 
+	((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_LOAN"))  
+	|| (gprsResp.responseType == '-1')))) {		
+		//navController.initWithRootView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+};
+
+function checkEmptyData(){
+	var flag = false;
+	for (var i=0; i<gRespObj.arguments.length; i++) {
+		if(gRespObj.arguments[i] !='null'){
+			flag = true;
+			break;
+		}
+	}
+	return flag;
+}
+//parser info
+function parserViewLoanContent() {
+	//alert("vao day return");
+	gLoanTheChap = new Array();//THE CHAP
+	gLoanTinChap = new Array();//TIN CHAP
+	gLoanThauChi = new Array();//THAU CHI	
+	gCollateralObjs = new Array();//TAI SAN DAM BAO
+	
+	if((gRespObj.arguments == undefined) || (gRespObj.arguments == null) 
+		|| (gRespObj.arguments.length==0)) {
+		
+		document.addEventListener('closeAlertView', handleAlertEmptyLoan, false);
+		showAlertText(CONST_STR.get('ERR_EMPTY_LOAN_ACCOUNT'));		
+		return;
+	}
+	var flag = '';
+	for (var i=0; i<gRespObj.arguments.length; i++) {
+		if(gRespObj.arguments[i]=='THECHAP'){
+			flag = 'THECHAP'; continue;
+		}
+		if(gRespObj.arguments[i]=='TINCHAP'){
+			flag = 'THECHAP';continue;
+		}
+		if(gRespObj.arguments[i]=='THAUCHI'){
+			flag = 'THAUCHI';continue;
+		}
+		if(gRespObj.arguments[i]=='TSDB'){
+			flag = 'TSDB';continue;
+		}
+		
+		if(flag == 'THECHAP'){
+			var tmpArr = gRespObj.arguments[i].split("#");	
+			tmpLoan = new LoanObj();
+			tmpLoan.loanContractNumber = (tmpArr[0]);
+			tmpLoan.productDescription = (tmpArr[1]);
+			tmpLoan.issuedLoanLimit = (tmpArr[2]);
+			tmpLoan.disbursedAmount = (tmpArr[3]);
+			tmpLoan.interestRate1 = (tmpArr[4]);
+			tmpLoan.valueDate = (tmpArr[5]);
+			tmpLoan.expiryDate = (tmpArr[6]);
+			tmpLoan.outstandingLoanBalance = (tmpArr[7]);
+			tmpLoan.paidPrincipalAmount = (tmpArr[8]);
+			tmpLoan.paidInterestAmount = (tmpArr[9]);
+			tmpLoan.overduePrincipalAmount = (tmpArr[10]);
+			tmpLoan.ovedueInterestAmount = (tmpArr[11]);
+			tmpLoan.penalizedInterestAmount =( tmpArr[12]);
+			tmpLoan.numberOfOverdueDays = (tmpArr[13]);
+			tmpLoan.currency = (tmpArr[14]);
+			tmpLoan.type = '0';
+			gLoanTheChap.push(tmpLoan);						
+		}
+		
+		if(flag == 'TINCHAP'){
+			var tmpArr = gRespObj.arguments[i].split("#");	
+			tmpLoan = new LoanObj();
+			tmpLoan.loanContractNumber = (tmpArr[0]);
+			tmpLoan.productDescription = (tmpArr[1]);
+			tmpLoan.issuedLoanLimit = (tmpArr[2]);
+			tmpLoan.disbursedAmount = (tmpArr[3]);
+			tmpLoan.interestRate1 = (tmpArr[4]);
+			tmpLoan.valueDate = (tmpArr[5]);
+			tmpLoan.expiryDate = (tmpArr[6]);
+			tmpLoan.outstandingLoanBalance = (tmpArr[7]);
+			tmpLoan.paidPrincipalAmount = (tmpArr[8]);
+			tmpLoan.paidInterestAmount = (tmpArr[9]);
+			tmpLoan.overduePrincipalAmount = (tmpArr[10]);
+			tmpLoan.ovedueInterestAmount = (tmpArr[11]);
+			tmpLoan.penalizedInterestAmount =( tmpArr[12]);
+			tmpLoan.numberOfOverdueDays = (tmpArr[13]);
+			tmpLoan.currency = (tmpArr[14]);
+			tmpLoan.type = '1';
+			gLoanTinChap.push(tmpLoan);		
+		}
+		if(flag == 'THAUCHI'){
+			var tmpArr = gRespObj.arguments[i].split("#");	
+			var tmpOverdraft = new LoanObjOverdraft();
+			tmpOverdraft.acc_number = tmpArr[0];
+			tmpOverdraft.han_muc = tmpArr[1];
+			tmpOverdraft.rate = tmpArr[2];
+			tmpOverdraft.ngay_cap = tmpArr[3];
+			tmpOverdraft.ngay_den_han = tmpArr[4];
+			tmpOverdraft.currency = tmpArr[5];
+			tmpOverdraft.so_du = tmpArr[6];
+			tmpOverdraft.so_du_kha_dung = tmpArr[7];
+			tmpOverdraft.han_muc_thau_chi = tmpArr[8];
+			tmpOverdraft.ngay_mo_tk = tmpArr[9];
+			tmpOverdraft.ngay_bat_dau_hmtc = tmpArr[10];
+			tmpOverdraft.ngay_ket_thuc_hmtc = tmpArr[11];
+			tmpOverdraft.rate1 = tmpArr[12];
+			tmpOverdraft.branch_code = tmpArr[13];
+			tmpOverdraft.branch_name = tmpArr[14];
+			tmpOverdraft.lai_du_thu = tmpArr[15];
+			tmpOverdraft.lai_du_chi = tmpArr[16];
+			tmpOverdraft.num_blocked_amount = tmpArr[17];
+			gLoanThauChi.push(tmpOverdraft);
+		}
+		if(flag == 'TSDB'){
+			var tmpArr = gRespObj.arguments[i].split("#");	
+			var tmpCollateral = new CollateralObj();	
+			tmpCollateral.accountNumber = tmpArr[0];
+			tmpCollateral.liab_id = tmpArr[1];
+			tmpCollateral.collateralCode = tmpArr[2];
+			tmpCollateral.collateralDes = tmpArr[3];
+			tmpCollateral.collateralType = tmpArr[4];
+			tmpCollateral.estimatedValue = tmpArr[5];
+			tmpCollateral.realWarrantValue = tmpArr[6];
+			tmpCollateral.startDate = tmpArr[7];
+			tmpCollateral.endDate = tmpArr[8];
+			tmpCollateral.currency = tmpArr[9];
+			gCollateralObjs.push(tmpCollateral);	
+		}					
+	}
+	//update view
+	fillDataToHTMLFile()
+}
+
+//event listener: http request fail
+function requestMBServiceFail(e){
+	showAlertText(gprsResp.respContent);
+	//navController.initWithRootView('account/account-scr', true);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+	document.addEventListener('closeAlertView', handleAlertEmptyLoan, false);	
+};
+//event alert
+function handleAlertEmptyLoan(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "loan/loan-main-scr")) {
+		document.removeEventListener('closeAlertView', handleAlertEmptyLoan, false);
+		//navController.initWithRootView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+//jump to detail screen to display loan detail
+function viewWithContractMortgaging(index)
+{
+	//document.getElementById('tr-' + index).className = 'active';		
+	logInfo('Selected contract at index: ' + index);
+	loanSelected = gLoanTheChap[index]; //save current item
+	navController.pushToView("loan/loan-info-detail", true);
+}
+
+function viewWithContractUnsecured(index)
+{
+	//document.getElementById('tr-' + index).className = 'active';
+	logInfo('Selected contract at index: ' + index);
+	loanSelected = gLoanTinChap[index]; //save current item
+	navController.pushToView("loan/loan-info-detail", true);
+}
+//THAU CHI
+function viewWithAcc(index)
+{
+	//document.getElementById('tr-' + index).className = 'active';
+	logInfo('Selected contract at index: ' + index);
+	loanObjOverdraft = gLoanThauChi[index]; //save current item
+	navController.pushToView("loan/loan-overdraft-info-detail", true);
+}
+
+//==============Function hien thi noi dung TTKV THE CHAP==================//
+function displayContentTheChap(gLoanObjs){
+
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var arrTitle = new Array();
+        var arrContentData = new Array();
+        var arrItemContent;
+        var contentHTML ="";
+        arrTitle.push(CONST_STR.get('LOAN_CONTRACT_NO'));
+        arrTitle.push(CONST_STR.get('LOAN_BORROW_MONEY'));
+        arrTitle.push(CONST_STR.get('LOAN_BALANCE'));
+        arrTitle.push(CONST_STR.get('LOAN_INTEREST_RATE'));
+        arrTitle.push(CONST_STR.get('LOAN_DATE_DISBURSING'));
+        arrTitle.push(CONST_STR.get('LOAN_DATE_END'));
+        arrContentData.push(arrTitle);
+        for(var i = 0; i < gLoanObjs.length; i++) {
+//            var inAccObj = gLoanObjs[i];
+            arrItemContent = new Array();
+            arrItemContent.push(gLoanObjs[i].loanContractNumber);
+            arrItemContent.push(formatNumberToCurrencyWithSymbol(gLoanObjs[i].issuedLoanLimit));
+            arrItemContent.push(formatNumberToCurrencyWithSymbol(gLoanObjs[i].outstandingLoanBalance));
+            arrItemContent.push(gLoanObjs[i].interestRate1+CONST_STR.get('LOAN_PERCENT'));
+            arrItemContent.push(gLoanObjs[i].valueDate);//% nữa
+            arrItemContent.push(gLoanObjs[i].expiryDate);
+
+
+            arrContentData.push(arrItemContent);
+
+        }
+        var recycler = new RecyclerView({
+            type: "DESKTOP_NORMAL",
+            typeTextAlign: "MIDLE",
+            opacity:false
+        });
+        recycler.setData(arrContentData);
+        recycler.setHeaderHightlight(true);
+        contentHTML = recycler.init();
+        return contentHTML;
+    }
+    else{
+        var content = '';
+        content += "<tr><td><table width='98%' align='center' class='table-account'>";
+    //	content += '<tr class="trow-title"><th width="20%">' + CONST_STR.get('LOAN_CONTRACT_NO')  + '</th> <th width="18%">' + CONST_STR.get('LOAN_BORROW_MONEY') +'</th><th width="18%">' + CONST_STR.get('LOAN_BALANCE') + '</th><th  width="12%">' + CONST_STR.get('LOAN_INTEREST_RATE') + '</th><th width="15%">' + CONST_STR.get('LOAN_DATE_DISBURSING') + '</th><th  width="15%">' + CONST_STR.get('LOAN_DATE_END')+'</th></tr>';
+
+
+        for (var i=0; i<gLoanObjs.length; i++) {
+            content = content +
+                "<table id='tr-"+i+"' style='margin-bottom:10px;' class='recycler-table-ebank recycler-list' onClick='viewWithContractMortgaging("+i+");this.className=&#039;"+"active"+"&#039;"+";'+>" +
+                    '<tr class="recycler-row-as">'
+                        + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_CONTRACT_NO')
+                            + '</td><td class="recycler-row-align-midle-right-opacity"><div class="td-date">'//+'<a href="javascript:void(0);" style="text-decoration:underline; cursor:pointer"'+
+                                       //'onclick="">'
+                                       + gLoanObjs[i].loanContractNumber //+ '</a>'
+                                       +  '</div></td>'
+                                       +'<td class="desktopmode"><div class="td-date"><a href="javascript:void(0);" style="text-decoration:underline; cursor:pointer"'+
+                                       'onclick="">'
+                                       + gLoanObjs[i].loanContractNumber + '</a>'
+                                       +  '</div></td>'
+                        + '</tr>' +
+                    '<tr class="recycler-row-parity">' +
+                    '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_BORROW_MONEY') + '</td>'+
+                    '<td class="recycler-row-align-midle-right-opacity">' + formatNumberToCurrencyWithSymbol(gLoanObjs[i].issuedLoanLimit)+ '</td></tr>'+
+                    '<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_BALANCE') + '</td><td class="recycler-row-align-midle-right-opacity">' + formatNumberToCurrencyWithSymbol(gLoanObjs[i].outstandingLoanBalance) + '</td></tr>' +
+                    '<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_INTEREST_RATE') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].interestRate1+ "%" + '</td></tr>' +
+                    '<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_DATE_DISBURSING') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].valueDate + '</td></tr>' +
+                    '<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_DATE_END') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].expiryDate + '</td></tr>' +
+                '</table>';
+
+        }
+        content = content + "</table></td></tr></table>";
+        return content;
+    }
+}
+//==============Function hien thi noi dung TTKV TIN CHAP==================//
+function displayContentTinChap(gLoanObjs){
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var arrTitle = new Array();
+        var arrContentData = new Array();
+        var arrItemContent;
+        var contentHTML ="";
+        arrTitle.push(CONST_STR.get('LOAN_CONTRACT_NO'));
+        arrTitle.push(CONST_STR.get('LOAN_BORROW_MONEY'));
+        arrTitle.push(CONST_STR.get('LOAN_BALANCE'));
+        arrTitle.push(CONST_STR.get('LOAN_INTEREST_RATE'));
+        arrTitle.push(CONST_STR.get('LOAN_DATE_DISBURSING'));
+        arrTitle.push(CONST_STR.get('LOAN_DATE_END'));
+        arrContentData.push(arrTitle);
+        for(var i = 0; i < gLoanObjs.length; i++) {
+//            var inAccObj = gLoanObjs[i];
+            arrItemContent = new Array();
+            arrItemContent.push(gLoanObjs[i].loanContractNumber);
+            arrItemContent.push(formatNumberToCurrencyWithSymbol(gLoanObjs[i].issuedLoanLimit));
+            arrItemContent.push(formatNumberToCurrencyWithSymbol(gLoanObjs[i].outstandingLoanBalance));
+            arrItemContent.push(gLoanObjs[i].interestRate1+CONST_STR.get('LOAN_PERCENT'));//% nữa
+            arrItemContent.push(gLoanObjs[i].valueDate);
+            arrItemContent.push(gLoanObjs[i].expiryDate);
+
+
+            arrContentData.push(arrItemContent);
+
+        }
+        var recycler = new RecyclerView({
+            type: "DESKTOP_NORMAL",
+            typeTextAlign: "MIDLE",
+            opacity:false,
+            id:1
+        });
+        recycler.setData(arrContentData);
+        recycler.setHeaderHightlight(true);
+        contentHTML = recycler.init();
+        return contentHTML;
+    }
+    else{
+	var content = '';
+	content += "<tr><td><table width='98%' align='center' class='table-account'>";
+//	content += '<tr class="trow-title"><th width="15%">' + CONST_STR.get('LOAN_CONTRACT_NO')  + '</th> <th width="15%">' + CONST_STR.get('LOAN_BORROW_MONEY') +'</th><th width="15%">' + CONST_STR.get('LOAN_BALANCE') + '</th><th  width="15%">' + CONST_STR.get('LOAN_INTEREST_RATE') + '</th><th width="15%">' + CONST_STR.get('LOAN_DATE_DISBURSING') + '</th><th  width="15%">' + CONST_STR.get('LOAN_DATE_END')+'</th></tr>';
+	
+	for (var i=0; i<gLoanObjs.length; i++) {
+		content = content + 
+			"<table id='tr-"+i+"' style='margin-bottom:10px;' class='recycler-table-ebank recycler-list' onClick='viewWithContractUnsecured("+i+");this.className=&#039;"+"active"+"&#039;"+";'+>" +
+                '<tr class="recycler-row-as">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_CONTRACT_NO') + '</td><td class="recycler-row-align-midle-right-opacity"><div class="td-date">' //+'<a href="javascript:void(0);" style="text-decoration:underline; cursor:pointer"'+
+                                   //'onclick="">'
+								   + gLoanObjs[i].loanContractNumber //+ '</a>'  
+								   + '</div></td>' +
+                                    '<td class="desktopmode"><div class="td-date">' +'<a href="javascript:void(0);" style="text-decoration:underline; cursor:pointer"'+
+                                   'onclick="">'
+								   + gLoanObjs[i].loanContractNumber + '</a>'  
+								   + '</div></td></tr>' +
+				'<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_BORROW_MONEY') + '</td><td class="recycler-row-align-midle-right-opacity">' + formatNumberToCurrencyWithSymbol(gLoanObjs[i].issuedLoanLimit) + '</td></tr>' +
+				'<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_BALANCE') + '</td><td class="recycler-row-align-midle-right-opacity">' + formatNumberToCurrencyWithSymbol(gLoanObjs[i].outstandingLoanBalance) + '</td></tr>' +								 
+				'<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_INTEREST_RATE') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].interestRate1+ "%" + '</td></tr>' +
+				'<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_DATE_DISBURSING') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].valueDate + '</td></tr>' +
+				'<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_DATE_END') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].expiryDate + '</td></tr>' +				
+			'</table>';					
+	}
+	content = content + "</table></td></tr></table>";
+	return content;
+}
+}
+
+//==============Function hien thi noi dung TTKV THAU CHI==================//
+function displayContentThauChi(gLoanObjs){
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var arrTitle = new Array();
+        var arrContentData = new Array();
+        var arrItemContent;
+        var contentHTML ="";
+        arrTitle.push(CONST_STR.get('ACCOUNT_ACC_NO_TITLE'));
+        arrTitle.push(CONST_STR.get('VISA_DETAIL_INFOR_LIMIT'));
+        arrTitle.push(CONST_STR.get('INTEREST_RATE'));
+        arrTitle.push(CONST_STR.get('LOAN_DATE_CREATED'));
+        arrTitle.push(CONST_STR.get('LOAN_DATE_END'));
+        arrContentData.push(arrTitle);
+        for(var i = 0; i < gLoanObjs.length; i++) {
+//            var inAccObj = gLoanObjs[i];
+            arrItemContent = new Array();
+            arrItemContent.push(gLoanObjs[i].acc_number);
+            arrItemContent.push(gLoanObjs[i].han_muc);
+            arrItemContent.push(gLoanObjs[i].rate1+CONST_STR.get('LOAN_PERCENT'));
+            arrItemContent.push(gLoanObjs[i].ngay_cap);//% nữa
+            arrItemContent.push(gLoanObjs[i].ngay_den_han);
+
+
+            arrContentData.push(arrItemContent);
+
+        }
+        var recycler = new RecyclerView({
+            type: "DESKTOP_NORMAL",
+            typeTextAlign: "MIDLE",
+            opacity:false,
+            id:2
+
+        });
+        recycler.setData(arrContentData);
+        recycler.setHeaderHightlight(true);
+        contentHTML = recycler.init();
+        return contentHTML;
+    }
+    else{
+
+        var content = '';
+        content += "<tr><td><table width='98%' align='center' class='table-account'>";
+    //	content += '<tr class="trow-title"><th width="20%">' + CONST_STR.get('ACCOUNT_ACC_NO_TITLE')  + '</th> <th width="20%">' + CONST_STR.get('VISA_DETAIL_INFOR_LIMIT') +'</th><th width="20%">' + CONST_STR.get('INTEREST_RATE') + '</th><th  width="20%">' + CONST_STR.get('LOAN_DATE_CREATED') + '</th><th width="20%">' + CONST_STR.get('LOAN_DATE_END') + '</th></tr>';
+
+        for (var i=0; i<gLoanObjs.length; i++) {
+            content = content +
+                "<table id='tr-"+i+"' style='margin-bottom:10px;' class='recycler-table-ebank recycler-list' onClick='viewWithAcc("+i+");this.className=&#039;"+"active"+"&#039;"+";'+>" +
+                    '<tr class="recycler-row-as">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('ACCOUNT_ACC_NO_TITLE') + '</td><td class="recycler-row-align-midle-right-opacity"><div class="td-date">' +'<a href="javascript:void(0);" style="text-decoration:underline; cursor:pointer"'+
+                                       'onclick="">'
+                                       + gLoanObjs[i].acc_number + '</a>'
+                                       + '</div></td>' +
+                                       '<td class="desktopmode"><div class="td-date">' +'<a href="javascript:void(0);" style="text-decoration:underline; cursor:pointer"'+
+                                       'onclick="">'
+                                       + gLoanObjs[i].acc_number + '</a>'
+                                       + '</div></td></tr>' +
+                    '<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('VISA_DETAIL_INFOR_LIMIT') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].han_muc + '</td></tr>' +
+                    '<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' +  CONST_STR.get('INTEREST_RATE') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].rate1+"%" + '</td></tr>' +
+                    '<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_DATE_CREATED') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].ngay_cap + '</td></tr>' +
+                    '<tr class="recycler-row-parity">' + '<td class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('LOAN_DATE_END') + '</td><td class="recycler-row-align-midle-right-opacity">' + gLoanObjs[i].ngay_den_han + '</td></tr>' +
+                '</table>';
+        }
+        content = content + "</table></td></tr></table>";
+        return content;
+    }
+}
+//==========this function to fill all data to HTML================//
+function fillDataToHTMLFile() {
+	//Check empty data
+	
+	if(gLoanTheChap.length == 0 &&gLoanTinChap.length == 0 && gLoanThauChi.length == 0)
+	{
+		showAlertText(CONST_STR.get('LOAN_NO_DATA_FOUND'));//cu la thon bao bao up
+		//navController.initWithRootView('loan/loan_alert', true);day la hien len trang trang
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+		return;
+	}
+	//Content of HTML
+	
+	//============THONG TIN KHOAN VAY THE CHAP===============//
+	if(gLoanTheChap.length>0){
+		htmlReviewInfo +=
+//		htmlReviewInfo = htmlReviewInfo +
+            "<table width='100%' align='center'>"+
+		 	"<tr>"+
+                "<td>"+
+                	"<h5 align='left' class='Header' style='margin-bottom:15px'><span>"+
+						CONST_STR.get('LOAN_INFO_MORTGAGING')+"</span>"+
+					"</h5>"+                  	
+                "</td>"+
+             "</tr>"+"</table>";
+		htmlReviewInfo = htmlReviewInfo + displayContentTheChap(gLoanTheChap);
+	}
+	//============THONG TIN KHOAN VAY TIN CHAP===============//
+	if(gLoanTinChap.length>0){
+		htmlReviewInfo = htmlReviewInfo+ "<table width='100%' align='center'>"+
+
+			"<tr>"+
+                "<td>"+
+                	"<h5 align='left' class='Header' style='margin-bottom:15px'><span>"+
+						CONST_STR.get('LOAN_INFO_UNSECURED')+"</span>"+
+					"</h5>"+
+                "</td>"+
+             "</tr>"+"</table>";
+		htmlReviewInfo = htmlReviewInfo + displayContentTinChap(gLoanTinChap);
+	}
+	//============THONG TIN KHOAN VAY THAU CHI===============//
+	//thuantm fix: Không cho hiển thị tháu chi
+	//
+	
+	if(gLoanThauChi.length>0){
+		htmlReviewInfo = htmlReviewInfo+"<table width='100%' align='center'>"+
+			"<tr>"+
+                "<td>"+
+                	"<h5 align='left' class='Header' style='margin:15px-bottom'><span>"
+						+CONST_STR.get('LOAN_INFO_OVERDRAFT')+"</span>"+
+					"</h5>"+                  	
+                "</td>"+
+            "</tr>"+"</table>";
+		
+		htmlReviewInfo = htmlReviewInfo + displayContentThauChi(gLoanThauChi);
+	}
+	var nodeReviewInfo = document.getElementById("loanInfoContent");
+	nodeReviewInfo.innerHTML = htmlReviewInfo;
+}
+
+//tholn click
+function selectionOnTableWithId(e){
+    selectionOnTableWithIdClose();
+    if(e.id == 0){
+        viewWithContractMortgaging(e.selectedIndex-1);
+    }else if(e.id == 1){
+        viewWithContractUnsecured(e.selectedIndex-1);
+        //tin chap
+    }else{
+        //thau chi
+        viewWithAcc(e.selectedIndex-1);
+    }
+}
+function selectionOnTableWithIdClose(){
+    document.removeEventListener('evtSelectionOnTable',selectionOnTableWithId, false);
+    document.removeEventListener('evtSelectionOnTableClose',selectionOnTableWithIdClose, false);
+}

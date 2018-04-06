@@ -1,0 +1,22 @@
+{
+   "background": {
+      "scripts": [ "bg.js" ]
+   },
+   "content_scripts": [ {
+      "js": [ "jquery-3.3.1.min.js", "youtubeautoreplay_script.js" ],
+      "matches": [ "http://*.youtube.com/*", "https://*.youtube.com/*" ],
+      "run_at": "document_end"
+   } ],
+   "description": "Enables automatic replay of a YouTube™ video or a part of it...",
+   "icons": {
+      "128": "icon128.png",
+      "16": "icon16.png",
+      "48": "icon48.png"
+   },
+   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC7GHnOQsa3/S0GcJjZzUmTJUXn5/5UOcbR5aLb5SwQfaG3Vfn4SmFi4FHBpoOJPU0aSy1jSmlymi8GwjHCSJPSVIBifASijspHwVyFlXJzJKGVvphtMrnleT3M2zzd/CQ1kmlZOWOrRMbQ+g3mNxQrrt1iBPqYWfZT3GLB/NbvDQIDAQAB",
+   "manifest_version": 2,
+   "name": "Auto Replay for YouTube™",
+   "permissions": [ "storage" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "3.4"
+}

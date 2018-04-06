@@ -1,0 +1,533 @@
+/**
+ * Created by DucNM2.FSOFT.
+ * User:
+ * Date: 7/2/14
+ * Time: 9:35 AM
+ */
+
+var introArray;
+var introResultArray= new Array();
+var sreachArray;
+var arrResult = null;
+var docXml;
+var delId = "";
+var cusId = "";
+var sta = null;
+var tmpArray1 = [];
+var tmpArray2 = [];
+var flag = false;
+var totalPage = 0;
+var itemsPerPage = 10;
+var pageIndex = 1;
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+    //alert('init');
+    return '';
+}
+
+/*** INIT VIEW END ***/
+function viewBackFromOther() {
+    logInfo('Back from other view');
+    flag = true;
+    introResultArray = sreachArray;
+}
+
+/*** VIEW LOAD SUCCESS ***/
+function viewDidLoadSuccess() {
+    bottomBar.hide();
+    logInfo('introduce management load success');
+        sendJSONRequest();
+    var arrMedial = getItemsPerPage(introResultArray, pageIndex);
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+function viewWillUnload() {
+    logInfo('intro page unload');
+    document.removeEventListener('evtChangeWidthDesktop', reGenHTMLdoc, false);
+    document.removeEventListener('evtChangeWidthMobile', reGenHTMLdoc, false);
+
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+if (!gIsLogin) {
+    var tmpNodeBack = document.getElementById('intro.btn.back');
+    tmpNodeBack.style.display = 'block';
+}
+
+function goBack() {
+    navController.popView(true);
+}
+
+/*** SEND REQUEST ***/
+function sendJSONRequest() {
+    // collect the form data while iterating over the inputs
+    // get introduce new customer list
+    var data = {};
+    var arrayArgs = new Array();
+    arrayArgs.push("");
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_LIST_INTRO_CUS"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e) {
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LIST_INTRO_CUS")))) {
+        introArray = new Array();
+        introArray = gprsResp.arguments;
+        loadDataFromService();
+    }
+    else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LIST_INTRO_CUS")) || (gprsResp.responseType == '-1')))) {
+        //navController.initWithRootView('account/account-scr', true);
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.initWithRootView(tmpPageName, true, tmpPageType);
+    }
+};
+
+//event listener: http request fail
+function requestMBServiceFail() {
+    //navController.initWithRootView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.initWithRootView(tmpPageName, true, tmpPageType);
+};
+
+function searchInfoInList(obj) {
+    if (obj != null || obj != undefined) {
+        var tmpResult = new Array();
+        var keyword = removeAccentLNH(obj.value.toLowerCase());
+
+        logInfo("sreachArray.length: " + sreachArray.length);
+
+        for (var i in  sreachArray) {
+            if (removeAccentLNH(sreachArray[i].name.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].phoneNum.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].dob.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].cardNum.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].cardNumDate.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].cardNumAdd).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].phoneNumFix.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].email.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].address.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].company.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].position.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].companyAdd.toLowerCase()).indexOf(keyword) != -1
+                || removeAccentLNH(sreachArray[i].cusId.toLowerCase()).indexOf(keyword) != -1) {
+                tmpResult.push(sreachArray[i]);
+            }
+        }
+        introResultArray = tmpResult;
+        totalPage = calTotalPage(introResultArray);
+        logInfo(introResultArray);
+        pageIndex = 1;
+        var arrMedial = new Array();
+        arrMedial = getItemsPerPage(introResultArray, pageIndex);
+        var tmpHtmlContent = genHtmlManagementDoc(arrMedial);
+        var tmpNode = document.getElementById('div');
+        tmpNode.innerHTML = tmpHtmlContent;
+        genPagging(totalPage, pageIndex);
+    }
+
+}
+
+/*** FUNCTION ***/
+
+function checkBlank(str) {
+    if (str == null || str == undefined || str == "") {
+        return true;
+    }
+    return false;
+}
+
+function loadDataFromService() {
+    sreachArray = new Array();
+    if (introArray != null || introArray != undefined) {
+
+        for (var i = 0; i < introArray.length; i++) {
+            var tempArrStr = introArray[i].split("#");
+
+            sreachArray.push({
+                cusId: tempArrStr[0],
+                name: tempArrStr[2],
+                phoneNum: tempArrStr[3],
+                dob: tempArrStr[4],
+                cardNum: tempArrStr[5],
+                cardNumDate: tempArrStr[6],
+                cardNumAdd: tempArrStr[7],
+                phoneNumFix: tempArrStr[8],
+                email: tempArrStr[9],
+                address: tempArrStr[10],
+                company: tempArrStr[11],
+                position: tempArrStr[12],
+                companyAdd: tempArrStr[13],
+                sex: tempArrStr[17],
+                revenue: tempArrStr[18],
+                nation: tempArrStr[19],
+                cusAttach: checkBlank(tempArrStr[16]) == true ? CONST_STR.get('INTRODUCE_ATTACH_NO') : CONST_STR.get('INTRODUCE_ATTACH_YES'),
+                cusStatus: Number(tempArrStr[14]) < 3 ? CONST_STR.get('INTRODUCE_STATUS_0') : CONST_STR.get('INTRODUCE_STATUS_3'),
+                cusStatusNum: tempArrStr[14],
+                cusLink: tempArrStr[20]
+            })
+        }
+    }
+
+    introResultArray = sreachArray;
+    totalPage = calTotalPage(introResultArray);
+    logInfo(introResultArray);
+    pageIndex = 1;
+    var arrMedial = new Array();
+    arrMedial = getItemsPerPage(introResultArray, pageIndex);
+    var tmpHtmlContent = genHtmlManagementDoc(arrMedial);
+    var tmpNode = document.getElementById('div');
+    tmpNode.innerHTML = tmpHtmlContent;
+    genPagging(totalPage, pageIndex);
+
+
+    document.addEventListener('evtChangeWidthDesktop', reGenHTMLdoc, false);
+    document.addEventListener('evtChangeWidthMobile', reGenHTMLdoc, false);
+
+}
+function reGenHTMLdoc() {
+    genHtmlManagementDoc(introResultArray);
+}
+
+function pushToDisplay(cusId) {
+    genXmlDocForDisplayEdit(cusId);
+    navController.pushToView("introducexsl/introduce_new_customer_display", true, "xsl");
+}
+
+
+function pushToEdit(cusId) {
+    var arrayArgs = new Array();
+    arrayArgs.push("QSINTROMEMBER");
+    arrayArgs.push(gCustomerNo);
+    var gprsCmd = new GprsCmdObj(15, "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceCheckCtvEditSuccess, requestMBServiceCheckCtvEditFail);
+
+    genXmlDocForDisplayEdit(cusId);
+}
+
+function requestMBServiceCheckCtvEditSuccess(e) {
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH")))) {
+        var gLoyaltyManageObjs = new Array();
+        gLoyaltyManageObjs = gprsResp.arguments;
+        logInfo(gLoyaltyManageObjs);
+        var tempArrStr = gLoyaltyManageObjs[0].split("#");
+        if (tempArrStr[0] == "QSINTROMEMBER" && tempArrStr[1].lenght != 0) {
+            navController.pushToView('introducexsl/introduce_new_customer_edit_ctv', true, 'xsl');
+        }
+        else {
+            navController.pushToView('introducexsl/introduce_new_customer_edit', true, 'xsl');
+        }
+    }
+    else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH")) || (gprsResp.responseType == '-1')))) {
+        //navController.initWithRootView('account/account-scr', true);
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.initWithRootView(tmpPageName, true, tmpPageType);
+    }
+}
+
+function requestMBServiceCheckCtvEditFail() {
+    //navController.initWithRootView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+function genXmlDocForDisplayEdit(cusId) {
+    docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlRootNode = createXMLNode('introCus', '', docXml);
+    var tmpChildNodeName = null;
+
+    for (var i = 0; i < introResultArray.length; i++) {
+        if (cusId == introResultArray[i].cusId) {
+            tmpChildNodeName = createXMLNode('introCusId', introResultArray[i].cusId, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusName', introResultArray[i].name, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusSex', introResultArray[i].sex, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusCellPhoneNum', introResultArray[i].phoneNum, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusDob', introResultArray[i].dob, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusNation', introResultArray[i].nation, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusCardNum', introResultArray[i].cardNum, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusCardDate', introResultArray[i].cardNumDate, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusCardAddress', introResultArray[i].cardNumAdd, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusPhoneNum', introResultArray[i].phoneNumFix, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusEmail', introResultArray[i].email, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusAddress', introResultArray[i].address, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusCompany', introResultArray[i].company, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusWorkPosition', introResultArray[i].position, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusCompanyAddress', introResultArray[i].companyAdd, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusRevenue', introResultArray[i].revenue, docXml, tmpXmlRootNode);
+            tmpChildNodeName = createXMLNode('introCusAttach', introResultArray[i].cusAttach, docXml, tmpXmlRootNode);
+        }
+    }
+    setReviewXmlStore(docXml);
+}
+
+function pushToDelete(cusIdNeedDel) {
+    cusId = cusIdNeedDel;
+
+    showAlertAppText(CONST_STR.get('INTRODUCE_DELETE_CONFIRM'), CONST_STR.get('BENEFIC_LIST_YES'), CONST_STR.get('BENEFIC_LIST_NO'));
+    document.addEventListener('alertAppConfirmOK', alertConfirmOK, false);
+    document.addEventListener('alertAppConfirmCancel', alertConfirmCancel, false);
+}
+
+function alertConfirmOK() {
+    if (currentPage == "introducexsl/introduce-new-customer-management-scr") {
+        alertConfirmCancel();
+        var arrayArgs = new Array();
+        arrayArgs.push(cusId);
+        var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_DELETE_INTRO_CUS"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+        data = getDataFromGprsCmd(gprsCmd);
+        requestMBService(data, true, 0, requestMBServiceDeleteSuccess, requestMBServiceDeleteFail);
+    }
+}
+
+function alertConfirmCancel() {
+    if (currentPage == "introducexsl/introduce-new-customer-management-scr") {
+        document.removeEventListener("alertConfirmCancel", alertConfirmCancel, false);
+        document.removeEventListener("alertConfirmOK", alertConfirmOK, false);
+    }
+}
+
+function requestMBServiceDeleteSuccess(e) {
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_DELETE_INTRO_CUS")))) {
+        navController.pushToView('introducexsl/success-introduce-customer-delete', true, 'xsl');
+    }
+    else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_DELETE_INTRO_CUS")) || (gprsResp.responseType == '-1')))) {
+        //navController.initWithRootView('account/account-scr', true);
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.initWithRootView(tmpPageName, true, tmpPageType);
+    }
+}
+
+function requestMBServiceDeleteFail(e) {
+    //navController.initWithRootView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+// Indicator page
+function calTotalPage(arrObj) {
+    if (arrObj != null && arrObj.length > 0) {
+        return Math.ceil(arrObj.length / itemsPerPage);
+    }
+    return 0;
+}
+function getItemsPerPage(arrObj, pageIdx) {
+    var arrTmp = new Array();
+    var from = 0;
+    var to  = 0;
+    var length = arrObj.length;
+    for(var i = 0; i < length; i++) {
+        from = (pageIdx - 1) * itemsPerPage;
+        to = from + itemsPerPage;
+        if(i >= from && i < to) {
+            arrTmp.push(arrObj[i]);
+        }
+
+    }
+
+    return arrTmp;
+}
+function pageIndicatorSelected(selectedIdx, selectedPage) {
+    pageIndex = selectedIdx;
+    var arrMedial = new Array();
+    arrMedial = getItemsPerPage(introResultArray, selectedIdx);
+
+    var  oStr = genHtmlManagementDoc(arrMedial);
+    var tmpNode = document.getElementById('div');
+    tmpNode.innerHTML = oStr;
+    genPagging(totalPage, pageIndex);
+}
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+    var arrTmp = new Array();
+    var from = 0;
+    var to = 0;
+    for (var i = 0; i < arrObj.length; i++) {
+        from = (pageIndex - 1) * itemsPerPage;
+        to = from + itemsPerPage;
+        if (i >= from && i < to) {
+            arrTmp.push(arrObj[i]);
+        }
+    }
+    return arrTmp;
+}
+
+function genPagging(arr, pageIndex) {
+    var nodepage = document.getElementById('accdetail-pagination');
+    var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+    nodepage.innerHTML = tmpStr;
+
+    //chan nhap ky tu dac biet
+    var tmpArrInputName = document.getElementById('div').getElementsByTagName('input');
+    var length = tmpArrInputName.length;
+    for (var i=0; i<length; i++) {
+        var tmpInputID = tmpArrInputName[i].getAttribute('id');
+        setInputOnlyASCII(tmpInputID);
+    }
+}
+
+function genHtmlSearchResult(arr) {
+    if (arr != null) {
+        var docXsl = getCachePageXsl("introducexsl/introduce-new-customer-management-tbl-scr");
+        genHTMLStringWithXML(genXMLDocSearch(arr), docXsl, successPaggingCallback, failPaggingCallback);
+
+    }
+}
+
+function genXMLDocSearch(arr) {
+    var srcXml = createXMLDoc();
+    var tmpXmlRootNode;
+    tmpXmlRootNode = createXMLNode('intro', '', srcXml);
+    var tmpXmlNodePoint = null;
+
+    for (var i = 0; i < arr.length; i++) {
+        tmpXmlNodePoint = createXMLNode('introCus', '', srcXml, tmpXmlRootNode);
+        var tmpChildNodeName = createXMLNode('introCusName', arr[i].name, srcXml, tmpXmlNodePoint);
+        tmpChildNodeName = createXMLNode('introCusId', arr[i].cusId, srcXml, tmpXmlNodePoint);
+        tmpChildNodeName = createXMLNode('introCusDob', arr[i].dob, srcXml, tmpXmlNodePoint);
+        tmpChildNodeName = createXMLNode('introCusCardNum', arr[i].cardNum, srcXml, tmpXmlNodePoint);
+        tmpChildNodeName = createXMLNode('introCusPhoneNum', arr[i].phoneNum, srcXml, tmpXmlNodePoint);
+        tmpChildNodeName = createXMLNode('introCusLink', arr[i].cusLink, srcXml, tmpXmlNodePoint);
+        tmpChildNodeName = createXMLNode('introCusAttach', arr[i].cusAttach, srcXml, tmpXmlNodePoint);
+        tmpChildNodeName = createXMLNode('introCusStatus', arr[i].cusStatus, srcXml, tmpXmlNodePoint);
+        tmpChildNodeName = createXMLNode('introCusStatusNum', arr[i].cusStatusNum, srcXml, tmpXmlNodePoint);
+    }
+    logInfo(srcXml);
+    return srcXml;
+}
+
+function successPaggingCallback(strHtml) {
+    var div = document.getElementById("div");
+    div.innerHTML = strHtml;
+    genPagging(introResultArray, pageIndex);
+}
+
+function failPaggingCallback() {
+    //navController.initWithRootView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+function genHtmlManagementDoc(inHisArray) {
+
+    var arrTitle = new Array();
+    arrTitle.push(CONST_STR.get('INTRODUCE_INFO_NAME'));
+    arrTitle.push(CONST_STR.get('INTRODUCE_INFO_DOB'));
+    arrTitle.push(CONST_STR.get('INTRODUCE_INFO_ID'));
+    arrTitle.push(CONST_STR.get('INTRODUCE_INFO_PHONE'));
+    arrTitle.push(CONST_STR.get('INTRODUCE_INFO_ATTACH'));
+    arrTitle.push(CONST_STR.get('INTRODUCE_INFO_STATUS'));
+    arrTitle.push(CONST_STR.get('INTRODUCE_INFO_CHOOSE'));
+
+
+    var arrContentData = new Array();
+    if (CONST_DESKTOP_MODE && !checkScreenisMobilePX()) {
+        arrContentData.push(arrTitle);
+    }
+    var contentHTML = "";
+    var arrItemContent;
+    for (var i = 0; i < inHisArray.length; i++) {
+        var tmpcusobj = inHisArray[i];
+        arrItemContent = new Array()
+        if (CONST_DESKTOP_MODE && !checkScreenisMobilePX()) {
+            arrItemContent.push('<a onclick="pushToDisplay(' + inHisArray[i].cusId + ')">' + tmpcusobj.name + '</a>');
+            arrItemContent.push(tmpcusobj.dob);
+            arrItemContent.push(tmpcusobj.cusId);
+            arrItemContent.push(tmpcusobj.phoneNum);
+            arrItemContent.push(tmpcusobj.cusAttach);
+            arrItemContent.push(tmpcusobj.cusStatus);
+            arrItemContent.push(
+                '<a href="javascript:void(0)" onclick="pushToEdit(' + inHisArray[i].cusId + ')"><span class="icon-edit" style="padding: 0 3px;"></span></a> <a href="javascript:void(0)" onclick="pushToDelete(' + inHisArray[i].cusId + ')"><span class="icon-delete" style="padding: 0 3px;"></span></a><a class="desktopmode" href="javascript:void(0)" onclick="openLinkInWindows(\'' + inHisArray[i].cusLink + '\')"><img title="In đơn mở tài khoản" style="padding: 0 3px;" src="css/img/print.png"/></a>'
+            );
+
+
+            arrContentData.push(arrItemContent);
+
+        } else {
+            var arrName = new Array();
+            arrName.push(CONST_STR.get('INTRODUCE_INFO_NAME'));
+            arrName.push('<a onclick="pushToDisplay(' + inHisArray[i].cusId + ')">' + tmpcusobj.name + '</a>');
+
+            var arrDob = new Array();
+            arrDob.push(CONST_STR.get('INTRODUCE_INFO_DOB'));
+            arrDob.push(tmpcusobj.dob);
+
+            var arrId = new Array();
+            arrId.push(CONST_STR.get('INTRODUCE_INFO_ID'));
+            arrId.push(tmpcusobj.cusId);
+
+            var arrPhone = new Array();
+            arrPhone.push(CONST_STR.get('INTRODUCE_INFO_PHONE'));
+            arrPhone.push(tmpcusobj.phoneNum);
+
+            var arrAttach = new Array();
+            arrAttach.push(CONST_STR.get('INTRODUCE_INFO_ATTACH'));
+            arrAttach.push(tmpcusobj.cusAttach);
+
+            var arrStatus = new Array();
+            arrStatus.push(CONST_STR.get('INTRODUCE_INFO_STATUS'));
+            arrStatus.push(tmpcusobj.cusStatus);
+
+            var arrChoose = new Array();
+            arrChoose.push(CONST_STR.get('INTRODUCE_INFO_CHOOSE'));
+            arrChoose.push('<a href="javascript:void(0)" onclick="pushToEdit(' + inHisArray[i].cusId + ')"><span class="icon-edit" style="padding: 0 3px;"></span></a> <a href="javascript:void(0)" onclick="pushToDelete(' + inHisArray[i].cusId + ')"><span class="icon-delete" style="padding: 0 3px;"></span></a><a class="desktopmode" href="javascript:void(0)" onclick="openLinkInWindows(\'' + inHisArray[i].cusLink + '\')"><img title="In đơn mở tài khoản" style="padding: 0 3px;" src="css/img/print.png"/></a>'
+            );
+
+            var arrContent = new Array();
+            arrContent.push(arrName);
+            arrContent.push(arrDob);
+            arrContent.push(arrId);
+            arrContent.push(arrPhone);
+            arrContent.push(arrAttach);
+            arrContent.push(arrStatus);
+            arrContent.push(arrChoose);
+
+            var recycler = new RecyclerView({
+                type: "NORMAL",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign: "LEFT",
+                opacity: true
+            });
+
+            recycler.setData(arrContent);
+            var strHTML = recycler.init();
+            contentHTML = contentHTML + strHTML +"<div style='padding-bottom: 10px;'></div>";
+        }
+    }
+
+    if (CONST_DESKTOP_MODE && !checkScreenisMobilePX()) {
+        var recycler = new RecyclerView({
+            type: "DESKTOP_NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign: "LEFT",
+            opacity: false
+        });
+
+        recycler.setData(arrContentData);
+        recycler.setHeaderHightlight(true);
+        contentHTML = recycler.init();
+
+    }
+    return contentHTML;
+}

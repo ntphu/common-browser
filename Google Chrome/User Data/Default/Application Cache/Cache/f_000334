@@ -1,0 +1,1062 @@
+/**
+ * Created by CongNT1.Fsoft
+ * User: 
+ * Date: 07/07/14
+ * Time: 5:35 PM
+ */
+
+/*** HEADER ***/
+var tmpDestinationAcc;
+var gprsResp = new GprsRespObj("","","","");
+var arrResultService = null;
+var arrFullList = null;
+var arrTrustList = null;
+var arrNormalList = null;
+
+var arrSearchTmp = null;
+
+var docXml;
+
+var typeSearch = "ALL";
+
+
+var gTransId = "";
+var gFavoriteName = "";
+var gTypeList = "";
+var gAcctNo = "";
+
+var numberRecords = 5;
+var pageIndex = 1;
+var requestType = "";
+
+var flag = false;
+
+var selectedType = "";
+var selectedName = "";
+
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+	
+	return '';
+}
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	logInfo('transfer load success');
+	
+	if(!flag) {
+		sendRequestJSON();
+	} else {
+			arrFullList = JSON.parse(localStorage['arrFullList']);
+			arrTrustList =	JSON.parse(localStorage['arrTrustList']);
+			arrNormalList=	JSON.parse(localStorage['arrNormalList']);
+			pageIndex = localStorage['pageIndex'];
+			typeSearch = localStorage['typeSearch'];
+			handleDataFromBack(typeSearch, pageIndex);
+	
+	}
+	
+	//handle input transfer content
+	//setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+	var isIPad = navigator.userAgent.match(/iPad/i);
+	if(isIPad) keyboardEvent();
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('transfer will unload');
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+/*** FUNCTIONS ***/
+
+
+function showTypeListSelection() {
+	var arrValues = [];
+	var arrKeys = [];
+	arrValues.push(CONST_STR.get('BENEFIC_LIST_NORMAL'));
+	arrValues.push(CONST_STR.get('BENEFIC_LIST_TRUST'));
+	arrKeys.push("TH");
+	arrKeys.push("TC");
+	document.addEventListener("evtSelectionDialog", handleSelectionTypeList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionTypeListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), arrValues, arrKeys, false);
+}
+
+//event: selection dialog list
+function handleSelectionTypeList(e) {
+	if (currentPage == "benefic-manage/benefic-manage-create-scr") {
+		handleSelectionTypeListClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("selTypeList");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		gTypeList = e.selectedValue2;
+	}
+}
+
+function handleSelectionTypeListClose(e) {
+	if (currentPage == "benefic-manage/benefic-manage-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionTypeListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionTypeList, false);
+	}
+}
+
+function cancelEdit() {
+	var objDiv = document.getElementById("divEdit");
+	var acctObj = document.getElementById("txtSrcAcct");
+	var acctNameObj = document.getElementById("txtNameAcct");
+	//var typeListObj = document.getElementById("selTypeList");
+	var favNameObj = document.getElementById("txtNameFavorite");
+	acctObj.value = '';
+	acctNameObj.value = '';
+	//typeListObj.value = '';
+	favNameObj.value = '';
+	objDiv.style.display = 'none';
+	gTransId = "";
+	gFavoriteName = "";
+	gTypeList = "";
+}
+
+function update(acct, acctname, typelist, favname, transid) {
+	var objDiv = document.getElementById("divEdit");
+	var acctObj = document.getElementById("txtSrcAcct");
+	var acctNameObj = document.getElementById("txtNameAcct");
+	//var typeListObj = document.getElementById("selTypeList");
+	var favNameObj = document.getElementById("txtNameFavorite");
+	
+	var lblAcctNoObj = document.getElementById("lblAcctNo");
+	var lblAcctNameObj = document.getElementById("lblAcctName");
+	
+	//var transId = parseInt(transType);
+	var v1 = "";
+	var v2 = "";
+	for(var i in arrFullList) {
+		if(acct == arrFullList[i].acctno && typelist == arrFullList[i].payee && transid == arrFullList[i].transid) {
+			lblAcctNoObj.innerHTML= arrFullList[i].stracctext;
+			lblAcctNameObj.innerHTML = arrFullList[i].straccnametext;
+			
+			acctObj.value = acct;
+			acctNameObj.value = arrFullList[i].accname;
+			//typeListObj.value = typelist == "TH" ? CONST_STR.get('BENEFIC_LIST_NORMAL') : CONST_STR.get('BENEFIC_LIST_TRUST');
+			favNameObj.value = arrFullList[i].favoritename;
+			
+			selectedType = typelist;
+			selectedName = favname;
+			
+			break;
+		}
+	}
+	gTransId = transid;
+	gFavoriteName = favname;
+	gTypeList = typelist;
+	objDiv.style.display = '';
+}
+
+
+var conditions = gConditions; 
+/*** VALIDATE INPUT ***/
+
+
+function sendRequestJSON() {
+	logInfo('sendJSON');
+	// collect the form data while iterating over the inputs	
+	var data = {};
+	var arrayArgs = new Array();
+	//CIF
+	//arrayArgs.push(gCustomerNo);
+	//Tran type
+	arrayArgs.push("");
+	//payee
+	arrayArgs.push("ALL");
+	var gprsCmd = new GprsCmdObj("234", "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//request service success
+function requestMBServiceSuccess(e) {
+	logInfo("benefic management: " + e);
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp);
+	if(gprsResp.respCode == '0') {
+		arrResultService = new Array();
+		arrResultService = gprsResp.arguments;
+		if(arrResultService != null && arrResultService.length >0) {
+			var docXsl = getCachePageXsl("benefic-manage/benefic-manage-result-search");
+			logInfo(docXsl);
+			//genHTMLStringWithXML(docXml, docXsl, successGenHtmlCallback, failGenHtmlCallback);
+			genHTMLStringWithXML(genXMLDoc(arrResultService), docXsl, successCallback, failCallback);
+		} else {
+			document.getElementById("lblNoDataFound").innerHTML = CONST_STR.get('BENEFIC_LIST_NO_DATA_FOUND');
+		}
+	} else {
+		//navController.initWithRootView("accountxsl/account-scr", true, 'xsl');
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+//request service failed
+function requestMBServiceFail() {
+	//navController.initWithRootView("accountxsl/account-scr", true, 'xsl');
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+////////////////////////////////////////////
+function handleDataFromBack(typeSearch, pageIndex) {
+	var arrMedial = new Array();
+	
+	switch (typeSearch) {
+		case "ALL":
+			arrMedial = arrFullList;
+			break;
+		/*case "TC":
+			arrMedial = arrTrustList;
+			break;*/
+		case "TH":
+			arrMedial = arrNormalList;
+			break;
+		default:
+			break;
+	}
+	
+	setColor(typeSearch);
+	
+	genHtmlSearchResult(getItemsPerPage(arrMedial, pageIndex));
+	
+	genPagging(arrMedial, pageIndex);
+}
+/////////////////gen html result search////////////////////
+function successCallback(strHtml) {
+	var div = document.getElementById("divSearchResult");
+	div.innerHTML = strHtml;
+	
+	genPagging(arrFullList, pageIndex);
+	
+	genHtmlSearchResult(getItemsPerPage(arrFullList, 1));
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/numberRecords);
+	}
+	return 0;
+}
+
+
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	pageIndex = selectedIdx;
+	
+	var arrMedial = new Array();
+	
+	
+	switch (typeSearch) {
+		case "ALL":
+			arrMedial = arrFullList;
+			break;
+		/*case "TC":
+			arrMedial = arrTrustList;
+			break;*/
+		case "TH":
+			arrMedial = arrNormalList;
+			break;
+		default:
+			break;
+	}
+	
+	cancelEdit();
+	
+	
+	genHtmlSearchResult(getItemsPerPage(arrMedial, selectedIdx));
+	
+	genPagging(arrMedial, selectedIdx);
+	
+}
+
+
+function getFirstPageData(selectedIdx) {
+	var arrMedial = new Array();
+	
+	
+	switch (typeSearch) {
+		case "ALL":
+			arrMedial = arrFullList;
+			break;
+		/*case "TC":
+			arrMedial = arrTrustList;
+			break;*/
+		case "TH":
+			arrMedial = arrNormalList;
+			break;
+		default:
+			break;
+	}
+	
+	
+	genHtmlSearchResult(getItemsPerPage(arrMedial, selectedIdx));
+	
+	genPagging(arrMedial, selectedIdx);
+}
+
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * numberRecords;
+		to = from + numberRecords;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}
+		
+	}
+	
+	return arrTmp;
+}
+
+function genPagging(arr, pageIndex) {
+	var totalPage = calTotalPage(arr);
+	var nodePager = document.getElementById('pageIndicatorNums');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodePager.innerHTML = tmpStr;
+	
+}
+
+function failCallback(e) {
+	logInfo('loi: ' + e);
+	
+}
+
+function isBlank(str) {
+    return (!str || /^\s*$/.test(str));
+}
+//////////////////////////////////////////
+
+function genXMLDoc(arrResultService) {
+	var docXml = createXMLDoc();
+	var rootNode = createXMLNode('beneficlist', '', docXml);
+	var tmpXmlNodeInfo;
+	var childNodeInfo;
+	
+	var lengthArr = arrResultService.length;
+	var arrTmp = null;
+	
+	var tenThuHuong = "";
+	var tenUaThich  = "";
+	
+	
+	arrFullList = new Array();
+	arrTrustList = new Array();
+	arrNormalList = new Array();
+	for(var i =0; i < lengthArr; i++) {
+		
+		arrTmp = new Array();
+		arrTmp = arrResultService[i].split("#");
+		
+		tenThuHuong = arrTmp[4] == "null" || isBlank(arrTmp[4])? "" : arrTmp[4];
+		tenUaThich = arrTmp[9] == "null" || isBlank(arrTmp[9])? "" : arrTmp[9];
+		
+		arrFullList.push({
+			acctno: arrTmp[3],
+			category : arrTmp[10],
+			accname : tenThuHuong,
+			payee : arrTmp[1],
+			transid : arrTmp[11],
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[12] + '',
+			straccnametext: '' + arrTmp[13] + ''
+			});
+		
+		if(arrTmp[1] == "TC") {
+			arrTrustList.push({
+			acctno: arrTmp[3],
+			category : arrTmp[10],
+			accname : tenThuHuong,
+			payee : arrTmp[1],
+			transid : arrTmp[11],
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[12] + '',
+			straccnametext: '' + arrTmp[13] + ''
+			});
+		}
+		
+		if(arrTmp[1] == "TH") {
+			arrNormalList.push({
+			acctno: arrTmp[3],
+			category : arrTmp[10],
+			accname : tenThuHuong,
+			payee : arrTmp[1],
+			transid : arrTmp[11],
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[12] + '',
+			straccnametext: '' + arrTmp[13] + ''
+			});
+		}		
+	}//end for
+	
+		logInfo(docXml);
+	return docXml;
+}
+
+
+
+function genXMLDocSearch(arr) {
+	var docXml = createXMLDoc();
+	var rootNode = createXMLNode('beneficlist', '', docXml);
+	var tmpXmlNodeInfo;
+	var childNodeInfo;
+	
+	var lengthArr = arr.length;
+	
+	for(var i =0; i < lengthArr; i++) {
+		
+		tmpXmlNodeInfo = createXMLNode('benefic', '', docXml, rootNode);
+
+		//tai khoan thu huong
+		childNodeInfo = createXMLNode('sourceacctitle', CONST_STR.get('BENEFIC_SRC_ACC_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('sourceacccontent', arr[i].acctno, docXml, tmpXmlNodeInfo);
+		
+		//phan loai
+		childNodeInfo = createXMLNode('typetitle', CONST_STR.get('BENEFIC_TYPE_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('typecontent',  arr[i].category, docXml, tmpXmlNodeInfo);
+		
+		//ten nguoi thu huong
+		childNodeInfo = createXMLNode('nametitle', CONST_STR.get('BENEFIC_NAME_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('namecontent', arr[i].favoritename == "" ? arr[i].accname : arr[i].favoritename, docXml, tmpXmlNodeInfo);
+		
+		//loai danh sach
+		childNodeInfo = createXMLNode('typelisttitle', CONST_STR.get('BENEFIC_TYPE_LIST_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('typelistcontent',  arr[i].payee, docXml, tmpXmlNodeInfo);
+		
+		//loai giao dich
+		childNodeInfo = createXMLNode('transtypetitle', '', docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('transtypecontent', arr[i].transid, docXml, tmpXmlNodeInfo);
+
+		//ten ua thich
+		childNodeInfo = createXMLNode('favnametitle', CONST_STR.get('BENEFIC_NAME_FAV_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('favnamecontent', arr[i].favoritename, docXml, tmpXmlNodeInfo);
+		
+		//lua chon
+		childNodeInfo = createXMLNode('choicetitle', CONST_STR.get('INPUT_ACC_BTN_SELECT'), docXml, tmpXmlNodeInfo);
+		
+	}
+	
+		//view detail to edit
+		tmpXmlNodeInfo = createXMLNode('beneficdetail', '', docXml, rootNode);
+		childNodeInfo = createXMLNode('sourceacctitle', CONST_STR.get('ESAVING_ACCOUNT_NO_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('nametitle', CONST_STR.get('BENEFIC_NAME_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('typelisttitle', CONST_STR.get('BENEFIC_TYPE_LIST_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('namefavoritetitle', CONST_STR.get('BENEFIC_NAME_FAV_TITLE'), docXml, tmpXmlNodeInfo);
+		logInfo(docXml);
+	return docXml;
+}
+
+//check array is blank or not blank
+function isBlankArr(arrFullList) {
+	if(arrFullList == null || arrFullList.length == 0) {
+		return true;
+	}
+	return false;
+}
+
+function fillBenefic(type, me)
+{
+	pageIndex = 1;
+	typeSearch = type;
+	if (typeSearch == "ALL")
+	{
+		if(!isBlankArr(arrFullList)) {
+			
+			
+			genHtmlSearchResult(arrFullList);
+			getFirstPageData(1);
+		} else {
+			genHtmlSearchResult(arrFullList);
+				
+		}
+	}
+	else if (typeSearch == "TH")
+	{
+		if(!isBlankArr(arrNormalList)) {
+		
+		genHtmlSearchResult(arrNormalList);
+		getFirstPageData(1);
+		} else {
+			genHtmlSearchResult(arrNormalList);
+			
+		}
+	}
+	/*else if (typeSearch == "TC")
+	{
+		if(!isBlankArr(arrTrustList)) {
+		
+		genHtmlSearchResult(arrTrustList);
+		getFirstPageData(1);
+		} else {
+			genHtmlSearchResult(arrTrustList);
+			
+		}
+	}*/
+	var listTab = document.getElementById("tabs");
+	var tabs = listTab.getElementsByClassName("item");
+	for (var i = 0; i < tabs.length; i++) {
+		var tab = tabs[i];
+		if (tab == me)
+		{
+			tab.setAttribute("class","item selected");
+		}else{
+			tab.setAttribute("class","item");
+		}
+
+	}
+}
+/*
+function searchNormal(type, me) {
+	pageIndex = 1;
+	setColor(type);
+	typeSearch = "TH";
+	if(!isBlankArr(arrNormalList)) {
+		
+		genHtmlSearchResult(arrNormalList);
+		getFirstPageData(1);
+	} else {
+		genHtmlSearchResult(arrNormalList);
+		
+	}
+	
+	var listTab = document.getElementById("tabs");
+	var tabs = listTab.getElementsByClassName("item");
+	for (var i = 0; i < tabs.length; i++) {
+		var tab = tabs[i];
+		if (tab == me)
+		{
+			tab.setAttribute("class","item selected");
+		}else{
+			tab.setAttribute("class","item");
+		}
+
+	}
+}
+function searchAll(type){
+	pageIndex = 1;
+	setColor(type);
+	typeSearch = "ALL";
+	if(!isBlankArr(arrFullList)) {
+		
+		
+		genHtmlSearchResult(arrFullList);
+		getFirstPageData(1);
+	} else {
+		genHtmlSearchResult(arrFullList);
+			
+	}
+}
+
+function searchTrust(type) {
+	pageIndex = 1;
+	setColor(type);
+	typeSearch = "TC";
+	if(!isBlankArr(arrTrustList)) {
+		
+		genHtmlSearchResult(arrTrustList);
+		getFirstPageData(1);
+	} else {
+		genHtmlSearchResult(arrTrustList);
+		
+	}
+}
+*/
+function setColor(type) {
+	var btnNormal = document.getElementById("btnNormal");
+	var btnTrust = document.getElementById("btnTrust");
+	var btnFull = document.getElementById("btnFull");
+	switch (type) {
+		case "ALL":
+			btnFull.style.backgroundColor = "#FAA60D";
+			btnNormal.style.backgroundColor = "#AFAFB8";
+			btnTrust.style.backgroundColor = "#AFAFB8";
+			break;
+		/*case "TC":
+			btnTrust.style.backgroundColor = "#FAA60D";
+			btnNormal.style.backgroundColor = "#AFAFB8";
+			btnFull.style.backgroundColor = "#AFAFB8";
+			break;*/
+		case "TH":
+			btnNormal.style.backgroundColor = "#FAA60D";
+			btnTrust.style.backgroundColor = "#AFAFB8";
+			btnFull.style.backgroundColor = "#AFAFB8";
+			break;
+		default:
+			break;
+	}
+}
+
+
+
+function genHtmlSearchResult(arr) {
+	var docXsl = getCachePageXsl("benefic-manage/benefic-manage-result-search");
+	logInfo(docXsl);
+
+	genHTMLStringWithXML(genXMLDocSearch(arr), docXsl, successPaggingCallback, failPaggingCallback);
+}
+
+
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("divSearchResult");
+	div.innerHTML = strHtml;
+
+	var tmpArr = new Array();
+	var strKeyword = document.getElementById("txtKeyword").value;
+	if(isBlank(strKeyword)) {
+		switch (typeSearch) {
+			case "ALL":
+				tmpArr = arrFullList;
+				break;
+			/*case "TC":
+				tmpArr = arrTrustList;
+				break;*/
+			case "TH":
+				tmpArr = arrNormalList;
+				break;
+			default:
+				break;
+		}
+	} else {
+		tmpArr = arrSearchTmp;
+	}
+	
+	genPagging(tmpArr, pageIndex);
+	//pageIndicatorSelected(pageIndex, document.getElementById('pageIndicatorNums'), tmpArr);
+}
+
+function failPaggingCallback() {
+	
+}
+
+
+//search by ky word
+function searchByKeyword(objKeyword) {
+	var strKeyword = objKeyword.value;
+	
+	switch (typeSearch) {
+		case "ALL":
+			searchInArr(arrFullList, strKeyword);
+			break;
+		/*case "TC":
+			searchInArr(arrTrustList, strKeyword);
+			break;*/
+		case "TH":
+			searchInArr(arrNormalList, strKeyword);
+			break;
+		default:
+			break;
+	}
+	
+}
+
+function searchInArr(arr, keyword) {
+	keyword = keyword.toLowerCase();
+	arrSearchTmp = new Array();
+	from = (pageIndex - 1) * numberRecords;
+		to = from + numberRecords;
+	
+	
+	for(var i in arr) {
+		if(arr[i].acctno.toLowerCase().indexOf(keyword) != -1 
+			|| arr[i].category.toLowerCase().indexOf(keyword)  != -1 
+			|| arr[i].accname.toLowerCase().indexOf(keyword) != -1
+			|| arr[i].favoritename.toLowerCase().indexOf(keyword) != -1) {
+				if(i >= from && i < to) {
+					arrSearchTmp.push(arr[i]);
+				}
+			}
+	}
+	
+	genHtmlSearchResult(arrSearchTmp);
+	
+}
+//gen sequence form
+function genSequenceForm() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpStepNo = 301;
+	setRespObjStore(301);
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+//call service update
+function requestUpdate() {
+	genSequenceForm() ;
+	//origin value	
+	logInfo("origin type: " + selectedType);
+	logInfo("origin name: " + selectedName);
+	
+	//new value
+	logInfo("new type: " + gTypeList);
+	logInfo("new name: " + document.getElementById("txtNameFavorite").value);	
+	
+	if (selectedType == gTypeList && selectedName == document.getElementById("txtNameFavorite").value)
+	{
+		showAlertText(CONST_STR.get("BENEFIC_ERR_NOT_CHANGE"));
+		return;	
+	}
+	
+	
+	requestType = "UPDATE";
+	requestService(requestType);
+}
+
+function genReviewScreen() {
+	if(gTypeList != "") {//? localStorage['gTypeList'] : gTypeList
+		gTypeList = gTypeList;
+	} else if(gTypeList == "") {
+		if(localStorage['gTypeList'] != undefined) {
+			gTypeList = localStorage['gTypeList'];
+		}
+	}
+	var accNo 			= document.getElementById("txtSrcAcct").value;
+	var accName 		= document.getElementById("txtNameAcct").value;
+	var typeList 		= gTypeList == "TC" ? CONST_STR.get('BENEFIC_LIST_TRUST') : CONST_STR.get('BENEFIC_LIST_NORMAL');
+	var transId 		= gTransId == "" ? localStorage['gTransId'] : gTransId;
+	var favoriteName 	= document.getElementById("txtNameFavorite").value;
+	
+	var lblAcctNo		= document.getElementById("lblAcctNo").innerHTML;
+	var lblAcctName		= document.getElementById("lblAcctName").innerHTML;
+	//var lblTypeList		= document.getElementById("lblTypeList").innerHTML;
+	var lblFavoriteName		= document.getElementById("lblFavoriteName").innerHTML;
+	
+	
+	/*var docXml 			= createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle',CONST_STR.get('MENU_BENEFIC_MANAGE') + ", "+ CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	//review/reviewinfo/transinfo
+	//so tai khoan
+	var tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', lblAcctNo, docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', accNo, docXml, tmpChildNodeTrans);
+
+	//ten tai khoan
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', lblAcctName, docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', accName, docXml, tmpChildNodeTrans);
+
+	//loai danh sach
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	//tmpChildNode = createXMLNode('transinfotitle', lblTypeList, docXml, tmpChildNodeTrans);
+	//tmpChildNode = createXMLNode('transinfocontent', typeList, docXml, tmpChildNodeTrans);
+	
+	//ten ua thich
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', lblFavoriteName, docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', favoriteName, docXml, tmpChildNodeTrans);
+	
+	//loai giao dich
+
+	tmpChildNodeTrans = createXMLNode('typelistcode', gTypeList, docXml, tmpXmlRootNode);
+	tmpChildNodeTrans = createXMLNode('transid', transId, docXml, tmpXmlRootNode);
+	//var xmlAsString = new XMLSerializer().serializeToString( docXml );
+	//logInfo(xmlAsString);
+	setReviewXmlStore(docXml);*///THUANTM COMMENT
+	
+	//THUAN TM GEN_REVIEW TO BY PASS AUTHENTICATION
+	var htmlReviewInfo = "";
+	htmlReviewInfo = "<table width='98%' align='center'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE') + 
+				"</h5>" + "</tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='98%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default' infoview='review'>" + "<td class='td-left'>" + 
+						lblAcctNo + 
+					"</td>" + "<td class='td-right'>" + 
+						accNo + 
+					"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						lblAcctName + 
+					"</td>" + "<td class='td-right'>" + 
+						accName + 
+					"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						lblFavoriteName + 
+					"</td>" + "<td class='td-right'>" + 
+						favoriteName + 
+					"</td></tr>";
+					
+	htmlReviewInfo = htmlReviewInfo + 					
+            "<tr class='desktopmode' id='result-export-print' style='display:none;'>" +
+            	"<td colspan='2'>" +
+                	"<div align='right' style='padding-right: 5px;'>" +
+                        "<a href='javascript:void(0)' onclick='printResultHistory();'><img title='In trang này' style='margin-right:5px;' src='css/img/print.png'/></a>" +
+                    "</div></td></tr>";
+	 htmlReviewInfo = htmlReviewInfo + "<tr>"+
+            "<td colspan='2'>"+
+            "<table width='96%' class = ''>"+
+            "<tbody>"+
+            "<tr>"+
+            "<td width='32%'>"+
+             "<input id='goEsavingOpenLnk' type='submit' class='btnshadow btn-primary' onClick='CancelbtnClick()' value='REVIEW_BTN_CANCEL' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'/>"+
+            "</td>" + 
+              "<td width='32%'>"+
+			  "<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'/>"+
+			  "</td>"+
+              "<td width='32%'>"+
+			   "<input type='button' onClick='sendRequestForUpdateBenefit()' value='REVIEW_BTN_CONFIRM' class='btnshadow btn-second' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'/>"+
+			   "</td>"+
+              "</tr>"+
+              "</tbody>"+
+              "</table>"+
+              "</td>"+
+            "</tr>";
+					
+	htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table>";	
+	
+	setReviewHtmlStore(htmlReviewInfo);
+	
+	
+	localStorage['gTypeList'] = gTypeList;
+	localStorage['gTransId'] = gTransId;
+	localStorage['arrFullList'] = JSON.stringify(arrFullList);
+	localStorage['arrTrustList'] = JSON.stringify(arrTrustList);
+	localStorage['arrNormalList'] = JSON.stringify(arrNormalList);
+	localStorage['pageIndex'] = pageIndex;
+	localStorage['typeSearch'] = typeSearch;
+	//navController.pushToView("com-review-xsl-scr", true, 'xsl');//THUANTM COMMENT
+	navController.pushToView("com-review-scr", true);
+}
+
+
+
+//show confirm delete dialog
+function showConfirmDelete(accNo, typeList, transId) {
+	
+	
+	 gTransId = transId;
+ 	 
+	 gTypeList = typeList;
+	 
+	 gAcctNo = accNo;
+
+	var arrTmp1 = [];
+	var arrTmp2 = [];
+	
+	var str = CONST_STR.get('BENEFIC_CONFIRM_DELETE');
+	
+	/*arrTmp1.push(CONST_STR.get('BENEFIC_LIST_YES'));
+	arrTmp1.push(CONST_STR.get('BENEFIC_LIST_NO'));
+	arrTmp2.push("1");
+	arrTmp2.push("0");
+	document.addEventListener("evtSelectionDialog", handleSelectionConfirm, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionConfirmClose, false);*/
+	document.addEventListener("alertConfirmOK", alertConfirmOK, false);
+	document.addEventListener("alertConfirmCancel", alertConfirmCancel, false);
+	document.getElementById('btnAlertConfirmCancel').value = CONST_STR.get('BENEFIC_LIST_NO');
+	document.getElementById('btnAlertConfirmOk').value = CONST_STR.get('BENEFIC_LIST_YES');
+	showAlertConfirmText(str, alertConfirmOK, alertConfirmCancel);
+	
+}
+
+function alertConfirmOK() {
+	if (currentPage == "benefic-manage/benefic-manage-create-scr") {
+		alertConfirmCancel();
+		requestType = "DELETE";
+		requestService(requestType);
+	}
+}
+
+
+function alertConfirmCancel() {
+	if (currentPage == "benefic-manage/benefic-manage-create-scr") {
+		document.removeEventListener("alertConfirmCancel", alertConfirmCancel, false);
+		document.removeEventListener("alertConfirmOK", alertConfirmOK, false);
+	}
+}
+/*function handleSelectionConfirm(e) {
+	if (currentPage == "benefic-manage/benefic-manage-create-scr") {
+		handleSelectionConfirmClose();
+		
+		
+		if(e.selectedValue2 != null && e.selectedValue2 != undefined) {
+			if("1" == e.selectedValue2) {
+				requestType = "DELETE";
+				requestService(requestType);
+			}
+		}
+	}
+}
+
+function handleSelectionConfirmClose() {
+	if (currentPage == "benefic-manage/benefic-manage-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionConfirmClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionConfirm, false);
+	}
+}
+*//*call service delete
+ @param type = "UPDATE" | DELETE
+*/
+function requestService(type) {
+	var data = {};
+	var arrayArgs = new Array();
+	//gTransId
+	arrayArgs.push(gTransId);
+	//delete/update
+	arrayArgs.push(type);
+	//mau thu huong
+	arrayArgs.push(gTypeList);
+	//ten ua thich
+	gFavoriteName = document.getElementById("txtNameFavorite").value;
+	arrayArgs.push(gFavoriteName);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_UPDATE_BOOK_BENEFICIARY"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	if(type == 'UPDATE'){		
+		setGprsCmdStore(gprsCmd);
+		genReviewScreen();
+	}else{
+		if(type == 'DELETE'){
+			data = getDataFromGprsCmd(gprsCmd);	
+			requestMBService(data, true, 0, requestMBServiceDeleteSuccess, requestMBServiceDeleteFail);
+		}
+	}
+
+}
+
+function requestMBServiceDeleteSuccess(e) {
+		logInfo("em day: " + e);
+		gprsResp = parserJSON(e);
+		setRespObjStore(gprsResp); //store response
+		if("0" == gprsResp.respCode) {
+			var arrTmp = new Array();
+			arrTmp = gprsResp.arguments;
+			
+			if(requestType == "DELETE") {
+				if(arrTmp != null && arrTmp.length > 0) {
+					genXmlDeleteSuccess(arrTmp[0], gprsResp.respContent);
+				}
+			} else if(requestType == "UPDATE") {
+				genReviewScreen();
+			}
+		}
+}
+				
+function requestMBServiceDeleteFail() {
+	
+}
+
+
+function genXmlDeleteSuccess(transCode, strcontent) {
+	
+	
+	var accNo 			= "";
+	var accName 		= "";
+	var typeList 		= "";
+	var favoriteName 	= "";
+	
+	var lblAcctNo		= "";
+	var lblAcctName		= "";
+	//var lblTypeList		= document.getElementById("lblTypeList").innerHTML;
+	var lblFavoriteName		= document.getElementById("lblFavoriteName").innerHTML;
+	
+	for(var i in arrFullList) {
+		if(gAcctNo == arrFullList[i].acctno && gTransId == arrFullList[i].transid && gTypeList == arrFullList[i].payee) {
+			accNo 			= arrFullList[i].acctno;
+			accName 		= arrFullList[i].accname;
+			typeList 		= gTypeList == "TC" ? CONST_STR.get('BENEFIC_LIST_TRUST') : CONST_STR.get('BENEFIC_LIST_NORMAL');;
+			favoriteName 	= arrFullList[i].favoritename;
+			
+			lblAcctNo 		= arrFullList[i].stracctext;
+			lblAcctName		= arrFullList[i].straccnametext;
+			break;
+		}
+	}
+	
+	
+	
+	var docXml 			= createXMLDoc();
+
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	//thong bao ket qua giao dich
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', strcontent, docXml, tmpXmlNodeInfo);
+	
+	//review/reviewinfo/transinfo
+	//ma giao dich
+	var tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	//tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('SCHEDULE_BANK_TRANS_CODE'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transcode', transCode, docXml, tmpXmlNodeInfo);
+	
+	//so tai khoan
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('accttext', lblAcctNo, docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('accno', accNo, docXml, tmpXmlNodeInfo);
+
+	//ten tai khoan
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('accnametext', lblAcctName, docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('accname', accName, docXml, tmpXmlNodeInfo);
+
+	//loai danh sach
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	//tmpChildNode = createXMLNode('typelist', lblTypeList, docXml, tmpXmlNodeInfo);
+	//tmpChildNode = createXMLNode('typelistcontent', typeList, docXml, tmpXmlNodeInfo);
+	
+	//ten ua thich
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('favavoritename', lblFavoriteName, docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('favavoritenamecontent', favoriteName, docXml, tmpXmlNodeInfo);
+
+
+
+	//var xmlAsString = new XMLSerializer().serializeToString( docXml );
+	//logInfo(xmlAsString);
+	setReviewXmlStore(docXml);
+	
+	navController.pushToView("benefic-manage/benefic-manage-delete-finish", true, 'xsl');
+}
+/*** FUNCTIONS END ***/

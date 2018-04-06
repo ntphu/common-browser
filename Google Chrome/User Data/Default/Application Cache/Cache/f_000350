@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:template match="/">
+        <html>
+            <body>
+                <div id="mainViewContent" class="main-layout-subview">
+                    <div>
+                        <div  class="panelContent">
+                            <table width="100%">
+                                <tr>
+                                    <td>
+                                        <h5 align="left" class= "screen-title" >
+                                            <span style = "font-weight:bold;">MENU_INTRODUCE_CREATE</span>
+                                        </h5>
+                                        <div class="line-separate"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:45%;white-space:pre-wrap;">CHOICEENTER_INFO_TITLE_BGN</span>
+                                            <input onclick="showChoiceEnterInfo()" id="id.enterInfo" type="button" class="form-control form-control-righttext" value="ENTER_INFO_CHOICE" style="white-space:pre-wrap;"/>
+                                            <span class="icon-movenext input-group-addon input-group-symbol"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table id="id.tableTitle" width='98%' align='center'  >
+                                <tr>
+                                    <td colspan="2">
+                                        <h5 align="left" class="screen-title" style="display:none">
+                                            <span>INTRODUCE_TITLE</span>
+                                        </h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <h5 align="left">
+                                            <span>INTRODUCE_INFO_TITLE</span>
+                                        </h5>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table id="id.tableTitle1" width='98%' align='center' style="display:none;" >
+                                <tr>
+                                    <td colspan="2">
+                                        <h5 align="left" class="screen-title">
+                                            <span>INTRODUCE_TITLE1</span>
+                                        </h5>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table width="100%" align="center" id="id.tableIntroduce" class="table-intro">
+                                <tr>
+                                    <td colspan="2">
+                                        <h5 align="left" class="screen-title" style="display:none;">
+                                            <span>PERSONAL_INFO_TITLE</span>
+                                        </h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <h5 align="left">
+                                            <span>MANDATORY_INFO_TITLE</span>
+                                        </h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">FULLNAME_TITLE_BGN</span>
+                                            <input id="id.fullName"  type="text" class="form-control form-control-righttext"  placeholder="COM_TXT_INPUT_PLACEHOLDER" maxlength="25" style="white-space:pre-wrap;"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div id = "id.checkName" align="right" style="display:none;">
+                                            <h6>
+                                                <label type ="text" id="id.lbCheckName" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">GENDER_TITLE_BGN</span>
+                                            <input onclick="showChoiceGenderInfo()" id="id.genderInfo" type="button" class="form-control form-control-righttext" value="GENDER_BGN_CHOICE" style="white-space:pre-wrap;"/>
+                                            <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div  id = "id.checkGender" align="right" style="display:none;">
+                                            <h6>
+                                                <label type ="text" id="id.lbCheckGender" class="cssLineColor"> error </label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;white-space:pre-wrap">DATEOFBIRTH_TITLE_BGN_CTV</span>
+                                            <input id="id.dateOfBirth" type="tel" placeholder="COM_TXT_SELECTION_PLACEHOLDER_DATE" value="" class="form-control form-control-righttext-datepicker" 
+					  onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;" />
+                                            <span id="span.dateOfBirth" class="icon-calendar input-group-addon-datepicker input-group-symbol-datepicker"></span>
+                                        </div>
+                                        <div id = "id.checkDateOfBirth" align="right" style="display:none;">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckDateOfBirth" class="cssLineColor"> error </label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">PASSPORT_TITLE_BGN</span>
+                                            <input id="id.passport"  onkeypress="return isNumberKey(event)"  type="text" class="form-control form-control-righttext" maxlength="12" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;" onchange="checkPassportValid();"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div align="right" id="id.checkPassport" style="display:none">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckPassport" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">NATIONALITY_TITLE_BGN_CTV</span>
+                                            <input onclick="showChoiceNationalityInfo()" id="id.nationality" type="button" class="form-control form-control-righttext"  value="NATIONALITY_BGN_CHOICE" style="white-space:pre-wrap;"/>
+                                            <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div align="right" id="id.checkNationality" style="display:none">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckNationality" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;white-space:pre-wrap">DATEOFISSUE_TITLE_BGN_CTV</span>
+                                            <input id="id.dateOfIssue" type="tel" placeholder="COM_TXT_SELECTION_PLACEHOLDER_DATE" value="" class="form-control form-control-righttext-datepicker" 
+					  onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;" />
+                                            <span id="span.dateOfIssue" class="icon-calendar input-group-addon-datepicker input-group-symbol-datepicker"></span>
+                                        </div>
+                                        <div align="right" id="id.checkDateOfIssue" style="display:none">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckDateOfIssue" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">PLACEOFISSUE_TITLE_BGN_CTV</span>
+                                            <input id="id.placeOfIssue" type="text" class="form-control form-control-righttext" maxlength="50" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div align="right" id="id.checkPlaceOfIssue" style="display:none">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckPlaceOfIssue" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">MOBILE_TITLE_BGN</span>
+                                            <input id="id.mobileNumber" type="tel" class="form-control form-control-righttext" maxlength="11" onkeypress="return isNumberKey(event)" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;" onchange="checkMobileValid();"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div id = "id.checkMobile" style="display:none" align="right">
+                                            <label type ="text" id="id.lbCheckMobile"  class="cssLineColor"></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">HOMEPHONE_TITLE_BGN</span>
+                                            <input id="id.homePhone" type="tel" class="form-control form-control-righttext" maxlength="16" onkeypress="return isNumberKey(event)" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">EMAIL_TITLE_BGN_CTV</span>
+                                            <input id="id.email" name= "email" type="email" class="form-control form-control-righttext" maxlength="50" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div id = "id.checkEmail" align="right" style="display:none;">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckEmailCTV" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">ADDRESS_TITLE_BGN_CTV</span>
+                                            <input id="id.address" type="text" class="form-control form-control-righttext" maxlength="200" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div align="right" id="id.checkAddress" style="display:none">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckAddress" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">COMPANY_TITLE_BGN_CTV</span>
+                                            <input id="id.company" type="text" class="form-control form-control-righttext" maxlength="100" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div align="right" id="id.checkCompany" style="display:none">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckCompany" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">COMPANYADDRESS_TITLE_BGN</span>
+                                            <input id="id.companyAddress" type="text" class="form-control form-control-righttext" maxlength="200" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">POSITION_TITLE_BGN_CTV</span>
+                                            <input id="id.position" type="text" class="form-control form-control-righttext" maxlength="100" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="white-space:pre-wrap;"/>
+                                            <span class="input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div align="right" id="id.checkPosition" style="display:none">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckPosition" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" class="td-text CSSIntroduce">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:20%;">INCOME_TITLE_BGN_CTV</span>
+                                            <input onclick="showChoiceIncomeInfo()" id="id.incomeInfo" type="button" class="form-control form-control-righttext" value="INCOME_BGN_CHOICE" style="white-space:pre-wrap;"/>
+                                            <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span>
+                                        </div>
+                                        <div align="right" id="id.checkIncome" style="display:none">
+                                            <h6>
+                                                <label type ="text" id="id.lbcheckIncome" class="cssLineColor"></label>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <h5 align="left" class="screen-title" style="display:none;">
+                                            <span>PRODUCT_INFO_TITLE</span>
+                                        </h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="left" valign="middle" class="td-text">
+                                        <div class="input-group">
+                                            <input id="id.checkboxAcount" type="checkbox" align="left" checked="checked" disabled="disabled"/>
+                                            <span class="input-group-addon" style="text-align:left;width:665px;">ACCOUNT_TITLE_BGN</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table id="id.loadInfoCustomerFile" style="display:none;" width="100%" align="center" >
+                                <tr>
+                                    <td colspan="2" align="left" valign="middle" class="td-text">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" style="width:45%;">LIST_INTRODUCE_TITLE_BGN</span>
+                                            <input id="btnFile" type="button" class="form-control form-control-rightbutton" onclick="document.getElementById('id.fileUpload02').click()"/>
+                                            <input id="id.fileUpload02" type="file" value="COM_TXT_INPUT_PLACEHOLDER" class="form-control form-control-rightbutton" style="cursor:pointer; display:none" onchange="fnChangeList(this)"/>
+                                            <!--<input type="file" onchange="fnChangeList(this)" class="form-control form-control-rightbutton input-file" 
+value="COM_TXT_INPUT_PLACEHOLDER" id="id.fileUpload02" accept="application/msexcel"/><input id="btnFile" type="button" class="form-control form-control-rightbutton" onclick="document.getElementById('id.fileUpload02').click()"/>-->
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <a href="javascript:void(0);" onclick="openLinkInWindows('./download/Danh_sach_gioi_thieu_khach_hang.xls');" id ="id.linkDownloadTemp"  download="Danh_sach_gioi_thieu_khach_hang.xls">
+                                            <u>
+                                                <span style="white-space:pre-wrap;padding-left:520px;">TEMPLATE_LIST_CUSTOMER_INTRODUCE</span>
+                                            </u>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr class="trow-space"></tr>
+                                <tr id="id.checkFileExcel" style="display:none;">
+                                    <td>
+
+                                        <div align="left">
+                                            <label type ="text" class="cssLineColor" id="id.lbCheckFileExcel" style="white-space:pre-wrap;margin-left:45%"></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input type="button" class="btnshadow btn-second" onclick="sendJSONRequestFile()" value="CUSTOMER_CREATE_BTN_SENDLIST" style="white-space:pre-wrap;"/>
+                                    </td>
+                                </tr>
+                                <tr class="trow-space"></tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <div class="notestyle" align="left">
+                                            <span>INTRODUCE_INFO_TITLE1</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table>
+                                <tr class="trow-space"></tr>
+                            </table>
+                            <div id="div" width="100%"></div>
+                            <table id = "id.btnsendImageAll" style="display:none;" width="100%" align="center">
+                                <tr class="trow-space"></tr>
+                                <tr>
+                                    <td>
+                                        <input type="button" class="btnshadow btn-second" onclick="sendJSONRequestImageAll()" value="CUSTOMER_CREATE_BTN_SENDREQUEST"/>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table id="id.loadInfoCustomerEnter" width="100%" align="center" class="table-intro">
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <div class="input-group" style="height:38px">
+                                            <span class="input-group-addon" style="width:45%;white-space:pre-wrap;">ATTACK_TITLE_BGN</span>
+                                            <input type="file" onchange="fnChange(this)" class="form-control form-control-rightbutton input-file" 
+value="COM_TXT_INPUT_PLACEHOLDER" id="id.fileUpload01" accept="image/png;image/jpg"/>
+                                            <input id="btnFile" type="button" class="form-control form-control-rightbutton" onclick="document.getElementById('id.fileUpload01').click()"/>
+                                            <span id="take-picture-icon" class="input-group-addon input-group-symbol btn-take-picture mobilemode" onclick="document.getElementById('id.fileUpload01').click()"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr id = "id.checkFile" style="display:none">
+                                    <td>
+                                        <div align="right">
+                                            <label type ="text"  class="cssLineColor" id="id.lbCheckFile"></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table id="tb-prevPicture" width="100%" align="center" class="table-intro" style="display:none">
+                                <tr>
+                                    <td colspan="2" style="border: none;">
+                                        <div id="prevPic" class="prevPicture" align="center">
+                                            <!--<h2>Keep crop area square</h2>-->
+                                            <div id="cropperContainer1" class="cropperContainer" onclick="rotateImageIntroCus(90);"></div>
+                                            <div class="previews">
+                                                <!--<div id="previewSmall1" class="previewSmall" style="display:none"></div>-->
+                                                <div id="previewBig1" class="previewBig desktopmode" style="display:none"></div>
+                                            </div>
+                                            <div id="info1" class="infoPicture desktopmode"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table id="button_back" width="100%" align="center" class="table-intro">
+                                <tr>
+                                    <td>
+                                        <input type="button" class="btnshadow btn-second" onclick="sendJSONRequest()" value="CUSTOMER_CREATE_BTN_SENDREQUEST"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div id="selection-dialog" class="dialog-blacktrans" align="center" style="display:none">
+                    <div class="dialog-backgroundtrans" align="center" onClick="closeDialog(this)"></div>
+                    <div id="divListGroup" class="list-group dialog-list"></div>
+                </div>
+            </body>
+        </html>
+    </xsl:template>
+</xsl:stylesheet>

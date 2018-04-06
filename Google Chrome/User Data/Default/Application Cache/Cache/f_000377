@@ -1,0 +1,966 @@
+
+// declare G variable
+var selSavingsTypeID = "";
+var selSavingsCurrencyID = "";
+var selSavingsTermID = "";
+var selLoanInterestID = "";
+var selLoanPrincipalID = "";
+var arrayResult;
+var flag_check = false;
+
+var gUtiConditions = {	"amount":
+{
+    "allow":"[,.0-9]",
+    "notallow":"",
+    "minlength":"0",
+    "maxlength":"18",
+    "func":""
+},
+    "date":
+    {
+        "allow":"[-/.0-9]",
+        "notallow":"",
+        "minlength":"0",
+        "maxlength":"10",
+        "func":""
+    },
+    "rate":
+    {
+        "allow":"[.0-9]",
+        "notallow":"",
+        "minlength":"0",
+        "maxlength":"10",
+        "func":""
+    }
+}
+
+
+function showCal(obj) {
+    var fromDate;
+    var strBwd = gUserInfo.lang == 'VN' ? 'Trước' : 'Previous';
+    var strFwd = gUserInfo.lang == 'VN' ? 'Sau' : 'Next';
+    var strHide = gUserInfo.lang == 'VN' ? 'Đóng' : 'Close';
+    var strMotu = gUserInfo.lang == 'VN' ? 'T2;T3;T4;T5;T6;T7;CN' : 'Mo;Tu;We;Th;Fr;Sa;Su';
+    var strFull = gUserInfo.lang == 'VN' ? 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12' : 'January;Feburary;March;April;May;June;July;August;September;October;November;December';
+    
+    fromDate = new DatePicker(
+        {               
+            show : function(data) {},           
+            hide : function(data) {},           
+            seek : function(data) {},           
+            select : function(data) {
+                document.getElementById('id.valueDate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+                fromDate.hide();
+                }           
+        },              
+        {               
+            tmpl_field   : 'd/m/Y',         
+            range_min    : '01-01-1900',            
+            range_max    : '12-31-9999',            
+            //dom_id       : obj.id,            
+            //dom_field    : obj,           
+            
+            dom_field    : document.getElementById('span.valueDate'),   
+            async_selection : true,
+            
+            dictionaries : {            
+                'custom' : {        
+                    common : {  
+                        bwd  : strBwd,
+                        fwd  : strFwd, 
+                        hide : strHide
+                    },  
+                    weekdays : {    
+                        motu : strMotu
+                    },  
+                    monthes : { 
+                        full : strFull
+                    }
+                }       
+            }           
+        }               
+    );  
+    var today = new Date();     
+                    
+    var dd = today.getDate();                       
+    var mm = today.getMonth()+1; //January is 0!                        
+    var yyyy = today.getFullYear();                     
+                            
+    if(dd<10) {                     
+        dd='0'+dd;                  
+    }                       
+                            
+    if(mm<10) {                     
+        mm='0'+mm;                  
+    }                       
+                            
+    today = yyyy+'-'+mm+'-'+dd;
+    fromDate.select(today);
+        
+}
+
+function viewDidLoadSuccess() {
+    // navController.getActionBar().setTitleBarOnly(CONST_STR.get('LOAN_REGISTER_CALCULATOR'));
+      bottomBar.hide();
+    document.getElementById('navActionbar').style.display = 'block';
+    document.getElementById('footerSlide').style.display = 'none';
+    document.getElementById('mainlayoutfooter').style.display='none';
+    document.getElementById('nav.btn.homeright').style.display = 'none';
+/*    document.getElementById('floatingButton').style.display = 'none';*/
+    /*if(navArrayScr.length == 2){
+        document.getElementById('nav.btn.homeright').style.display = 'none';
+    }else{
+        document.getElementById('nav.btn.homeright').style.display = 'block';
+    }*/
+    navController.getActionBar().hideNavHeaderBar();
+    navController.getActionBar().setHavingBackground(false);
+    navController.getActionBar().setTitleBarOnly(CONST_STR.get("MENU_UTILITIES_CALCULATOR"));
+    var date = document.getElementById("id.valueDate");
+    showCal(date);
+
+    var tagSelection = document.getElementById("id.selcfunc");
+    var table1 = document.getElementById('id.tblSavings');
+    var table2 = document.getElementById('id.tblLoan');
+    var table3 = document.getElementById('id.tblOutSavings');
+    var table4 = document.getElementById('divTableLoanRerult');
+
+    if(gUtilitiesModeDefault == 1) {
+        logInfo('Mode 1');
+
+        tagSelection.value = CONST_STR.get('UTILITIES_CALCULATOR_SAVINGS');
+        table1.style.display = '';
+        table2.style.display = 'none';
+        table3.style.display = 'none';
+        table4.style.display = 'none';
+        showRate();
+    }
+    else {
+        logInfo('Mode 2');
+
+        tagSelection.value = CONST_STR.get('UTILITIES_CALCULATOR_LOAN');
+        table1.style.display = 'none';
+        table2.style.display = '';
+        table3.style.display = 'none';
+        table4.style.display = 'none';
+    }
+    if(gModeScreenView == CONST_MODE_SCR_MEDIUM && navArrayScr.length >=3){
+        document.getElementById('mainview').style.borderBottomLeftRadius='';
+        document.getElementById('mainview').style.borderTopLeftRadius='';
+    }
+    if(gModeScreenView == CONST_MODE_SCR_MEDIUM && navArrayScr[0]=="login-scr" ){
+        document.getElementById('mainview').style.borderBottomLeftRadius='5px';
+        document.getElementById('mainview').style.borderTopLeftRadius='5px';
+        document.getElementById('mainview').style.background = 'rgba(255,255,255,0.9)';
+    }
+}
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+    //flag = false;
+    gUtilitiesModeDefault = 1;//default
+    logInfo('Utility will unload');
+    document.removeEventListener("evtChangeWidthDesktop",calculateLoan,false);
+    document.removeEventListener("evtChangeWidthMobile",calculateLoan,false);
+
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+// select type of calculator
+function showSelection(){
+    var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_UTILITIES_CALCULATOR_EN: CONST_KEY_UTILITIES_CALCULATOR_VN;
+    var tmpArray2 = CONST_KEY_TRANS_PRE_SLECT_BGN;
+    document.addEventListener("evtSelectionDialog", handleSelectionBGN, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionBGNClose, false);
+    showDialogList(CONST_STR.get('UTILITIES_CALCULATOR_PRODUCT'), tmpArray1, tmpArray2, false);
+}
+
+function handleSelectionBGN(e){
+    var table1 = document.getElementById('id.tblSavings');
+    var table2 = document.getElementById('id.tblLoan');
+    var table3 = document.getElementById('id.tblOutSavings');
+    var table4 = document.getElementById('divTableLoanRerult');
+    var selectionID = "";
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        handleSelectionBGNClose();
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagSelection = document.getElementById("id.selcfunc");
+            if (tagSelection.nodeName == "INPUT") {
+                tagSelection.value = e.selectedValue1;
+            }
+            else {
+                tagSelection.innerHTML = e.selectedValue1;
+            }
+        }
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            selectionID = e.selectedValue2;
+        }
+        if(selectionID == '1'){
+            table1.style.display = '';
+            table2.style.display = 'none';
+            table3.style.display = 'none';
+            table4.style.display = 'none';
+        }
+        else if(selectionID == '2'){
+            table1.style.display = 'none';
+            table2.style.display = '';
+            table3.style.display = 'none';
+            table4.style.display = 'none';
+        }
+    }
+}
+
+function handleSelectionBGNClose(){
+    bottomBar.hide();
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionBGNClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionBGN, false);
+    }
+}
+
+// select Savings Type
+function showSelectionSavingsType(){
+    var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_UTILITIES_CAL_SAV_TYPE_EN: CONST_KEY_UTILITIES_CAL_SAV_TYPE_VN;
+    var tmpArray2 = CONST_KEY_UTILITIES_CAL_SAV_TYPE_BGN;
+    document.addEventListener("evtSelectionDialog", handleSelectionSavingsTypeBGN, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionSavingsTypeBGNClose, false);
+    showDialogList(CONST_STR.get('UTILITIES_CALCULATOR_CHOICE'), tmpArray1, tmpArray2, false);
+}
+
+function handleSelectionSavingsTypeBGN(e){
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        handleSelectionSavingsTypeBGNClose();
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagSelection = document.getElementById("id.savType");
+            var tagSelectionCurrency = document.getElementById("id.savCurrency");
+            var tagSelectionTerm = document.getElementById("id.term");
+
+            if (tagSelection.nodeName == "INPUT") {
+                tagSelection.value = e.selectedValue1;
+            }
+            else {
+                tagSelection.innerHTML = e.selectedValue1;
+            }
+        }
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            selSavingsTypeID = e.selectedValue2;
+            tagSelectionCurrency.value = CONST_STR.get('UTILITIES_CALCULATOR_CUR_VND');
+            selSavingsCurrencyID = 'VND';
+            if(selSavingsTypeID == "" || selSavingsTypeID == 1 || selSavingsTypeID == 6){
+                tagSelectionTerm.value = CONST_STR.get('UTILITIES_CALCULATOR_TERM_1W');
+                selSavingsTermID = '01W';
+            }
+            else if(selSavingsTypeID == "5") {
+                tagSelectionTerm.value = CONST_STR.get('UTILITIES_CALCULATOR_TERM_3M');
+                selSavingsTermID = '03M';
+            }
+            else {
+                tagSelectionTerm.value = CONST_STR.get('UTILITIES_CALCULATOR_TERM_1M');
+                selSavingsTermID = '01M';
+            }
+        }
+    }
+}
+
+function handleSelectionSavingsTypeBGNClose(){
+    bottomBar.hide();
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionSavingsTypeBGNClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionSavingsTypeBGN, false);
+    }
+}
+
+// select Currency
+function showSelectionCurrency(){
+    var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_UTILITIES_CAL_SAV_CURRENCY_EN: CONST_KEY_UTILITIES_CAL_SAV_CURRENCY_EN;
+    var tmpArray2 = CONST_KEY_UTILITIES_CAL_SAV_CURRENCY_BGN;
+    var curArray1 = new Array();
+    var curArray2 = new Array();
+    if(selSavingsTypeID == "" || selSavingsTypeID == 1 || selSavingsTypeID == 3 || selSavingsTypeID == 4 || selSavingsTypeID == 5){
+        curArray1.push(tmpArray1[0]);
+        curArray2.push(tmpArray2[0]);
+    }
+    if(selSavingsTypeID == 2){
+        curArray1.push(tmpArray1[0]);
+        curArray2.push(tmpArray2[0]);
+        curArray1.push(tmpArray1[1]);
+        curArray2.push(tmpArray2[1]);
+    }
+    if(selSavingsTypeID == 6){
+        for (var i = 0; i < tmpArray1.length; i++){
+            curArray1.push(tmpArray1[i]);
+            curArray2.push(tmpArray2[i]);
+        }
+    }
+    document.addEventListener("evtSelectionDialog", handleSelectionCurrencyBGN, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionCurrencyBGNClose, false);
+    showDialogList(CONST_STR.get('UTILITIES_CALCULATOR_CHOICE'), curArray1, curArray2, false);
+}
+
+function handleSelectionCurrencyBGN(e){
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        handleSelectionCurrencyBGNClose();
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagSelection = document.getElementById("id.savCurrency");
+            if (tagSelection.nodeName == "INPUT") {
+                tagSelection.value = e.selectedValue1;
+            }
+            else {
+                tagSelection.innerHTML = e.selectedValue1;
+            }
+        }
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            selSavingsCurrencyID = e.selectedValue2;
+        }
+    }
+}
+
+function handleSelectionCurrencyBGNClose(){
+    bottomBar.hide();
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionCurrencyBGNClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionCurrencyBGN, false);
+    }
+}
+
+// select Term
+function showSelectionTerm(){
+    var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_UTILITIES_CAL_TERM_EN: CONST_KEY_UTILITIES_CAL_TERM_VN;
+    var tmpArray2 = CONST_KEY_UTILITIES_CAL_TERM_BGN;
+    var curArray1 = new Array();
+    var curArray2 = new Array();
+    if(selSavingsTypeID == "" || selSavingsTypeID == 1 || selSavingsTypeID == 6){
+        for (var i = 0; i < tmpArray1.length; i++){
+            curArray1.push(tmpArray1[i]);
+            curArray2.push(tmpArray2[i]);
+        }
+    }
+    if(selSavingsTypeID == 2 || selSavingsTypeID == 3 || selSavingsTypeID == 4){
+        for (var i = 3; i < tmpArray1.length; i++){
+            curArray1.push(tmpArray1[i]);
+            curArray2.push(tmpArray2[i]);
+        }
+    }
+    if(selSavingsTypeID == 5){
+        for (var i = 5; i < tmpArray1.length; i++){
+            curArray1.push(tmpArray1[i]);
+            curArray2.push(tmpArray2[i]);
+        }
+    }
+    document.addEventListener("evtSelectionDialog", handleSelectionTermBGN, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionTermBGNClose, false);
+    showDialogList(CONST_STR.get('UTILITIES_CALCULATOR_CHOICE'), curArray1, curArray2, false);
+}
+
+function handleSelectionTermBGN(e){
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        handleSelectionTermBGNClose();
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagSelection = document.getElementById("id.term");
+            if (tagSelection.nodeName == "INPUT") {
+                tagSelection.value = e.selectedValue1;
+            }
+            else {
+                tagSelection.innerHTML = e.selectedValue1;
+            }
+        }
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            selSavingsTermID = e.selectedValue2;
+        }
+        showRate();
+    }
+}
+
+function handleSelectionTermBGNClose(){
+    bottomBar.hide();
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionTermBGNClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionTermBGN, false);
+    }
+}
+
+//show rate
+function showRate()
+{
+    var amount = document.getElementById('id.savAmount');
+    var date = document.getElementById('id.valueDate');
+
+    //calculate savings here
+    var data = {};
+    var arrayArgs = new Array();
+    if(selSavingsTypeID == ""){
+        selSavingsTypeID = 1;
+    }
+    var amountVal;
+    if(amount.value == "")
+    {
+        amountVal = 0;
+    }
+    else
+    {
+        amountVal = parseFloat(amount.value.replace(/,/g, ''));
+    }
+    if(selSavingsCurrencyID == ""){
+        selSavingsCurrencyID = "VND";
+    }
+    if(selSavingsTypeID == "" || selSavingsTypeID == 1 || selSavingsTypeID == 6){
+        if(selSavingsTermID == ""){
+            selSavingsTermID = "01W";
+        }
+    }
+    else {
+        if(selSavingsTermID == ""){
+            selSavingsTermID = "01M";
+        }
+    }
+
+    arrayArgs.push(selSavingsTypeID);
+    arrayArgs.push(amountVal);
+    arrayArgs.push(selSavingsCurrencyID);
+    arrayArgs.push(date.value);
+    arrayArgs.push(selSavingsTermID);
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_UTILITIES"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceShowRateSuccess, requestMBServiceShowRateFail);
+}
+
+function requestMBServiceShowRateSuccess(e){
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_UTILITIES")))) {
+        var gSavingsResultObjs = new Array();
+        gSavingsResultObjs = gprsResp.arguments;
+        var rate = document.getElementById("id.interestRate");
+        var tempArrStr = gSavingsResultObjs[0].split("#");
+        rate.value = tempArrStr[0] + "%";
+        var table3 = document.getElementById('id.tblOutSavings');
+
+        if(table3.style.display != 'none')
+        {
+            docXml = createXMLDoc();
+            var tmpXmlRootNode;
+            var tmpXmlRootNode = createXMLNode('savings', '', docXml);
+            var tmpChildNode = createXMLNode('revenue', tempArrStr[1] + ' ' + selSavingsCurrencyID, docXml, tmpXmlRootNode);
+            tmpChildNode = createXMLNode('maturityDate', tempArrStr[2], docXml, tmpXmlRootNode);
+
+            var docXsl = getCachePageXsl("utilitiesxsl/utilities-manage-scr-saving-result");
+            genHTMLStringWithXML(docXml, docXsl, successCalSavingCallback, failCalSavingCallback);
+        }
+    }
+    else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_UTILITIES"))  || (gprsResp.responseType == '-1')))) {
+        //navController.initWithRootView('account/account-scr', true);
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.initWithRootView(tmpPageName, true, tmpPageType);
+    }
+}
+
+function requestMBServiceShowRateFail(){
+    //navController.initWithRootView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+// calculate Savings inputed
+function calculateSavings(){
+    var isValid = true;
+    var amount = document.getElementById('id.savAmount');
+    var date = document.getElementById('id.valueDate');
+    var tmpStr;
+
+    if (!validateFunc(amount.value, gUtiConditions["amount"])) {
+        document.getElementById("id.checkAmount").style.display = '';
+        document.getElementById("id.lbcheckAmount").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+        isValid = false;
+    }
+    else {
+        document.getElementById("id.checkAmount").style.display = 'none';
+    }
+
+    if (!validateFunc(date.value, gUtiConditions["date"])) {
+        document.getElementById("id.checkDate").style.display = '';
+        document.getElementById("id.lbcheckDate").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+        isValid = false;
+    }
+    else {
+        document.getElementById("id.checkDate").style.display = 'none';
+    }
+
+    if(!isValid){
+        return;
+    }
+
+    var table3 = document.getElementById('id.tblOutSavings');
+
+    table3.style.display = '';
+
+    //calculate savings here
+    var data = {};
+    var arrayArgs = new Array();
+    if(selSavingsTypeID == ""){
+        selSavingsTypeID = 1;
+    }
+    var amountVal = parseFloat(amount.value.replace(/,/g, ''));
+    if(selSavingsCurrencyID == ""){
+        selSavingsCurrencyID = "VND";
+    }
+    if(selSavingsTypeID == "" || selSavingsTypeID == 1 || selSavingsTypeID == 6){
+        if(selSavingsTermID == ""){
+            selSavingsTermID = "01W";
+        }
+    }
+    else {
+        if(selSavingsTermID == ""){
+            selSavingsTermID = "01M";
+        }
+    }
+
+    arrayArgs.push(selSavingsTypeID);
+    arrayArgs.push(amountVal);
+    arrayArgs.push(selSavingsCurrencyID);
+    arrayArgs.push(date.value);
+    arrayArgs.push(selSavingsTermID);
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_UTILITIES"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceSavingsCalSuccess, requestMBServiceSavingsCalFail);
+}
+
+function requestMBServiceSavingsCalSuccess(e){
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_UTILITIES")))) {
+        var gSavingsResultObjs = new Array();
+        gSavingsResultObjs = gprsResp.arguments;
+        var rate = document.getElementById("id.interestRate");
+        var tempArrStr = gSavingsResultObjs[0].split("#");
+        rate.value = tempArrStr[0] + "%";
+
+        docXml = createXMLDoc();
+        var tmpXmlRootNode;
+        var tmpXmlRootNode = createXMLNode('savings', '', docXml);
+        var tmpChildNode = createXMLNode('revenue', tempArrStr[1] + ' ' + selSavingsCurrencyID, docXml, tmpXmlRootNode);
+        tmpChildNode = createXMLNode('maturityDate', tempArrStr[2], docXml, tmpXmlRootNode);
+
+        var docXsl = getCachePageXsl("utilitiesxsl/utilities-manage-scr-saving-result");
+        genHTMLStringWithXML(docXml, docXsl, successCalSavingCallback, failCalSavingCallback);
+    }
+    else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_UTILITIES"))  || (gprsResp.responseType == '-1')))) {
+        //navController.initWithRootView('account/account-scr', true);
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.initWithRootView(tmpPageName, true, tmpPageType);
+    }
+}
+
+function requestMBServiceSavingsCalFail(){
+    //navController.initWithRootView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+function successCalSavingCallback(oStr){
+    var tabh = document.getElementById("divCalculateSavingsResult");
+    tabh.innerHTML = oStr;
+}
+
+function failCalSavingCallback(){
+    //navController.initWithRootView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+// select Periodic Interest Payment
+function showSelectionInterestPayment(){
+    var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_UTILITIES_CAL_LOAN_EN: CONST_KEY_UTILITIES_CAL_LOAN_VN;
+    var tmpArray2 = CONST_KEY_UTILITIES_CAL_LOAN_BGN;
+    var curArray1 = new Array();
+    var curArray2 = new Array();
+    curArray1.push(tmpArray1[0]);
+    curArray2.push(tmpArray2[0]);
+    document.addEventListener("evtSelectionDialog", handleSelectionInterestPaymentBGN, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionInterestPaymentBGNClose, false);
+    showDialogList(CONST_STR.get('UTILITIES_CALCULATOR_CHOICE'), curArray1, curArray2, false);
+}
+
+function handleSelectionInterestPaymentBGN(e){
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        handleSelectionInterestPaymentBGNClose();
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagSelection = document.getElementById("id.loanInterest");
+            if (tagSelection.nodeName == "INPUT") {
+                tagSelection.value = e.selectedValue1;
+            }
+            else {
+                tagSelection.innerHTML = e.selectedValue1;
+            }
+        }
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            selLoanInterestID = e.selectedValue2;
+        }
+    }
+}
+
+function handleSelectionInterestPaymentBGNClose(){
+    bottomBar.hide();
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionInterestPaymentBGNClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionInterestPaymentBGN, false);
+    }
+}
+
+// select Periodic Principal Payment
+function showSelectionPrincipalPayment(){
+    var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_UTILITIES_CAL_LOAN_EN: CONST_KEY_UTILITIES_CAL_LOAN_VN;
+    var tmpArray2 = CONST_KEY_UTILITIES_CAL_LOAN_BGN;
+    document.addEventListener("evtSelectionDialog", handleSelectionPrincipalPaymentBGN, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionPrincipalPaymentBGNClose, false);
+    showDialogList(CONST_STR.get('UTILITIES_CALCULATOR_CHOICE'), tmpArray1, tmpArray2, false);
+}
+
+function handleSelectionPrincipalPaymentBGN(e){
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        handleSelectionPrincipalPaymentBGNClose();
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagSelection = document.getElementById("id.loanPrincipal");
+            if (tagSelection.nodeName == "INPUT") {
+                tagSelection.value = e.selectedValue1;
+            }
+            else {
+                tagSelection.innerHTML = e.selectedValue1;
+            }
+        }
+        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+            selLoanPrincipalID = e.selectedValue2;
+        }
+    }
+}
+
+function handleSelectionPrincipalPaymentBGNClose(){
+    bottomBar.hide();
+    if (currentPage == "utilitiesxsl/utilities-manage-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionPrincipalPaymentBGNClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionPrincipalPaymentBGN, false);
+    }
+}
+
+function calculateLoan(){
+    arrayResult = new Array();
+    var isValid = true;
+    var tmpStr;
+    var amount = document.getElementById('id.loanAmount');
+    var term = document.getElementById('id.loanTerm');
+    var rate = document.getElementById('id.loanRate');
+    var interest = document.getElementById('id.loanInterest');
+    tmpStr = interest.value;
+    if(tmpStr.length < 1 || selLoanInterestID == ""){
+        selLoanInterestID = 1;
+    }
+    var principal = document.getElementById('id.loanPrincipal');
+    tmpStr = principal.value;
+    if(tmpStr.length < 1 || selLoanPrincipalID == ""){
+        selLoanPrincipalID = 1;
+    }
+
+    if (!validateFunc(amount.value, gUtiConditions["amount"])) {
+        document.getElementById("id.checkLoanAmount").style.display = '';
+        document.getElementById("id.lbcheckLoanAmount").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+        isValid = false;
+    }
+    else {
+        document.getElementById("id.checkLoanAmount").style.display = 'none';
+    }
+
+    if (!validateFunc(term.value, gUtiConditions["amount"])) {
+        document.getElementById("id.checkLoanTerm").style.display = '';
+        document.getElementById("id.lbcheckLoanTerm").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+        isValid = false;
+    }
+    else {
+        document.getElementById("id.checkLoanTerm").style.display = 'none';
+    }
+
+    if (!validateFunc(rate.value, gUtiConditions["rate"])) {
+        document.getElementById("id.checkLoanRate").style.display = '';
+        document.getElementById("id.lbcheckLoanRate").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+        isValid = false;
+    }
+    else {
+        document.getElementById("id.checkLoanRate").style.display = 'none';
+    }
+
+    if(!isValid){
+        return;
+    }
+
+    var amountVal = parseFloat(amount.value.replace(/,/g, ''));
+    var termVal = parseInt(term.value);
+    var rateVal = parseFloat(rate.value);
+
+    for (var i = 0; i < termVal; i ++) {
+        if(i <= 11) {
+            obj = new Object();
+            obj.thang = i + 1;
+            //obj.lai = (amount * rate) / (12 * 100);
+            obj.lai = 0;
+
+            //so tien goc phai tra theo quy
+            /*
+             if((i + 1) % principcal == 0) {
+             obj.goctra = Math.ceil((amount * principcal) / term);
+             } else {
+             obj.goctra = 0;
+             }
+             */
+
+            //so ky tra no goc
+            // selLoanPrincipalID = 1: hang thang
+            // selLoanPrincipalID = 2: hang quy
+            // selLoanPrincipalID = 3: 6 thang
+            var principalMonth;
+            if (selLoanPrincipalID == 1){
+                principalMonth = 1;
+            }
+            if (selLoanPrincipalID == 2){
+                principalMonth = 3;
+            }
+            if (selLoanPrincipalID == 3){
+                principalMonth = 6;
+            }
+
+            if (principalMonth == 3) //tra lai 3 thang
+            {
+                if ((termVal - 1) % 3 == 0) //truong hop so thang vay = 3k + 1
+                {
+                    obj.soky_trano_goc = (termVal - 1) / 3;
+                }
+                else if ((termVal - 2) % 3 == 0) //truong hop so thang vay = 3k + 2
+                {
+                    obj.soky_trano_goc = ((termVal - 2) / 3) + 1;
+                }
+                else //truong hop khac
+                {
+                    obj.soky_trano_goc = termVal / 3;
+                }
+            }
+            else if (principalMonth == 6) //tra lai 6 thang
+            {
+                if (termVal % 6 == 0) //truong hop so thang vay = 6k
+                {
+                    obj.soky_trano_goc = termVal / 6;
+                }
+                else if ((termVal - 1) % 6 == 0) //truong hop so thang vay = 6k + 1
+                {
+                    obj.soky_trano_goc = (termVal - 1) / 6;
+                }
+                else if ((termVal - 2) % 6 == 0) //truong hop so thang vay = 6k + 2
+                {
+                    obj.soky_trano_goc = ((termVal - 2) / 6) + 1;
+                }
+                else if ((termVal - 3) % 6 == 0) //truong hop so thang vay = 6k + 3
+                {
+                    obj.soky_trano_goc = ((termVal - 3) / 6) + 1;
+                }
+                else if ((termVal - 4) % 6 == 0) //truong hop so thang vay = 6k + 4
+                {
+                    obj.soky_trano_goc = ((termVal - 4) / 6) + 1;
+                }
+                else if ((termVal - 5) % 6 == 0) //truong hop so thang vay = 6k + 5
+                {
+                    obj.soky_trano_goc = ((termVal - 5) / 6) + 1;
+                }
+                else //truong hop khac
+                {
+                    obj.soky_trano_goc = termVal / 6;
+                }
+            }
+            else //tra lai 1 thang
+            {
+                obj.soky_trano_goc = termVal;
+            }
+
+            //xu ly rieng truong hop neu tinh ra so ky nho hon 1
+            if (obj.soky_trano_goc < 1)
+            {
+                obj.soky_trano_goc = 1;
+            }
+
+            //so tien goc phai tra
+            if(((i + 1) % principalMonth == 0) || (i + 1 == termVal)) {
+                obj.goctra = Math.ceil(amountVal / obj.soky_trano_goc);
+            }
+            else {
+                obj.goctra = 0;
+            }
+
+            //goc con lai
+            obj.goccon	= 0;
+            arrayResult[i] = obj;
+        }
+        else if(i > 11) {
+            break;
+        }
+    }
+
+    if(arrayResult.length > 0) {
+        for (var i = 0; i < arrayResult.length; i ++) {
+            if(i == 0) {
+                arrayResult[i].goccon = Math.ceil(amountVal - arrayResult[i].goctra);
+                arrayResult[i].lai = Math.ceil((amountVal * rateVal) / (12 * 100));
+            } else if(i > 0) {
+                arrayResult[i].goccon = arrayResult[i - 1].goccon - arrayResult[i].goctra;
+
+                if((i + 1) % principalMonth != 0)
+                {
+                    arrayResult[i].lai = Math.ceil((arrayResult[i].goccon * rateVal) / (12 * 100));
+                }
+                else if((i + 1) % principalMonth == 0)
+                {
+                    arrayResult[i].lai = Math.ceil(((arrayResult[i].goccon + arrayResult[i].goctra) * rate.value) / (12 * 100));
+                }
+
+                if (i + 1 == termVal)
+                {
+                    arrayResult[i].lai = Math.ceil(((arrayResult[i].goccon + arrayResult[i].goctra) * rate.value) / (12 * 100));
+                    arrayResult[i].goctra = arrayResult[i-1].goccon;
+                }
+            }
+
+            //xu ly rieng cho truong hop 3k+1 va 6k+1 tai dong cuoi cung
+            if (i + 1 == termVal)
+            {
+                if ((3*arrayResult[i].soky_trano_goc + 1 == termVal) || (6*arrayResult[i].soky_trano_goc + 1 == termVal))
+                {
+                    arrayResult[i-1].goctra = 0;
+                    arrayResult[i].lai = arrayResult[i-1].lai;
+                }
+            }
+
+            //xu ly rieng cho truong hop 3k+1 va 6k+1 tai dong cuoi cung trong truong hop vay 13 thang
+            if ((termVal == 13) && ((3*arrayResult[i].soky_trano_goc + 1 == termVal) || (6*arrayResult[i].soky_trano_goc + 1 == termVal)))
+            {
+                arrayResult[11].goctra = 0;
+            }
+        }
+        for (var i = 0; i < arrayResult.length; i ++) {
+            if(arrayResult[i].goctra == 0) {
+                arrayResult[i].goccon = '';
+            }
+
+            if(parseFloat(arrayResult[i].goccon) < 0) {
+                arrayResult[i].goccon = 0;
+            }
+        }
+    }
+    var Rerult = document.getElementById("divTableLoanRerult");
+    Rerult.style.display = '';
+    logInfo(arrayResult);
+    genXMLDoc(arrayResult);
+    document.addEventListener("evtChangeWidthDesktop",calculateLoan,false);
+    document.addEventListener("evtChangeWidthMobile",calculateLoan,false);
+}
+
+function genXMLDoc(arr){
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var arrTitle = new Array();
+        arrTitle.push(CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_M'));
+        arrTitle.push(CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_INT_A'));
+        arrTitle.push(CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_PRI_A'));
+        arrTitle.push(CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_REMAINING_B'));
+
+        var arrContentData = new Array();
+        arrContentData.push(arrTitle);
+        var arrItemContent;
+        var contentHTML="";
+        var strHTML =  '<table width="100%" style="padding: 5px 0;">'+
+           '<tr>'+
+                '<td colspan="2"><span>'+CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUTCOME')+'</span></td>'+
+                '<td colspan="2" align="right" valign="middle"><span><span>'+CONST_STR.get('UTILITIES_CALCULATOR_LOAN_OUT_CURRENCY')+'</span>: VND</span></td>'+
+            '</tr>'+
+        '</table>';
+        for (var i = 0; i < arr.length; i++){
+            arrItemContent = new Array();
+            arrItemContent.push(i+1);
+            arrItemContent.push(formatNumberToCurrency(arr[i].lai));
+            arrItemContent.push(formatNumberToCurrency(arr[i].goctra));
+            arrItemContent.push(formatNumberToCurrency(arr[i].goccon));
+
+            arrContentData.push(arrItemContent);
+        }
+        var recycler = new RecyclerView({
+            type: "DESKTOP_LIST",
+            typeTextAlign: "MIDLE",
+            opacity:false
+        });
+        recycler.setData(arrContentData);
+        contentHTML = recycler.init();
+        strHTML+=contentHTML;
+        document.getElementById("divTableLoanRerult").innerHTML = strHTML;
+    } else{
+    docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlRootNode = createXMLNode('loan', '', docXml);
+    var tmpNodeLoanName = null;
+    var tmpChildNodeName = null;
+
+    for (var i = 0; i < arr.length; i++){
+        var tempArrStr = arr[i];
+        tmpNodeLoanName = createXMLNode('eachMonth', '', docXml, tmpXmlRootNode);
+        tmpChildNodeName = createXMLNode('month', i + 1, docXml, tmpNodeLoanName);
+        tmpChildNodeName = createXMLNode('interestAmount', formatNumberToCurrency(arr[i].lai), docXml, tmpNodeLoanName);
+        tmpChildNodeName = createXMLNode('principalAmount', formatNumberToCurrency(arr[i].goctra), docXml, tmpNodeLoanName);
+        tmpChildNodeName = createXMLNode('remainingBalance', formatNumberToCurrency(arr[i].goccon), docXml, tmpNodeLoanName);
+    }
+    logInfo(docXml);
+    var docXsl = getCachePageXsl("utilitiesxsl/utilities-manage-scr-loan-result");
+    genHTMLStringWithXML(docXml, docXsl, successCallback, failCallback);
+    }
+}
+
+function successCallback(oStr)
+{
+    var tabh = document.getElementById("divTableLoanRerult");
+    tabh.innerHTML = oStr;
+}
+
+function failCallback(){
+}
+
+function handleInputAmount(e, des){
+    formatCurrency(e, des);
+}
+
+function isFloatNumberKey(evt) {
+    var rate = document.getElementById("id.loanRate");
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if ( ((charCode > 47) && (charCode < 58 ) ) || (charCode == 8) || (charCode == 46) || rate.value.indexOf('.') > 0) {
+        return true;
+    }
+
+    return false;
+}
+
+function check(obj) {
+    var rate = document.getElementById("id.loanRate");
+    var valid = !isNaN(obj.value);
+    if(!valid) {
+        var lastIndex = rate.value.lastIndexOf('.') ;
+        if(lastIndex < 0) {
+            obj.value = obj.value.substring(0, obj.value.length - 1);
+
+        } else {
+            obj.value = obj.value.substring(0, lastIndex);
+        }
+    }
+    return valid;
+}
+function backPage(){
+    navController.popView('loan/loan-advisory-scr', true, 'xsl');
+}
+
+function viewBackFromOther() {
+    logInfo('Back from other view');
+    flag_check = true;
+}

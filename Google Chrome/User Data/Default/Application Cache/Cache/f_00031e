@@ -1,0 +1,1235 @@
+﻿<style>
+
+	table.links a{
+
+    	/*color: #000000;*/
+
+		text-align:justify;
+
+	}
+
+	table.links a:active { 
+
+			outline-color: -moz-use-text-color;
+
+			outline-style: none;
+
+			outline-width: 0;
+
+			text-align:justify;
+
+		}
+
+	table.links a:focus {
+
+			outline-color: -moz-use-text-color;
+
+			outline-style: none;
+
+			outline-width: 0;
+
+			text-align:justify;
+
+		}
+
+	div.title_Q
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/		
+
+		font-size:16px;
+
+		font-weight:bold;
+
+		margin-bottom:25px;
+
+	}
+
+	div.title_KH
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/		
+
+		font-size:14px;
+
+		font-weight:bold;
+
+		margin-bottom:25px;
+
+	} 
+
+	.title
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/		
+
+		font-size:13px;
+
+		font-weight:bold;
+
+		/*color:#7030A0;*/
+
+		margin-bottom:20px;
+
+		padding-right:35px;
+
+	}
+
+	.title_list
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/	
+
+		font-size:12px;	
+
+		font-weight:bold;
+		
+		/*color:#7030A0;*/
+
+		margin-bottom:20px;
+
+ 	    /*padding-right:50px;*/
+		padding-right:10px;
+		
+		text-align: left;
+
+	}
+
+	.content
+
+	{
+
+		/*font-family:Tahoma, sans-serif;*/	
+
+		line-height:20px;
+
+		font-size:12px;	
+
+		margin-bottom:20px;
+
+		/*padding-right:50px;*/
+		padding-right:10px;
+
+		text-align:justify;		
+		
+		/*color:#000000;*/
+	}
+
+	
+
+	div.list_content ul
+
+	{	
+
+  		 padding:0px;		
+
+    	 /*padding-right:50px;*/ 
+		 padding-right:10px;
+
+		 text-align:justify;		
+
+	}
+
+	div.list_content ul li
+
+	{		 
+
+  		 padding:0px;
+
+		 text-align:left;
+
+   		 padding-right:35px;
+
+		 text-align:justify;		
+
+	}
+
+	
+
+	.stickdiv {
+
+			position:fixed;
+
+			top:10px;
+
+		
+
+		}
+
+</style>
+
+<div id="mainViewContent" class="main-layout-subview" style="padding-top: 30px;">
+    <div class="question">
+        <table width="90%" cellpadding="0" cellspacing="0">
+			<tr>
+				<td>
+					<div style="float:left;">
+						<div class="icon-back btnshadow btn-second btn-round-15" onclick="window.open('./index-non-ebank.html?menu=support','_self');"></div>
+					</div>
+				</td>
+			</tr>
+            <tr>
+                <td>
+                    <div style="text-align: center">
+                        <div class="title_Q">
+                            FREQUENTLY ASKED QUESTIONS ABOUT ELECTRONIC BANKING SERVICES</div>
+                        <div class="title_KH">
+                            For individual customers</div>
+                        <div style="font-size: 20px">
+                            ********</div>
+                    </div>
+                    <!--div tieu de -->
+                </td>
+            </tr>
+        </table>
+        <table cellpadding="4px" cellspacing="4px" class="links" style="margin-right: 0px;
+            padding-right: 0px; text-align: justify">
+            <tr>
+                <td class="title">
+                    I. SERVICES OVERVIEW</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#tong_quan_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('tong_quan_title_1'),500);">1. What is Electronic Banking Services of TPBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#tong_quan_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('tong_quan_title_2'),500);">2. On which channels can customers make transactions?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#tong_quan_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('tong_quan_title_3'),500);">3. Benefits brought by the services for customers?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    II. SERVICE REGISTRATION
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_1'),500);">1. Who can register for the service? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_2'),500);">2. Can I ask someone to register eBanking service in my name?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_3'),500);">3. Where to register? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_4'),500);">4. How to register?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_5" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_5'),500);">5. What must I have to use eBanking service? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_6" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_6'),500);">6. If I have several accounts at TPBank, do I have to register
+                        e-banking service for each of them?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_7" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_7'),500);">7. After registration, how to start using service?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_ky_title_8" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_ky_title_8'),500);">8. Is eBank of TPBank still available abroad?</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    III. LOGIN
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_nhap_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_nhap_title_1'),500);">1. What should I do if I forgot my login account and password?</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_nhap_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_nhap_title_2'),500);">2. What should I do if I haven’t yet received password
+                        after registration? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_nhap_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_nhap_title_3'),500);">3. What do I have to do in the first login? </a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dang_nhap_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('dang_nhap_title_4'),500);">4. Can I have more than 1 login account?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    IV. SECURITY</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bao_mat_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('bao_mat_title_1'),500);">1. How does TPBank ensure the safety and security of eBanking
+                        service?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bao_mat_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('bao_mat_title_2'),500);">2. What is OTP? When do I have to use it?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bao_mat_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('bao_mat_title_3'),500);">3. Which methods of authentication are provided by TPBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bao_mat_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('bao_mat_title_4'),500);">4. What do I need to make my eBanking transactions safe?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    V. SERVICE CHARGES</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bieu_phi_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('bieu_phi_title_1'),500);">1. Which fees I have to pay for using eBanking service?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#bieu_phi_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('bieu_phi_title_2'),500);">2. Which fees are waived?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    VI. TRANSACTION LIMITS</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#han_muc_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('han_muc_title_1'),500);">1. I use OTP SMS to authenticate transactions, so, what are
+                        my daily transaction limit and my each transaction limit ?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#han_muc_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('han_muc_title_2'),500);">2. What is a large value transaction?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#han_muc_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('han_muc_title_3'),500);">3. Transaction limits for customers using Token key?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#han_muc_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('han_muc_title_4'),500);">4. Is it possible to extend transaction limits? If so, what
+                        process do I have to follow?</a></td>
+            </tr>
+            <tr>
+                <td class="title">
+                    VII. SERVICES</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_1'),500);">1. Which services are provided by TPBank on eBanking?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_2'),500);">2. How long can I view and print my account statements?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_3'),500);">3. How many transactions can I view for each time I view my account
+                        transactions?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_4" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_4'),500);">4. On eBanking system, can I view the information of my passbook
+                        deposited at front offices?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_5" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_5'),500);">5. Is there a requirement on the minimum amount of e-savings?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_6" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_6'),500);">6. Can I track the payment schedule for my loan at TPBank on eBanking?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_7" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_7'),500);">7. Can I apply for a loan at TPBank through eBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_8" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_8'),500);">8. On eBanking system, can I transfer money to another
+                        bank as fast as internal transfer?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_9" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_9'),500);">9. Can I transfer money to some beneficiaries by only 1 transfer
+                        transaction? If so, is there a requirement on the number of beneficiaries in one
+                        bulk transfer transaction?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_10" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_10'),500);">10. Does eBanking system automatically save beneficiaries’
+                        information for each transfer transaction?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_11" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_11'),500);">11. Can I print Transfer confirmation/Invoice to show my transfer’s
+                        evidence?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_12" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_12'),500);">12. If I top-up for my mobile phone via eBanking service, Do
+                        I get the promotion of the telecom company?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_13" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_13'),500);">13. Which mobile network can I top-up for through eBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_14" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_14'),500);">14. Which kinds of postpaid bills can I pay through eBank system?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_15" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_15'),500);">15. Can I purchase online goods and make a payment through Internet
+                        Banking without a credit card?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_16" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_16'),500);">16. Which kinds of services are available in the gold function
+                        at TPBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_17" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_17'),500);">17. Can I repay for my credit card on eBanking?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_18" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_18'),500);">18. Does TPBank allow customers to set the own online spending limits for their credit cards?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_19" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_19'),500);">19. Can I track my bonus point and exchange gifts on eBanking?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_20" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_20'),500);">20. Can I search for information on interest rates, exchange rates, gold prices and promotion programs of TPBank on eBanking?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#dv_title_21" onclick="mainContentScroll.scrollToElement(document.getElementById('dv_title_21'),500);">21.Can I get consultation about TPBank’s services on eBanking?</a></td>
+            </tr>
+ 
+            <tr>
+                <td class="title">
+                    VIII. SUPPORT AND FEEDBACK</td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#ho_tro_title_1" onclick="mainContentScroll.scrollToElement(document.getElementById('ho_tro_title_1'),500);">1. From which channels can I get supported by TPBank?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#ho_tro_title_2" onclick="mainContentScroll.scrollToElement(document.getElementById('ho_tro_title_2'),500);">2. How to investigate and complain about eBanking sevices?</a></td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="blinfo" style="cursor:pointer" href="#ho_tro_title_3" onclick="mainContentScroll.scrollToElement(document.getElementById('ho_tro_title_3'),500);">3. How long does it take to deal with investigation requests
+                        and complaints about eBanking services?</a></td>
+            </tr>
+        </table>
+        <!--table danh sach link -->
+        <br />
+        <div style="text-align: center">
+            <div style="font-size: 20px; padding-bottom: 20px; padding-top: 20px">
+            </div>
+            <div class="title_Q">
+                FREQUENTLY ASKED QUESTIONS ABOUT ELECTRONIC BANKING SERVICES</div>
+            <div class="title_KH">
+                For individual customers</div>
+            <div style="font-size: 20px">
+                ********</div>
+        </div>
+        <!--div tieu de -->
+        <div>
+            <div class="title" id="tong_quan">
+                I. SERVICES OVERVIEW
+            </div>
+            <div>
+                <div>
+                    <div class="title_list" id="tong_quan_title_1">
+                        1. What is Electronic Banking Services of TPBank?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="tong_quan_content_1">
+                        TPBank eBank is the product of TPBank electronic banking, providing online services which help clients perform banking transactions and e-commerce transactions and bills payment via electronic banking channels provided by TPBank
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--1.	D?ch v? Ngân hàng di?n t? c?a TPBank là gì? -->
+                <div>
+                    <div class="title_list" id="tong_quan_title_2">
+                        2. On which channels can customers make transactions?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="tong_quan_content_2">
+                        Customers can make online transactions with TPBank through 2 channels:
+                        <br />
+                        <ul class="list_content">
+                            <li>Internet Banking: customers use computers with Internet connection to access the transaction path <a href="https://ebank.tpb.vn ">https://ebank.tpb.vn </a></li>
+                            <li>Mobile Banking: Customers use mobile phones which have connection to the Internet through GPRS/3G/Wi-Fi to perform transactions on one of 2 versions of TPBank Mobile Banking, which are:
+                                <ul>
+                                    <li>Mobile Application: customers download and install the application “TPB Mobile” on cellphones.  </li>
+                                    <li>Mobile Wap: customers access the website <a href="https://ebank.tpb.vn">https://ebank.tpb.vn</a>
+                                        from a web browser of cellphone.   </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--2. -->
+                <div>
+                    <div class="title_list" id="tong_quan_title_3">
+                        3. Benefits brought by the services for customers?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="tong_quan_content_3">
+                        - Perform banking transactions for 24 hours a day and 7 days a week, every time and everywhere.
+                        <br />
+                        - Save time, money and enjoy preferential rates and fees compared to transactions at the counter.<br />
+                        - Exactly manage your finance information and invest your money effectively. <br />
+                        - Operate safely and reliably and simply,  it’s easy to use and easy to manage
+                    </div>
+                    <!--3. -->
+                </div>
+                <!--I.	T?NG QUAN V? D?CH V? -->
+                <div>
+                    <div class="title" id="dang_ky">
+                        II. SERVICE REGISTRATION
+                    </div>
+                    <div>
+                        <div>
+                            <div class="title_list" id="dang_ky_title_1">
+                                1. Who can register for the service?
+                            </div>
+                            <!--div tieu de -->
+                            <div class="content" id="dang_ky_content_1">
+                                - Individuals who are over 18 years old and have full capacity for civil acts.
+                                <br />
+                                - Individuals who have email address and cellphones.<br />
+                            </div>
+                            <!--div mo ta -->
+                        </div>
+                        <!--1. -->
+                        <div>
+                            <div class="title_list" id="dang_ky_title_2">
+                                2. Can I ask someone to register eBanking service in my name?
+                            </div>
+                            <!--div tieu de -->
+                            <div class="content" id="dang_ky_content_2">
+                                It is absolutely impossible.<br />
+                                Please register directly with TPBank to ensure the security of your account information.
+                            </div>
+                            <!--div mo ta -->
+                        </div>
+                        <!--2. -->
+                        <div>
+                            <div class="title_list" id="dang_ky_title_3">
+                                3. Where to register?
+                            </div>
+                            <!--div tieu de -->
+                            <div class="content" id="dang_ky_content_3">
+                                - Customers can register at the nearest Branches/ front offices of TPBank. The specific address <a href="./download/Branch network - TPBank.pdf" target="_blank">Here</a>
+                                <br />
+                                - Customer can also register online at <a href="http://applynow.tpb.vn ">http://applynow.tpb.vn
+                                </a>
+                            </div>
+                            <!--div mo ta -->
+                        </div>
+                        <!--3. -->
+                        <div>
+                            <div class="title_list" id="dang_ky_title_4">
+                                4. How to register?
+                            </div>
+                            <!--div tieu de -->
+                            <div class="content" id="dang_ky_content_4">
+                                - Please bring ID card/ valid Passport to the nearest branches/front offices to get detailed instructions. Customers can also fill out information in registration form <a href="./download/Giay dang ky su dung dich vu eBANK.pdf" target="_blank">Here</a> before bringing it to TPBank.
+                                <br />
+                                - Another way to register is following the steps on the registration age to register online at <a href="http://applynow.tpb.vn ">http://applynow.tpb.vn </a>
+                            </div>
+                            <!--div mo ta -->
+                        </div>
+                        <!--4. -->
+                        <div>
+                            <div class="title_list" id="dang_ky_title_5">
+                                5. What must I have to use eBanking service?
+                            </div>
+                            <!--div tieu de -->
+                            <div class="content" id="dang_ky_content_5">
+                                - Internet access devices (computer, cellphone, tablet, etc.)<br />
+                                - Login Account and password provided by TPBank after registering for services.
+                                <br />
+                                - One-time password providing device (customer’s cellphone, or devices provided by TPBank). 
+                            </div>
+                            <!--div mo ta -->
+                        </div>
+                        <!--5. -->
+                        <div>
+                            <div class="title_list" id="dang_ky_title_6">
+                                6. If I have several accounts at TPBank, do I have to register e-banking service
+                                for each of them?
+                            </div>
+                            <!--div tieu de -->
+                            <div class="content" id="dang_ky_content_6">
+                                No, you don’t. You only need to register for e-banking services one time to track and manage all your accounts in TPBank.
+                            </div>
+                            <!--div mo ta -->
+                        </div>
+                        <!--6. -->
+                        <div>
+                            <div class="title_list" id="dang_ky_title_7">
+                                7. After registration, how to start using service?
+                            </div>
+                            <!--div tieu de -->
+                            <div class="content" id="dang_ky_content_7">
+                                After registration, customers use the login account and password provided by the TPBank to log in the browser on computer or application on cellphone to start using service.
+                            </div>
+                            <!--div mo ta -->
+                        </div>
+                        <!--7. -->
+                        <div>
+                            <div class="title_list" id="dang_ky_title_8">
+                                8. Is eBank of TPBank still available abroad?
+                            </div>
+                            <!--div tieu de -->
+                            <div class="content" id="dang_ky_content_8">
+                                Yes. Customers can use the service of TPBank’s eBank wherever Internet is available.
+                                <br />
+                                In case you go abroad, Token authenticating method is recommended.
+                            </div>
+                            <!--div mo ta -->
+                        </div>
+                        <!--8. -->
+                    </div>
+                </div>
+                <!-- DANG KY DICH VU -->
+                <div>
+                    <div class="title" id="dang_nhap">
+                        III. LOGIN
+                    </div>
+                    <div>
+                        <div class="title_list" id="dang_nhap_title_1">
+                            1. What should I do if I forgot my login account and password?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_nhap_content_1">
+                            You can select one of the following ways to get your login account and password again:
+                            <ul class="list_content">
+                                <li>Get assistance at the nearest TPBank’s Branches/ front offices (You have to bring your ID card/ passport)</li>
+                                <li>Contact with our customer service center, Hotline: 04 37 683 683 or 1800 58 58 85 with your registered mobile phone number</li>
+                            </ul>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--1. -->
+                    <div>
+                        <div class="title_list" id="dang_nhap_title_2">
+                            2. What should I do if I haven’t yet received password after registration?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_nhap_content_2">
+                            You can select one of the following methods:
+                            <ul class="list_content">
+                                <li>Get assistance at the nearest TPBank’s Branches/ front offices (You have to bring your ID card/ passport)</li>
+                                <li>Contact with our customer service center, Hotline: 04 37 683 683 or 1800 58 58 85 with your registered mobile phone number</li>
+                                <li>Send mail from your registered email to our customer service center, email: <a
+                                    href="dichvu_khachhang@tpb.com.vn">dichvu_khachhang@tpb.com.vn.</a> In your email, please provide your personal information including login name , full name , date of birth , ID number , date and place of issue ; addresses. </li>
+                            </ul>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--2. -->
+                    <div>
+                        <div class="title_list" id="dang_nhap_title_3">
+                            3. What do I have to do in the first login?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_nhap_content_3">
+                            Please change your password at the first time you log-in in order to that your account and finance information are safe and secured.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--3. -->
+                    <div>
+                        <div class="title_list" id="dang_nhap_title_4">
+                            4. Can I have more than 1 login account?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dang_nhap_content_4">
+                            No, you can not. Every TPBank customer have only 1 login account.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--4. -->
+                </div>
+            </div>
+            <!--III.	ÐANG NH?P D?CH V? -->
+            <div>
+                <div class="title" id="bao_mat">
+                    IV. SECURITY</div>
+                <div>
+                    <div>
+                        <div class="title_list" id="bao_mat_title_1">
+                            1. How does TPBank ensure the safety and security of eBanking service?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="bao_mat_content_1">
+                            - In addition to providing static security layers, including account login and password, we work with the leading security technology company which provides multiple authentication methods for customers to select from.
+                            <br />
+                            - We set the limit for a transaction and for one day corresponding to each authentication method that you use
+                            <br />
+                            - We offer some suggestions on how to set up a secured password and warnings about the safety level of the password you set up so you can set up a highly secured password.
+                            <br />
+                            - We always remind you of the password change at the periodically deadline to avoid exposing your password which is used too long.
+                            <br />
+                            - The system will automatically log out when you stop using the service after 2 minutes to ensure that your account can not be exposed.
+                            <br />
+                            - Token is recommended to customers often dealing with great values. Every transaction with great value is performed, a free password authentication will be sent to customer’s cell phone to verify that transactions are carried out by the customer.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--1. -->
+                    <div>
+                        <div class="title_list" id="bao_mat_title_2">
+                            2. What is OTP? When do I have to use it?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="bao_mat_content_2">
+                            OTP (One Time Password) is the password used only once, is the security layer generated from the TPBank authentication method and used in payment transactions or transfer transactions to someone’s account and some other transactions under the provisions of TPBank.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--2. -->
+                    <div>
+                        <div class="title_list" id="bao_mat_3">
+                            3. Which methods of authentication are provided by TPBank?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="bao_mat_content_3">
+                            - OTP-SMS: OTP is sent to the registered phone number
+                            <br />
+                            - Token-key: a security device which is used for only one login account. Customers press the button on the device to get OTP for each transaction. It can be used for 2-5 years depending on how regular customers use it. With this device, customers can easily use the services of TPBank eBank, even abroad.
+                            <br />
+                            - Matrix Card: a card containing 45 OTP marked according to matrix coding method. A card is used for only one login account. When all the OTP is used, you need to buy another card associated with your login account and continued use. You can perform transactions on TPBank eBank from abroad with this authentication method 
+                            <br />
+                            - Soft Token: a software providing OTP code, it is installed on the mobile phone of the customer and used for only one login account. There’s no expired date for a soft token. It’s out of date when customers cancel e-banking services with TPBank. Soft token can be used abroad.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--3. -->
+                    <div>
+                        <div class="title_list" id="bao_mat_title_4">
+                            4. What do I need to make my eBanking transactions safe?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="bao_mat_content_4">
+                            To secure your ebank, please:
+                            <ul class="list_content">
+                                <li>Never share your password to anyone , anywhere and anytime</li>
+                                <li>Not choose weak passwords such as your name, date of birth , phone number and something like that</li>
+                                <li>Not save login account and password in the auto- save featured software.</li>
+                                <li>Carefully preserve and keep your Token –key or matrix card or OTP receiving phone or Soft Token installed device. If your OTP device is stolen or lost, you must immediately contact with TPBank to inform and ask for a new OTP received device.</li>
+                                <li>You should not leave the computer/access device or let someone use these devices until you log out. You are responsible for logging out after each time logging-in and using e-banking services.</li>
+                                <li>When detecting or suspecting unauthorized access or someone else know your password please infrom us as soon as possible through our Hotline : 37,683,683 04 or 1800 58 58 85</li>
+                            </ul>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--4. -->
+                </div>
+            </div>
+            <!--IV.	B?O M?T D?CH V? -->
+            <div>
+                <div class="title" id="bieu_phi">
+                    V. SERVICE CHARGES</div>
+                <div>
+                    <div>
+                        <div class="title_list" id="bieu_phi_title_1">
+                            1. Which fees I have to pay for using e-banking service?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="bieu_phi_content_1">
+                            - TPBank provide electronic banking services for customers with monthy maintenance fee at  5,000 VND (not including VAT ) 
+                            <br />
+                            - See other fees relating to e-banking service <a href="./download/Bieu phi dich vu eBank.pdf">
+                                Here </a>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--1. -->
+                    <div>
+                        <div class="title_list" id="bieu_phi_title_2">
+                            2. Which fees are waived?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="bieu_phi_content_2">
+                            <ul class="list_content">
+                                <li>Registration fee</li>
+                                <li>OTP-SMS sending fee</li>
+                                <li>Restoration fee</li>
+                                <li>Most of eBanking transactions are waived: Internal transfers, transfer money to FPTS securities accounts, deposit/withdraw money from electronic savings, repayment for credit card, top-up, bill payment of telephone/electricity/ADSL, view account information and statement and some other transactions….</li>
+                            </ul>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--2. -->
+                </div>
+            </div>
+            <!--Bieu phi -->
+            <div>
+                <div class="title">
+                    VI. TRANSACTION LIMITS</div>
+                <div>
+                    <div>
+                        <div class="title_list" id="han_muc_title_1">
+                            1. I use OTP SMS to authenticate transactions, so, what are my daily transaction
+                            limit and my each transaction limit?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="han_muc_content_1">
+                            - Daily limit is 100,000,000 VND
+                            <br />
+                            - Per transaction limit is 50,000,000 VND
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--1. -->
+                    <div>
+                        <div class="title_list" id="han_muc_title_2">
+                            2. What is a large value transaction?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="han_muc_content_2">
+                            Large -value transactions are transactions of  which amount of money is transacted exceeds the limit of 1 authenticating time assigned by TPBank. At the moment, a transaction of over 300 million VND is considered to be a large value deal. When a large -value transaction is made, the customer must authenticate twice, once with SMS - OTP and another with OTP provided by the OTP generated devices.
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--2. -->
+                    <div>
+                        <div class="title_list" id="han_muc_title_3">
+                            3. Transaction limits if customers use Token key?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="han_muc_content_3">
+                            <table cellspacing="2" cellpadding="2" border="1">
+                                <tr>
+                                    <td>
+                                    </td>
+                                    <td style="text-align: center">
+                                        Limit per transaction</td>
+                                    <td style="text-align: center">
+                                        Limit per day</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center">
+                                        Limit for once authentication</td>
+                                    <td style="text-align: center">
+                                        300,000,000 VND
+                                        <br />
+                                    </td>
+                                    <td style="text-align: center">
+                                        600,000,000 VND
+                                        <br />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center">
+                                        Limit for twice authentication
+                                    </td>
+                                    <td style="text-align: center">
+                                        500,000,000 VND
+                                        <br />
+                                    </td>
+                                    <td style="text-align: center">
+                                        1 billion VND
+                                        <br />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--3. -->
+                    <div>
+                        <div class="title_list" id="han_muc_title_4">
+                            4. Is it possible to extend transaction limits? If so, what process do I have to
+                            follow?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="han_muc_content_4">
+                            Yes, it is possible.<br />
+                            Please contact with the nearest branches/front offices of TPBank to be supported
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--4. -->
+                </div>
+            </div>
+            <!--VI.	H?N M?C GIAO D?CH -->
+            <div>
+                <div class="title" id="dv">
+                    VII. SERVICES</div>
+                <div>
+                    <div>
+                        <div class="title_list" id="dv_title_1">
+                            1. Which services are provided by TPBank on Internet Banking?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="dv_content_1">
+                            Internet banking of TPBank provides adequate and diverse services, including:
+                            <ul class="list_content">
+                                <li>Account : Query information and transaction, view and print account statements</li>
+                                <li>Savings: Query, change information, open and withdraw money online 24/7</li>
+                                <li>Loan: Query loans information, payment schedule, apply for a stand-by overdraft and activate overdraft limit.</li>
+                                <li>Transfers: Internal transfer; normal interbank transfer, realtime transfer to other banks through card number and account number; preodical transfer; bulk transfer, transfer to securities account.</li>
+                                <li>Services payment: Top-up, bills payment of telephone/electricity/ADSL/airline ticket/water, online shopping, etc.</li>
+                                <li>Gold Service: View online gold price, manage gold-safe-keeping information; List of gold deals, register to withdraw gold</li>
+                                <li>Card Service: Query information and print credit card statements, repayment for credit card balance, change credit card spending limit, etc.</li>
+                                <li>Loyalty program, track down TPBank’s information, customer get customers and numerous of other utilities.</li>
+                            </ul>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--1. -->
+                </div>
+                <div>
+                    <div class="title_list" id="dv_title_2">
+                        2. How long can I view and print my account statements?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_2">
+                        You can view your account transactions and print statement within 1 latest year from today
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--2. -->
+                <div>
+                    <div class="title_list" id="dv_title_3">
+                        3. How many transactions can I view for each time I view my account transactions?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_3">
+                        Transactions performed within 90 days will be displayed for each time you select to view for a long time.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--3. -->
+                <div>
+                    <div class="title_list" id="dv_title_4">
+                        4. On eBank system, Can I view the information of my passbook deposited at front
+                        offices?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_4">
+                        Yes. You can view all information of your passbooks either it was opened at front offices or eBank system.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--4. -->
+                <div>
+                    <div class="title_list" id="dv_title_5">
+                        5. Is there a requirement on the minimum amount of e-savings?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_5">
+                        Yes. The minimum amount is 1.000.000 VND
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--5. -->
+                <div>
+                    <div class="title_list" id="dv_title_6">
+                        6. Can I track the payment schedule for my loan at TPBank on eBanking?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_6">
+                        Yes. You can check you payment schedule for all of your loans on eBanking of TPBank.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--6. -->
+                <div>
+                    <div class="title_list" id="dv_title_7">
+                        7. Can I apply for a loan at TPBank through eBank?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_7">
+                        You can apply for a stand-by overdraft and activate the overdraft limit on our eBank system. You can also send questions to ask for a loan process and information of your neeed loan.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--7. -->
+                <div>
+                    <div class="title_list" id="dv_title_8">
+                        8. On Internet Banking system, can I transfer money to another bank as fast as internal
+                        transfer?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_8">
+                        Yes. You can realtime transfer to other banks through card number or account number. Your money will be transferred to beneficiaries only in 8s’<br />
+                        List of beneficiary banks <a href="./download/Danh sach NH nhan chuyen tien qua the.pdf"
+                            target="_blank">here</a>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--8. -->
+                <div>
+                    <div class="title_list" id="dv_title_9">
+                        9. Can I transfer money to some beneficiaries by only 1 transfer transaction? If
+                        so, is there a requirement on the number of beneficiaries in one bulk transfer transaction?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_9">
+                        Thanks to our bulk-transfer function, you can transfer money to many accounts at TPBank by only 1 transfer transaction. The number of recipients in one transfer transaction is not limited. However, if the list of recipients including hundreds of beneficiaries, you should split them to ensure transactions are processed quickly.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--9. -->
+                <div>
+                    <div class="title_list" id="dv-title_10">
+                        10. Does eBanking system automatically save beneficiaries’ information for
+                        each transfer transaction?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_10">
+                        You do not need to save transfer patterns. For each financial transaction, just select to save beneficiary information to list of beneficiaries or remittance template. Then, you will not have to re-enter information and account number of beneficiaries, all you have to do is to select from list of beneficiaries or remittance template.<br />
+                        
+                        In case you want to change/ delete/edit information on beneficiaries, please access the function of " beneficiary management" in the category of “Utilities” service. In case you want to view/delete/edit information on remittance template, please access the function of " remittance template" in the category of “Transfer” service.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--10. -->
+                <div>
+                    <div class="title_list" id="dv_title_11">
+                        11. Can I print Transfer confirmation/Invoice to show my transfer’s evidence?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_11">
+                        Yes. You can review/ print Transfer confirmation by using module Transfer\View fundtransfer. 
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--11. -->
+                <div>
+                    <div class="title_list" id="dv_title_12">
+                        12. If I top-up for my mobile phone via eBanking service, Do I get the promotion
+                        of the telecom company?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_12">
+                        Yes. You still enjoy all of the promotions of the mobile network operators as scratch card recharges. Further more, TPBank often runs incentive programs for customers to top-up through eBank.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--11. -->
+                <div>
+                    <div class="title_list" id="dv_title_13">
+                        13. Which mobile network can I top-up for through eBank?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_13">
+                        All mobile network in Vietnam
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--12. -->
+                <div>
+                    <div class="title_list" id="dv_title_14">
+                        14. Which kinds of postpaid bills can I pay through eBank system?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_14">
+                        <ul class="list_content">
+                            <li>Mobile bill</li>
+                            <li>Homephone bill</li>
+                            <li>Internet – ADSL bill</li>
+                            <li>Electricity bill</li>
+                            <li>Water bill</li>
+                            <li>TV Cab bill</li>
+                            <li>Pay-later airline tickets</li>
+                        </ul>
+                        TPBank still keeps on extending billers and bill payment services to meet with customers’
+                        need.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--13. -->
+                <div>
+                    <div class="title_list" id="dv_title_15">
+                        15. Can I purchase online goods and make a payment through eBanking without
+                        a credit card?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_15">
+                        Yes. Actually, there are more than 300 websites accepting payment transactions made by ATM cards or accounts of TPBank, as a result, you can purchase goods online and pay through TPBank’s Internet Banking.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--14. -->
+                <div>
+                    <div class="title_list" id="dv_title_16">
+                        16. Which kinds of services are available in the gold function at TPBank?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_16">
+                        <ul class="list_content">
+                            <li>Constantly and online update the world gold price and TPBank gold price</li>
+                            <li>Manage the information of your safe-keeping Gold in TPBank.</li>
+                            <li>View the gold trading transaction history and gold trading price history.</li>
+                            <li>Make requests to withdraw your gold.</li>
+                        </ul>
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--15. -->
+                <div>
+                    <div class="title_list" id="dv_title_17">
+                        17. Can I repay for my credit card on eBanking?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_17">
+                        Yes. You can repay for your own credit card debt by using module Card service\Credit card repayment. 
+                        <br />
+                        Normaly, Your card limit will be refunded on the next day after repayment.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--16. -->
+                <div>
+                    <div class="title_list" id="dv_title_18">
+                        18.	Does TPBank allow customers to set the own online spending limits for their credit cards?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_18">
+                        Yes. Whenever cuctomers need to spend or not spend at any online spending limits, customer can set their own limits or lock limit to ensure security for their credit card.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--17. -->
+                <div>
+                    <div class="title_list" id="dv_title_19">
+                        19.	Can I track my bonus point and exchange gifts on eBanking?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_19">
+                        Yes. You can track your bonus point and exchange gifts at either counter or eBaking system of TPBank.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--18. -->
+                <div>
+                    <div class="title_list" id="dv_title_20">
+                        20.	Can I search for information on interest rates, exchange rates, gold prices and promotion programs of TPBank on IeBanking?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_20">
+                        Yes. TPBank’s eBanking provides a full range of information on interest rates, exchange rates, gold prices, promotion programs of TPBank for customers.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--19. -->
+                <div>
+                    <div class="title_list" id="dv_title_21">
+                        21.	Can I get consultation about TPBank’s services on eBanking?
+                    </div>
+                    <!--div tieu de -->
+                    <div class="content" id="dv_content_21">
+                        Yes. We are ready to consult about loan services and cards services on TPBank’s eBanking. If you have any question or feedback about our services, you can contact with our customer service center which is availble 24/7 through telephone, email, or live chat, etc.
+                    </div>
+                    <!--div mo ta -->
+                </div>
+                <!--20. -->
+                
+            </div>
+            <!--VII.	CÁC D?CH V? CUNG C?P TRÊN INTERNET BANKING -->
+            <div>
+                <div class="title" id="ho_tro">
+                    VIII. SUPPORT AND FEEDBACK</div>
+                <div>
+                    <div>
+                        <div class="title_list" id="ho_tro_title_1">
+                            1. From which channels can I get supported by TPBank?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="ho_tro_content_1">
+                               Please contact with TPBank through:
+                            <ul class="list_content">
+                                <li>Our nearest branches/ front offices. Detail <a href="./download/Branch network - TPBank.pdf"
+                                    target="_blank">here</a> </li>
+                                <li>Make a phonecall or send email to TPBank’s customer service center
+                                    <ul>
+                                        <li>Tel: 04 37 683 683 or 1800 58 58 85</li>
+                                        <li>Email: <a href="mailto: dichvu_khachhang@tpb.com.vn?Subject=Hỏi đáp" target="_top">
+                                            dichvu_khachhang@tpb.com.vn</a> </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--1. -->
+                </div>
+                <div>
+                    <div>
+                        <div class="title_list" id="ho_tro_title_2">
+                            2. How to investigate and complain about eBanking sevices?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="ho_tro_content_2">
+                            Please bring your ID card/passport to our nearest branches/front offices or contact
+                            the customer service center for assistance.
+                            <br />
+                            <br />
+                            You can fill out a <a href="./download/Yeu cau tro giup dich vu eBANK.pdf" target="_blank">
+                                requesting support form </a>before bringing it to TPBank
+                        </div>
+                        <!--div mo ta -->
+                    </div>
+                    <!--2. -->
+                    <div>
+                        <div class="title_list" id="ho_tro_title_3">
+                            3. How long does it take to deal with investigation requests and complaints about
+                            eBanking services?
+                        </div>
+                        <!--div tieu de -->
+                        <div class="content" id="ho_tro_content_3">
+                            It depends on what customers require. TPBank commit to support customers as soon
+                            as possible:
+                            <ul>
+                                <li>For internal transfers: within 24 hours after receiving a request.</li>
+                                <li>For normal interbank transfer, Top-up, Bill Payment, Online shopping: it depends on how long the partners, the intermediary payment companies, State Bank of Vietnam, Beneficiary Bank. So, it takes less than 7 working days since we received customers’ requests.</li>
+                                <li>For realtime transfer to other bank: it depends on the process of the third party, and it may take up to 15 working days.</li>
+                            </ul>
+                        </div>
+                        <!--div mo ta -->
+                        <br />
+                        <br />
+                        <br />
+                    </div>
+                    <!--3. -->
+                </div>
+                <!-- VIII.	H? TR? VÀ TRA SOÁT, KHI?U N?I-->
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,2142 @@
+/**
+ * Created by HuyNT2.
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+ /*
+var usercheck;
+document.addEventListener("deviceready", passBtnList, false);
+ var passBtnList = document.getElementsByClassName('pass_button');
+	if (gIsAddedEvent == false) {
+		gIsAddedEvent = true;
+		for (index = 0; index < passBtnList.length; index++) {
+			passBtnList[index].addEventListener('click', function (e) {
+				e.preventDefault();
+				actionPass(this);
+			});				
+		}
+	}
+
+*/
+var loginbg1=document.getElementById('login-1').offsetHeight;
+var loginbg2=document.getElementById('login-2').offsetHeight;
+var x =25;//chi so tang them div login khi nhap capcha
+var y =30;//chi so giam div login khi da nho tai khoan dang nhap
+
+ var usercheck;
+document.addEventListener("deviceready", onDeviceReady, false);
+
+// device APIs are available
+//
+
+function onDeviceReady() {
+	 
+	var passBtnList = document.getElementsByClassName('pass_button');
+	if (gIsAddedEvent == false) {
+		gIsAddedEvent = true;
+		for (index = 0; index < passBtnList.length; index++) {
+			passBtnList[index].addEventListener('touchstart', function (e) {
+
+				e.preventDefault();
+				actionPass(this);
+			});				
+		}
+	}
+    if(gCustomerNo != undefined)
+        sendJSONCheckFingerprintPINRequest();
+	//cordova.exec(null, null, 'CoreAndroid', 'overrideBackbutton', [true]);
+}
+
+
+setInputOnlySpace('login.txt.password', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+setInputOnlyASCII('login.txt.captcha', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+//setInputOnlyNumber('login.txt.username', CONST_STR.get("ERR_INPUT_ONLY_NUMBER"));
+
+var statusAccMode = false;
+var touchIDTokenKey = '';
+var isPinEX='';
+var isflaglock='';
+/*document.addEventListener("evtTouchID", function(){
+	showAlertText("H3");
+}, true);*/
+
+
+initLoginScr();
+function initLoginScr() {
+	statusAccMode = getUserInfoToLocal(); //get local data
+    getUserAvatarFromLocal(); //anhpv1 avatar
+    getLayoutConfig();
+    getChangeBackGr();
+	if(getURLParam('cif') && getURLParam('cif').length == 10) {
+		statusAccMode = false;
+		document.getElementById('login.txt.username').value = getURLParam('cif');
+	}
+	if(!statusAccMode) {
+		getCaptcha();
+		return;
+	}
+	updateViewWithUserInfo(statusAccMode);
+	
+	getCaptcha();
+}
+
+function viewDidLoadSuccess() {
+	  window.addEventListener("resize",function(){
+        //   var length = navArrayScr.length;
+        //   resizeMainViewContent(navArrayScr[length-1]);
+		  resizeMainViewContentWhenKeyboardShow();
+		  
+    });
+	getNavigatorInfoUser();
+	if (gModeScreenView == CONST_MODE_SCR_SMALL) {
+		loginforMobile();
+	}
+	else{
+	loginfoDesktop();	
+	}
+
+	if(gModeScreenView == CONST_MODE_SCR_MEDIUM){
+		document.getElementById('login-3').style.display='none';
+			document.getElementById('navigation.logo').style.display='none';
+			document.getElementById('iconForgotPassword').style.right='5%';
+			document.getElementById('login.border').style.borderBottom='1px solid rgba(255, 255, 255, 0.3)';
+			document.getElementById('PrintandPin').style.display='none';
+			document.getElementById('login.accountnamerow').style.display = 'none';
+            document.getElementById('bottom_page').style.display='block';
+	}
+	document.addEventListener('evtChangeWidthDesktop',loginfoDesktop,false);
+    document.addEventListener('evtChangeWidthMobile',loginforMobile,false);
+    document.getElementById('footerSlide').style.display = 'block';
+    document.getElementById('mainlayoutfooter').style.display = 'block';
+//    document.getElementById('floatingButton').style.display = 'block';
+    document.getElementById('navActionbar').style.display = 'none';
+    document.getElementById('nav.btn.homeright').style.display = 'block';
+    document.getElementById('mainview').style.background = 'none';
+
+
+		//CHANGE BANNER
+		var capchar = document.getElementById('trow_capcha');
+		if(capchar!= undefined){
+			capchar.style.display='none';
+		}
+
+		logInfo('load login view success');
+		document.getElementById("login.txt.username").onblur = function() {
+			var loginUser = document.getElementById("login.txt.username");
+			var tmpStr = loginUser.value;
+			if(parseInt(tmpStr) >0){
+				if (tmpStr && tmpStr > 0 && tmpStr.length < 8) {
+				loginUser.value = '00000000'.substring(0, 8 - tmpStr.length) + tmpStr;
+				tmpStr = loginUser.value;
+			}
+			}
+		};
+
+		if(gUserInfo.lang == 'EN') {
+			document.getElementById('login.BannerBottom').innerHTML = '<a href="' + bannersTPBank.bottomBanner[0].bannerLinkEN + '"><img style="height:85px;" src="' + bannersTPBank.bottomBanner[0].bannerImageEN + '"></a>';
+		}
+		else {
+			document.getElementById('login.BannerBottom').innerHTML = '<a href="' + bannersTPBank.bottomBanner[0].bannerLinkVN + '"><img style="height:85px;" src="' + bannersTPBank.bottomBanner[0].bannerImageVN + '"></a>';
+		}
+
+
+		//TUANNM5 PINCODE VIEW INIT
+
+		//PINCODE VIEW INIT END
+		//sendJSONCheckFingerprintPINRequest();
+		//Sangnt1 l?y l?i count notification chua d?c
+		setTimeout(function(){
+			gDeviceTokenPush = localStorage.gDeviceTokenPush;
+			getCountDataNotificationUnread();
+
+		},1000);
+		//Sangnt1 them lay vi tri
+		//end sangnt1
+}
+
+
+function viewWillUnload() {
+	//flag = false;
+	logInfo('view login will unload');
+	document.removeEventListener('evtChangeWidthMobile',loginforMobile,false);
+	document.removeEventListener('evtChangeWidthDesktop',loginfoDesktop,false);
+	// document.getElementById('mainview').style.background = 'rgba(255,255,255,0.8)';
+    document.getElementById('bottom_page').style.display='none';
+    document.getElementById('mainlayoutfooter').style.display='none';
+}
+
+function changeLoginMode() {
+    if((gPincode == '' && gUsingFingerprint != '1' )|| (document.getElementById('login.txt.username').style.display != 'none' && document.getElementById('login.txt.username').value == ''))
+	{
+		//alert('chua dang ki ');
+        createDialog();
+       modalDialog.showDialog();
+	   //showAlertNOT_ALLOW_USE_FINGERSPRINT(CONST_STR.get('FINGER_PRINT_NOT_ALLOW'));
+	   //showAlertKHCN_KHDN_FAQ('ban can phai dng nhap lai do chua duoc dong bo voi tai khoan tren server, click vào day di');
+		return;	
+	}
+	if(isflagloginsuccess == 'N')
+		showAlertText(CONST_STR.get('PIN_LAST_LOGINSUCCESS_ALERT'));
+	var touchIDTimer = setInterval(function(){
+	//if (touchIDTokenKey != null && touchIDTokenKey.length > 0) {
+			clearInterval(touchIDTimer);
+			var devicePlatform = device.platform;
+            var versionSDK = device.version;
+			if(devicePlatform == 'Android' && versionSDK != 'undefined' && parseInt(versionSDK) >= 6){
+                cordova.exec(function(e){
+                    console.log('Thanh cong login qua van tay roi' + e );
+                    loginWithTouchID();
+                }, function(e){
+                    console.log('Loi login qua van tay roi' + e );
+                    if( isPinEX=='Y' ){
+                        showAlertText(CONST_STR.get('PIN_EX_DATE_ALERT'));
+                    }else{
+                        if (gPincode != '-1') {
+                            //KH da dang ky su dung PIN code tren thiet bi nay
+                            gUsingPinpadMode = 'login';
+                            paramObj = {
+                                typeAction: gUsingPinpadMode,
+                                pass:gPincode
+
+                            }
+                            document.getElementById('div-pinpad').style.display = '';
+                            document.getElementById('pageFooter').style.zIndex = -1;
+                        } else {
+                            document.getElementById('div-login-normal').style.display = '';
+                        }
+                    }
+                }, 'FingerPrint', 'checkMyFingerPrint', ['checkMyFingerPrint']);
+            }
+            else{
+				THEBTouchID.showFingerprintWithPIN('abc', 'def', 'Huynt2', function(){
+					loginWithTouchID();
+				}, function(e) { 
+					if (e == '3') {
+						//showAlertText(CONST_STR.get("TOUCHID_3_TIMES_FAIL_ALERT"));
+					}
+					//alert('Dang nhap bang PIN code');
+					if( isPinEX=='Y' ){
+					showAlertText(CONST_STR.get('PIN_EX_DATE_ALERT'));	
+					}else{
+						if (gPincode != '-1') {
+//                            if(gprsResp.arguments[3] == "00423505" ||gprsResp.arguments[3] == "01510196"){
+//                                alert("AnhNTT2 219 : gPincode" +gPincode+" ||| paramObj :"+paramObj);
+//                            }
+							//KH da dang ky su dung PIN code tren thiet bi nay
+							gUsingPinpadMode = 'login';
+							paramObj = {
+								typeAction: gUsingPinpadMode,
+								pass:gPincode
+								
+							}
+							document.getElementById('div-pinpad').style.display = '';
+							document.getElementById('pageFooter').style.zIndex = -1;
+						} else {
+							document.getElementById('div-login-normal').style.display = '';
+						}
+					}
+				});
+			}
+		//}
+	}, 200);
+	setTimeout(function(){
+		if(touchIDTimer) {
+			clearInterval(touchIDTimer);
+		}
+	}, 45000);
+}
+
+/*
+function openQRCodeScanner() {
+	//alert('happend');
+	var touchIDTimer = setInterval(function(){
+	//if (touchIDTokenKey != null && touchIDTokenKey.length > 0) {
+		clearInterval(touchIDTimer);
+		//alert('1');
+		THEBTouchID.loadQRCodeScanner('abc', function() {
+			
+		}, function() {
+		
+		});
+		//}
+	}, 200);
+	setTimeout(function(){
+		if(touchIDTimer) {
+			clearInterval(touchIDTimer);
+		}
+	}, 45000);
+}
+*/
+
+function openEBankSiteOK() {
+	openEBankSiteCancel();
+	window.open(encodeURI(CONST_WEB_URL_LINK + '?cif=' + tmpStr), '_system');
+}
+
+function openEBankSiteCancel() {
+	document.removeEventListener('alertAppConfirmOK', openEBankSiteOK, false);
+	document.removeEventListener('alertAppConfirmCancel', openEBankSiteCancel, false);
+}
+
+
+function openEBankSiteOK() {
+	openEBankSiteCancel();
+	window.open(encodeURI(CONST_WEB_URL_LINK + '?cif=' + tmpStr), '_system');
+}
+
+function openEBankSiteCancel() {
+	document.removeEventListener('alertAppConfirmOK', openEBankSiteOK, false);
+	document.removeEventListener('alertAppConfirmCancel', openEBankSiteCancel, false);
+}
+
+//METHOD GET CAPCHAR FROM CORE
+function getCaptcha(){
+	var data = {};
+	var arrayArgs = new Array();	
+	gHashCode=randomString();
+	//alert(hashCode);
+	arrayArgs.push(gHashCode);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_GET_CAPCHA"), "", "", "", "", arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestBacgroundMBService('CMD_TYPE_GET_CAPCHA', arrayArgs, requestMBServiceCapchaSuccess, requestMBServiceCapchaFail);
+}
+
+//event listener: http request success
+function requestMBServiceCapchaSuccess(e){
+	gprsResp = parserJSON(e, false);
+	var notiCaptcha = document.getElementById("login.txt.captcha");	
+	var image_captcha = gprsResp.respRaw;
+		
+	if ((gprsResp.respCode == '0') 
+		&& (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_GET_CAPCHA")))) 
+	{		
+		
+		/*current_md5_capcha = gprsResp.arguments[0];
+		notiCaptcha.placeholder = gprsResp.arguments[1];*/
+		var tmpCaptcha = document.getElementById('captcha_gen');
+		
+		if(tmpCaptcha != undefined && tmpCaptcha != null) {
+			tmpCaptcha.setAttribute('src', image_captcha);
+		}
+	}
+	else if ((gprsResp.respCode != '0') && 
+	((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_GET_CAPCHA"))  
+	|| (gprsResp.responseType == '-1')))) {		
+		var tmpCaptcha = document.getElementById('captcha_gen');
+		if(tmpCaptcha != undefined && tmpCaptcha != null) {
+			tmpCaptcha.setAttribute('src', "./assets/images/re-captcha.png");
+		}
+	}
+};
+
+//event listener: http request fail
+function requestMBServiceCapchaFail(e){
+	var tmpCaptcha = document.getElementById('captcha_gen');
+	if(tmpCaptcha != undefined && tmpCaptcha != null) {
+		tmpCaptcha.setAttribute('src', "./assets/images/re-captcha.png");
+	}
+	logInfo('FAILED');
+};
+
+
+function loginfoDesktop(){
+    var mainViewContent=document.getElementById('mainViewContent');
+    var bottom_page= document.getElementById('page_Bannerbottom');
+    var mainview=document.getElementById('mainview');
+if (currentPage == 'login-scr') {
+	if (mainview) {
+		 mainview.style.height = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) +'px';
+            mainview.style.height=(innerHeight-160) +'px';
+            mainview.style.transform='translate(0px, 0px) translateZ(0px);'
+	}
+        if (mainViewContent) {
+            mainViewContent.style.top = '0px';
+            mainViewContent.style.bottom = '0px';
+            mainViewContent.style.height='425px';
+            mainViewContent.style.background='inherit';
+            mainViewContent.style.paddingTop='0';
+        }
+        if (navBottomBar) {
+            navBottomBar.style.display = 'none';
+        }
+        var infoMationAvatar=document.getElementById('infoMationAvatar');
+        infoMationAvatar.style.textAlign='left';
+        infoMationAvatar.style.paddingLeft='28%';
+        infoMationAvatar.style.marginLeft='1px';
+        infoMationAvatar.style.paddingTop='0%';
+        infoMationAvatar.style.width='54%';
+        document.getElementById('login.accountnamerow').style.display='none';
+        document.getElementById('div-login-normal').style.top='0';
+        document.getElementById('name.userlogin').innerHTML = gCustomerNanme;
+        document.getElementById('login-3').style.display='none';
+        document.getElementById('UserAvatar').style.paddingTop='0%';
+        document.getElementById('UserAvatar').style.paddingRight='31%';
+        document.getElementById('UserAvatar').style.marginRight='-1px';
+        document.getElementById('navigation.logo').style.display='none';
+        document.getElementById('login.border').style.borderBottom='1px solid rgba(255, 255, 255, 0.3)';
+        document.getElementById('iconForgotPassword').style.right='5%';
+        document.getElementById('iconForgotPassword').style.top='inherit';
+        document.getElementById('iconForgotPassword').style.paddingTop='4px';
+        document.getElementById('menu-section').style.display='none';
+        document.getElementById('headermb').style.display='none';
+        document.getElementById('nav.btn.homeright').style.display='none';
+        document.getElementById('id.qrcode.btn').style.display='none';
+        document.getElementById('id.call.btn').style.display='none';
+        document.getElementById('bottom_page').style.display='block';
+        document.getElementById('mainlayoutfooter').style.display='block';
+//        document.getElementById('floatingButton').style.display='none';
+        document.getElementById('trow_capcha_bottom').style.borderBottom='1px solid rgba(255, 255, 255, 0.3)';
+        var LoginAccountnumberrow=document.getElementById('login.txt.username');
+         statusAccMode=getUserInfoToLocal();
+    if (statusAccMode=='') {
+        document.getElementById('loginAccountnumberrow').style.borderBottom='1px solid rgba(255, 255, 255, 0.3)';
+    }
+    else{
+        document.getElementById('loginAccountnumberrow').style.borderBottom='none';
+    }
+    }  
+}
+function loginforMobile(){
+    if (currentPage == 'login-scr') {
+        if (mainViewContent) {
+            mainViewContent.style.height = 'auto';
+            mainViewContent.style.top = '40px';
+            mainViewContent.style.bottom =  '0px';
+            mainViewContent.style.width='100%';
+            mainViewContent.style.left='0';
+            mainViewContent.style.paddingTop='10%';
+        }
+        if (navBottomBar) {
+            navBottomBar.style.display = 'none';
+        }
+        document.getElementById('UserAvatar').style.paddingTop='0';
+        document.getElementById('UserAvatar').style.paddingRight='5%';
+        var infoMationAvatar=document.getElementById('infoMationAvatar');
+        infoMationAvatar.style.textAlign='left';
+        infoMationAvatar.style.paddingLeft='5%';
+        infoMationAvatar.style.paddingTop='0';
+        infoMationAvatar.style.width='70%';
+        document.getElementById('div-login-normal').style.top='16px';
+        document.getElementById('name.userlogin').innerHTML = gCustomerNanme;
+    	document.getElementById('login-3').style.display='block';
+        document.getElementById('login.border').style.borderBottom='none';
+        document.getElementById('iconForgotPassword').style.top='5%';
+        document.getElementById('iconForgotPassword').style.right='-35%';
+        document.getElementById('iconForgotPassword').style.paddingTop='0';
+        document.getElementById('loginAccountnumberrow').style.borderBottom='none';
+        document.getElementById('headermb').style.display='block';
+        document.getElementById('PrintandPin').style.display='block';
+        document.getElementById('login-1').style.height='168px;'
+        document.getElementById('bottom_page').style.display='none';
+        document.getElementById('mainlayoutfooter').style.display='block';
+//        document.getElementById('floatingButton').style.display='block';
+        document.getElementById('trow_capcha_bottom').style.borderBottom='none';
+     	
+    }
+}
+function updateViewWithUserInfo(inStatus) {
+	
+	if (inStatus && gCustomerNanme && gCustomerNanme.length > 0){// && (getURLParam('payment') != 'order')) {
+		document.getElementById('login.txt.username').style.display = 'none';
+		document.getElementById('login.txt.username').value = gCustomerNo;
+		
+		document.getElementById('login.ico.username').style.display = 'none';
+		document.getElementById('login.accountname').style.display = 'inherit';
+        document.getElementById('iconForgotPassword').style.top='5%';
+        //anhntt thay doi div khi da co ten tai khoan
+        document.getElementsByClassName('icon-pin-fingerprints')[0].setAttribute('style','margin-top:22px');
+        var heightbg1=loginbg1-x;
+        var heightbg2=loginbg2-y;
+        document.getElementById('login-1').setAttribute('style','height:'+heightbg1+'px');
+        document.getElementById('login-2').setAttribute('style','height:'+heightbg2+'px');
+        document.getElementById('login-3').style.height='84px';
+        document.getElementById('login-4').style.height='74px';
+        if(gModeScreenView == CONST_MODE_SCR_SMALL){
+		if(!Environment.isMobile()){
+			var tmpNodeAccName = document.getElementById('login.accountname');
+			tmpNodeAccName.innerHTML = gCustomerNanme;
+			document.getElementById('navigation.logo').style.display='none';
+		}else{
+			
+			document.getElementById('updateinfo.secondtime').style.display='block';
+			document.getElementById('navigation.logo').style.display='none';
+			document.getElementById('name.userlogin').innerHTML = gCustomerNanme;
+			document.getElementById('user.avatar').style.display = 'none';
+			var tmpUserAvatar = document.getElementById('user.avatar');
+			if(gUserAvatar !="undefined")
+			{
+				tmpUserAvatar.src= gUserAvatar;
+				tmpUserAvatar.style.display = '';
+			}
+		}
+		if(Environment.isMobile()){
+			var tmpNodeAccName = document.getElementById('login.accountname');
+			tmpNodeAccName.innerHTML = gCustomerNanme;
+			document.getElementById('navigation.logo').style.display='none';
+		}else{
+			
+			document.getElementById('updateinfo.secondtime').style.display='block';
+			document.getElementById('navigation.logo').style.display='none';
+			document.getElementById('name.userlogin').innerHTML = gCustomerNanme;
+			document.getElementById('user.avatar').style.display = 'none';
+			var tmpUserAvatar = document.getElementById('user.avatar');
+			if(gUserAvatar !="undefined")
+			{
+				tmpUserAvatar.src= gUserAvatar;
+				tmpUserAvatar.style.display = '';
+			}
+		}
+	}
+		else{
+			if(Environment.isWindows()){
+				var tmpNodeAccName = document.getElementById('login.accountname');
+			tmpNodeAccName.innerHTML = gCustomerNanme;
+		}else{
+			document.getElementById('updateinfo.secondtime').style.display='block';
+			document.getElementById('navigation.logo').style.display='none';
+			document.getElementById('name.userlogin').innerHTML = gCustomerNanme;
+			document.getElementById('user.avatar').style.display = 'none';
+			var tmpUserAvatar = document.getElementById('user.avatar');
+			if(gUserAvatar !="undefined")
+			{
+				tmpUserAvatar.src= gUserAvatar;
+				tmpUserAvatar.style.display = '';
+			}
+		}
+			document.getElementById('login-3').style.display='none';
+			document.getElementById('login.border').style.borderBottom='1px solid rgba(255, 255, 255, 0.3)';
+			document.getElementById('PrintandPin').style.display='none';
+		}
+        //anhntt.fsoft set layout accno
+        if(gModeScreenView == CONST_MODE_SCR_SMALL){
+        	if(gKeylayout==1){
+           changecsstopath('cssmb');
+        }else if(gKeylayout==2){
+            changecsstopath('cssmb-light');
+        }else{
+            changecsstopath('cssmb');
+        }
+        }
+        for(var i=1;i<=24;i++) {
+            if(changeBackGround==i){
+                ChangeImg(i);
+            }
+    }
+
+    }
+
+    else {
+    	if(gModeScreenView == CONST_MODE_SCR_SMALL){
+        document.getElementById('login.txt.username').style.display = 'block';
+        document.getElementById('login.txt.username').value = '';
+        document.getElementById('login.ico.username').style.display = 'block';
+        document.getElementById('login.accountname').style.display = 'none';
+        document.getElementById('updateinfo.secondtime').style.display='none';
+        document.getElementById('navigation.logo').style.display='block';
+        document.getElementById('iconForgotPassword').style.top='none';
+    }
+    else{
+    	document.getElementById('login.txt.username').style.display = 'block';
+        document.getElementById('login.txt.username').value = '';
+        document.getElementById('login.ico.username').style.display = 'block';
+        document.getElementById('login.accountname').style.display = 'none';
+        document.getElementById('updateinfo.secondtime').style.display='none';
+        document.getElementById('navigation.logo').style.display='none';
+        document.getElementById('iconForgotPassword').style.top='none';
+        document.getElementById('loginAccountnumberrow').style.borderBottom='1px solid rgba(255, 255, 255, 0.3)';
+    }
+    }
+}
+
+function changeModeInputAccNo() {
+     //anhntt login voi truong hop binh thuong
+    document.getElementsByClassName('icon-pin-fingerprints')[0].setAttribute('style','margin-top:0px');
+    document.getElementById('login-1').setAttribute('style','height:'+loginbg1+'px');
+    document.getElementById('login-2').setAttribute('style','height:'+loginbg2+'px');
+    document.getElementById('login-3').style.height='90px';
+    document.getElementById('login-4').style.height='80px';
+    gUsingFingerprint=='0';
+    document.getElementById('navigation.logo').style.display='none';
+    var tmpStatus = getUserInfoToLocal();
+    getUserAvatarFromLocal(); //anhpv1
+    if(!tmpStatus) {
+
+        return;
+	}
+	statusAccMode = !statusAccMode;
+	updateViewWithUserInfo(statusAccMode);
+}
+
+//handle input
+var tmpNodeUser = document.getElementById('login.txt.username');
+tmpNodeUser.addEventListener('evtSpecialKeyPressed', handleSpecialKeyPressd, false);
+var tmpNodePass = document.getElementById('login.txt.password');
+tmpNodePass.addEventListener('evtSpecialKeyPressed', handleSpecialKeyPressd, false);
+var tmpNodeCaptcha = document.getElementById('login.txt.captcha');
+tmpNodeCaptcha.addEventListener('evtSpecialKeyPressed', handleSpecialKeyPressd, false);
+
+function handleSpecialKeyPressd(e)
+{
+	var ew = e.keyPress;
+	if (ew == 13) { //Enter pressed
+		requestLogin();
+	}
+	else {
+		return;
+	}
+}
+
+
+document.getElementById('login.txt.username').onchange = function(e) {
+	var tmpStr = document.getElementById('login.txt.username').value;
+	if (!CONST_BROWSER_MODE && tmpStr.length == 10 && parseInt(tmpStr)> 0) {
+		window.open(encodeURI(CONST_WEB_URL_LINK + '?cif=' + tmpStr), '_system');
+		/*showAlertAppText(CONST_STR.get('OPEN_CORP_SITE_ALERT_CONTENT'), CONST_STR.get('BANNER_ALERT_MOBILE_BTN_OK'), CONST_STR.get('BANNER_ALERT_MOBILE_BTN_CANCEL'));
+		document.addEventListener('alertAppConfirmOK', openEBankSiteOK, false);
+		document.addEventListener('alertAppConfirmCancel', openEBankSiteCancel, false);	*/
+	}
+}
+
+function requestLogin() {
+	if ((!statusAccMode) && (document.getElementById("login.txt.username").value.length == 0)){
+		showAlertText(CONST_STR.get("ERR_EMPTY_ACC_INPUT"));
+		return;
+	}
+	
+	//passing 
+	sendJSONRequest();
+	
+}
+
+function goToBankInfoMainScr() {
+	navController.pushToView('bankinfo/bank-info-main-scr', true);
+}
+
+var gprsResp = new GprsRespObj("","","","");
+
+function sendJSONRequest() {
+	
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	var loginUser = document.getElementById("login.txt.username");
+	var loginPass = document.getElementById("login.txt.password");
+	var loginCaptcha = document.getElementById("login.txt.captcha");
+		
+	
+	// var tmpStr = statusAccMode? gCustomerNo : loginUser.value;
+	// if(statusAccMode) loginUser.value = gCustomerNo;
+	var tmpStr = statusAccMode? localStorage.getItem('TPBankUserNumber') : loginUser.value;
+	 if(statusAccMode) loginUser.value = localStorage.getItem('TPBankUserNumber');
+	usercheck =tmpStr;
+	if( !isNaN(tmpStr) && parseInt(tmpStr)> 0){
+		if (tmpStr.length < 8) {
+		loginUser.value = '00000000'.substring(0, 8 - tmpStr.length) + tmpStr;
+		tmpStr = loginUser.value;
+		}
+		if (loginUser.value.length != 8 && loginUser.value.length != 10) {
+			if(loginUser.value.length != 11){
+				showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+				return;
+			}
+			
+		}
+	}
+	
+	arrayArgs.push(loginUser.value);
+	
+	tmpStr = loginPass.value;
+	if (tmpStr.length < 1) {
+		showAlertText(CONST_STR.get('ERR_EMPTY_PASSWORD'));
+		return;
+	}
+	
+	//if (!checkAvailableChar(tmpStr)) {
+	//	showAlertText(CONST_STR.get('ERR_MSG_WRONG_PASSWORD_FORMAT'));
+	//	return;
+	//}
+	if(document.getElementById('trow_capcha').style.display==""){
+		tmpStr = loginCaptcha.value;
+		if (tmpStr.length < 1) {
+			showAlertText(CONST_STR.get('ERR_EMPTY_CAPTCHA'));
+			return;
+		}
+	}
+	
+	
+	/*if(loginUser.value.length == 10 && CONST_BROWSER_MODE) {
+		document.getElementsByName('fldLoginUserId')[0].value = loginUser.value;
+		document.getElementsByName('fldPassword')[0].value = loginPass.value;
+		document.getElementsByName('fldCaptchar')[0].value = loginCaptcha.value;
+		document.getElementsByName('fldCaptcharChecksum')[0].value = encodeURIComponent(current_md5_capcha);
+		document.getElementById('fldLoginIBForm').setAttribute('action', CONST_WEB_CORP_URL_LINK);
+		document.getElementById('fldGoToIBank').click();
+		return;
+	}*/
+	var passTemp = loginPass.value.replace("\\","\\\\");
+	var passTempCheck = passTemp.replace("'","\\'"); 
+	var passTempCheckChoack = passTempCheck.replace('"',"\\\""); 
+	var passNew = encodeURIComponent(passTempCheckChoack);
+	logInfo(passNew,"login-scr:680");
+	arrayArgs.push(passNew);
+	//arrayArgs.push(loginPass.value);
+	if(document.getElementById('trow_capcha').style.display=="none"){
+		arrayArgs.push("");
+		arrayArgs.push("");
+	}
+	else{
+		if(loginCaptcha.length <2){
+			showAlertText(CONST_STR.get('LOGIN_INPUT_CAPCHA_ERR'));
+			return;
+		}
+		arrayArgs.push(loginCaptcha.value);
+		arrayArgs.push(encodeURIComponent(gHashCode));
+	}
+	//arrayArgs.push(encodeURIComponent(current_md5_capcha));
+	//damnv bổ sung
+	try {
+		arrayArgs.push(device.uuid);
+	}
+	catch(err) {
+		arrayArgs.push('On Browser');
+	}
+	//dạmnv end
+
+	arrayArgs.push(encodeURIComponent(navigator.userAgent));
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_LOGIN"), "", "", gUserInfo.lang, "", arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	
+}
+
+function loginWithTouchID() {
+	var data = {};
+	var arrayArgs = new Array();
+	var tokenKey = '';
+	
+	//localStorage.setItem('TouchIDTokenKey', '');
+	tokenKey = localStorage.getItem('TouchIDTokenKey');
+	
+	arrayArgs.push(device.uuid);
+	//arrayArgs.push('123456');
+	//arrayArgs.push(touchIDTokenKey);
+	arrayArgs.push(tokenKey);	
+
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TOUCHID_LOGIN"), "", "", gUserInfo.lang, "", arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+function sendJSONCheckFingerprintPINRequest() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	var deviceID ='';//= device.uuid;
+	try {
+		deviceID = device.uuid;
+		arrayArgs.push(deviceID);
+        if(gDeviceRestartFlag){
+            arrayArgs.push('Y');
+        }else{
+            arrayArgs.push('');
+        }
+//		arrayArgs.push('718207E7-6784-4F4B-B374-651A88B27450');
+
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_FINGERPRINT_PINCODE_CHECK_STATUS"), "", "", gUserInfo.lang, gUserInfo.sessionID , arrayArgs);
+		
+		data = getDataFromGprsCmd(gprsCmd);
+	   showLoadingMask(this);	
+	   requestMBService(data, false , 0, requestMBServiceSuccess, requestMBServiceFail);
+       // requestBacgroundMBService('CMD_FINGERPRINT_PINCODE_CHECK_STATUS',arrayArgs, requestMBServiceSuccess, requestMBServiceFail);
+	}
+	catch(err) {
+		
+		/*
+		deviceID = '';
+		document.getElementById('td-touchid-login').style.display = 'none';
+		*/
+		/*
+		arrayArgs.push('123456');
+
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_FINGERPRINT_PINCODE_CHECK_STATUS"), "", "", gUserInfo.lang, "", arrayArgs);
+		
+		data = getDataFromGprsCmd(gprsCmd);
+		
+		requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+		*/
+	}
+}
+
+function requestMBServiceSuccess(e) {
+	hideLoadingMask();
+	if(contentPromotion.isOpen){
+		return;
+	}
+	gprsResp = parserJSON(e);
+	if(parseInt(gprsResp.respCode) =='2009'){
+		var capchar = document.getElementById('trow_capcha');
+		if(capchar!= undefined){
+			capchar.style.display='';
+            //anhntt thay doi height cho div login
+            var Heightlg1=loginbg1+x;
+            var Heightlg2=loginbg2+x;
+            if(gModeScreenView == CONST_MODE_SCR_MEDIUM){
+            	Heightlg1 += 16;
+            }
+            document.getElementById('login-1').setAttribute('style','height:'+Heightlg1+'px');
+            document.getElementById('login-2').setAttribute('style','height:'+Heightlg2+'px');
+            document.getElementById('login-3').style.height='112px';
+            document.getElementById('login-4').style.height='102px';
+		}
+		
+		showAlertText(gprsResp.respContent);
+		return;
+	}
+	if ((parseInt(gprsResp.respCode) == parseInt(RESP.get('COM_SUCCESS')))
+        && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_FINGERPRINT_PINCODE_CHECK_STATUS")))) {
+//        if(gprsResp.arguments[3] == "00423505" ||gprsResp.arguments[3] == "01510196"){
+//            alert("AnhNTT : dang nhap bang ma pin hoac van tay");
+//            alert("AnhNTT 799: gprsResp: "+gprsResp);
+//        }
+
+		if (gprsResp.arguments[0] == '-1') {
+//            if(gprsResp.arguments[3] == "00423505" ||gprsResp.arguments[3] == "01510196"){
+//                alert("Dang nhap binh thuong 797"+gprsResp.arguments[0]);
+//            }
+
+            document.getElementById('div-login-normal').style.display = '';
+			//thiet bi nay chua dang ky su dung PIN code hay Fingerprint
+			/*
+			localStorage.setItem('TouchIDTokenKey', '');
+			touchIDTokenKey = localStorage.getItem('TouchIDTokenKey');
+			if (touchIDTokenKey != null && touchIDTokenKey.length > 0) {
+				document.getElementById('td-touchid-login').style.display = '';
+			} else {
+				document.getElementById('td-touchid-login').style.display = 'none';
+			}*/
+			//document.getElementById('td-touchid-login').style.display = 'none';
+		} else {
+//			if(gprsResp.arguments[3] == "00423505" ||gprsResp.arguments[3] == "01510196"){
+//                alert("AnhNTT 810: gUsingFingerprint" +gprsResp.arguments[2]+" gPincode: "+gprsResp.arguments[1]+" gCustomerNo: "+gprsResp.arguments[3]+ " isPinEX: "+gprsResp.arguments[4]+"ttttt5: "+gprsResp.arguments[5]+"tttt6 :"+gprsResp.arguments[6]);
+//            }
+			//document.getElementById('td-touchid-login').style.display = 'none';
+			var tmpNodeAccName = document.getElementById('login.accountname');
+		    tmpNodeAccName.innerHTML =gprsResp.arguments[9];
+            logInfo("PHAMVANANH1"+tmpNodeAccName);
+			//gTokenKey = gprsResp.arguments[0];
+			gUsingFingerprint = gprsResp.arguments[2];
+			gPincode = gprsResp.arguments[1];
+//			gCustomerNo = gprsResp.arguments[3];
+		    isPinEX=gprsResp.arguments[4];  // DAMNV: THAM SỐ LÀ Y THÌ PINCODE HOẶC VÂN TAY ĐÃ DÙNG X THÁNG CẦN ĐỔI MÃ
+		    isflaglock=gprsResp.arguments[5];  // DAMNV: THAM SỐ KIỂM TRA XEM CÓ ĐỔ PASS HAY KHÔNG
+		    isflagloginsuccess=gprsResp.arguments[6]; // DAMNV: THAM SỐ KIỂM TRA LẦN ĐANG NHẬP THÀNH CÔNG GẦN ĐÂY SAU X NGÀY
+		    if( (isflaglock=='N') && (isflagloginsuccess=='Y')){
+				if (gUsingFingerprint == '1') {
+					changeLoginMode();
+				} else {
+					//document.getElementById('td-touchid-login').style.display = 'none';
+					if(isPinEX=='Y' ){
+						 showAlertText(CONST_STR.get('PIN_EX_DATE_ALERT'));		
+					}else{
+					if (gPincode != '-1' && gCustomerNo == gprsResp.arguments[3]) {
+						//KH da dang ky su dung PIN code tren thiet bi nay
+						gUsingPinpadMode = 'login';
+						paramObj = {
+							typeAction: gUsingPinpadMode,
+							pass:gPincode
+							
+						};
+						document.getElementById('div-pinpad').style.display = '';
+						document.getElementById('pageFooter').style.zIndex = -1;
+					}
+				  }
+				}
+		}else if((isflaglock=='Y') && (isflagloginsuccess=='Y')) {
+			showAlertText(CONST_STR.get('PIN_CHANGE_PASSSUCCESS_ALERT'));		
+				
+		}else if(isflagloginsuccess=='N'){
+			showAlertText(CONST_STR.get('PIN_LAST_LOGINSUCCESS_ALERT'));		
+		}
+        }
+		//Sangnt1
+        setTimeout(function(){
+            getCountDataNotificationUnread();
+
+        },4000);
+
+	}else if ((parseInt(gprsResp.respCode) == parseInt(RESP.get('COM_SUCCESS')))||(parseInt(gprsResp.respCode) == parseInt(RESP.get('COM_PASSWORD_EXPIRE')))
+        && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TOUCHID_LOGIN")))) {
+		//gTokenKey = gprsResp.arguments[gprsResp.arguments.length - 2];
+		var tokenKey = gprsResp.arguments[gprsResp.arguments.length - 2];
+		
+		if (typeof(Storage) !== "undefined") {
+        // Web storage is supported
+			try {
+				localStorage.setItem('TouchIDTokenKey', tokenKey);
+				logInfo('Set local storage complete');
+			}
+			catch(err) {
+				logInfo('Browser not support local store');
+			}
+		}
+		else {
+			// Web storage is NOT supported
+			logInfo('Browser not support local store');
+		}
+		
+		document.getElementById('div-pinpad').style.display = 'none';
+		document.getElementById('pageFooter').style.zIndex = 102;
+		
+		//var loginUser = document.getElementById("login.txt.username");
+		//gCustomerNo = loginUser.value;
+		gCustomerNo = gprsResp.arguments[gprsResp.arguments.length - 1];
+		//var loginUser = gCustomerNo;
+		parserLoginInfo();
+		try{
+		gSysData = JSON.parse(gprsResp.respJson);
+		}catch(e)
+		{
+		}
+		//setUserInfoToLocal(loginUser, gUserInfo.accountName);
+		gUserInfo.lang = getLanguageConfig();
+		gIsLogin = true;
+		
+		//config view
+		setViewOnDesktopWhenLogin();
+		document.getElementById('tabHost').innerHTML = "";
+		
+		//using to redirect online payment
+		if(getURLParam('payment') == 'order') {
+			setTimeout(function(e){
+				navController.initWithRootView('paymentxsl/payment-online-shopping-create', true, 'xsl');
+				navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+			}, 1000);
+		}
+		else if(getURLParam('payment') == 'ecounter') {
+			setTimeout(function(e){
+				navController.initWithRootView('paymentxsl/payment-ecounter', true, 'xsl');
+				navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+			}, 1000);
+		}
+		else if(getURLParam('payment') == 'pocket') {
+		    setTimeout(function(e){
+		        navController.pushToView('paymentxsl/payment-topup-create-scr', true, 'xsl');
+				setTitleBar(CONST_STR.get('TOPUP_REPAYMENT_SCREEN_TITLE'));
+		        //navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+		    }, 1000);
+		}
+		else {
+			gotoHomePage();
+			/*if(gUserInfo.lang == 'VN')
+			{
+			  navController.initWithRootView('homepagexsl/homepage-scr', true, 'xsl');
+			  navController.setDefaultPage('homepagexsl/homepage-scr', 'xsl');
+			}
+			else
+			{
+			  navController.initWithRootView('homepagexsl/homepage-scr-eng', true, 'xsl');
+			  navController.setDefaultPage('homepagexsl/homepage-scr-eng', 'xsl');
+			}*/
+		}
+		
+		var btnChangeLangIB = document.getElementById("btnChangLanguageIB");
+		btnChangeLangIB.style.visibility = "hidden";
+		btnChangeLangIB.style.webkitBackfaceVisibility = "hidden";
+		btnChangeLangIB.style.backfaceVisibility = "hidden";    
+		
+		var btnChangeLang = document.getElementById("btnChangLanguage");
+		btnChangeLang.style.display = "none";
+		
+		var mobilefooter = document.getElementById("mainlayoutfooter");
+		mobilefooter.style.display = "none";
+		var homeBtn = document.getElementById('id.home.btn');
+		if(homeBtn!=null){
+			homeBtn.style.display = 'block';
+		}
+		logInfo('hide lang button - end');
+		
+		//Sangnt1
+        setTimeout(function(){
+            getCountDataNotificationUnread();
+
+        },4000);
+
+	} else if ((parseInt(gprsResp.respCode) == parseInt(RESP.get('COM_SUCCESS')))||(parseInt(gprsResp.respCode) == parseInt(RESP.get('COM_PASSWORD_EXPIRE')))
+        && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LOGIN")))) {
+
+		/*
+        if (gTokenKey.length > 0 && gTokenKey != '-1') {
+			if (gCustomerNo != document.getElementById("login.txt.username").value) {
+				gTokenKey = '-1';
+				gUsingFingerprint = '0';
+				gPincode = '-1';
+			}
+		}
+		*/
+		
+		//var loginUser = document.getElementById("login.txt.username");
+		//gCustomerNo = loginUser.value;
+
+		/***** DAMNV: LUU TOCKENKEY KHI LOGIN THANH CONG VE DIVICE********/
+        var index1=0;
+		for (var i=0; i<gprsResp.arguments.length; i++) {
+			if(gprsResp.arguments[i] == 'FINGER_TOKEN_END') {
+				index1 =i-1;
+				break;
+			}
+		}
+        var tokenKey1 = gprsResp.arguments[index1];        
+		if (typeof(Storage) !== "undefined" && tokenKey1 != 'NO-CHANGE') {
+			try {
+				localStorage.setItem('TouchIDTokenKey', tokenKey1);
+				logInfo('Set local storage complete');
+			}
+			catch(err) {
+				logInfo('Browser not support local store');
+			}
+		}
+		else {
+			logInfo('Browser not support local store');
+		}
+
+		parserLoginInfo();
+		try{
+			gSysData = JSON.parse(gprsResp.respJson);
+		}catch(e)
+		{
+		}
+		//setUserInfoToLocal(loginUser.value, gUserInfo.accountName);
+		gUserInfo.lang = getLanguageConfig();
+		gIsLogin = true;
+		
+		//config view
+		setViewOnDesktopWhenLogin();
+		document.getElementById('tabHost').innerHTML = "";
+		
+		//using to redirect online payment
+		if(getURLParam('payment') == 'order') {
+			setTimeout(function(e){
+				navController.initWithRootView('paymentxsl/payment-online-shopping-create', true, 'xsl');
+				navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+			}, 1000);
+		}
+		else if(getURLParam('payment') == 'ecounter') {
+			setTimeout(function(e){
+				navController.initWithRootView('paymentxsl/payment-ecounter', true, 'xsl');
+				navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+			}, 1000);
+		}
+		else if(getURLParam('payment') == 'pocket') {
+		    setTimeout(function(e){
+				navController.pushToView('paymentxsl/payment-topup-create-scr', true, 'xsl');
+				setTitleBar(CONST_STR.get('TOPUP_REPAYMENT_SCREEN_TITLE'));
+		       // navController.initWithRootView('paymentxsl/payment-topup-create-scr', true, 'xsl');
+		       // navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+		    }, 1000);
+		}
+		else {
+			gotoHomePage();
+			/*if(gUserInfo.lang == 'VN')
+			{
+			  navController.initWithRootView('homepagexsl/homepage-scr', true, 'xsl');
+			  navController.setDefaultPage('homepagexsl/homepage-scr', 'xsl');
+			}
+			else
+			{
+			  navController.initWithRootView('homepagexsl/homepage-scr-eng', true, 'xsl');
+			  navController.setDefaultPage('homepagexsl/homepage-scr-eng', 'xsl');
+			}*/
+		}
+		
+		var btnChangeLangIB = document.getElementById("btnChangLanguageIB");
+		btnChangeLangIB.style.visibility = "hidden";
+		btnChangeLangIB.style.webkitBackfaceVisibility = "hidden";
+		btnChangeLangIB.style.backfaceVisibility = "hidden";    
+  
+		var btnChangeLang = document.getElementById("btnChangLanguage");
+		btnChangeLang.style.display = "none";
+		
+		var mobilefooter = document.getElementById("mainlayoutfooter");
+		mobilefooter.style.display = "none";
+		var homeBtn = document.getElementById('id.home.btn');
+		if(homeBtn!=null){
+			homeBtn.style.display = 'block';
+		}
+		logInfo('hide lang button - end');
+		
+		//Sangnt1
+        setTimeout(function(){
+            getCountDataNotificationUnread();
+           },4000);
+	} /*else if ((parseInt(gprsResp.respCode) == parseInt(RESP.get('COM_PASSWORD_EXPIRE')))
+        && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LOGIN")))) {
+        var index1=0;
+		for (var i=0; i<gprsResp.arguments.length; i++) {
+			if(gprsResp.arguments[i] == 'FINGER_TOKEN_END') {
+				index1 =i-1;
+				break;
+			}
+		}
+        var tokenKey1 = gprsResp.arguments[index1];        
+		if (typeof(Storage) !== "undefined" && tokenKey1 != 'NO-CHANGE') {
+			try {
+				localStorage.setItem('TouchIDTokenKey', tokenKey1);
+				logInfo('Set local storage complete');
+			}
+			catch(err) {
+				logInfo('Browser not support local store');
+			}
+		}
+		else {
+			logInfo('Browser not support local store');
+		}
+		parserLoginInfo();
+		try{
+		gSysData = JSON.parse(gprsResp.respJson);
+		}catch(e)
+		{
+		}
+		//setUserInfoToLocal(loginUser.value, gUserInfo.accountName);
+		gUserInfo.lang = getLanguageConfig();
+		gIsLogin = true;
+		
+		//config view
+		setViewOnDesktopWhenLogin();
+		document.getElementById('tabHost').innerHTML = "";
+		
+		//using to redirect online payment
+		if(getURLParam('payment') == 'order') {
+			setTimeout(function(e){
+				navController.initWithRootView('paymentxsl/payment-online-shopping-create', true, 'xsl');
+				navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+			}, 1000);
+			var btnChangeLangIB = document.getElementById("btnChangLanguageIB");
+			btnChangeLangIB.style.display = "none";
+			
+			var btnChangeLang = document.getElementById("btnChangLanguage");
+			btnChangeLang.style.display = "none";
+			
+			var mobilefooter = document.getElementById("mainlayoutfooter");
+			mobilefooter.style.display = "none";
+		}
+		else {
+			navController.pushToView('accountxsl/account-change-password-scr', true, 'xsl');
+			navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+            document.getElementById('navActionbar').style.display = 'block';
+            document.getElementById('footerSlide').style.display = 'none';
+            document.getElementById('floatingButton').style.display = 'none';
+            document.getElementById('nav.btn.homeright').style.display = 'block';
+            document.getElementById('headermb').style.display = 'none';
+            document.getElementById('mainlayoutfooter').style.display = 'none';
+            document.getElementById('nav.btn.home').style.display = 'none';
+            navController.getActionBar().hideNavHeaderBar();
+            navController.getActionBar().setHavingBackground(false);
+
+            navController.getActionBar().setTitleBarOnly(CONST_STR.get("MENU_SETTING_CHANGE_PASSWORD"));
+		}
+		
+		var homeBtn = document.getElementById('id.home.btn');
+		if(homeBtn!=null){
+			homeBtn.style.display = 'block';
+		}
+	}*/
+	else if (((parseInt(gprsResp.respCode) == 2001) || (parseInt(gprsResp.respCode) == 1)) && 
+			(parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LOGIN")))){
+		//B1 clear
+		getCaptcha();
+		var captChar = document.getElementById('login.txt.captcha');
+		if(captChar !=null){
+			captChar.value = "";			
+		}		
+	}
+	//ngocdt3 bo sung
+	else if(parseInt(gprsResp.respCode) == 20||parseInt(gprsResp.respCode) == 21){
+		if(parseInt(usercheck) >0 && usercheck.length ==10){
+			showAlertAppText(CONST_STR.get('CHANGE_USER_NAME_DN'), CONST_STR.get('BENEFIC_LIST_YES'), CONST_STR.get('BENEFIC_LIST_NO'));
+		}
+		document.addEventListener('alertAppConfirmOK', showChoiceConfirmPre, false);
+    	document.addEventListener('alertAppConfirmCancel', showChoiceConfirmPreClose, false);
+	}
+	//nogcdt3 end
+    //sangnt1 bo sung check token push
+        requestUpdateTokenPUS();
+    //end sangnt1
+};
+//ngocdt3 bo sung
+function showChoiceConfirmPre(e) {
+	if (currentPage == "login-scr") {
+		showChoiceConfirmPreClose();
+		openLinkInWindows('https://ebank.tpb.vn/biz'); 
+	}
+}
+
+function showChoiceConfirmPreClose() {
+	if (currentPage == "login-scr") {
+		document.removeEventListener("alertAppConfirmCancel", showChoiceConfirmPreClose, false);
+		document.removeEventListener("alertAppConfirmOK", showChoiceConfirmPre, false);
+	}
+}
+//ngocdt3 end
+
+//event listener: http request success
+function requestMBServiceFail() {
+
+	
+};
+
+function parserLoginInfo() {
+	
+	var indx = 0;
+	var numAccount = 0;
+	var tmpIndx = 0;
+	var tmpStr = "";
+	var tmpArr = [];
+	var numAccChild =0;
+	var isEasylink="";
+	var tmpListAccount = new Array();//danh sach toan bo tk cua KH
+	var tmpListAccChild = new Array();//danh sach tai khoan con cua KH
+	
+	gUserInfo.sessionID = gprsResp.arguments[indx++];
+	gUserInfo.accountName = gprsResp.arguments[indx++];
+	
+	//set user name
+	document.getElementById('menu-profile-name').innerHTML = gUserInfo.accountName;
+	
+	gUserInfo.valicationType = gprsResp.arguments[indx++];
+	if (gprsResp.arguments[indx++] == "GOLD_TERM_COMFIRMED") {
+		gUserInfo.goldTermConfirmed = true;
+	}
+	else {
+		gUserInfo.goldTermConfirmed = false;
+	}
+	gUserInfo.mobileNumber = gprsResp.arguments[indx++];
+	gUserInfo.email = gprsResp.arguments[indx++];
+	gUserInfo.userRole = gprsResp.arguments[indx++];
+	numAccount = parseInt(gprsResp.arguments[indx++]);
+	gUserInfo.flag_check =gprsResp.arguments[indx++];
+	gUserInfo.username =gprsResp.arguments[indx++];
+	//gCustomerNo =gprsResp.arguments[indx++];
+	var currentCustomerNo = gprsResp.arguments[indx++];
+
+    // DUYLK GET IDENTIFIER  + DAMNV set cmnd cho client
+	var identifier=  gprsResp.arguments[indx++];
+	
+	gUserInfo.identifier=identifier;
+	gAutoSaving =gprsResp.arguments[indx++];
+	//TUANNM5 update fỏ fingerprint, ca nhan hoa user
+	try {
+		var tokenKey = localStorage.getItem('TouchIDTokenKey');
+	
+		if (tokenKey.length > 0 && tokenKey != '-1') {
+			if (gCustomerNo != currentCustomerNo) {
+				gTokenKey = '-1';
+				gUsingFingerprint = '0';
+				gPincode = '-1';
+			}
+		}
+	} catch(err) {
+		gTokenKey = '-1';
+		gUsingFingerprint = '0';
+		gPincode = '-1';
+	}
+	
+	gCustomerNo = currentCustomerNo;
+	setUserInfoToLocal(currentCustomerNo, gUserInfo.accountName);
+	
+	//numAccount = parseInt(gprsResp.arguments[indx++]);
+	var tmpArrayNotJumbo = new Array();
+	var tmpArrayJumbo = new Array();
+	var tmpJumboStatus = false;
+	var tmpArrayEasylink = new Array()//20170626 ngocdt3 them de lay mang gia tri cua easylink
+	for (var i=indx; i<numAccount + indx; i++) {
+		var tmpAccObj = new AccountObj();
+		var rawAccInfo = gprsResp.arguments[i];
+		if (!rawAccInfo || rawAccInfo.length < 2) {
+			continue;
+		}
+		var arrayAccInfo = rawAccInfo.split("#");
+		tmpAccObj.accountNumber = arrayAccInfo[0];
+		tmpAccObj.description = arrayAccInfo[1];
+		tmpAccObj.balance = arrayAccInfo[2];
+		tmpAccObj.balanceAvailable = arrayAccInfo[3];
+		tmpAccObj.currency = arrayAccInfo[4];
+		tmpAccObj.descByUser = arrayAccInfo[5];
+		tmpAccObj.overdraftLimit = arrayAccInfo[6];
+		tmpAccObj.accClass = arrayAccInfo[7];
+		tmpAccObj.udfFieldVal = arrayAccInfo[8];
+		
+		//ngocdt3 bo sung check nodebit
+		tmpAccObj.nodebit = arrayAccInfo[10];
+		//ngocdt3 bo sung de tao mang chua thong tin tai khoan tiet kiem tu dong
+		if(tmpAccObj.accountNumber ==gAutoSaving){
+			gUserInfo.autoSavingList.push(tmpAccObj);
+		}
+		if (tmpAccObj.udfFieldVal == "6") {
+			tmpArrayJumbo.push(tmpAccObj);
+			tmpJumboStatus = true;
+			tmpArrayEasylink.push(tmpAccObj);
+		}
+		/*else {
+			if (((parseInt(tmpAccObj.overdraftLimit) > 0) && arrayAccInfo[9] == 1) || tmpAccObj.accountNumber ==gAutoSaving ||(tmpAccObj.accClass == 'D7A000') || (tmpAccObj.currency != 'VND')) {
+				tmpArrayNotJumbo.push(tmpAccObj);
+			}
+			else {
+				tmpArrayJumbo.push(tmpAccObj);
+			}
+		}*/
+		//gUserInfo.accountList.push(tmpAccObj);
+		//ngocdt3 comment cho hien thi tai khoan tiet kiem tu dong
+		//ngocdt3 ko cho hien tiet keim tu dong nua
+		if(tmpAccObj.currency == 'VND' && tmpAccObj.accClass != 'T6A001' && tmpAccObj.accClass != 'D7A000') {
+			<!--if(tmpAccObj.currency == 'VND' && tmpAccObj.accClass != 'D7A000' || tmpAccObj.accountNumber !=gAutoSaving ){-->
+			gUserInfo.accountList.push(tmpAccObj);
+			gUserInfo.accountListLocalTrans.push(tmpAccObj);
+		}
+		else {
+			gUserInfo.accountListOther.push(tmpAccObj);
+			//bo sung tai khoan D7A000 vao tai khoan nhan tien
+			if(tmpAccObj.accClass == 'D7A000') {
+				gUserInfo.accountListLocalTrans.push(tmpAccObj);
+			}
+		}
+	}
+	/*if (tmpJumboStatus) {
+		gUserInfo.accountList = tmpArrayJumbo;
+		gUserInfo.accountListOther = tmpArrayNotJumbo;
+	}*/
+	indx = numAccount + indx;
+	//avatar
+	gUserInfo.userAvatar = gprsResp.arguments[indx];
+    setUserAvatarToLocal(gUserInfo.userAvatar);//anhpv1 avatar
+	if(gUserInfo.userAvatar && gUserInfo.userAvatar.length > 1 && document.getElementById('menu-profile-avatar')) {
+		 var img = new Image();
+            img.src = gUserInfo.userAvatar;
+            var fileAvatarExits =  img.height != 0;
+		document.getElementById('menu-profile-avatar').innerHTML = '<img width="25" height="25" style="margin-top:1px; margin-left:4px" src="' + + (fileAvatarExits ?'src="' + gUserInfo.userAvatar + '" />': '" />');
+		document.getElementById('menu-profile-avatar').style.backgroundColor = "transparent";
+	}
+	//avatar end
+	indx ++;
+	if(gprsResp.arguments[indx] && gprsResp.arguments[indx] == 'MENU') {
+		indx ++;
+		for (var i=indx; i<gprsResp.arguments.length; i++) {
+			if(gprsResp.arguments.length > 1) {
+				if(gprsResp.arguments[indx] == 'MENU_END') {
+					indx ++;
+					break;
+				}
+				else {
+					var tmpMenuArr = gprsResp.arguments[i].split('#');
+					var tmpMenuObj = new MenuObj();
+					tmpMenuObj.keyLang = tmpMenuArr[0];
+					tmpMenuObj.menuID = tmpMenuArr[1];
+					tmpMenuObj.parentMenuID = tmpMenuArr[2];
+					tmpMenuObj.iconCode = tmpMenuArr[3];
+					tmpMenuObj.path = tmpMenuArr[4];
+					tmpMenuObj.onClick = tmpMenuArr[5];
+					tmpMenuObj.imgHighlight = tmpMenuArr[6];
+					tmpMenuObj.requireStatus = tmpMenuArr[7];
+					tmpMenuObj.priority = tmpMenuArr[8];
+					tmpMenuObj.ismainmenu = tmpMenuArr[9];
+					tmpMenuObj.isbottombar = tmpMenuArr[10];
+					tmpMenuObj.color = "#"+tmpMenuArr[11];
+					
+					try {
+						var deviceID = device.uuid;
+						
+						gMenuList.push(tmpMenuObj);	
+					} catch (err) {
+						if (tmpMenuArr[1] != 'liFingerprintPIN') {
+							gMenuList.push(tmpMenuObj);
+						}
+					}
+					
+					
+					
+					indx ++;
+				}
+			}
+		}
+	}
+
+	logInfo('Menu list length: ' + gMenuList.length);
+	var tmpMenuOrder = new Array();
+	var tmpSubMenuOrder = new Array();
+	var menuType = '';
+	if(gprsResp.arguments[indx]) {
+		for (var i=indx; i<gprsResp.arguments.length; i++) {
+			if(gprsResp.arguments[i] == 'MENU_USER_END') {
+				indx++;
+				break;
+			}
+			else {
+				var customizeMenuString = gprsResp.arguments[i];
+				
+				if(customizeMenuString.indexOf('-CUSTOM-MENU-') > -1){
+					var tempArray = customizeMenuString.split('-CUSTOM-MENU-');
+
+				//	has custom submenu config
+					// get menu config
+					if(tempArray.length > 0){
+						tmpMenuOrder = (tempArray[0]).split('#');
+					}
+					//tmpMenuOrder = (customizeMenuString.substring(0, customizeMenuString.indexOf('-CUSTOM-MENU-'))).split('#');
+
+					// get submenu config
+					if(tempArray.length > 1){
+						tmpSubMenuOrder = (tempArray[1]).split('#');
+					}
+					//tmpSubMenuOrder = (customizeMenuString.substring(customizeMenuString.indexOf('-CUSTOM-MENU-')+13, customizeMenuString.length)).split('#');
+
+					// get menu type
+					if(tempArray.length > 2){
+						menuType = tempArray[2];
+					}
+
+					indx++;
+				} else {
+				//	has not custom submenu config (old user < ebv7)
+					tmpMenuOrder = gprsResp.arguments[i].split('#');
+					indx++;
+				}
+
+			}
+		}
+	}
+	//reorder menu
+	if (tmpMenuOrder && tmpMenuOrder.length > 1) {
+		gMenuUserOrder = tmpMenuOrder;
+		for (var i=0; i<gMenuList.length; i++) {
+			var tmpMenuObj = gMenuList[i];
+			if(tmpMenuObj.requireStatus == 'Y' && tmpMenuObj.menuID.length > 0 && tmpMenuObj.parentMenuID.length == 0) {
+				var tmpStatus = false;
+				for (var j=0; j<tmpMenuOrder.length; j++) {
+					if(tmpMenuObj.menuID == tmpMenuOrder[j]) {
+						tmpStatus = true;
+						break;
+					}
+				}
+				if(!tmpStatus) {
+					gMenuUserOrder.push(tmpMenuObj.menuID);
+				}
+			}
+		}
+	}
+	else {
+		for (var i=0; i<gMenuList.length; i++) {
+			var tmpMenuObj = gMenuList[i];
+			if(tmpMenuObj.menuID.length > 0 && tmpMenuObj.parentMenuID.length == 0) {
+				gMenuUserOrder.push(tmpMenuObj.menuID);
+			}
+		}
+	}
+
+	//reorder submenu
+	if (tmpSubMenuOrder && tmpSubMenuOrder.length > 1) {
+		gSubMenuUserOrder = tmpSubMenuOrder;
+		for (var i=0; i<gMenuList.length; i++) {
+			var tmpMenuObj = gMenuList[i];
+			if(tmpMenuObj.parentMenuID.length > 0) {
+			//if(tmpMenuObj.menuID.length == 0 && tmpMenuObj.parentMenuID.length > 0) {
+				var tmpStatus = false;
+				for (var j=0; j<tmpSubMenuOrder.length; j++) {
+					var subMenuIDKeyLang = tmpMenuObj.parentMenuID + '_' + tmpMenuObj.keyLang;
+					if(subMenuIDKeyLang == tmpSubMenuOrder[j]) {
+						tmpStatus = true;
+						break;
+					}
+				}
+				if(tmpStatus) {
+					gSubMenuUserOrder.push(subMenuIDKeyLang);
+					gMenuList[i].hiddenStatus = 'N';
+				} else {
+					gMenuList[i].hiddenStatus = 'Y';
+				}
+			}
+
+		}
+	}
+	else {
+		for (var i=0; i<gMenuList.length; i++) {
+			var tmpMenuObj = gMenuList[i];
+			//if(tmpMenuObj.menuID.length == 0 && tmpMenuObj.parentMenuID.length > 0) {
+			if(tmpMenuObj.parentMenuID.length > 0) {
+				gSubMenuUserOrder.push(tmpMenuObj.parentMenuID + '_' + tmpMenuObj.keyLang);
+				gMenuList[i].hiddenStatus = 'N';
+			} else {
+				//gMenuList[i].hiddenStatus = 'Y';
+			}
+		}
+	}
+	
+	genMenuSection();
+
+	if(menuType == 'simple'){
+		quickChangeMenuStyleSimple(false);
+	} else if(menuType == 'default'){
+		quickChangeMenuStyleDefault(false);
+	} else if(menuType == 'custom'){
+		document.getElementById('quick_default_menu_btn').style.display = 'none';
+        document.getElementById('quick_simple_menu_btn').style.display = 'none';
+        document.getElementById('quick_custom_menu_btn').style.display = '';
+	}
+	//ngocdt3 bo sung cho tuy chinh hien thi tinh nang
+	else{
+		document.getElementById('quick_default_menu_btn').style.display = 'none';
+        document.getElementById('quick_simple_menu_btn').style.display = 'none';
+        document.getElementById('quick_custom_menu_btn').style.display = '';
+	}
+	//20170717 ngocdt3 chinh sua cho easylink
+	indx=indx+2;
+	numAccChild=parseInt(gprsResp.arguments[indx++]);
+	isEasylink=gprsResp.arguments[indx++];
+	if(isEasylink=='Y'){//20170814 ngocdt3 fix loi hien thi tai khoan
+		gUserInfo.accountListOther=[];
+		for (var k=indx; k<numAccChild + indx; k++) {
+			var tmpAccObj = new AccountObj();
+			var rawAccInfo = gprsResp.arguments[k];
+			if (!rawAccInfo || rawAccInfo.length < 2) {
+				continue;
+			}
+			var arrayAccInfo = rawAccInfo.split("#");
+			tmpAccObj.accountNumber = arrayAccInfo[0];
+			tmpAccObj.description = arrayAccInfo[1];
+			tmpAccObj.balance = arrayAccInfo[2];
+			tmpAccObj.balanceAvailable = arrayAccInfo[3];
+			tmpAccObj.currency = arrayAccInfo[4];
+			tmpAccObj.descByUser = arrayAccInfo[5];
+			tmpAccObj.overdraftLimit = arrayAccInfo[6];
+			tmpAccObj.accClass = arrayAccInfo[7];
+			tmpAccObj.udfFieldVal = arrayAccInfo[8];
+			tmpAccObj.nodebit = arrayAccInfo[10];
+			tmpListAccChild.push(tmpAccObj);
+			gUserInfo.accountListOther=tmpListAccChild.concat(tmpArrayEasylink);
+		}
+	}
+	//20170717 ngocdt3 end
+	return true;
+	
+	var indxPayment = numAccount + 6;
+	var numGroupPaymentService = parseInt(gprsResp.arguments[indxPayment + 1]);
+	for (var i=0; i<numGroupPaymentService; i++) {
+		tmpStr = gprsResp.arguments[indxPayment + 2 + i];
+		
+		if (tmpStr != undefined){
+			tmpArr = tmpStr.split("#");
+			
+			if (tmpArr.length == 7){
+				var paymentGrp = {groupId:tmpArr[0], srvGroup:tmpArr[1], name:tmpArr[2], description:tmpArr[3], nameEn:tmpArr[4], descriptionEn:tmpArr[5], icon:tmpArr[6]};
+				gUserInfo.paymentGroupList.push(paymentGrp);
+			}
+		}
+	}
+		
+	var numPaymentService = parseInt(gprsResp.arguments[indxPayment + numGroupPaymentService + 2]);
+	for (var i=0; i<numPaymentService; i++) {
+		tmpStr = gprsResp.arguments[numGroupPaymentService + indxPayment + 3 + i];
+		
+		if (tmpStr != undefined){
+			tmpArr = tmpStr.split("#");
+			
+			if (tmpArr.length == 7){
+				var paymentService = {srvId:tmpArr[0], srvGroup:tmpArr[1], srvName:tmpArr[2], srvDesc:tmpArr[3], srvNameEn:tmpArr[4], srvDescEn:tmpArr[5], icon:tmpArr[6]};
+				gUserInfo.paymentServiceList.push(paymentService);
+			}
+		}
+	}
+	
+	var numProvider = parseInt(gprsResp.arguments[numPaymentService + numGroupPaymentService + indxPayment + 3]);
+	for (var i=0; i<numProvider; i++) {
+		tmpStr = gprsResp.arguments[numGroupPaymentService + numPaymentService + indxPayment + 4 + i];
+		
+		if (tmpStr != undefined){
+			tmpArr = tmpStr.split("#");
+			
+			if (tmpArr.length == 6){
+				var paymentProvider = {srvId:tmpArr[0], srvGroup:tmpArr[1], prName:tmpArr[2], srvCode:tmpArr[3], prDesc:tmpArr[4], prId:tmpArr[5]};
+				gUserInfo.paymentProviderList.push(paymentProvider);
+			}
+		}
+	}
+	
+	var numFieldForm = parseInt(gprsResp.arguments[numProvider + numPaymentService + numGroupPaymentService + indxPayment + 4]);
+	for (var i=0; i<numFieldForm; i++) {
+		tmpStr = gprsResp.arguments[numProvider + numPaymentService + numGroupPaymentService + indxPayment + 5 + i];
+		
+		if (tmpStr != undefined){
+			tmpArr = tmpStr.split("#");
+			
+			if (tmpArr.length == 14){
+				var paymentReqField = {srvCode:tmpArr[0], msgType:tmpArr[1], msgFieldId:tmpArr[2], fieldDesc:tmpArr[3], fieldType:tmpArr[4], fieldLength:tmpArr[5], inputType: tmpArr[6], madatory:tmpArr[7], sortIndex:tmpArr[8], id:tmpArr[9], isAmount:tmpArr[10], fieldDescEn:tmpArr[11], dfltVal:tmpArr[12], id1:tmpArr[13]};
+				gUserInfo.paymentRequestFieldList.push(paymentReqField);
+			}
+		}
+	}
+	
+	var numFieldFormCbo = parseInt(gprsResp.arguments[numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 5]);
+	for (var i=0; i<numFieldFormCbo; i++) {
+		gUserInfo.paymentRequestFieldCboList.push(gprsResp.arguments[numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 6 + i]);
+		tmpStr = gprsResp.arguments[numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 6 + i];
+		
+		if (tmpStr != undefined){
+			tmpArr = tmpStr.split("#");
+			
+			if (tmpArr.length == 4){
+				var paymentReqFieldCbo = {id:tmpArr[0], mapId:tmpArr[1], fieldVal:tmpArr[2], fieldDesc:tmpArr[3]};
+				gUserInfo.paymentRequestFieldCboList.push(paymentReqFieldCbo);
+			}
+		}
+	}
+	
+	var numFieldFormHistory = parseInt(gprsResp.arguments[numFieldFormCbo + numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 6]);
+	for (var i=0; i<numFieldFormHistory; i++) {
+		gUserInfo.paymentFieldHistoryList.push(gprsResp.arguments[numFieldFormCbo + numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 6 + i]);
+		}
+	
+	return true;
+}
+
+
+//Handle change password with response code 210
+
+function handleAlertChangePasswordPressedOK (evt) {
+	if(currentPage == "login-scr") {
+		navController.pushToView('accountxsl/account-change-password-scr', true, 'xsl');
+	}
+}
+
+function handleAlertChangePasswordPressedCancel (evt) {
+	if(currentPage == "login-scr") {
+		gIsLogin = true;
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+function goTerms()
+{	
+	showAlertKHCN_KHDN_TERMS(CONST_STR.get('ALERT_KHCN_KHDN_TITLE'));
+}
+
+function goInstruction()
+{	showAlertKHCN_KHDN_INSTRUCTION(CONST_STR.get('ALERT_KHCN_KHDN_TITLE'));
+}
+
+function goFAQ()
+{
+	showAlertKHCN_KHDN_FAQ(CONST_STR.get('ALERT_KHCN_KHDN_TITLE'));
+}
+
+function goForgotPassword()
+{
+	if (gUserInfo.lang == 'EN')
+	{
+		navController.pushToView('forgot-pw-scr-eng', true, 'html');
+	}
+	else
+	{
+		navController.pushToView('forgot-pw-scr-vie', true, 'html');
+	}	
+}
+
+function goSignup()
+{
+	openLinkInWindows('https://applynow.tpb.vn/'); 
+}
+//Post device token
+
+
+
+
+
+//TUANNM5 -- BEGIN PIN CODE VIEW 
+
+document.getElementById('title_lock').innerHTML = CONST_STR.get('PINPAD_INPUT');
+document.getElementById('p-exit-pin').innerHTML = CONST_STR.get('BTN_EXIT_PINPAD');
+document.getElementById('p-delete-pin').innerHTML = CONST_STR.get('BTN_DELETE_PINPAD');
+var pass_value = "";
+var pass_temp="";
+var paramObj = {
+	typeAction: gUsingPinpadMode,
+	pass:gPincode
+	
+}
+
+var PASS_ONE = 0,PASS_TWO = 1,PASS_THREE = 2,PASS_FOUR = 3,PASS_FIVE = 4,PASS_SIX = 5,COUNT_PASS= 6;
+
+var ACTION_CHANGEPASS = "change_pass";
+var ACTION_LOGIN = "login";
+var ACTION_CREATEPASS = "create_pass";
+var start_create_pass = 0;
+var start_change_pass = 0;
+var isCheckOldPass = false;
+var heightScreen = 0,widthScreen = 0;
+var MAX_NUMBER_INPUT_PASS = 2;
+localStorage.inputpassnumber = 0;
+
+function checkValue(i){
+	//�ang nh?p
+	if(paramObj.typeAction == ACTION_LOGIN){
+		//Ki?m tra m?t kh?u.
+		if(CryptoJS.MD5(pass_value).toString() == paramObj.pass) {
+			loginWithTouchID();
+		} else if (CryptoJS.MD5(pass_value).toString() != paramObj.pass) {
+			animationError(1);
+			actionClear();
+		} else if(pass_value.length > PASS_FOUR ){
+			
+			animationError();
+			actionClear();
+		} 
+		
+	}// �?i pass
+	else if(paramObj.typeAction == ACTION_CHANGEPASS){
+		// Ki?m tra check v?i m� pin cu chua - Chua check
+		if(isCheckOldPass == false){
+			//N�u m?t kh?u tr�ng nhau:
+			if(CryptoJS.MD5(pass_value).toString() == paramObj.pass){
+			if(start_change_pass == 0){
+				document.getElementById("title_lock").innerHTML = CONST_STR.get("PINPAD_INPUT_NEW");
+				actionClear();
+				start_change_pass = 1;
+				isCheckOldPass = true;
+			}
+			
+			
+		}else{
+			animationError(1);
+			actionClear();
+		}
+			
+		}else{
+			if(start_change_pass == 1 ){
+				//Ki?m tra m?t kh?u m?i 
+				if(CryptoJS.MD5(pass_value).toString() == paramObj.pass){
+					actionClear();
+					start_change_pass = 1;
+					document.getElementById("title_lock").innerHTML = CONST_STR.get("PINPAD_INPUT_NEW");
+					animationError(2);
+				}
+				else{
+					pass_temp = CryptoJS.MD5(pass_value).toString();
+					actionClear();
+					start_change_pass = 2;
+					document.getElementById("title_lock").innerHTML = CONST_STR.get("PINPAD_INPUT_NEW_AGAIN");
+				}
+			}else if(start_change_pass==2){
+				if(pass_temp == CryptoJS.MD5(pass_value).toString()){
+					//alert("Thay d?i m?t kh?u th�nh c�ng");
+					sendJSONChangePINRequest();
+				
+				}else{
+					start_change_pass = 1;
+					animationError(1);
+					document.getElementById("title_lock").innerHTML = CONST_STR.get("PINPAD_INPUT_NEW");
+					actionClear();
+					isCheckOldPass = true;
+					
+				}
+			}
+		}
+		
+		
+		
+	} //T?o m?t kh?u
+	else if(paramObj.typeAction == ACTION_CREATEPASS){
+		// Ngu?i d�ng nh?p m� pin
+		if(start_create_pass == 0){
+			pass_temp = pass_value;
+			actionClear();
+			document.getElementById("title_lock").innerHTML = CONST_STR.get("PINPAD_INPUT_AGAIN");
+			start_create_pass = 1;
+			// Ch? ngu?i d�ng nh?p l?i m� pin
+		}else{
+			// Ki?m tra 2 m� pin c� tr�ng kh�ng
+			if(pass_temp == pass_value){
+				//alert("M?t kh?u d�ng r?i");
+				sendJSONRequest();
+				
+			}else{
+				animationError(1);
+				document.getElementById("title_lock").innerHTML = CONST_STR.get("PINPAD_INPUT");
+				actionClear();
+				
+			}
+			start_create_pass = 0;
+		}
+	}
+	
+
+}
+
+function actionPass(element){
+	var value;
+    switch (element.id) {
+        case 'pass1':
+            value = 1;
+            break;
+        case 'pass2':
+            value = 2;
+            break;
+        case 'pass3':
+            value = 3;
+            break;
+        case 'pass4':
+            value = 4;
+            break;
+        case 'pass5':
+            value = 5;
+            break;
+        case 'pass6':
+            value = 6;
+            break;
+        case 'pass7':
+            value = 7;
+            break;
+        case 'pass8':
+            value = 8;
+            break;
+        case 'pass9':
+            value = 9;
+            break;
+        case 'pass0':
+            value = 0;
+            break;
+		case 'passExit':
+			document.getElementById('div-pinpad').style.display = 'none';
+			document.getElementById('pageFooter').style.zIndex = 102;
+			localStorage.inputpassnumber=0;
+			actionClear();
+			try {
+				document.getElementById('div-login-normal').style.display = '';
+			}
+			catch (err)
+			{
+			}
+			break;
+        case 'passClear':
+			value = -1;
+			actionClearStepbyStep();
+            break;
+    }
+	if(value < 0) {
+		return;
+	}
+	
+	if(pass_value == "undefined"){
+		pass_value = new String("");
+		
+	}
+	var length = pass_value.length;
+	document.getElementById("error_message").innerHTML="&nbsp;";
+	document.getElementById("error_message").style.visibility = "hidden";
+	
+	if(length < COUNT_PASS){
+		fillCirclePass(length);
+		pass_value += value;
+		if(pass_value.length == 6)
+			checkValue();
+		
+	}else if(length >= COUNT_PASS){
+		checkValue();
+	}
+
+}
+
+function fillCirclePass(length){
+	    if(length == PASS_ONE){
+			var att = document.getElementById("pass_one");
+			if(att != null)
+				setBgOpacityFadeInCircle(att);
+			
+		}else if(length == PASS_TWO){
+			var att = document.getElementById("pass_two");
+			if(att != null)
+				setBgOpacityFadeInCircle(att);
+		}else if(length == PASS_THREE){
+			var att = document.getElementById("pass_three");
+			if(att != null)
+				setBgOpacityFadeInCircle(att);
+		}else if(length == PASS_FOUR){
+			var att = document.getElementById("pass_four");
+			if(att != null)
+				setBgOpacityFadeInCircle(att);
+				
+		}else if(length == PASS_FIVE){
+			var att = document.getElementById("pass_five");
+			if(att != null)
+				setBgOpacityFadeInCircle(att);
+				
+		}else if(length == PASS_SIX){
+			var att = document.getElementById("pass_six");
+			if(att != null)
+				setBgOpacityFadeInCircle(att);
+				
+		}
+}
+
+function actionClear(){
+	
+	pass_value="";
+	var clearAll = setInterval(function(){
+		var att = document.getElementById("pass_one");
+				if(att != null)
+					setBgOpacityFadeOutCircle(att);
+		var att2 = document.getElementById("pass_two");
+				if(att2 != null)
+					setBgOpacityFadeOutCircle(att2);
+		var att3 = document.getElementById("pass_three");
+				if(att3 != null)
+					setBgOpacityFadeOutCircle(att3);
+		var att4 = document.getElementById("pass_four");
+				if(att4 != null)
+					setBgOpacityFadeOutCircle(att4);
+		var att5 = document.getElementById("pass_five");
+				if(att5 != null)
+					setBgOpacityFadeOutCircle(att5);
+		var att6 = document.getElementById("pass_six");
+				if(att6 != null)
+					setBgOpacityFadeOutCircle(att6);
+
+		if(clearAll!=null)
+			clearInterval(clearAll);
+	},400);
+}
+
+function actionClearStepbyStep(){
+	if(pass_value.length==COUNT_PASS){
+		var att6 = document.getElementById("pass_six");
+			if(att6 != null){
+				setBgOpacityFadeOutCircle(att6);
+				pass_value= pass_value.substring(0,5);
+			}
+	}
+	else if(pass_value.length==PASS_SIX){
+		var att5 = document.getElementById("pass_five");
+			if(att5 != null){
+				setBgOpacityFadeOutCircle(att5);
+				pass_value= pass_value.substring(0,4);
+			}
+	}
+	else if(pass_value.length==PASS_FIVE){
+		var att4 = document.getElementById("pass_four");
+			if(att4 != null){
+				setBgOpacityFadeOutCircle(att4);
+				pass_value= pass_value.substring(0,3);
+			}
+	}
+	else if(pass_value.length==PASS_FOUR){
+		var att3 = document.getElementById("pass_three");
+			if(att3 != null){
+				setBgOpacityFadeOutCircle(att3);
+				pass_value= pass_value.substring(0,2);
+			}
+	}
+	else if(pass_value.length==PASS_THREE){
+	var att2 = document.getElementById("pass_two");
+			if(att2 != null){
+				setBgOpacityFadeOutCircle(att2);
+				pass_value= pass_value.substring(0,1);
+			}
+	}else if(pass_value.length==PASS_TWO){
+	var att = document.getElementById("pass_one");
+			if(att != null){
+				setBgOpacityFadeOutCircle(att);
+			
+				pass_value="";
+			}
+	}
+	
+		
+}
+
+function animationError(type_error){
+	
+	$("#enter_code").effect("shake", {times:2,distance:'10',direction:'top'}, 500 );
+	switch (type_error){
+		case 1:
+			document.getElementById("error_message").innerHTML = CONST_STR.get("PINPAD_INPUT_PIN_ERROR");
+		break;
+		case 2:
+			document.getElementById("error_message").innerHTML = CONST_STR.get("PINPAD_INPUT_PIN_NEW_ERROR");
+		break;
+		case 3:
+			document.getElementById("error_message").innerHTML = CONST_STR.get("PINPAD_INPUT_PIN_ERROR");	
+		break;
+		case 4:
+			document.getElementById("error_message").innerHTML = CONST_STR.get("PINPAD_INPUT_PIN_CHECK_ERROR");
+		break;
+	}
+	document.getElementById("error_message").style.visibility = "visible";
+	
+    if(localStorage.inputpassnumber >= MAX_NUMBER_INPUT_PASS){
+        //showAlertText(CONST_STR.get('PIN_3_TIMES_FAIL_ALERT'));
+		document.getElementById('div-pinpad').style.display = 'none';
+		document.getElementById('pageFooter').style.zIndex = 102;
+		document.getElementById("title_lock").innerHTML = CONST_STR.get("PINPAD_INPUT");
+		document.getElementById("error_message").innerHTML = '&nbsp;';
+		document.getElementById("error_message").style.visibility = 'hidden';
+		localStorage.inputpassnumber = 0;
+		try {
+			document.getElementById('div-login-normal').style.display = '';
+		}
+		catch (err)
+		{
+		}
+    }
+	localStorage.inputpassnumber = Number(localStorage.inputpassnumber)+1;
+}
+	
+
+function RGBA(red,green,blue,alpha) {
+    this.red = red;
+    this.green = green;
+    this.blue = blue;
+    this.alpha = alpha;
+    this.getCSS = function() {
+        return "rgba("+this.red+","+this.green+","+this.blue+","+this.alpha+")";
+    }
+}
+var bgColor = new RGBA(255,255,255,0.3);
+var bgCircle = new RGBA(255,255,255,0.1);
+function setBgOpacityFadeIn(elem) {
+	
+	var opac = 0;
+	var fadein = setInterval(function(){
+		opac += 0.1;
+		if (opac >= 0.3 && fadein!=null){
+            clearInterval(fadein);
+        }
+		 bgColor.alpha = opac;
+    	 elem.style.backgroundColor = bgColor.getCSS();
+		},10);
+   
+}
+
+function setBgOpacityFadeOut(elem) {
+	var opac = 0.3;
+	var fadeOut = setInterval(function(){
+		opac -= 0.1;
+		if (opac <= 0.0 && fadeOut!=null){
+            clearInterval(fadeOut);
+        }
+		 bgColor.alpha = opac;
+    	 elem.style.backgroundColor = bgColor.getCSS();
+		},10);
+   
+}
+
+function setBgOpacityFadeInCircle(elem) {
+	
+	var opac = 0;
+	 elem.setAttribute("fill", bgCircle.getCSS());
+	var fadein = setInterval(function(){
+		opac += 0.1;
+		if (opac >= 1 && fadein != null){
+			
+            clearInterval(fadein);
+        }
+		 bgCircle.alpha = opac;
+		 
+    	 elem.setAttribute("fill", bgCircle.getCSS());
+		},30);
+   
+}
+
+function setBgOpacityFadeOutCircle(elem) {
+	var opac = 1;
+	
+	var fadeOut = setInterval(function(){
+		opac -= 0.1;
+		if (opac <= 0.0 && fadeOut != null ){
+            clearInterval(fadeOut);
+        }
+		 bgCircle.alpha = opac;
+		 elem.setAttribute("fill", bgCircle.getCSS());
+    	
+		},30);
+   
+} 
+
+function genResultScreen() {
+	//var nodeReviewInfo = document.getElementById("panelContent");
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlRootNode = createXMLNode('result', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('resulttitle', CONST_STR.get('PIN_REGISTER_TITLE'), docXml, tmpXmlRootNode);
+	
+	tmpXmlNodeInfo = createXMLNode('resulttitleresult', CONST_STR.get('PIN_REGISTER_COMPLETE_TITLE'), docXml, tmpXmlRootNode);
+	
+	logInfo(docXml);
+	setReviewXmlStore(docXml);
+	
+	navController.pushToView("setting/setting-pin-fingerprint/setting-pin-fingerprint-result-scr", true, 'xsl');
+}
+ function btnLoginWithFingerPrintandPin(){
+	 
+	 if((gPincode == '' && gUsingFingerprint != '1' )|| (document.getElementById('login.txt.username').style.display != 'none' && document.getElementById('login.txt.username').value == ''))
+	{
+
+		createDialog();
+		modalDialog.showDialog();
+		return;
+	}
+	  if(gCustomerNo != undefined){
+		    sendJSONCheckFingerprintPINRequest();
+	  }
+
+ }
+////TUANNM5 -- END PIN CODE VIEW
+function randomString() {
+	var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+	var string_length = 15;
+	var randomstring = '';
+	for (var i=0; i<string_length; i++) {
+		var rnum = Math.floor(Math.random() * chars.length);
+		randomstring += chars.substring(rnum,rnum+1);
+	}
+	return randomstring;
+}
+    var modalDialog;
+    function createDialog(){
+        modalDialog = new ModalDialog({
+            type:2,
+            title: "Cảnh báo",
+            contentMessage: CONST_STR.get('FINGER_PRINT_NOT_ALLOW'),
+            isCloseShow: true,
+            cancel: "Hủy",
+            agree: "Đồng ý",
+            parentNote:""
+        });
+        modalDialog.setParentShow("mainview");
+        modalDialog.setCallback(function(param){
+            console.log("setCallbackAgree " +param);
+        });
+
+        modalDialog.onCreateDialog();
+ };
+
+
+tmpNodePass.onkeyup = function (e) {
+    var evt = e || window.event;
+    var ew = evt.keyCode || evt.which;
+
+    if(ew == 32){
+        showAlertText(CONST_STR.get('ERR_INPUT_PASSWORD_SPACE_CHAR_LOGIN'));
+        tmpNodePass.value = tmpNodePass.value.replace(tmpNodePass.value, '');
+        tmpNodePass.value =  removeAccentSpace(tmpNodePass.value);
+    }
+    if (ew == 13) { //Enter pressed
+        requestLogin();
+    }
+};

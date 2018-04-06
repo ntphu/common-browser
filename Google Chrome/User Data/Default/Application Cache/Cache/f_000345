@@ -1,0 +1,2735 @@
+/**
+ * Created by ThuanTm
+ * User: Thuantm
+ * Date: 8/1/14
+ * Time: 9:27 AM
+ */
+
+var docXsl;
+
+var statusEditingName = false;
+var editingAccNo = "";
+
+var ResultControl1;
+var ResultControl2;
+var ResultControl3;
+var ResultControl4;
+var ResultControl5;
+var ResultControl6;
+var ResultControl7;
+
+var lstCurr1;
+var lstCurr2;
+var lstCurr3;
+var lstCurr4;
+var lstCurr5;
+var lstCurr6;
+var lstCurr7;
+var docXslCurr1;
+var docXslCurr2;
+var docXslCurr3;
+var docXslCurr4;
+var docXslCurr5;
+var docXslCurr6;
+var docXslCurr7;
+
+var gESavingInputObj;
+var gDestinationAcc;
+
+var tempObj = new Object();
+var flg;
+var itemsPerPage =5;
+
+var pageIndex1 = 1;
+var pageIndex2 = 1;
+var pageIndex3 = 1;
+var pageIndex4 = 1;
+var pageIndex5 = 1;
+var pageIndex6 = 1;
+var pageIndex7 = 1;
+var HistoryObj =[];
+
+var HisTopup = [];
+var HisRate = [];
+
+var parameterAll = "ALL";
+var status_esaving = false;
+var arrPageCounterEsaving;
+var gFurSaving =[];
+//initialize
+function loadInitXML(){
+	
+}
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	status_esaving = true;
+	sendJSONRequest();
+    genDesktoplistview();
+}
+
+function viewDidLoadSuccess(){
+	arrPageCounterEsaving = new Array();
+    navController.getBottomBar().hide();
+	if(status_esaving) {
+		logInfo('no load loan');
+		status_esaving = false;
+		ReloadPage();
+	
+	}
+	else {		
+		logInfo('Esavings infomation load success');
+		sendJSONRequest();
+	}
+}
+
+function viewWillUnload(){
+	/*document.getElementById('lblChangLanguage').innerHTML = CONST_STR.get('MAIN_SCR_HEADER_TITLE').toUpperCase();*/
+	logInfo('Esavings infomation unload');
+    document.removeEventListener('evtChangeWidthDesktop',genDesktoplistview,false);
+    document.removeEventListener('evtChangeWidthMobile',genDesktoplistview,false);
+}
+
+function genXMLForCurrency(){
+	
+	var divSum1 = document.getElementById('div-sum1').innerHTML =displaySumCurr(lstCurr1) ;
+	var divSum2 = document.getElementById('div-sum2').innerHTML =displaySumCurr(lstCurr2);
+	var divSum3 = document.getElementById('div-sum3').innerHTML =displaySumCurr(lstCurr3);
+	var divSum4 = document.getElementById('div-sum4').innerHTML =displaySumCurr(lstCurr4);
+	var divSum5 = document.getElementById('div-sum5').innerHTML =displaySumCurr(lstCurr5);
+	var divSum6 = document.getElementById('div-sum6').innerHTML =displaySumCurr(lstCurr6);
+    var divSum7 = document.getElementById('div-sum7').innerHTML =displaySumCurr(lstCurr7);
+}
+
+function displaySumCurr(lstCurr){
+	var content = "<table>";
+			for(var i = 0; i<lstCurr.length; i++){								
+             	content += "<tr>"+ 
+					"<td><b><span> "+CONST_STR.get('ESAVING_TOTAL')+" "+CONST_STR.get('ESAVING_SO_TIEN_GOC_LABEL')+" ("+lstCurr[i].type+"): "+" </span></b></td>"+
+					"<td style='text-align:right'><span style='font-weight:bold;white-space:pre-wrap;float:left;'>"+(parseFloat(lstCurr[i].value)).formatMoney(2, '.', ',')+"</span></td>"+
+				"</tr>";
+			}
+		
+      content += "</table>"; 	 
+	  return content; 
+}
+
+function getCurrencyXSL(lstCurr, index){
+	var docXslCurr = createXMLDoc();	
+	var rootNode = createXMLNode('currencyNode'+index,'',docXslCurr);		
+	for(var obj in lstCurr){					
+		var type = createXMLNode('type','Tổng '+obj.type, docXslCurr ,rootNode);	
+		var value = createXMLNode('value',obj.value, docXslCurr, rootNode);
+	}
+	logInfo(docXslCurr);
+	return docXslCurr;
+}
+
+function sendJSONRequest(){
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(parameterAll);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING"), "", "", 
+								 gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+
+}
+
+function requestMBServiceSuccesss(e){   
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING") || (gprsResp.responseType == '-1')))){
+		//navController.pushToView('account/account-scr', true);
+		// var tmpPageName = navController.getDefaultPage();
+		// var tmpPageType = navController.getDefaultPageType();
+		navController.popView();
+	}
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING")))) {
+		
+		gESavingInputObj = new Array();
+
+		gESavingInputObj = gprsResp.arguments;
+		
+		if(gESavingInputObj == null||gESavingInputObj.length==6){
+			//THUANTM 
+			showAlertText(CONST_STR.get('ESAVING_ERR_NULL_VALUE'));
+			navController.popView();			
+			return;
+		}
+		//genXMLData();
+		showAll();
+		getData();
+		
+		genXMLForCurrency();
+        genDesktoplistview();
+        document.addEventListener('evtChangeWidthDesktop',genDesktoplistview,false);
+        document.addEventListener('evtChangeWidthMobile',genDesktoplistview,false);
+
+	}	
+}
+function genDesktoplistview(){
+    if(ResultControl1.length>0){
+        showLst(1);
+        document.getElementById('div-datainfo').style.display = 'none';
+            genHtmlSearchResult(getItemsPerPage(ResultControl1, pageIndex1),1)
+    }else{
+        hiddenLst(1);
+    }
+    if(ResultControl2.length>0){
+        showLst(2);
+            genHtmlSearchResult(getItemsPerPage(ResultControl2, pageIndex2),2);
+
+    }else{
+        hiddenLst(2);
+    }
+    if(ResultControl3.length>0){
+        showLst(3);
+            genHtmlSearchResult(getItemsPerPage(ResultControl3, pageIndex3),3);
+    }else{
+        hiddenLst(3);
+    }
+    //HuyNT2: bo sung cho Auto-saving
+    if(ResultControl4.length>0){
+        showLst(4);
+            genHtmlSearchResult(getItemsPerPage(ResultControl4, pageIndex4),4);
+    }else{
+        hiddenLst(4);
+    }
+    //NgocDT3 bo sung cho Future-saving
+    if(ResultControl5.length>0){
+        showLst(5);
+            genHtmlSearchResult(getItemsPerPage(ResultControl5, pageIndex5),5);
+    }else{
+        hiddenLst(5);
+    }
+    //NgocDT3 bo sung cho tiet kiem khong rut truoc han
+    if(ResultControl6.length>0){
+        showLst(6);
+            genHtmlSearchResult(getItemsPerPage(ResultControl6, pageIndex6),6);
+    }else{
+        hiddenLst(6);
+    }
+    // live bank
+    if(ResultControl7.length>0){
+        showLst(7);
+        genHtmlSearchResult(getItemsPerPage(ResultControl7, pageIndex7),7);
+    }else{
+        hiddenLst(7);
+    }/* HieuTH-tự hiện thị bảng đầu tiên*/
+	var idparent= ["parent1","parent2","parent3","parent4","parent5","parent6","parent7"];
+	var defaultId;
+	for (j = 0; j <= idparent.length; j++) { 
+		if (document.getElementById(idparent[j]).style.display =="block"){
+			defaultId=j+1;
+			break;
+		}
+	}
+	showDetailinfo(defaultId);
+	/* HieuTH end */
+}
+function showAll(){
+	if(document.getElementById("mainViewContent")!=undefined)
+		document.getElementById("mainViewContent").style.display='block';
+}
+
+function hiddenLst(section){
+	if(section == 1){
+		var node = document.getElementById("parent1");
+		if(node !=null){
+			node.style.display = 'none';		
+		}	
+	}else
+	if(section == 2){
+		var node = document.getElementById("parent2");
+		if(node !=null){
+			node.style.display = 'none';		
+		}
+	}else
+	if(section == 3){
+		var node = document.getElementById("parent3");
+		if(node !=null){
+			node.style.display = 'none';		
+		}
+	}
+	//HuyNT2: bo sung cho Auto-Saving
+	if(section == 4){
+		var node = document.getElementById("parent4");
+		if(node !=null){
+			node.style.display = 'none';		
+		}
+	}
+	//NgocDT3 bo sung cho Future Saving
+	if(section == 5){
+		var node = document.getElementById("parent5");
+		if(node !=null){
+			node.style.display = 'none';		
+		}
+	}
+	//ngocdt3 bo sung cho tiet kiem khong rut truoc han
+	if(section == 6){
+		var node = document.getElementById("parent6");
+		if(node !=null){
+			node.style.display = 'none';		
+		}
+	}
+
+    // live bank
+    if(section == 7){
+        var node = document.getElementById("parent7");
+        if(node !=null){
+            node.style.display = 'none';
+        }
+    }
+}
+function showLst(section){
+	if(section == 1){
+		var node = document.getElementById("parent1");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}else
+	if(section == 2){
+		var node = document.getElementById("parent2");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}else
+	if(section == 3){
+		var node = document.getElementById("parent3");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}
+	//HuyNT2: bo sung cho Auto-Saving
+	if(section == 4){
+		var node = document.getElementById("parent4");
+		if(node !=null){
+			node.style.display = 'block';
+		}
+	}
+	//NgocDT3 bo sung cho Future Saving
+	if(section == 5){
+		var node = document.getElementById("parent5");
+		if(node !=null){
+			node.style.display = 'block';
+		}
+	}
+	//ngocdt3 bo sung cho tiet kiem khong rut truoc han
+	if(section == 6){
+		var node = document.getElementById("parent6");
+		if(node !=null){
+			node.style.display = 'block';
+		}
+	}
+
+    // live bank
+    if(section == 7){
+        var node = document.getElementById("parent7");
+        if(node !=null){
+            node.style.display = 'block';
+        }
+    }
+}
+
+
+function requestMBServiceFail(e){
+	showAlertText(gprsResp.respContent);
+	//navController.pushToView('account/account-scr', true);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.pushToView(tmpPageName, true, tmpPageType);
+}
+
+//Hàm kiểm tra xem là loại tiền tệ gì
+//Và trả lại vị trí trong mảng nếu tìm thấy
+function checkKeyInArray(key, lstArr){	
+	for(var i=0; i<lstArr.length; i++){
+		if(lstArr[i].type == key){
+			return i;
+		}
+	}
+	return -1;
+}
+
+//Get all data and fill 3 arrays
+var indexOfSelect = 0;
+function getData(){
+	lstCurr1 = new Array();
+	lstCurr2 = new Array();
+	lstCurr3 = new Array();
+	lstCurr4 = new Array();
+	lstCurr5 = new Array();
+	lstCurr6 = new Array();
+    lstCurr7 = new Array();
+	ResultControl1 = new Array();
+	ResultControl2 = new Array();
+	ResultControl3 = new Array();
+	ResultControl4 = new Array();
+	ResultControl5 = new Array();
+	ResultControl6 = new Array();
+    ResultControl7 = new Array();
+	var objCurr;
+	
+	var tempArrStr;
+	var objtemp = null;
+
+	//FIRST LIST
+
+    var index = 0;
+    var indexEnd = gESavingInputObj.indexOf("END");
+    if(indexEnd !== -1){
+        indexOfSelect = indexEnd;
+    }
+    if(index<gESavingInputObj.length){
+        for(var k=index;k<indexEnd;k++){
+            tempArrStr = gESavingInputObj[k].split("#");
+            objtemp = new Object();
+            objtemp.brn_code = tempArrStr[0];
+            objtemp.prod_code = tempArrStr[1];
+            objtemp.savingtype = tempArrStr[2];
+            objtemp.accnocont = tempArrStr[3];
+            objtemp.prod_des = tempArrStr[4];
+            objtemp.currcont = tempArrStr[5];
+            objtemp.amountcont = tempArrStr[6];
+
+            objtemp.sodu = tempArrStr[7];
+            objtemp.sodu_hientai = tempArrStr[8];
+            objtemp.sodu_bandau = tempArrStr[9];
+            objtemp.so_tien_da_rut = tempArrStr[10];
+            objtemp.valdatecont = tempArrStr[11];
+            objtemp.matdatecont = tempArrStr[12];
+            objtemp.interestcont = tempArrStr[13];
+            objtemp.tenor_day = tempArrStr[14];
+            objtemp.tenor_month = tempArrStr[15];
+            objtemp.tenor_year = tempArrStr[16];
+            objtemp.is_type = tempArrStr[17];
+            objtemp.estimatedcont = tempArrStr[18];
+            objtemp.so_phong_toa = tempArrStr[19];
+            objtemp.lydo_phong_toa = tempArrStr[20];
+            objtemp.account_name = tempArrStr[21];
+            objtemp.type = 0;
+
+            //Show total currency
+            objCurr = new Object();
+            objCurr.type = objtemp.currcont;
+            objCurr.value =parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+            if(k==0) {
+                lstCurr1.push(objCurr);
+            }else{
+                var idx = checkKeyInArray(objCurr.type, lstCurr1);
+                if(idx==-1){
+                    lstCurr1.push(objCurr);
+                }else{
+                    lstCurr1[idx].value = parseFloat(lstCurr1[idx].value)+parseFloat(objCurr.value);
+                }
+            }
+
+            ResultControl1.push(objtemp);
+        }
+
+        //LIST 2
+        if(indexEnd!==-1){
+        var index = indexEnd+1;
+        indexEnd = gESavingInputObj.indexOf("END", index);
+        if(indexEnd !== -1){
+            indexOfSelect = indexEnd;
+        }
+        for(var k=index;k<indexEnd;k++){
+            tempArrStr = gESavingInputObj[k].split("#");
+            objtemp = new Object();
+            objtemp.brn_code = tempArrStr[0];
+            objtemp.prod_code = tempArrStr[1];
+            objtemp.savingtype = tempArrStr[2];
+            objtemp.accnocont = tempArrStr[3];
+            objtemp.prod_des = tempArrStr[4];
+            objtemp.currcont = tempArrStr[5];
+            objtemp.amountcont = tempArrStr[6];
+
+            objtemp.sodu = tempArrStr[7];
+            objtemp.sodu_hientai = tempArrStr[8];
+            objtemp.sodu_bandau = tempArrStr[9];
+            objtemp.so_tien_da_rut = tempArrStr[10];
+            objtemp.valdatecont = tempArrStr[11];
+            objtemp.matdatecont = tempArrStr[12];
+            objtemp.interestcont = tempArrStr[13];
+            objtemp.tenor_day = tempArrStr[14];
+            objtemp.tenor_month = tempArrStr[15];
+            objtemp.tenor_year = tempArrStr[16];
+            objtemp.is_type = tempArrStr[17];
+            objtemp.estimatedcont = tempArrStr[18];
+            objtemp.so_phong_toa = tempArrStr[19];
+            objtemp.lydo_phong_toa = tempArrStr[20];
+            objtemp.account_name = tempArrStr[21];
+            objtemp.type = 1;
+
+            //Show total currency
+            objCurr = new Object();
+            objCurr.type = objtemp.currcont;
+            objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+            if(k==0) {
+                lstCurr2.push(objCurr);
+            }else{
+                var idx = checkKeyInArray(objCurr.type, lstCurr2);
+                if(idx==-1){
+                    lstCurr2.push(objCurr);
+                }else{
+                    lstCurr2[idx].value = parseFloat(lstCurr2[idx].value)+parseFloat(objCurr.value);
+                }
+            }
+            ResultControl2.push(objtemp);
+        }
+        }
+        //LIST 3k;
+        if(indexEnd!==-1){
+        var index = indexEnd+1;
+        indexEnd = gESavingInputObj.indexOf("END", index);
+        if(indexEnd !== -1){
+            indexOfSelect = indexEnd;
+        }
+        for(var k=index;k<indexEnd;k++){
+            tempArrStr = gESavingInputObj[k].split("#");
+            objtemp = new Object();
+            objtemp.brn_code = tempArrStr[0];
+            objtemp.prod_code = tempArrStr[1];
+            objtemp.savingtype = tempArrStr[2];
+            objtemp.accnocont = tempArrStr[3];
+            objtemp.prod_des = tempArrStr[4];
+            objtemp.currcont = tempArrStr[5];
+            objtemp.amountcont = tempArrStr[6];
+
+            objtemp.sodu = tempArrStr[7];
+            objtemp.sodu_hientai = tempArrStr[8];
+            objtemp.sodu_bandau = tempArrStr[9];
+            objtemp.so_tien_da_rut = tempArrStr[10];
+            objtemp.valdatecont = tempArrStr[11];
+            objtemp.matdatecont = tempArrStr[12];
+            objtemp.interestcont = tempArrStr[13];
+            objtemp.tenor_day = tempArrStr[14];
+            objtemp.tenor_month = tempArrStr[15];
+            objtemp.tenor_year = tempArrStr[16];
+            objtemp.is_type = tempArrStr[17];
+            objtemp.estimatedcont = tempArrStr[18];
+            objtemp.so_phong_toa = tempArrStr[19];
+            objtemp.lydo_phong_toa = tempArrStr[20];
+            objtemp.account_name = tempArrStr[21];
+            objtemp.type = 0;
+
+            //Show total currency
+            objCurr = new Object();
+            objCurr.type = objtemp.currcont;
+            objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+            if(k==0) {
+                lstCurr3.push(objCurr);
+            }else{
+                var idx = checkKeyInArray(objCurr.type, lstCurr3);
+                if(idx==-1){
+                    lstCurr3.push(objCurr);
+                }else{
+                    lstCurr3[idx].value = parseFloat(lstCurr3[idx].value)+parseFloat(objCurr.value);
+                }
+            }
+            ResultControl3.push(objtemp);
+        }
+        }
+        //HuyNT2: Bo sung cho Auto-saving
+        //LIST 4
+        if(indexEnd!==-1){
+        var index = indexEnd+1;
+        indexEnd = gESavingInputObj.indexOf("END", index);
+        if(indexEnd !== -1){
+            indexOfSelect = indexEnd;
+        }
+        for(var k=index;k<indexEnd;k++){
+            tempArrStr = gESavingInputObj[k].split("#");
+            objtemp = new Object();
+            objtemp.brn_code = tempArrStr[0];
+            objtemp.prod_code = tempArrStr[1];
+            objtemp.savingtype = tempArrStr[2];
+            objtemp.accnocont = tempArrStr[3];
+            objtemp.prod_des = tempArrStr[4];
+            objtemp.currcont = tempArrStr[5];
+            objtemp.amountcont = tempArrStr[6];
+
+            objtemp.sodu = tempArrStr[7];
+            objtemp.sodu_hientai = tempArrStr[8];
+            objtemp.sodu_bandau = tempArrStr[9];
+            objtemp.so_tien_da_rut = tempArrStr[10];
+            objtemp.valdatecont = tempArrStr[11];
+            objtemp.matdatecont = tempArrStr[12];
+            objtemp.interestcont = tempArrStr[13];
+            objtemp.tenor_day = tempArrStr[14];
+            objtemp.tenor_month = tempArrStr[15];
+            objtemp.tenor_year = tempArrStr[16];
+            objtemp.is_type = tempArrStr[17];
+            objtemp.estimatedcont = tempArrStr[18];
+            objtemp.so_phong_toa = tempArrStr[19];
+            objtemp.lydo_phong_toa = tempArrStr[20];
+            objtemp.account_name = tempArrStr[21];
+            objtemp.type = 0;
+
+            //Show total currency
+            objCurr = new Object();
+            objCurr.type = objtemp.currcont;
+            objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+            if(k==0) {
+                lstCurr4.push(objCurr);
+            }else{
+                var idx = checkKeyInArray(objCurr.type, lstCurr4);
+                if(idx==-1){
+                    lstCurr4.push(objCurr);
+                }else{
+                    lstCurr4[idx].value = parseFloat(lstCurr4[idx].value)+parseFloat(objCurr.value);
+                }
+            }
+            ResultControl4.push(objtemp);
+        }
+        }
+        //NgocDT3 bổ sung cho Future saving
+        //LIST 5
+        if(indexEnd!==-1){
+            var index = indexEnd+1;
+            indexEnd = gESavingInputObj.indexOf("END", index);
+            if(indexEnd !== -1){
+                indexOfSelect = indexEnd;
+            }
+            for(var k=index;k<indexEnd;k++){
+                tempArrStr = gESavingInputObj[k].split("#");
+                objtemp = new Object();
+                objtemp.brn_code = tempArrStr[0];
+                objtemp.prod_code = tempArrStr[1];
+                objtemp.savingtype = tempArrStr[2];
+                objtemp.accnocont = tempArrStr[3];
+                objtemp.prod_des = tempArrStr[4];
+                objtemp.currcont = tempArrStr[5];
+                objtemp.amountcont = tempArrStr[6];
+
+                objtemp.sodu = tempArrStr[7];
+                objtemp.sodu_hientai = tempArrStr[8];
+                objtemp.sodu_bandau = tempArrStr[9];
+                objtemp.so_tien_da_rut = tempArrStr[10];
+                objtemp.valdatecont = tempArrStr[11];
+                objtemp.matdatecont = tempArrStr[12];
+                objtemp.interestcont = tempArrStr[13];
+                objtemp.tenor_day = tempArrStr[14];
+                objtemp.tenor_month = tempArrStr[15];
+                objtemp.tenor_year = tempArrStr[16];
+                objtemp.is_type = tempArrStr[17];//tan suat
+                objtemp.estimatedcont = tempArrStr[18];
+                objtemp.so_phong_toa = tempArrStr[19];
+                objtemp.lydo_phong_toa = tempArrStr[20];
+                objtemp.account_name = tempArrStr[21];
+                objtemp.frequency_amt = tempArrStr[22];//so tien dinh ky chuyen
+                objtemp.purpose = tempArrStr[23];//muc dich gui gop
+                objtemp.channel = tempArrStr[24];//kenh giao dich
+                objtemp.accamt = tempArrStr[25];//tai khoan trich tien hien tai
+                objtemp.checktype = tempArrStr[26];//loai tiet kiem gui gop/linh hoat
+                objtemp.frequendate = tempArrStr[27];//ngay bat dau dinh ky
+                //objtemp.type = 0;
+                objtemp.type = 2;
+
+                //Show total currency
+                objCurr = new Object();
+                objCurr.type = objtemp.currcont;
+                objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                if(k==0) {
+                    lstCurr5.push(objCurr);
+                }else{
+                    var idx = checkKeyInArray(objCurr.type, lstCurr5);
+                    if(idx==-1){
+                        lstCurr5.push(objCurr);
+                    }else{
+                        lstCurr5[idx].value = parseFloat(lstCurr5[idx].value)+parseFloat(objCurr.value);
+                    }
+                }
+                ResultControl5.push(objtemp);
+            }
+        }
+
+        //ngocdt3 bo sung cho tiet kiem khong rut truoc han
+
+        if(indexEnd!==-1){
+            var index = indexEnd + 1;
+            indexEnd = gESavingInputObj.indexOf("END",index);
+            if(indexEnd !== -1){
+                indexOfSelect = indexEnd;
+            }
+
+            for(var k=index;k<indexEnd;k++){
+                tempArrStr = gESavingInputObj[k].split("#");
+                objtemp = new Object();
+                objtemp.brn_code = tempArrStr[0];
+                objtemp.prod_code = tempArrStr[1];//account class
+                objtemp.savingtype = tempArrStr[2];
+                objtemp.accnocont = tempArrStr[3];
+                objtemp.prod_des = tempArrStr[4];
+                objtemp.currcont = tempArrStr[5];
+                objtemp.amountcont = tempArrStr[6];
+
+                objtemp.sodu = tempArrStr[7];
+                objtemp.sodu_hientai = tempArrStr[8];
+                objtemp.sodu_bandau = tempArrStr[9];
+                objtemp.so_tien_da_rut = tempArrStr[10];
+                objtemp.valdatecont = tempArrStr[11];
+                objtemp.matdatecont = tempArrStr[12];
+                objtemp.interestcont = tempArrStr[13];
+                objtemp.tenor_day = tempArrStr[14];
+                objtemp.tenor_month = tempArrStr[15];
+                objtemp.tenor_year = tempArrStr[16];
+                objtemp.is_type = tempArrStr[17];
+                objtemp.estimatedcont = tempArrStr[18];
+                objtemp.so_phong_toa = tempArrStr[19];
+                objtemp.lydo_phong_toa = tempArrStr[20];
+                objtemp.account_name = tempArrStr[21];
+                objtemp.type = 0;
+
+                //Show total currency
+                objCurr = new Object();
+                objCurr.type = objtemp.currcont;
+                objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                if(k==0) {
+                    lstCurr6.push(objCurr);
+                }else{
+                    var idx = checkKeyInArray(objCurr.type, lstCurr6);
+                    if(idx==-1){
+                        lstCurr6.push(objCurr);
+                    }else{
+                        lstCurr6[idx].value = parseFloat(lstCurr6[idx].value)+parseFloat(objCurr.value);
+                    }
+                }
+                ResultControl6.push(objtemp);
+            }
+        }
+
+        // live bank
+        if(indexEnd!==-1){
+            var index = indexEnd+1;
+            indexEnd = gESavingInputObj.indexOf("END", index);
+            if(indexEnd !== -1){
+                indexOfSelect = indexEnd;
+            }
+            for(var k=index;k<indexEnd;k++){
+                tempArrStr = gESavingInputObj[k].split("#");
+                objtemp = new Object();
+                objtemp.brn_code = tempArrStr[0];
+                objtemp.prod_code = tempArrStr[1];
+                objtemp.savingtype = tempArrStr[2];
+                objtemp.accnocont = tempArrStr[3];
+                objtemp.prod_des = tempArrStr[4];
+                objtemp.currcont = tempArrStr[5];
+                objtemp.amountcont = tempArrStr[6];
+
+                objtemp.sodu = tempArrStr[7];
+                objtemp.sodu_hientai = tempArrStr[8];
+                objtemp.sodu_bandau = tempArrStr[9];
+                objtemp.so_tien_da_rut = tempArrStr[10];
+                objtemp.valdatecont = tempArrStr[11];
+                objtemp.matdatecont = tempArrStr[12];
+                objtemp.interestcont = tempArrStr[13];
+                objtemp.tenor_day = tempArrStr[14];
+                objtemp.tenor_month = tempArrStr[15];
+                objtemp.tenor_year = tempArrStr[16];
+                objtemp.is_type = tempArrStr[17];
+                objtemp.estimatedcont = tempArrStr[18];
+                objtemp.so_phong_toa = tempArrStr[19];
+                objtemp.lydo_phong_toa = tempArrStr[20];
+                objtemp.account_name = tempArrStr[21];
+                objtemp.type = 0;
+
+                //Show total currency
+                objCurr = new Object();
+                objCurr.type = objtemp.currcont;
+                objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                if(k==0) {
+                    lstCurr7.push(objCurr);
+                }else{
+                    var idx = checkKeyInArray(objCurr.type, lstCurr7);
+                    if(idx==-1){
+                        lstCurr7.push(objCurr);
+                    }else{
+                        lstCurr7[idx].value = parseFloat(lstCurr7[idx].value)+parseFloat(objCurr.value);
+                    }
+                }
+                ResultControl7.push(objtemp);
+            }
+        }
+        //check neu khong tim thay vi tri END
+        var indexOfArray = indexOfSelect+1;
+        var  indexEndOfArray = gESavingInputObj.indexOf("END",indexOfArray);
+        if(indexEndOfArray==-1 && indexOfArray < gESavingInputObj.length ){
+            for(var k=indexOfArray;k<gESavingInputObj.length;k++){
+                tempArrStr = gESavingInputObj[k].split("#");
+                objtemp = new Object();
+                objtemp.brn_code = tempArrStr[0];
+                objtemp.prod_code = tempArrStr[1];//account class
+                //Tiet kiem tai quay
+                if(objtemp.prod_code=="T5A003"|| objtemp.prod_code == 'TEA001'|| objtemp.prod_code == 'NTFIKW'|| objtemp.prod_code == 'NTVIBD'|| objtemp.prod_code == 'TTVIBD'){
+                    objtemp.savingtype = tempArrStr[2];
+                    objtemp.accnocont = tempArrStr[3];
+                    objtemp.prod_des = tempArrStr[4];
+                    objtemp.currcont = tempArrStr[5];
+                    objtemp.amountcont = tempArrStr[6];
+
+                    objtemp.sodu = tempArrStr[7];
+                    objtemp.sodu_hientai = tempArrStr[8];
+                    objtemp.sodu_bandau = tempArrStr[9];
+                    objtemp.so_tien_da_rut = tempArrStr[10];
+                    objtemp.valdatecont = tempArrStr[11];
+                    objtemp.matdatecont = tempArrStr[12];
+                    objtemp.interestcont = tempArrStr[13];
+                    objtemp.tenor_day = tempArrStr[14];
+                    objtemp.tenor_month = tempArrStr[15];
+                    objtemp.tenor_year = tempArrStr[16];
+                    objtemp.is_type = tempArrStr[17];
+                    objtemp.estimatedcont = tempArrStr[18];
+                    objtemp.so_phong_toa = tempArrStr[19];
+                    objtemp.lydo_phong_toa = tempArrStr[20];
+                    objtemp.account_name = tempArrStr[21];
+                    objtemp.type = 0;
+
+                    //Show total currency
+                    objCurr = new Object();
+                    objCurr.type = objtemp.currcont;
+                    objCurr.value =parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                    if(k==0) {
+                        lstCurr1.push(objCurr);
+                    }else{
+                        var idx = checkKeyInArray(objCurr.type, lstCurr1);
+                        if(idx==-1){
+                            lstCurr1.push(objCurr);
+                        }else{
+                            lstCurr1[idx].value = parseFloat(lstCurr1[idx].value)+parseFloat(objCurr.value);
+                        }
+                    }
+
+                    ResultControl1.push(objtemp);
+                }else
+                 // Tiet Kiem rut goc linh hoat
+                if(objtemp.prod_code=="FTVIBN"|| objtemp.prod_code == 'FTFIBN'){
+                    objtemp.savingtype = tempArrStr[2];
+                    objtemp.accnocont = tempArrStr[3];
+                    objtemp.prod_des = tempArrStr[4];
+                    objtemp.currcont = tempArrStr[5];
+                    objtemp.amountcont = tempArrStr[6];
+
+                    objtemp.sodu = tempArrStr[7];
+                    objtemp.sodu_hientai = tempArrStr[8];
+                    objtemp.sodu_bandau = tempArrStr[9];
+                    objtemp.so_tien_da_rut = tempArrStr[10];
+                    objtemp.valdatecont = tempArrStr[11];
+                    objtemp.matdatecont = tempArrStr[12];
+                    objtemp.interestcont = tempArrStr[13];
+                    objtemp.tenor_day = tempArrStr[14];
+                    objtemp.tenor_month = tempArrStr[15];
+                    objtemp.tenor_year = tempArrStr[16];
+                    objtemp.is_type = tempArrStr[17];
+                    objtemp.estimatedcont = tempArrStr[18];
+                    objtemp.so_phong_toa = tempArrStr[19];
+                    objtemp.lydo_phong_toa = tempArrStr[20];
+                    objtemp.account_name = tempArrStr[21];
+                    objtemp.type = 1;
+
+                    //Show total currency
+                    objCurr = new Object();
+                    objCurr.type = objtemp.currcont;
+                    objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                    if(k==0) {
+                        lstCurr2.push(objCurr);
+                    }else{
+                        var idx = checkKeyInArray(objCurr.type, lstCurr2);
+                        if(idx==-1){
+                            lstCurr2.push(objCurr);
+                        }else{
+                            lstCurr2[idx].value = parseFloat(lstCurr2[idx].value)+parseFloat(objCurr.value);
+                        }
+                    }
+                    ResultControl2.push(objtemp);
+                }else
+                //Tiet kiem dien tu
+                if(objtemp.prod_code=="ETVIKW"|| objtemp.prod_code == 'ETVIBD'){
+                    objtemp.savingtype = tempArrStr[2];
+                    objtemp.accnocont = tempArrStr[3];
+                    objtemp.prod_des = tempArrStr[4];
+                    objtemp.currcont = tempArrStr[5];
+                    objtemp.amountcont = tempArrStr[6];
+
+                    objtemp.sodu = tempArrStr[7];
+                    objtemp.sodu_hientai = tempArrStr[8];
+                    objtemp.sodu_bandau = tempArrStr[9];
+                    objtemp.so_tien_da_rut = tempArrStr[10];
+                    objtemp.valdatecont = tempArrStr[11];
+                    objtemp.matdatecont = tempArrStr[12];
+                    objtemp.interestcont = tempArrStr[13];
+                    objtemp.tenor_day = tempArrStr[14];
+                    objtemp.tenor_month = tempArrStr[15];
+                    objtemp.tenor_year = tempArrStr[16];
+                    objtemp.is_type = tempArrStr[17];
+                    objtemp.estimatedcont = tempArrStr[18];
+                    objtemp.so_phong_toa = tempArrStr[19];
+                    objtemp.lydo_phong_toa = tempArrStr[20];
+                    objtemp.account_name = tempArrStr[21];
+                    objtemp.type = 0;
+
+                    //Show total currency
+                    objCurr = new Object();
+                    objCurr.type = objtemp.currcont;
+                    objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                    if(k==0) {
+                        lstCurr3.push(objCurr);
+                    }else{
+                        var idx = checkKeyInArray(objCurr.type, lstCurr3);
+                        if(idx==-1){
+                            lstCurr3.push(objCurr);
+                        }else{
+                            lstCurr3[idx].value = parseFloat(lstCurr3[idx].value)+parseFloat(objCurr.value);
+                        }
+                    }
+                    ResultControl3.push(objtemp);
+                }else
+                   //Tiet kiem tu dong
+                if(objtemp.prod_code=="T6A001"){
+                    objtemp.savingtype = tempArrStr[2];
+                    objtemp.accnocont = tempArrStr[3];
+                    objtemp.prod_des = tempArrStr[4];
+                    objtemp.currcont = tempArrStr[5];
+                    objtemp.amountcont = tempArrStr[6];
+
+                    objtemp.sodu = tempArrStr[7];
+                    objtemp.sodu_hientai = tempArrStr[8];
+                    objtemp.sodu_bandau = tempArrStr[9];
+                    objtemp.so_tien_da_rut = tempArrStr[10];
+                    objtemp.valdatecont = tempArrStr[11];
+                    objtemp.matdatecont = tempArrStr[12];
+                    objtemp.interestcont = tempArrStr[13];
+                    objtemp.tenor_day = tempArrStr[14];
+                    objtemp.tenor_month = tempArrStr[15];
+                    objtemp.tenor_year = tempArrStr[16];
+                    objtemp.is_type = tempArrStr[17];
+                    objtemp.estimatedcont = tempArrStr[18];
+                    objtemp.so_phong_toa = tempArrStr[19];
+                    objtemp.lydo_phong_toa = tempArrStr[20];
+                    objtemp.account_name = tempArrStr[21];
+                    objtemp.type = 0;
+
+                    //Show total currency
+                    objCurr = new Object();
+                    objCurr.type = objtemp.currcont;
+                    objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                    if(k==0) {
+                        lstCurr4.push(objCurr);
+                    }else{
+                        var idx = checkKeyInArray(objCurr.type, lstCurr4);
+                        if(idx==-1){
+                            lstCurr4.push(objCurr);
+                        }else{
+                            lstCurr4[idx].value = parseFloat(lstCurr4[idx].value)+parseFloat(objCurr.value);
+                        }
+                    }
+                    ResultControl4.push(objtemp);
+                }else
+                    // Tiet kiem gui gop dien tu
+                if(objtemp.prod_code=="T5A005"){
+                    objtemp.savingtype = tempArrStr[2];
+                    objtemp.accnocont = tempArrStr[3];
+                    objtemp.prod_des = tempArrStr[4];
+                    objtemp.currcont = tempArrStr[5];
+                    objtemp.amountcont = tempArrStr[6];
+
+                    objtemp.sodu = tempArrStr[7];
+                    objtemp.sodu_hientai = tempArrStr[8];
+                    objtemp.sodu_bandau = tempArrStr[9];
+                    objtemp.so_tien_da_rut = tempArrStr[10];
+                    objtemp.valdatecont = tempArrStr[11];
+                    objtemp.matdatecont = tempArrStr[12];
+                    objtemp.interestcont = tempArrStr[13];
+                    objtemp.tenor_day = tempArrStr[14];
+                    objtemp.tenor_month = tempArrStr[15];
+                    objtemp.tenor_year = tempArrStr[16];
+                    objtemp.is_type = tempArrStr[17];//tan suat
+                    objtemp.estimatedcont = tempArrStr[18];
+                    objtemp.so_phong_toa = tempArrStr[19];
+                    objtemp.lydo_phong_toa = tempArrStr[20];
+                    objtemp.account_name = tempArrStr[21];
+                    objtemp.frequency_amt = tempArrStr[22];//so tien dinh ky chuyen
+                    objtemp.purpose = tempArrStr[23];//muc dich gui gop
+                    objtemp.channel = tempArrStr[24];//kenh giao dich
+                    objtemp.accamt = tempArrStr[25];//tai khoan trich tien hien tai
+                    objtemp.checktype = tempArrStr[26];//loai tiet kiem gui gop/linh hoat
+                    objtemp.frequendate = tempArrStr[27];//ngay bat dau dinh ky
+                    //objtemp.type = 0;
+                    objtemp.type = 2;
+
+                    //Show total currency
+                    objCurr = new Object();
+                    objCurr.type = objtemp.currcont;
+                    objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                    if(k==0) {
+                        lstCurr5.push(objCurr);
+                    }else{
+                        var idx = checkKeyInArray(objCurr.type, lstCurr5);
+                        if(idx==-1){
+                            lstCurr5.push(objCurr);
+                        }else{
+                            lstCurr5[idx].value = parseFloat(lstCurr5[idx].value)+parseFloat(objCurr.value);
+                        }
+                    }
+                    ResultControl5.push(objtemp);
+                }else
+                    //Tiet kiem tai loc
+                if(objtemp.prod_code == 'T5A004'){
+                    objtemp.savingtype = tempArrStr[2];
+                    objtemp.accnocont = tempArrStr[3];
+                    objtemp.prod_des = tempArrStr[4];
+                    objtemp.currcont = tempArrStr[5];
+                    objtemp.amountcont = tempArrStr[6];
+
+                    objtemp.sodu = tempArrStr[7];
+                    objtemp.sodu_hientai = tempArrStr[8];
+                    objtemp.sodu_bandau = tempArrStr[9];
+                    objtemp.so_tien_da_rut = tempArrStr[10];
+                    objtemp.valdatecont = tempArrStr[11];
+                    objtemp.matdatecont = tempArrStr[12];
+                    objtemp.interestcont = tempArrStr[13];
+                    objtemp.tenor_day = tempArrStr[14];
+                    objtemp.tenor_month = tempArrStr[15];
+                    objtemp.tenor_year = tempArrStr[16];
+                    objtemp.is_type = tempArrStr[17];
+                    objtemp.estimatedcont = tempArrStr[18];
+                    objtemp.so_phong_toa = tempArrStr[19];
+                    objtemp.lydo_phong_toa = tempArrStr[20];
+                    objtemp.account_name = tempArrStr[21];
+                    objtemp.type = 0;
+
+                    //Show total currency
+                    objCurr = new Object();
+                    objCurr.type = objtemp.currcont;
+                    objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                    if(k==0) {
+                        lstCurr6.push(objCurr);
+                    }else{
+                        var idx = checkKeyInArray(objCurr.type, lstCurr6);
+                        if(idx==-1){
+                            lstCurr6.push(objCurr);
+                        }else{
+                            lstCurr6[idx].value = parseFloat(lstCurr6[idx].value)+parseFloat(objCurr.value);
+                        }
+                    }
+                    ResultControl6.push(objtemp);
+                }else
+                // live bank
+                if(objtemp.prod_code=="T5A007"|| objtemp.prod_code == 'T5A009'){
+                    objtemp.savingtype = tempArrStr[2];
+                    objtemp.accnocont = tempArrStr[3];
+                    objtemp.prod_des = tempArrStr[4];
+                    objtemp.currcont = tempArrStr[5];
+                    objtemp.amountcont = tempArrStr[6];
+
+                    objtemp.sodu = tempArrStr[7];
+                    objtemp.sodu_hientai = tempArrStr[8];
+                    objtemp.sodu_bandau = tempArrStr[9];
+                    objtemp.so_tien_da_rut = tempArrStr[10];
+                    objtemp.valdatecont = tempArrStr[11];
+                    objtemp.matdatecont = tempArrStr[12];
+                    objtemp.interestcont = tempArrStr[13];
+                    objtemp.tenor_day = tempArrStr[14];
+                    objtemp.tenor_month = tempArrStr[15];
+                    objtemp.tenor_year = tempArrStr[16];
+                    objtemp.is_type = tempArrStr[17];
+                    objtemp.estimatedcont = tempArrStr[18];
+                    objtemp.so_phong_toa = tempArrStr[19];
+                    objtemp.lydo_phong_toa = tempArrStr[20];
+                    objtemp.account_name = tempArrStr[21];
+                    objtemp.type = 0;
+
+                    //Show total currency
+                    objCurr = new Object();
+                    objCurr.type = objtemp.currcont;
+                    objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+                    if(k==0) {
+                        lstCurr7.push(objCurr);
+                    }else{
+                        var idx = checkKeyInArray(objCurr.type, lstCurr7);
+                        if(idx==-1){
+                            lstCurr7.push(objCurr);
+                        }else{
+                            lstCurr7[idx].value = parseFloat(lstCurr7[idx].value)+parseFloat(objCurr.value);
+                        }
+                    }
+                    ResultControl7.push(objtemp);
+                }
+            }
+
+        }
+    }
+
+}
+
+
+function PageIndicatorObject() {
+		this.pageCount = "";
+		this.id = "";
+		this.name="";
+	}
+var objectPageIndicator;
+function genPagging(arr, pageIndex, nodepage,nodeName) {
+	
+	var totalPage = calTotalPage(arr);
+	//var nodepage = document.getElementById('pageIndicatorNums1');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+	objectPageIndicator = new  PageIndicatorObject();
+	objectPageIndicator.pageCount = totalPage;
+	objectPageIndicator.id = nodepage;
+	objectPageIndicator.name = nodeName;
+	arrPageCounterEsaving.push(objectPageIndicator);
+	//chan nhap ky tu dac biet
+	var tmpArrInputName = document.getElementById('parent1').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+	tmpArrInputName = document.getElementById('parent2').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+	tmpArrInputName = document.getElementById('parent3').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+	tmpArrInputName = document.getElementById('parent4').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+	tmpArrInputName = document.getElementById('parent5').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+	tmpArrInputName = document.getElementById('parent6').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+    tmpArrInputName = document.getElementById('parent7').getElementsByTagName('input');
+    for (var i=0; i<tmpArrInputName.length; i++) {
+        var tmpInputID = tmpArrInputName[i].getAttribute('id');
+        setInputOnlyASCII(tmpInputID);
+    }
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex1) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex1 - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}		
+	}	
+	return arrTmp;
+}
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+
+	var arrMedial = new Array();
+	
+	if(selectedPage.id == 'pageIndicatorNums1') {
+		pageIndex1 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl1, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 1);
+	}
+	else if(selectedPage.id == 'pageIndicatorNums2') {
+		pageIndex2 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl2, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 2);
+	}
+	else if(selectedPage.id == 'pageIndicatorNums3') {
+		pageIndex3 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl3, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 3);				
+	}
+	else if(selectedPage.id == 'pageIndicatorNums4') {
+		pageIndex4 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl4, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 4);				
+	}
+	//ngocdt3 bo sung cho Future saving
+	else if(selectedPage.id == 'pageIndicatorNums5') {
+		pageIndex5 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl5, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 5);				
+	}
+	//ngocdt3 bo sung cho Tiet kiem khong rut truoc han
+	else if(selectedPage.id == 'pageIndicatorNums6') {
+		pageIndex6 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl6, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 6);				
+	}
+    // live bank
+    else if(selectedPage.id == 'pageIndicatorNums7'){
+        pageIndex7 = selectedIdx;
+        arrMedial = getItemsPerPage(ResultControl7, selectedIdx);
+        genHtmlSearchResult(arrMedial, 7);
+    }
+	
+}
+//doing
+function genHtmlSearchResult(arr, section) {
+	//bowser.name = 'Firefox';
+	if(section==1)
+	{
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            // if(bowser.name=='Firefox'){
+                successPaggingCallback1(genHTMLdata(arr));
+            // }else{
+                // var docXsl = getCachePageXsl("esaving/esaving-information-table");
+                // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback1, failPaggingCallback);
+            // }
+        }
+        else{
+		// if(bowser.name=='Firefox'){
+			successPaggingCallback1(genXmlDataPagging(arr));
+		// }else{
+			// var docXsl = getCachePageXsl("esaving/esaving-information-table");
+			// genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback1, failPaggingCallback);
+		// }
+    }
+		
+	}
+	if(section==2)
+	{
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            // if(bowser.name=='Firefox'){
+                successPaggingCallback2(genHTMLdata(arr));
+            // }else{
+                // var docXsl = getCachePageXsl("esaving/esaving-information-table");
+                // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback2, failPaggingCallback);
+            // }
+        }
+        else{
+		// if(bowser.name=='Firefox'){
+			successPaggingCallback2(genXmlDataPagging(arr));
+		// }else{
+			// var docXsl = getCachePageXsl("esaving/esaving-information-table");
+			// genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback2, failPaggingCallback);
+		// }
+        }
+	}
+	if(section==3)
+	{
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            // if(bowser.name=='Firefox'){
+                successPaggingCallback3(genHTMLdata(arr));
+            // }else{
+                // var docXsl = getCachePageXsl("esaving/esaving-information-table");
+                // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback3, failPaggingCallback);
+            // }
+        }
+	    else{
+		// if(bowser.name=='Firefox'){
+			successPaggingCallback3(genXmlDataPagging(arr));
+		// }else{
+			// var docXsl = getCachePageXsl("esaving/esaving-information-table");
+            // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback3, failPaggingCallback);
+		// }
+        }
+	}
+	if(section==4)
+	{
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            // if(bowser.name=='Firefox'){
+                successPaggingCallback4(genHTMLdata(arr));
+            // }else{
+                // var docXsl = getCachePageXsl("esaving/esaving-information-table");
+                // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback4, failPaggingCallback);
+            // }
+        }
+        else{
+		// if(bowser.name=='Firefox'){
+			successPaggingCallback4(genXmlDataPagging(arr));
+		// }else{
+			// var docXsl = getCachePageXsl("esaving/esaving-information-table");
+			// genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback4, failPaggingCallback);
+		// }
+        }
+	}
+	//ngocdt3 bo sung cho Future saving
+	if(section==5)
+	{
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            // if(bowser.name=='Firefox'){
+                successPaggingCallback5(genHTMLdata(arr));
+            // }else{
+                // var docXsl = getCachePageXsl("esaving/esaving-information-table");
+                // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback5, failPaggingCallback);
+            // }
+        }
+        else{
+		// if(bowser.name=='Firefox'){
+			successPaggingCallback5(genXmlDataPagging(arr));
+		// }else{
+			// var docXsl = getCachePageXsl("esaving/esaving-information-table");
+			// genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback5, failPaggingCallback);
+		// }
+        }
+	}
+	//ngocdt3 bo sung cho tiet kiem khong rut truoc han
+	if(section==6)
+	{
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            // if(bowser.name=='Firefox'){
+                successPaggingCallback6(genHTMLdata(arr));
+            // }else{
+                // var docXsl = getCachePageXsl("esaving/esaving-information-table");
+                // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback6, failPaggingCallback);
+            // }
+        }
+        else{
+		// if(bowser.name=='Firefox'){
+			successPaggingCallback6(genXmlDataPagging(arr));
+		// }else{
+			// var docXsl = getCachePageXsl("esaving/esaving-information-table");
+			// genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback6, failPaggingCallback);
+		// }
+        }
+	}
+    // live bank
+    if(section==7)
+    {
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            // if(bowser.name=='Firefox'){
+                successPaggingCallback7(genHTMLdata(arr));
+            // }else{
+                // var docXsl = getCachePageXsl("esaving/esaving-information-table");
+                // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback7, failPaggingCallback);
+            // }
+        }
+        else{
+            // if(bowser.name=='Firefox'){
+                successPaggingCallback7(genXmlDataPagging(arr));
+            // }else{
+                // var docXsl = getCachePageXsl("esaving/esaving-information-table");
+                // genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback7, failPaggingCallback);
+            // }
+        }
+    }
+}
+
+function successPaggingCallback1(strHtml) {
+	var div = document.getElementById("divSection1");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl1, pageIndex1,document.getElementById('pageIndicatorNums1'),'pageIndicatorNums1');
+}
+function successPaggingCallback2(strHtml) {
+	var div = document.getElementById("divSection2");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl2, pageIndex2, document.getElementById('pageIndicatorNums2'),'pageIndicatorNums2');
+}
+function successPaggingCallback3(strHtml) {
+	var div = document.getElementById("divSection3");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl3, pageIndex3, document.getElementById('pageIndicatorNums3'),'pageIndicatorNums3');
+}
+function successPaggingCallback4(strHtml) {
+	var div = document.getElementById("divSection4");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl4, pageIndex4, document.getElementById('pageIndicatorNums4'),'pageIndicatorNums4');
+}
+//ngocdt3 bo sug cho Future saving
+function successPaggingCallback5(strHtml) {
+	var div = document.getElementById("divSection5");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl5, pageIndex5, document.getElementById('pageIndicatorNums5'),'pageIndicatorNums5');
+}
+//ngocdt3 bo sug cho tiet kiem khong rut truoc han
+function successPaggingCallback6(strHtml) {
+	var div = document.getElementById("divSection6");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl6, pageIndex6, document.getElementById('pageIndicatorNums6'),'pageIndicatorNums6');
+}
+
+// live bank
+function successPaggingCallback7(strHtml) {
+    var div = document.getElementById("divSection7");
+    div.innerHTML = strHtml;
+    genPagging(ResultControl7, pageIndex7, document.getElementById('pageIndicatorNums7'),'pageIndicatorNums7');
+}
+
+function failPaggingCallback() {
+	
+}
+
+Number.prototype.formatMoney = function(c, d, t){
+var n = this, 
+    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+    d = d == undefined ? "." : d, 
+    t = t == undefined ? "," : t, 
+    s = n < 0 ? "-" : "", 
+    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+    j = (j = i.length) > 3 ? j % 3 : 0;
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+ };
+//doing
+//gen xml data khi chon trang 1, 2,....
+function genXmlDataPagging(arr) {	
+	var itemInnerHtml ="";
+	var docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('esavingInfo','',docXml);
+	
+	var childlistsavingNode = createXMLNode('listaccsaving','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('esavingTitleTable','',docXml,childlistsavingNode);
+	
+	 
+	var childNodeTit = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,titleTable);
+	//ngocdt3 bo sung cho future-saving
+	
+	//childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);	
+	//childNodeTit = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,titleTable);
+	//childNodeTit = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,titleTable);
+	var tmpSavings;
+	if (arr && arr.length > 0) {
+		
+		tmpSavings = arr[0];
+	}
+	if (tmpSavings &&(tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)) {
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,titleTable);
+	}
+	else {
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+	}
+	childNodeTit = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,titleTable);
+	if (tmpSavings && tmpSavings.prod_code == 'T6A001') {
+		childNodeTit = createXMLNode('valdatetit',CONST_STR.get('ACC_OPENDATE_TITLE'),docXml,titleTable);
+	}
+	else {
+		childNodeTit = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,titleTable);
+	}
+	
+	if (tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)) {
+		childNodeTit = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,titleTable);
+	}
+	else {
+		childNodeTit = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,titleTable);
+	}
+	
+	childNodeTit = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,titleTable);
+	if (tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)) {
+		childNodeTit = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+	}
+	else {
+		childNodeTit = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,titleTable);
+	}
+	if (tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)) {
+		childNodeTit = createXMLNode('estimatedtit',CONST_STR.get('FUTURE_SAVING_HISTORY'),docXml,titleTable);
+	}
+	else if(tmpSavings && (tmpSavings.prod_code == 'T5A004'||tmpSavings.prod_code == 'T5A003'||tmpSavings.prod_code == 'TEA001')){
+		childNodeTit = createXMLNode('estimatedtit',CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'),docXml,titleTable);
+	}
+	else {
+		childNodeTit = createXMLNode('estimatedtit',CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST'),docXml,titleTable);
+	}
+	//childNodeTit = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,titleTable);
+	//childNodeTit = createXMLNode('estimatedtit',CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST'),docXml,titleTable);
+	//LIST 1
+
+	for(var i in arr){
+		tmpSavings=arr[i];
+        var arraccinfo = new Array();
+		var valTable = createXMLNode('accinfo','',docXml, childlistsavingNode);
+		
+		nodeVal = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,valTable);
+
+		//nodeVal = createXMLNode('savingtype',arr[i].savingtype,docXml,valTable);
+		//account_name
+		var nodeVal = createXMLNode('accnocont',arr[i].accnocont,docXml,valTable);
+        var viewtitle = "<span>"+CONST_STR.get('ACCOUNT_ACC_NO_TITLE')+"</span>"
+        var viewcontent = "<span>"+arr[i].accnocont+"</span>"
+        var row1 = new Array(viewtitle, viewcontent);
+        arraccinfo.push(row1);
+		if(arr[i].account_name && arr[i].account_name.length > 0) {
+			nodeVal = createXMLNode('accnocontname',arr[i].account_name,docXml,valTable);
+		}
+		//loại tk/muc dich
+        var row2 = new Array();
+		if(tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)){
+		nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,valTable);
+		nodeVal = createXMLNode('savingtype',CONST_STR.get(arr[i].purpose),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('FUTURE_SAVING_PURPOSE')+"</span>"
+            var viewcontent = "<span>"+CONST_STR.get(arr[i].purpose)+"</span>"
+		row2 = new Array(viewtitle,viewcontent);
+		}
+		else{
+		nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,valTable);
+		nodeVal = createXMLNode('savingtype',arr[i].savingtype,docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE')+"</span>"
+            var viewcontent = "<span>"+arr[i].savingtype+"</span>"
+            row2 = new Array(viewtitle,viewcontent);
+		//nodeVal = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,valTable);
+		}
+        arraccinfo.push(row2);
+        var row3 = new Array();
+		if(tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)){
+		nodeVal = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('FUTURE_SAVING_BALANCE_CURR')+"</span>"
+            row3.push(viewtitle);
+		}
+		else{
+		nodeVal = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL')+"</span>"
+            row3.push(viewtitle);
+		}
+
+		nodeVal = createXMLNode('amountcont',(parseFloat(removeSpecialChar(arr[i].sodu_hientai))).formatMoney(2, '.', ','),docXml,valTable);
+        var viewcontent = "<span>"+(parseFloat(removeSpecialChar(arr[i].sodu_hientai))).formatMoney(2, '.', ',')+"</span>"
+        row3.push(viewcontent);
+        arraccinfo.push(row3);
+		//nodeVal = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,valTable);
+		nodeVal = createXMLNode('interestcont',arr[i].interestcont + "%",docXml,valTable);
+		nodeVal = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,valTable);
+        var viewtitle = "<span>"+CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE')+"</span>"
+        var viewcontent = "<span>"+arr[i].interestcont + "%"+"</span>"
+        var row4 = new Array(viewtitle,viewcontent);
+        arraccinfo.push(row4);
+
+        var row5 = new Array();
+		nodeVal = createXMLNode('valdatecont',arr[i].valdatecont,docXml,valTable);
+
+		if (tmpSavings && tmpSavings.prod_code == 'T6A001') {
+			nodeVal = createXMLNode('valdatetit',CONST_STR.get('ACC_OPENDATE_TITLE'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('ACC_OPENDATE_TITLE')+"</span>"
+            row5.push(viewtitle);
+        }
+		else {
+            nodeVal = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE')+"</span>"
+            row5.push(viewtitle);
+		}
+        var viewcontent = "<span>"+arr[i].valdatecont+"</span>"
+		row5.push(viewcontent);
+        arraccinfo.push(row5);
+
+		nodeVal = createXMLNode('matdatecont',arr[i].matdatecont,docXml,valTable);
+		nodeVal = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,valTable);
+        var viewtitle = "<span>"+CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE')+"</span>"
+        var viewcontent = "<span>"+arr[i].matdatecont+"</span>"
+        var row6 = new Array(viewtitle,viewcontent);
+        arraccinfo.push(row6);
+
+        var row7 = new Array();
+        var row8 = new Array();
+		var row9 = new Array();
+		if(tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)){
+            nodeVal = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE')+"</span>"
+            row7.push(viewtitle);
+            if(arr[i].checktype=='FLX'){
+                nodeVal = createXMLNode('currcont',CONST_STR.get('FUTURE_SAVING_AUTO_NAME'),docXml,valTable);
+                var viewcontent = "<span>"+CONST_STR.get('FUTURE_SAVING_AUTO_NAME')+"</span>"
+                row7.push(viewcontent);
+            }
+            else if(arr[i].checktype=='PRD'){
+                nodeVal = createXMLNode('currcont',CONST_STR.get('FUTURE_SAVING_PRD_NAME'),docXml,valTable);
+                var viewcontent = "<span>"+CONST_STR.get('FUTURE_SAVING_PRD_NAME')+"</span>"
+                row7.push(viewcontent);
+		}
+
+//		nodeVal = createXMLNode('estimatedcont',CONST_STR.get('FUTURE_SAVING_HISTORY_DETAIL'),docXml,valTable);
+		nodeVal = createXMLNode('estimatedtit',CONST_STR.get('FUTURE_SAVING_HISTORY'),docXml,valTable);
+            var viewtitle = "<span onclick='viewdetail("+arr[i].accnocont+")'>"+CONST_STR.get('FUTURE_SAVING_HISTORY')+"</span>"
+            var viewdetail = "<a style='text-decoration:underline; cursor:pointer' onclick='if (!e) var e = window.event;e.cancelBubble = true;if (e.stopPropagation) e.stopPropagation();viewdetail(&quot;"+arr[i].accnocont+"&quot;);return false;''><span>"+CONST_STR.get('FUTURE_SAVING_HISTORY_DETAIL')+"</span></a>"
+		   row8.push(viewtitle,viewdetail);
+
+		}
+		else{
+		nodeVal = createXMLNode('currcont',arr[i].currcont,docXml,valTable);
+		nodeVal = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY')+"</span>"
+            var viewcontent = "<span>"+arr[i].currcont+"</span>"
+            row7.push(viewtitle,viewcontent);
+		if(tmpSavings && (tmpSavings.prod_code == 'T5A004')){
+			nodeVal = createXMLNode('estimatedcont',CONST_STR.get('SAVNO_BEFORE_MATDATE_EBANK'),docXml,valTable);
+			nodeVal = createXMLNode('estimatedtit',CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL')+"</span>"
+            var viewcontent = "<span>"+CONST_STR.get('SAVNO_BEFORE_MATDATE_EBANK')+"</span>"
+            row8.push(viewtitle,viewcontent);
+		}
+		else if(tmpSavings && (tmpSavings.prod_code == 'T5A003'||tmpSavings.prod_code == 'TEA001')){
+			nodeVal = createXMLNode('estimatedcont',CONST_STR.get('SAVNO_BEFORE_MATDATE_QUAY'),docXml,valTable);
+			nodeVal = createXMLNode('estimatedtit',CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL')+"</span>"
+            var viewcontent = "<span>"+CONST_STR.get('SAVNO_BEFORE_MATDATE_QUAY')+"</span>"
+            row8.push(viewtitle,viewcontent);
+		}
+		else{
+			nodeVal = createXMLNode('estimatedcont',arr[i].estimatedcont,docXml,valTable);
+			nodeVal = createXMLNode('estimatedtit',CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST'),docXml,valTable);
+            var viewtitle = "<span>"+CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST')+"</span>"
+            var viewcontent = "<span>"+arr[i].estimatedcont+"</span>"
+            row8.push(viewtitle,viewcontent);
+		}
+		}
+        arraccinfo.push(row7);
+        arraccinfo.push(row8);
+		//nodeVal = createXMLNode('currcont',arr[i].currcont,docXml,valTable);	
+		//nodeVal = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,valTable);
+		//nodeVal = createXMLNode('estimatedcont',arr[i].estimatedcont,docXml,valTable);	
+		//nodeVal = createXMLNode('estimatedtit',CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST'),docXml,valTable);
+		if(tmpSavings && (tmpSavings.prod_code == 'FTFIBD'||tmpSavings.prod_code == 'FTVIBN')){
+			nodeVal = createXMLNode('typetit',CONST_STR.get('ESAVING_DRAWAL_HISTORY'),docXml,valTable);
+			nodeVal = createXMLNode('type',arr[i].type,docXml,valTable);
+			var viewtitle ="<span>"+CONST_STR.get('ESAVING_DRAWAL_HISTORY')+"</span>";
+			var viewcontent ="<a style='text-decoration:underline; cursor:pointer'>"+"<span onclick='if (!e) var e = window.event;e.cancelBubble = true;if (e.stopPropagation) e.stopPropagation();gotoWithDrawalHistory(\"" + arr[i].accnocont + "\");return false;'>"+CONST_STR.get('GIFT_XCHNG_HIS_VIEW_DETAIL')+"</span></a>"
+			row9.push(viewtitle,viewcontent); 
+			arraccinfo.push(row9);
+		}
+        var contentHTML ="<html>";
+
+			 var recycler = new RecyclerView({
+            type: "ACTION",
+            typeTextAlign: "MIDLE",
+            title: "Tài khoản online",
+            titleAlign:"LEFT",
+            opacity:false
+			});
+			recycler.setData(arraccinfo);
+			contentHTML = recycler.init();
+			contentHTML="<div onclick='gotoDetailSrc(\"" + arr[i].accnocont + "\")'>"+contentHTML+"</div>"
+		
+		  
+        //contentHTML.setAttribute('onclick','gotoDetailSrc('+arr[i].account+')');
+		
+		var tmpChildNodeContent = createXMLNode('content', contentHTML, docXml, valTable);
+		itemInnerHtml = itemInnerHtml +"</br>" +contentHTML;
+        
+
+        arraccinfo = null;
+	}
+    logInfo(docXml);
+	// if(bowser.name =='Firefox'){
+		return itemInnerHtml;	
+	// }else{
+    	// return docXml;
+	// }
+}
+function genHTMLdata(arr){
+    var tmpSavings;
+    if (arr && arr.length > 0) {
+        tmpSavings = arr[0];
+    }
+    var contentHTML = '';
+    contentHTML += "<table class='recycler-table-ebank'>";
+    contentHTML += "<tr class='recycler-row-normal recycler-header-hightlight'>";
+    contentHTML += "<th width='16%' class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ACCOUNT_ACC_NO_TITLE')+"</span></th>";
+    if(tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)){
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('FUTURE_SAVING_PURPOSE')+"</span></th>";
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('FUTURE_SAVING_BALANCE_CURR')+"</span></th>";
+    }else{
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE')+"</span></th>";
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL')+"</span></th>";
+    }
+    contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE')+"</span></th>";
+    if (tmpSavings && tmpSavings.prod_code == 'T6A001'){
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ACC_OPENDATE_TITLE')+"</span></th>";
+    }else{
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE')+"</span></th>";
+    }
+    contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE')+"</span></th>";
+    if(tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)){
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE')+"</span></th>";
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('FUTURE_SAVING_HISTORY')+"</span></th>";
+    }else{
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY')+"</span></th>";
+        if(tmpSavings && (tmpSavings.prod_code == 'T5A004')){
+            contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL')+"</span></th>";
+        }else if(tmpSavings && (tmpSavings.prod_code == 'T5A003'||tmpSavings.prod_code == 'TEA001')){
+            contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL')+"</span></th>";
+        }else{
+            contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST')+"</span></th>";
+        }
+    }
+    if(tmpSavings && (tmpSavings.prod_code == 'FTFIBD'||tmpSavings.prod_code == 'FTVIBN')){
+        contentHTML += "<th class='recycler-row-align-midle_acc'><span> "+ CONST_STR.get('ESAVING_DRAWAL_HISTORY')+"</span></th>";
+    }
+    contentHTML +="</tr>";
+
+    var contentItem = '';
+    for( var i=0;i<arr.length;i++){
+        var tmpthisobj =arr[i];
+		if(tmpthisobj.account_name && tmpthisobj.account_name.length >0){
+			tmpthisobj.savingtype =tmpthisobj.account_name;
+		}
+        contentItem = contentItem +
+            '<tr class="recycler-row-normal recycler-hover renames">'+
+                '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+tmpthisobj.accnocont+'</td>';
+                if(tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)){
+                    contentItem = contentItem +
+                    '<td width="100%"  class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')" onmouseout="hideEditButton(\''+tmpthisobj.accnocont+'\')" onmouseover="showEditButton(\''+tmpthisobj.accnocont+'\')">'+
+                        '<div>' +
+                        '<div><span id="displayAccName'+tmpthisobj.accnocont+'">'+((CONST_STR.get(tmpthisobj.purpose)!=undefined )? CONST_STR.get(tmpthisobj.purpose): tmpthisobj.purpose)+'</span>'+
+                        '<div id="divEdit'+tmpthisobj.accnocont+'" style="float:right;"><a class="ref-link rename" onclick="showEditPanel(event,\''+tmpthisobj.accnocont+'\')"><span>'+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'</span></a></div>'+
+                        '</div>'+
+                        '<div id="divEditSave'+tmpthisobj.accnocont+'" style="display:none;">' +
+                        '<input type="text" style="width:100%" placeholder="'+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'" id="txtNewDes'+tmpthisobj.accnocont+'" type="text" maxlength="500"><a class="ref-link" onclick="saveContent(event,\''+tmpthisobj.accnocont+'\')"><span>'+CONST_STR.get('ACCOUNT_RENAME_SAVE_TITLE')+'</span></a></div>'+
+                        '</div>'+
+                    '</td>';
+                }else{
+                    contentItem = contentItem +
+                    '<td width="100%" class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')" onmouseout="hideEditButton(\''+tmpthisobj.accnocont+'\')" onmouseover="showEditButton(\''+tmpthisobj.accnocont+'\')">'+
+                        '<div>' +
+                        '<div><span id="displayAccName'+tmpthisobj.accnocont+'">'+tmpthisobj.savingtype+'</span>'+
+                        '<div id="divEdit'+tmpthisobj.accnocont+'" style="float:right;"><a class="ref-link rename" onclick="showEditPanel(event,\''+tmpthisobj.accnocont+'\')"><span>'+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'</span></a></div>'+
+                        '</div>'+
+                        '<div id="divEditSave'+tmpthisobj.accnocont+'" style="display:none;">' +
+                        '<input type="text" style="width:100%" placeholder="'+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'" id="txtNewDes'+tmpthisobj.accnocont+'" maxlength="500"><a class="ref-link" onclick="saveContent(event,\''+tmpthisobj.accnocont+'\')"><span>'+CONST_STR.get('ACCOUNT_RENAME_SAVE_TITLE')+'</span></a></div>'+
+                        '</div>'+
+                    '</td>';
+                }
+        contentItem = contentItem +
+            '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+(parseFloat(removeSpecialChar(tmpthisobj.sodu_hientai))).formatMoney(2, '.', ',')+'</td>'+
+            '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+tmpthisobj.interestcont+'</td>'+
+            '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+tmpthisobj.valdatecont+'</td>'+
+            '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+tmpthisobj.matdatecont+'</td>';
+            if(tmpSavings && (tmpSavings.prod_code == 'T5A005'/*||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001'*/)){
+                if(arr[i].checktype=='FLX'){
+                    contentItem = contentItem +
+                    '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+CONST_STR.get('FUTURE_SAVING_AUTO_NAME')+'</td>';
+                }else if(arr[i].checktype=='PRD'){
+                    contentItem = contentItem +
+                    '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')" >'+CONST_STR.get('FUTURE_SAVING_PRD_NAME')+'</td>';
+                }
+                var viewdetail = '<a style="text-decoration:underline; cursor:pointer" onclick="viewdetail(\''+tmpthisobj.accnocont+'\')"><span>'+CONST_STR.get('FUTURE_SAVING_HISTORY_DETAIL')+'</span></a>'
+                contentItem = contentItem +
+                '<td class="recycler-row-align-midle_saving" >'+viewdetail+'</td>';
+            }else{
+                contentItem = contentItem +
+                    '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+tmpthisobj.currcont+'</td>';
+                if(tmpSavings && (tmpSavings.prod_code == 'T5A004')){
+                    contentItem = contentItem +
+                        '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+CONST_STR.get('SAVNO_BEFORE_MATDATE_EBANK')+'</td>';
+                }else if(tmpSavings && (tmpSavings.prod_code == 'T5A003'||tmpSavings.prod_code == 'TEA001')){
+                    contentItem = contentItem +
+                        '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+CONST_STR.get('SAVNO_BEFORE_MATDATE_QUAY')+'</td>';
+                }else{
+                    contentItem = contentItem +
+                        '<td class="recycler-row-align-midle_saving" onclick="gotoDetailSrc(\'' + tmpthisobj.accnocont + '\')">'+tmpthisobj.estimatedcont+'</td>';
+                }
+            }
+        if(tmpSavings && (tmpSavings.prod_code == 'FTFIBD'||tmpSavings.prod_code == 'FTVIBN')){
+            var viewcontentcol9 ="<a style='text-decoration:underline; cursor:pointer'>"+"<span onclick='gotoWithDrawalHistory(\"" + arr[i].accnocont + "\")'>"+CONST_STR.get('GIFT_XCHNG_HIS_VIEW_DETAIL')+"</span></a>"
+            contentItem = contentItem +
+                '<td class="recycler-row-align-midle_saving">'+viewcontentcol9+'</td>';
+        }
+            '</tr>';
+    }
+    contentHTML += contentItem +"</table>";
+    logInfo(docXml);
+    // if(bowser.name =='Firefox'){
+        return contentHTML;
+    // }else{
+        // return docXml;
+    // }
+//    return contentHTML;
+}
+/*function genHTMLdata(arr){
+    var itemInnerHtml="";
+    var tmpSavings;
+    if (arr && arr.length > 0) {
+
+        tmpSavings = arr[0];
+    }
+    var contentHTML;
+    var arrContentData = new Array();
+    var arrTitle = new Array();
+
+    arrTitle.push(CONST_STR.get('ACCOUNT_ACC_NO_TITLE'));
+    if(tmpSavings && (tmpSavings.prod_code == 'T5A005'||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001')){
+        arrTitle.push(CONST_STR.get('FUTURE_SAVING_PURPOSE'));
+        arrTitle.push(CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'));
+
+    }else{
+        arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'));
+        arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'));
+    }
+    arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'));
+    if (tmpSavings && tmpSavings.prod_code == 'T6A001'){
+    arrTitle.push(CONST_STR.get('ACC_OPENDATE_TITLE'));
+    }else{
+    arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'));
+    }
+    arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'));
+    if(tmpSavings && (tmpSavings.prod_code == 'T5A005'||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001')){
+    arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'));
+    arrTitle.push(CONST_STR.get('FUTURE_SAVING_HISTORY'));
+    }else{
+        arrTitle.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'));
+        if(tmpSavings && (tmpSavings.prod_code == 'T5A004')){
+        arrTitle.push(CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'));
+        }else if(tmpSavings && (tmpSavings.prod_code == 'T5A003'||tmpSavings.prod_code == 'TEA001')){
+            arrTitle.push(CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'));
+        }else{
+             arrTitle.push(CONST_STR.get('ESAVING_INTEREST_AMOUNT_EST'));
+        }
+    }
+    if(tmpSavings && (tmpSavings.prod_code == 'FTFIBD'||tmpSavings.prod_code == 'FTVIBN')){
+    arrTitle.push(CONST_STR.get('ESAVING_DRAWAL_HISTORY'));
+    }
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+    arrContentData.push(arrTitle);
+    }
+    var arrItemContent;
+    for(i=0;i<arr.length;i++){
+        var tmpthisobj =arr[i];
+
+        arrItemContent = new Array();
+        arrItemContent.push("<span onclick='gotoDetailSrc(\"" + tmpthisobj.accnocont + "\")'>"+ tmpthisobj.accnocont+"</span>");
+        if(tmpSavings && (tmpSavings.prod_code == 'T5A005'||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001')){
+            arrItemContent.push(CONST_STR.get(tmpthisobj.purpose));
+        }else{
+            arrItemContent.push("<span onclick='gotoDetailSrc(\"" + tmpthisobj.accnocont + "\")'>"+ tmpthisobj.savingtype+"</span>");
+        }
+        arrItemContent.push("<span onclick='gotoDetailSrc(\"" + tmpthisobj.accnocont + "\")'>"+(parseFloat(removeSpecialChar(tmpthisobj.sodu_hientai))).formatMoney(2, '.', ',')+"</span>");
+        arrItemContent.push("<span onclick='gotoDetailSrc(\"" + tmpthisobj.accnocont + "\")'>"+ tmpthisobj.interestcont+"</span>");
+        arrItemContent.push("<span onclick='gotoDetailSrc(\"" + tmpthisobj.accnocont + "\")'>"+ tmpthisobj.valdatecont+"</span>");
+        arrItemContent.push("<span onclick='gotoDetailSrc(\"" + tmpthisobj.accnocont + "\")'>"+ tmpthisobj.matdatecont+"</span>");
+        if(tmpSavings && (tmpSavings.prod_code == 'T5A005'||tmpSavings.prod_code == 'T6A000'||tmpSavings.prod_code == 'T5A000'||tmpSavings.prod_code == 'T5A001')){
+            if(arr[i].checktype=='FLX'){
+            arrItemContent.push(CONST_STR.get('FUTURE_SAVING_AUTO_NAME'));
+            }else  if(arr[i].checktype=='PRD'){
+                arrItemContent.push(CONST_STR.get('FUTURE_SAVING_PRD_NAME'));
+            }
+            var viewdetail = "<a style='text-decoration:underline; cursor:pointer' onclick='viewdetail(&quot;"+tmpthisobj.accnocont+"&quot;)'><span>"+CONST_STR.get('FUTURE_SAVING_HISTORY_DETAIL')+"</span></a>"
+            arrItemContent.push(viewdetail);
+        }else{
+            arrItemContent.push("<span onclick='gotoDetailSrc(\"" + tmpthisobj.accnocont + "\")'>"+ tmpthisobj.currcont+"</span>");
+            if(tmpSavings && (tmpSavings.prod_code == 'T5A004')){
+                arrItemContent.push(CONST_STR.get('SAVNO_BEFORE_MATDATE_EBANK'));
+            }else if(tmpSavings && (tmpSavings.prod_code == 'T5A003'||tmpSavings.prod_code == 'TEA001')){
+                arrItemContent.push(CONST_STR.get('SAVNO_BEFORE_MATDATE_QUAY'));
+            }else{
+                arrItemContent.push("<span onclick='gotoDetailSrc(\"" + tmpthisobj.accnocont + "\")'>"+ tmpthisobj.estimatedcont+"</span>");
+            }
+        }
+        if(tmpSavings && (tmpSavings.prod_code == 'FTFIBD'||tmpSavings.prod_code == 'FTVIBN')){
+        var viewcontentcol9 ="<a style='text-decoration:underline; cursor:pointer'>"+"<span onclick='gotoWithDrawalHistory(\"" + arr[i].accnocont + "\")'>"+CONST_STR.get('GIFT_XCHNG_HIS_VIEW_DETAIL')+"</span></a>"
+        arrItemContent.push(viewcontentcol9);
+        }
+        arrContentData.push(arrItemContent);
+        var recycler = new RecyclerView({
+            type: "DESKTOP_NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan online",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+        recycler.setData(arrContentData);
+        recycler.setHeaderHightlight(true);
+//        recycler.setHeaderHightlight(true);
+//        recycler.setFooterHtml("<td></td>"+"<td  onclick='gotoDetailSrc(\"" + arr[i].accnocont + "\")' style='text-align:right;padding:10px;'><span style='padding:10px;font-style:italic;'>"
+//            + CONST_STR.get('JUMBO_DETAIL_TITLE') + "</span><span class='icon-circle-down input-group-symbol'></span></td>");
+        contentHTML = recycler.init();
+//        document.addEventListener('evtSelectionOnTable',getnumberacc,false);
+        //if( arr ==ResultControl1){
+    }
+    logInfo(docXml);
+    if(bowser.name =='Firefox'){
+        return contentHTML;
+    }else{
+        return docXml;
+    }
+}*/
+//function getnumberacc(event){
+//    document.removeEventListener('evtSelectionOnTable',getnumberacc,false);
+//    gotoDetailSrc(event.selectedNode.childNodes[0].innerText);
+//}
+/***end***/
+
+//arrPageCounterEsaving
+function showDetailinfo(id) {
+	var pageNumberCounter;
+	var pageNumberId;
+	if (arrPageCounterEsaving != undefined) {
+		var lengthArrPage = arrPageCounterEsaving.length;
+		var contentPage;
+		
+		for (i = 0; i < lengthArrPage; i++) {
+
+			contentPage = arrPageCounterEsaving[i];
+			if (contentPage.name == ("pageIndicatorNums" + id)) {
+				pageNumberCounter = contentPage.pageCount;
+				pageNumberId = contentPage.id;
+			}
+
+		}
+	}
+
+	
+    var idcontent111 = document.getElementById('divSection'+id);
+    var offsetHeight = idcontent111.offsetHeight;
+    var idtitle = document.getElementById('headcl'+id);
+    if (offsetHeight == 0)
+    {
+        idtitle.style.transform = 'rotate(90deg)';
+        idcontent111.style.height= 'auto';
+        //idcontent111.style.transform = 'rotate(-90deg)';
+        /*idcontent111.style.height= '0px';
+        idcontent111.style.opacity= '0';*/
+        idcontent111.style.display = 'block';
+		if(pageNumberCounter!=undefined && pageNumberId!=undefined && pageNumberCounter>1){
+			
+			pageNumberId.style.display='';
+		}
+       /* var pos = 0;
+        var id = setInterval(frame, 1);
+        function frame() {
+            if (pos == 350) {
+                clearInterval(id);
+            } else {
+                pos++;
+                idcontent111.style.height = pos + 'px';
+            }
+        }
+        idcontent111.style.height= 'auto';
+        idcontent111.style.opacity= '1';*/
+    }
+    else
+    {
+        idtitle.style.transform = 'rotate(0deg)';
+        //idcontent111.style.transform = 'rotate(90deg)';
+        idcontent111.style.height = '0px';
+        idcontent111.style.display ='none';
+		if(pageNumberCounter!=undefined && pageNumberId!=undefined ){
+			
+			pageNumberId.style.display='none';
+		}
+    }
+}
+
+function getObjWithKey(acc, arr){
+ 	var obj = new Object();		
+	for(var i in arr){
+		if(arr[i].accnocont==acc){
+			return arr[i];
+		}
+	}
+	return null;
+}
+function gotoWithDrawalHistory(accid){
+	gDestinationAcc = accid;
+	if(gDestinationAcc!=undefined && gDestinationAcc !=null){
+		navController.pushToView('esaving/esaving-withdraw-history', true, 'xsl');
+	}
+}
+function showInputFrequency()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_ESAVING_FREQUENCY_EN: CONST_KEY_ESAVING_FREQUENCY_VN;
+	var tmpArray2 = CONST_VAL_ESAVING_FREQUENCY;
+	document.addEventListener("evtSelectionDialog", handleInputFrequency, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+	showDialogList(CONST_STR.get('FUTURE_SAVING_CHOOSE_FREQUENCY'), tmpArray1, tmpArray2, false);
+}
+function gotoDetailSrc(accid){
+    console.log(accid);
+	gSavingAcc =accid;//ngocdt3 bo sung
+	
+	if(statusEditingName) { //Nếu đang đổi tên tài khoản thì không làm gì cả
+		//statusEditingName = false; //không dùng vì sửa lỗi double-click
+		return;
+	}
+	
+	//fadeOutMainContentScreen();
+	//setTimeout(function () {	
+		var element = document.getElementById("div-fix");
+		if(element !=null){
+			element.style.webkitTransform = 'none';
+			element.style.MozTransform = 'none';
+			element.style.msTransform = 'none';
+			element.style.OTransform = 'none';
+			element.style.transform = 'none';
+		}
+		
+		var currIndex = 1;
+		var obj = new Object();
+		var arrObj = new Array();
+		obj = getObjWithKey(accid, ResultControl1);
+		if(obj == null){
+			currIndex = 2;
+			obj = getObjWithKey(accid, ResultControl2);		
+		}
+		if(obj == null){
+			currIndex = 3;
+			obj = getObjWithKey(accid, ResultControl3);		
+		}
+		//HuyNT2: bo sung cho Auto-saving
+		if(obj == null){
+			currIndex = 4;
+			obj = getObjWithKey(accid, ResultControl4);		
+		}
+		//Ngocdt3 bo sung cho Future savin
+		if(obj == null){
+			currIndex = 5;
+			obj = getObjWithKey(accid, ResultControl5);		
+		}
+		//Ngocdt3 bo sung cho tiet kiem khong rut truoc han
+		if(obj == null){
+			currIndex = 6;
+			obj = getObjWithKey(accid, ResultControl6);		
+		}
+        // live bank
+        if(obj == null){
+            currIndex = 7;
+            obj = getObjWithKey(accid, ResultControl7);
+        }
+		if(obj!=null){
+                gArraySav = obj;
+				arrObj.push(obj);
+				gFurSaving.push(obj);
+				//genHtmlSearchResult(arrObj, 1);	
+		        var arraccinfo = new Array();
+
+				var docXml = createXMLDoc();
+				
+				var tmpXmlRootNode;
+				
+				var tmpXmlRootNode = createXMLNode('account', '', docXml);
+				var tmpIndex = getSelectedAccIdx();
+				var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+
+				if(obj.prod_code == 'T5A005' && currIndex == 5 && obj.checktype == 'PRD'){
+                    var row1 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_PURPOSE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', CONST_STR.get(obj.purpose), docXml, tmpXmlNodeInfo);
+                    row1.push(CONST_STR.get('FUTURE_SAVING_PURPOSE'),CONST_STR.get(obj.purpose));
+                    arraccinfo.push(row1);
+                    var row2 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_BALANCE_NON'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.sodu_hientai +" VND", docXml, tmpXmlNodeInfo);
+                    row2.push(CONST_STR.get('FUTURE_SAVING_BALANCE_NON'),obj.sodu_hientai +" VND");
+                    arraccinfo.push(row2);
+                    var row3 = new Array();
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_AMT_PRD'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(obj.frequency_amt) +" VND", docXml, tmpXmlNodeInfo);
+                    row3.push(CONST_STR.get('FUTURE_SAVING_AMT_PRD'),formatNumberToCurrencyWithSymbol(obj.frequency_amt) +" VND");
+                    arraccinfo.push(row3);
+                    var row4 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), docXml, tmpXmlNodeInfo);
+				     row4.push(CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'));
+				if(obj.prod_des < 12){
+					tmpChildNode = createXMLNode('acccontent2', obj.prod_des + " "+CONST_STR.get('FUTURE_SAVING_MONTH_CUR'), docXml, tmpXmlNodeInfo);
+                    row4.push(obj.prod_des + " "+CONST_STR.get('FUTURE_SAVING_MONTH_CUR'));
+				}
+				else if(obj.prod_des >= 12){
+					tmpChildNode = createXMLNode('acccontent2', (obj.prod_des/12) + " "+CONST_STR.get('TRANS_PERIODIC_YEAR'), docXml, tmpXmlNodeInfo);
+                    row4.push((obj.prod_des/12) + " "+CONST_STR.get('TRANS_PERIODIC_YEAR'));
+				}
+                    arraccinfo.push(row4);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row5 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.valdatecont, docXml, tmpXmlNodeInfo);
+                    row5.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),obj.valdatecont);
+                    arraccinfo.push(row5);
+                    var row6 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.matdatecont, docXml, tmpXmlNodeInfo);
+                    row6.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),obj.matdatecont);
+                    arraccinfo.push(row6);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row7 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_FREQUENCY'), docXml, tmpXmlNodeInfo);
+                    row7.push(CONST_STR.get('FUTURE_SAVING_FREQUENCY'));
+               	if (gUserInfo.lang == 'VN') {
+					if(obj.is_type =='T30'){
+					tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_VN[0]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate , docXml, tmpXmlNodeInfo);
+	                    row7.push(CONST_KEY_ESAVING_FREQUENCY_VN[0]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate);
+					}
+					else if(obj.is_type =='T60'){
+					tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_VN[1]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate, docXml, tmpXmlNodeInfo);
+	                    row7.push(CONST_KEY_ESAVING_FREQUENCY_VN[1]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate);
+					}
+					else if(obj.is_type =='T90'){
+					tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_VN[2]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate, docXml, tmpXmlNodeInfo);
+	                    row7.push(CONST_KEY_ESAVING_FREQUENCY_VN[2]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate);
+						}
+					}
+				else{
+					if(obj.is_type =='T30'){
+					tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_EN[0]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate , docXml, tmpXmlNodeInfo);
+	                    row7.push(CONST_KEY_ESAVING_FREQUENCY_EN[0]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate);
+					}
+					else if(obj.is_type =='T60'){
+					tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_EN[1]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate, docXml, tmpXmlNodeInfo);
+	                    row7.push(CONST_KEY_ESAVING_FREQUENCY_EN[1]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate);
+					}
+					else if(obj.is_type =='T90'){
+					tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_EN[2]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate, docXml, tmpXmlNodeInfo);
+	                    row7.push(CONST_KEY_ESAVING_FREQUENCY_EN[2]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+obj.frequendate);
+						}
+					}
+
+				    arraccinfo.push(row7);
+                    var row8 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_TYPE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', CONST_STR.get('FUTURE_SAVING_PRD'), docXml, tmpXmlNodeInfo);
+                    row8.push(CONST_STR.get('FUTURE_SAVING_TYPE'),CONST_STR.get('FUTURE_SAVING_PRD'));
+                    arraccinfo.push(row8);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row9 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.interestcont+"%", docXml, tmpXmlNodeInfo);
+                    row9.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),obj.interestcont+"%");
+                    arraccinfo.push(row9);
+                    var row10 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.channel, docXml, tmpXmlNodeInfo);
+                    row10.push(CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'),obj.channel);
+                    arraccinfo.push(row10);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row11 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.so_phong_toa, docXml, tmpXmlNodeInfo);
+				if(obj.prod_code == 'T5A003' || obj.prod_code == 'TEA001' ||obj.prod_code == 'T5A004'){
+					 row11.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'),0);
+				}
+                  else{  row11.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'),obj.so_phong_toa);}
+				 
+                    arraccinfo.push(row11);
+                    var row12 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.lydo_phong_toa, docXml, tmpXmlNodeInfo);
+                    row12.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'),obj.lydo_phong_toa);
+                    arraccinfo.push(row12);
+				}
+				else if (obj.prod_code == 'T5A005' && currIndex == 5 && obj.checktype == 'FLX'){
+                    var row1 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_PURPOSE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', CONST_STR.get(obj.purpose), docXml, tmpXmlNodeInfo);
+                    row1.push(CONST_STR.get('FUTURE_SAVING_PURPOSE'),CONST_STR.get(obj.purpose));
+                    arraccinfo.push(row1);
+                    var row2 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.currcont, docXml, tmpXmlNodeInfo);
+                    row2.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'),obj.currcont);
+                    arraccinfo.push(row2);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row3 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_BALANCE_NON'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(obj.sodu_hientai), docXml, tmpXmlNodeInfo);
+                    row3.push(CONST_STR.get('FUTURE_SAVING_BALANCE_NON'),formatNumberToCurrencyWithSymbol(obj.sodu_hientai));
+                    arraccinfo.push(row3);
+                    var row4 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.prod_des+" "+ CONST_STR.get('FUTURE_SAVING_MONTH_CUR'), docXml, tmpXmlNodeInfo);
+                    row4.push(CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'),obj.prod_des+" "+ CONST_STR.get('FUTURE_SAVING_MONTH_CUR'));
+                    arraccinfo.push(row4);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row5 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.valdatecont, docXml, tmpXmlNodeInfo);
+                    row5.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),obj.valdatecont);
+                    arraccinfo.push(row5);
+                    var row6 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.matdatecont, docXml, tmpXmlNodeInfo);
+                    row6.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),obj.matdatecont);
+                    arraccinfo.push(row6);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row7 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_FREQUENCY'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.is_type, docXml, tmpXmlNodeInfo);
+                    row7.push(CONST_STR.get('FUTURE_SAVING_FREQUENCY'),obj.is_type);
+                    arraccinfo.push(row7);
+                    var row8 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_TYPE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', CONST_STR.get('FUTURE_SAVING_AUTO'), docXml, tmpXmlNodeInfo);
+                    row8.push(CONST_STR.get('FUTURE_SAVING_TYPE'),CONST_STR.get('FUTURE_SAVING_AUTO'));
+                    arraccinfo.push(row8);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row9 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.interestcont+"%", docXml, tmpXmlNodeInfo);
+                    row9.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),obj.interestcont+"%")
+                    arraccinfo.push(row9);
+                    var row10 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'), docXml, tmpXmlNodeInfo);
+				/*tmpChildNode = createXMLNode('acccontent2', obj.channel, docXml, tmpXmlNodeInfo);*/
+				//tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.channel, docXml, tmpXmlNodeInfo);
+                    row10.push(CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'),obj.channel);
+                    arraccinfo.push(row10);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row11 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.so_phong_toa, docXml, tmpXmlNodeInfo);
+				if(obj.prod_code == 'T5A003' || obj.prod_code == 'TEA001' ||obj.prod_code == 'T5A004'){
+					 row11.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'),0);
+				}
+                  else{  row11.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'),obj.so_phong_toa);}
+                    arraccinfo.push(row11);
+                    var row12 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.lydo_phong_toa, docXml, tmpXmlNodeInfo);
+                    row12.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'),obj.lydo_phong_toa);
+                    arraccinfo.push(row12);
+				}
+				else {
+                    var row1 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.savingtype, docXml, tmpXmlNodeInfo);
+                    row1.push(CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'),obj.savingtype);
+                    arraccinfo.push(row1);
+                    var row2 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.currcont, docXml, tmpXmlNodeInfo);
+                    row2.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'),obj.currcont);
+                    arraccinfo.push(row2);
+				//THUANTM THÊM
+				
+				var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row3 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_TIEN_GUI_BAN_DAU'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(parseFloat(obj.amountcont)), docXml, tmpXmlNodeInfo);
+                    row3.push(CONST_STR.get('ESAVING_TIEN_GUI_BAN_DAU'),formatNumberToCurrencyWithSymbol(parseFloat(obj.amountcont)));
+                    arraccinfo.push(row3);
+				if(currIndex == 2){//chỉ hiển thị 2 trường này trong trườn hợp tiết kiệm rút gốc linh hoạt
+					var balance = parseFloat(obj.amountcont)-parseFloat(removeSpecialChar(obj.sodu_hientai));
+					var row4 = new Array();
+					tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_TIEN_GUI_DA_RUT'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(balance), docXml, tmpXmlNodeInfo);
+					row4.push(CONST_STR.get('ESAVING_TIEN_GUI_DA_RUT'),formatNumberToCurrencyWithSymbol(balance))
+					arraccinfo.push(row4);
+					tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row5 = new Array();
+					tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CURRENT_AMOUNT_EXT_TITLE'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(obj.sodu_hientai) , docXml, tmpXmlNodeInfo);
+                    row5.push(CONST_STR.get('ESAVING_CURRENT_AMOUNT_EXT_TITLE'),formatNumberToCurrencyWithSymbol(obj.sodu_hientai));
+                    arraccinfo.push(row5);
+				}
+                    var row6 = new Array();
+					var tenor = getTenor(obj);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_TERM'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', tenor, docXml, tmpXmlNodeInfo);
+				    row6.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_TERM'),tenor);
+                    arraccinfo.push(row6);
+
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row7 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.interestcont + "%", docXml, tmpXmlNodeInfo);
+                    row7.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'),obj.interestcont + "%");
+                    arraccinfo.push(row7);
+                    var row8 = new Array();
+				if(obj.prod_code == 'T5A004'){
+
+					tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('acccontent2', CONST_STR.get('SAVNO_BEFORE_MATDATE_EBANK'), docXml, tmpXmlNodeInfo);
+                    row8.push(CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'),CONST_STR.get('SAVNO_BEFORE_MATDATE_EBANK'));
+				}
+				else if(obj.prod_code == 'T5A003' || obj.prod_code == 'TEA001'){
+
+					tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'), docXml, tmpXmlNodeInfo);
+					tmpChildNode = createXMLNode('acccontent2', CONST_STR.get('SAVNO_BEFORE_MATDATE_QUAY'), docXml, tmpXmlNodeInfo);
+                    row8.push(CONST_STR.get('SAVNO_BEFORE_MATDATE_CHANEL'),CONST_STR.get('SAVNO_BEFORE_MATDATE_QUAY'));
+				}
+				else {
+					tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), docXml, tmpXmlNodeInfo);
+                    row8.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'));
+					if(obj.estimatedcont == '-')
+					{
+					tmpChildNode = createXMLNode('acccontent2', obj.estimatedcont, docXml, tmpXmlNodeInfo);
+                        row8.push(obj.estimatedcont);
+					}
+					else
+					{				
+					tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrency(obj.estimatedcont), docXml, tmpXmlNodeInfo);
+                        row8.push(formatNumberToCurrency(obj.estimatedcont));
+					}
+				}
+                    arraccinfo.push(row8);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row9 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_VALDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.valdatecont, docXml, tmpXmlNodeInfo);
+                    row9.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_VALDATE'),obj.valdatecont);
+                    arraccinfo.push(row9);
+                    var row10 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), docXml, tmpXmlNodeInfo);
+				//tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(obj.bamountcont) , docXml, tmpXmlNodeInfo);
+                tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(obj.so_phong_toa) , docXml, tmpXmlNodeInfo);
+				if(obj.prod_code == 'T5A003' || obj.prod_code == 'TEA001' ||obj.prod_code == 'T5A004'){
+					  row10.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'),0);
+				}
+                  else{   row10.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'),formatNumberToCurrencyWithSymbol(obj.so_phong_toa));}
+                   
+                    arraccinfo.push(row10);
+				
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+                    var row11 = new Array();
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.matdatecont, docXml, tmpXmlNodeInfo);
+                    row11.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'),obj.matdatecont);
+                    arraccinfo.push(row11);
+                    var row12 = new Array();
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), docXml, tmpXmlNodeInfo);
+				//tmpChildNode = createXMLNode('acccontent2', obj.breason, docXml, tmpXmlNodeInfo);
+                tmpChildNode = createXMLNode('acccontent2', obj.lydo_phong_toa, docXml, tmpXmlNodeInfo);
+				if(obj.prod_code == 'T5A003' || obj.prod_code == 'TEA001' ||obj.prod_code == 'T5A004'){
+					  row12.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'),'-');
+				}
+                  else{   row12.push(CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'),obj.lydo_phong_toa);;}
+                    
+                    arraccinfo.push(row12);
+				}
+
+           // var recycler = new RecyclerView({
+             //   type: "NORMAL",
+             //   typeTextAlign: "MIDLE",
+              //  title: "Detail tài khoản",
+              //  titleAlign:"LEFT",
+             //   opacity:false
+            //});
+            //recycler.setData(arraccinfo);
+            //var contentHTML = recycler.init();
+            //contentHTML.setAttribute('onclick','gotoDetailSrc('+arr[i].account+')');
+
+            //var tmpChildNodeContent = createXMLNode('content1', contentHTML, docXml, accinfo);
+            gArraccinfo = arraccinfo;
+			logInfo(docXml);
+			
+tmpChildNode = createXMLNode('esaving_type', currIndex, docXml, tmpXmlNodeInfo);
+			logInfo(docXml);			
+			//B1 save xml
+			//B2 goto detail screen
+			setReviewXmlStore(docXml);
+			if(obj.prod_code == 'T6A001' && currIndex == 4) {
+				var tmpAccObj = new AccountObj();
+				tmpAccObj.accountNumber = obj.accnocont;
+				tmpAccObj.accClass = obj.prod_code;				
+				//loai tien
+				tmpAccObj.currency = obj.currcont;
+				//so tien
+				tmpAccObj.balance = obj.sodu_hientai;
+				//ky han gui
+				if (gUserInfo.lang == 'VN' && obj.prod_des == 'NO_TENOR') {
+					tmpAccObj.ky_han_gui = CONST_STR.get('GOLD_STORE_NOTERM_TITLE');
+				}
+				else if (gUserInfo.lang == 'EN' && obj.prod_des == 'NO_TENOR') {
+					tmpAccObj.ky_han_gui = CONST_STR.get('GOLD_STORE_NOTERM_TITLE');
+				}
+				else {
+					tmpAccObj.ky_han_gui = "-";
+				}
+				//ngay mo tai khoan
+				tmpAccObj.openDate = obj.valdatecont;
+				//ngay đến hạn
+				tmpAccObj.overdraftEndDate = obj.matdatecont;
+				//lai suat
+				tmpAccObj.rate = obj.interestcont;
+				//lai den han (tam tinh)
+				tmpAccObj.profitReven = obj.estimatedcont;
+				//so tien phong toa
+				tmpAccObj.numBlockedAmt = obj.so_phong_toa;
+				//muc dich phong toa
+				tmpAccObj.blockReason = obj.lydo_phong_toa;
+				setSelectedAccInfoObj(tmpAccObj);
+				
+				navController.pushToView("accountxsl/account-history-scr", true, 'xsl');
+			}
+			else {
+				navController.pushToView("esaving/esaving-information-table-detail", true, 'xsl');
+			}
+			
+	
+			/*var tmpXsl = getCachePageXsl("esaving/esaving-info-table");
+			var tmpHtmlStr = genHTMLStringWithXML(docXml, tmpXsl, function(oStr){
+				var tmpNode = document.getElementById('div-datainfo');
+				if(tmpNode !=null) tmpNode.innerHTML = oStr;
+			});				
+			showLst(1);//Showing section 1				
+			hiddenLst(2);
+			hiddenLst(3);
+			var node;
+			
+			node = document.getElementById('pageIndicatorNums1');
+			if(node !=null){
+				node.style.display = 'none';
+			}
+			node = document.getElementById('div-sum1');
+			if(node !=null){
+				node.style.display = 'none';
+			}
+			node = document.getElementById('tableButton');
+			if(node !=null){
+				node.style.display = '';
+			}
+			node = document.getElementById('div-datainfo');
+			if(node !=null){
+				node.style.display = '';
+			}
+
+			setTitle(currIndex);
+			mainContentScroll.refresh();	*/	
+		}
+	//},500);
+	//fadeInMainContentScreen();
+}
+//get title current
+function setTitle(index){
+	if(index ==1){
+		document.getElementById('Header1').innerHTML = CONST_STR.get('ESAVING_COUNTER_NAME');
+	}
+	if(index ==2){
+		document.getElementById('Header2').innerHTML = CONST_STR.get('ESAVING_FLEXIBLE_NAME');
+	}
+	if(index ==3){
+		document.getElementById('Header3').innerHTML = CONST_STR.get('ESAVING_ONLINE_NAME');
+	}
+	if(index ==4){
+		document.getElementById('Header4').innerHTML = CONST_STR.get('JUMBO_AUTO_SAVINGS_TITLE');
+	}
+	if(index ==5){
+		document.getElementById('Header5').innerHTML = CONST_STR.get('MENU_FUTURE_SAVING');
+	}
+	if(index ==6){
+		document.getElementById('Header6').innerHTML = CONST_STR.get('SAVNO_BEFORE_MATDATE_MENU');
+	}
+}
+
+function ReloadPage(){
+	//fadeOutMainContentScreen();
+	//setTimeout(function () {
+	//
+		if(document.getElementById('Header1')!=undefined)
+			document.getElementById('Header1').innerHTML = CONST_STR.get('ESAVING_COUNTER_NAME');
+		document.getElementById('tableButton').style.display = 'none';
+		document.getElementById('div-datainfo').style.display = 'none';
+		document.getElementById('div-sum1').style.display = '';
+		//document.getElementById('pageIndicatorNums1').style.display = '';	
+		showLst(1);
+		showLst(2);
+		showLst(3);
+		showLst(4);
+		showLst(5);
+		showLst(6);
+        showLst(7);
+	
+		if(ResultControl1.length>0){
+			genHtmlSearchResult(getItemsPerPage(ResultControl1, pageIndex1),1)
+		}else{
+			hiddenLst(1);
+		}
+		if(ResultControl2.length>0){
+			genHtmlSearchResult(getItemsPerPage(ResultControl2, pageIndex2),2);		
+		}else{
+			hiddenLst(2);
+		}
+		if(ResultControl3.length>0){
+			genHtmlSearchResult(getItemsPerPage(ResultControl3, pageIndex3),3);				
+		}else{
+			hiddenLst(3);
+		}
+		//HuyNT2: bo sung cho tiet kiem tu dong
+		if(ResultControl4.length>0){
+			genHtmlSearchResult(getItemsPerPage(ResultControl4, pageIndex4),4);				
+		}else{
+			hiddenLst(4);
+		}
+		//NgocDT3 bo sung cho Future saving
+		if(ResultControl5.length>0){
+			genHtmlSearchResult(getItemsPerPage(ResultControl5, pageIndex5),5);				
+		}else{
+			hiddenLst(5);
+		}
+		//NgocDT3 bo sung cho tiet kiem khong rut truoc han
+		if(ResultControl6.length>0){
+			genHtmlSearchResult(getItemsPerPage(ResultControl6, pageIndex6),6);				
+		}else{
+			hiddenLst(6);
+		}
+        if(ResultControl7.length>0){
+            genHtmlSearchResult(getItemsPerPage(ResultControl7, pageIndex7),7);
+        }else{
+            hiddenLst(7);
+        }
+	//},500);	
+	//fadeInMainContentScreen();
+}
+
+function getTenor(obj){
+	var tenorday = parseInt(obj.tenor_day);
+	var tenormonth = parseInt(obj.tenor_month);
+	var tenoryear = parseInt(obj.tenor_year);
+	var counttenor = tenorday + 30*tenormonth +365*tenoryear;
+	if(counttenor>0){
+		if(tenorday <1){
+			if(tenormonth >0){
+				if(tenoryear >0){
+					return obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+				}
+				else {
+					return obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+				}
+			}
+			else if(tenormonth <1){
+				return obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR');
+			}
+		}
+		else if(tenorday >0){
+			if(tenormonth >0){
+				if(tenoryear >0){
+					return  obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+ obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+					
+				}
+				else {
+					return  obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+			}
+			else if(tenormonth <1){
+				if(tenoryear >0){
+					return  obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+				else{
+					return obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+			}
+			
+		}
+	}
+	/*try{
+		if(parseInt(obj.tenor_day)>0){
+			return obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+		}
+		if(parseInt(obj.tenor_month)>0){
+			return obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+		}
+		if(parseInt(obj.tenor_year)>0){
+			return obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR');
+		}
+	}
+	catch(e){}*/
+}
+
+/*function ConvertTenor(days){
+	var month = 30;
+	var week = 7;
+	var result = 0;
+	
+	if(days>= 28){		
+		return	result = days/month;
+	}
+		
+	if (days>=7){
+		
+		return days/week;
+	}
+	
+	return days + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+	
+}*/
+
+/* SHOW EDIT BUTTON */
+
+function showEditButton(inID) {
+	if(gModeScreenView == CONST_MODE_SCR_SMALL) return;
+	var tmpEditBtn = document.getElementById('divEdit' + inID);
+	if(tmpEditBtn) {
+		tmpEditBtn.style.display = '';
+	}
+}
+
+function hideEditButton(inID) {
+	var tmpEditBtn = document.getElementById('divEdit' + inID);
+	if(tmpEditBtn) {
+		tmpEditBtn.style.display = 'none';
+	}
+}
+
+function showEditPanel(e,inID) {
+    e.stopPropagation();
+	statusEditingName = true;
+	
+	hideEditButton(inID);
+	
+	var tmpEditPanel = document.getElementById('divEditSave' + inID);
+	if(tmpEditPanel) {
+		tmpEditPanel.style.display = '';
+		document.getElementById('txtNewDes' + inID).value = document.getElementById('displayAccName' + inID).innerHTML;
+	}
+}
+
+function saveContent(e,inID) {
+    e.stopPropagation();
+	statusEditingName = true;
+	
+	var tmpEditPanel = document.getElementById('divEditSave' + inID);
+	if(tmpEditPanel) {
+		tmpEditPanel.style.display = 'none';
+	}
+	var tmpInputNode = document.getElementById('txtNewDes' + inID);
+	
+	//chan nhap ky tu dac biet
+	tmpInputNode.value = removeAccent(tmpInputNode.value);
+	
+	if(tmpInputNode && tmpInputNode.value && tmpInputNode.value.length > 0 && (tmpInputNode.value != document.getElementById('displayAccName' + inID).innerHTML)) {
+		editingAccNo = inID;
+		document.getElementById('displayAccName' + inID).innerHTML = document.getElementById('txtNewDes' + inID).value;
+		for(var i = 0; i < ResultControl1.length; i++) {
+			var tmpObj = ResultControl1[i];
+			if(tmpObj.accnocont == inID && tmpObj.savingtype) {
+				tmpObj.savingtype = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+		for(var i = 0; i < ResultControl2.length; i++) {
+			var tmpObj = ResultControl2[i];
+			if(tmpObj.accnocont == inID && tmpObj.savingtype) {
+				tmpObj.savingtype = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+		for(var i = 0; i < ResultControl3.length; i++) {
+			var tmpObj = ResultControl3[i];
+			if(tmpObj.accnocont == inID && tmpObj.savingtype) {
+				tmpObj.savingtype = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+		//HuyNT2: bo sung cho Auto-saving
+		for(var i = 0; i < ResultControl4.length; i++) {
+			var tmpObj = ResultControl4[i];
+			if(tmpObj.accnocont == inID && tmpObj.savingtype) {
+				tmpObj.savingtype = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+		//NgocDT3 bo sug cho Future saving
+		for(var i = 0; i < ResultControl5.length; i++) {
+			var tmpObj = ResultControl5[i];
+			if(tmpObj.accnocont == inID && tmpObj.purpose) {
+				tmpObj.purpose = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+		//NgocDT3 bo sug cho tiet kiem khong rut truoc han
+		for(var i = 0; i < ResultControl6.length; i++) {
+			var tmpObj = ResultControl6[i];
+			if(tmpObj.accnocont == inID && tmpObj.savingtype) {
+				tmpObj.savingtype = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+        // live bank
+        for(var i = 0; i < ResultControl7.length; i++) {
+            var tmpObj = ResultControl7[i];
+            if(tmpObj.accnocont == inID && tmpObj.savingtype) {
+                tmpObj.savingtype = document.getElementById('txtNewDes' + inID).value;
+                break;
+            }
+        }
+		var arrayArgs = new Array();
+		arrayArgs.push(inID);
+		arrayArgs.push(tmpInputNode.value);
+		//arrayArgs.push("NEW#1#HN");
+		requestBacgroundMBService("CMD_TYPE_RENAME_ACC_NO", arrayArgs, requestRenameSavingNoSuccess, requestRenameSavingNoFail);
+	}
+	else {
+		statusEditingName = false;
+	}
+}
+
+function requestRenameSavingNoSuccess(e) {
+    statusEditingName = false;
+	/*setTimeout(function(){
+		statusEditingName = false;
+	}, 300);*/
+	
+	gprsResp = parserJSON(e, false);
+	if(gprsResp.respCode == '0') {
+		document.getElementById('displayAccName' + editingAccNo).innerHTML = document.getElementById('txtNewDes' + editingAccNo).value;
+	}
+	else {
+		//document.getElementById('displayAccName' + editingAccNo).innerHTML = document.getElementById('txtNewDes' + inID).value;
+		logInfo('rename account fail');
+	}
+	
+}
+
+function requestRenameSavingNoFail() {
+	statusEditingName = false;
+}
+function viewdetail(accid){
+
+	gFurSavAcc = accid;
+	if(gFurSavAcc!=undefined && gFurSavAcc !=null){
+		navController.pushToView('esaving/future-saving-history', true, 'xsl');
+	}
+}
+
+/*function viewdetail(accid){
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(accid);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_HISTORY_FUTURE_SAVING"), "", "", gUserInfo.lang , gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBHistorySuccess, requestMBHistoryFail);
+}
+function requestMBHistorySuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if (checkResponseCodeSuccess(gprsResp.respCode) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_HISTORY_FUTURE_SAVING")))) {
+		//parserLocalTrans();
+		HistoryObj = gprsResp.arguments;
+		parseHistory();
+		//genReviewScreen();
+		
+	}
+}
+function requestMBHistoryFail(e){
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.pushToView(tmpPageName, true, tmpPageType);
+};
+function parseHistory(){
+	for(var i=0; i<HistoryObj.length; i++){
+		if(HistoryObj[i] != 'END') {
+					tempArrStr = HistoryObj[i].split("#");
+					if (tempArrStr.length > 3){ //Card object
+						tmpTopObj = new HisTopObj();
+						tmpTopObj.date = tempArrStr[0];
+						tmpTopObj.amount = tempArrStr[1];
+						tmpTopObj.balance = tempArrStr[2];		
+						HisTopup.push(tmpTopObj);
+					}
+					else{
+						tmpRateObj = new HisRateObj();
+						tmpRateObj.startdate =tempArrStr[0];
+						tmpRateObj.rate = tempArrStr[1];
+						HisRate.push(tmpRateObj);
+					}
+				}
+	}
+	genXMLHistory();
+}
+function genXMLHistory(){
+	future-saving-history-table
+	3
+
+}*/

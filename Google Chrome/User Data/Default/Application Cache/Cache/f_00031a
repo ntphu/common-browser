@@ -1,0 +1,530 @@
+/*** INIT VIEW ***/
+//var gprsResp = new GprsRespObj("","","","");
+//var card;
+var customerCIF = '';
+var def;
+
+function loadInitXML() {
+	return '';
+}
+function viewBackFromOther() {
+	logInfo('Back from other view');
+}
+
+function viewDidLoadSuccess() {
+    def = localStorage.gIdUser;
+    //alert(def);
+
+    var data = {};
+    var arrayArgs = new Array();
+    arrayArgs.push(def);
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_REACTIVE_CUST_INFO"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+
+}
+
+function showAlertReactiveText(inContent, inBtnOKTitle, inImgAlertSrc) {
+    hiddenKeyBoard();
+	
+    var alertContent = document.getElementById("alert-app-content");
+		alertContent.innerHTML = inContent;
+	
+	//OK button
+	if(inBtnOKTitle && inBtnOKTitle.length > 0) {
+		document.getElementById('btnAlertAppOk').style.width = '100%';
+		document.getElementById('btnAlertAppOk').value = inBtnOKTitle;
+	}
+	
+	document.getElementById('btnAlertAppCancel').style.display = 'none';
+	document.getElementById('td-confirm-cancel').style.display = 'none';
+	
+    var alertdg = document.getElementById("alert-app-confirm");
+    alertdg.style.display = "block";
+    alertdg.style.zIndex = 2010;
+
+    //setTimeout(function (e) {
+        alertdg.style.opacity = 1;
+		if(!Environment.isMobile()) {
+			if(alertdg.getElementsByTagName('input')[1]) alertdg.getElementsByTagName('input')[1].focus();
+		}
+		
+    //}, 300);
+}
+
+function openEBankNormalSiteOK(e) {
+	if (currentPage == "reactive-cust-ebank-scr") {
+		document.removeEventListener('alertAppConfirmOK', openEBankNormalSiteOK, false);
+		window.location.assign("https://ebank.tpb.vn/retail/");
+	}
+}
+
+function requestMBServiceSuccess(e) {
+    gprsResp = parserJSON(e);
+    //setRespObjStore(gprsResp); //store response
+
+    if (parseInt(gprsResp.respCode) == 0 && parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_REACTIVE_CUST_INFO"))) {
+        customerCIF = gprsResp.arguments[0];
+        var customerName = gprsResp.arguments[1];
+
+        document.getElementById("account").innerHTML = customerCIF;
+        document.getElementById("username").innerHTML = customerName;
+        gCustomerNanme = customerName;
+    } else if ((parseInt(gprsResp.respCode) == 2007 || parseInt(gprsResp.respCode) == 2008) && parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_REACTIVE_CUST_INFO"))) {
+		showAlertReactiveText(gprsResp.respContent, CONST_STR.get('BANNER_ALERT_MOBILE_BTN_OK'));
+		document.addEventListener('alertAppConfirmOK', openEBankNormalSiteOK, false);
+    }
+    else if (parseInt(gprsResp.respCode) == 0 && parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_REACTIVE_CUST"))) {
+        /*
+        if (gTokenKey.length > 0 && gTokenKey != '-1') {
+            if (gCustomerNo != document.getElementById("login.txt.username").value) {
+                gTokenKey = '-1';
+                gUsingFingerprint = '0';
+                gPincode = '-1';
+            }
+        }
+        */
+        gCustomerNo = customerCIF;
+
+        //var loginUser = document.getElementById("login.txt.username");
+        //gCustomerNo = loginUser.value;
+
+        parserLoginInfo();
+        try{
+            gSysData = JSON.parse(gprsResp.respJson);
+        }catch(e)
+        {
+        }
+        setUserInfoToLocal(gCustomerNo, gUserInfo.accountName);
+        gUserInfo.lang = getLanguageConfig();
+        gIsLogin = true;
+
+        //config view
+        setViewOnDesktopWhenLogin();
+        document.getElementById('tabHost').innerHTML = "";
+
+        //using to redirect online payment
+        if(getURLParam('payment') == 'order') {
+            setTimeout(function(e){
+                navController.initWithRootView('paymentxsl/payment-online-shopping-create', true, 'xsl');
+                navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+            }, 1000);
+        }
+        else if(getURLParam('payment') == 'ecounter') {
+            setTimeout(function(e){
+                navController.initWithRootView('paymentxsl/payment-ecounter', true, 'xsl');
+                navController.setDefaultPage('accountxsl/account-scr', 'xsl');
+            }, 1000);
+        }
+        else {
+            navController.initWithRootView('setting/welcome-reactive-cust-scr', true, 'xsl');
+            navController.setDefaultPage('setting/welcome-reactive-cust-scr', 'xsl');
+        }
+
+        var btnChangeLangIB = document.getElementById("btnChangLanguageIB");
+        btnChangeLangIB.style.display = "none";
+
+        var btnChangeLang = document.getElementById("btnChangLanguage");
+        btnChangeLang.style.display = "none";
+
+        var mobilefooter = document.getElementById("mainlayoutfooter");
+        mobilefooter.style.display = "none";
+        var homeBtn = document.getElementById('id.home.btn');
+        if(homeBtn!=null){
+            homeBtn.style.display = 'block';
+        }
+        logInfo('hide lang button - end');
+    }
+}
+
+function requestMBServiceFail() {
+
+}
+
+
+function viewWillUnload() {
+    logInfo('change password will unload');
+}
+
+function sendJSONRequest() {
+
+    if (document.getElementById('txtCustID').value.length == 0) {
+        showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_CUSTID'));
+        return;
+    } else {
+        if (document.getElementById('txtPassword').value.length == 0) {
+            showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_PASS'));
+            return;
+        } else {
+            if (document.getElementById('txtRePassword').value.length == 0) {
+                showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_REPASS'));
+                return;
+            } else {
+                if (document.getElementById('txtPassword').value != document.getElementById('txtRePassword').value) {
+                    showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_REPASS_FAIL'));
+                    return;
+                }
+            }
+        }
+    }
+
+    var custID = document.getElementById('txtCustID').value;
+    var custPass = document.getElementById('txtPassword').value;
+
+    var data = {};
+    var arrayArgs = new Array();
+
+    //def, cif, cust ID, password
+    arrayArgs.push(def);
+    arrayArgs.push(customerCIF);
+    arrayArgs.push(custID);
+    arrayArgs.push(custPass);
+
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_REACTIVE_CUST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+
+}
+
+function parserLoginInfo() {
+
+    var indx = 0;
+    var numAccount = 0;
+    var tmpIndx = 0;
+    var tmpStr = "";
+    var tmpArr = [];
+
+    gUserInfo.sessionID = gprsResp.arguments[indx++];
+    gUserInfo.accountName = gprsResp.arguments[indx++];
+
+    //set user name
+    document.getElementById('menu-profile-name').innerHTML = gUserInfo.accountName;
+
+    gUserInfo.valicationType = gprsResp.arguments[indx++];
+    if (gprsResp.arguments[indx++] == "GOLD_TERM_COMFIRMED") {
+        gUserInfo.goldTermConfirmed = true;
+    }
+    else {
+        gUserInfo.goldTermConfirmed = false;
+    }
+    gUserInfo.mobileNumber = gprsResp.arguments[indx++];
+    gUserInfo.email = gprsResp.arguments[indx++];
+    gUserInfo.userRole = gprsResp.arguments[indx++];
+    numAccount = parseInt(gprsResp.arguments[indx++]);
+    gUserInfo.flag_check =gprsResp.arguments[indx++];
+    gUserInfo.username =gprsResp.arguments[indx++];
+    //numAccount = parseInt(gprsResp.arguments[indx++]);
+    var tmpArrayNotJumbo = new Array();
+    var tmpArrayJumbo = new Array();
+    var tmpJumboStatus = false;
+    for (var i=indx; i<numAccount + indx; i++) {
+        var tmpAccObj = new AccountObj();
+        var rawAccInfo = gprsResp.arguments[i];
+        if (!rawAccInfo || rawAccInfo.length < 2) {
+            continue;
+        }
+        var arrayAccInfo = rawAccInfo.split("#");
+        tmpAccObj.accountNumber = arrayAccInfo[0];
+        tmpAccObj.description = arrayAccInfo[1];
+        tmpAccObj.balance = arrayAccInfo[2];
+        tmpAccObj.balanceAvailable = arrayAccInfo[3];
+        tmpAccObj.currency = arrayAccInfo[4];
+        tmpAccObj.descByUser = arrayAccInfo[5];
+        tmpAccObj.overdraftLimit = arrayAccInfo[6];
+        tmpAccObj.accClass = arrayAccInfo[7];
+        tmpAccObj.udfFieldVal = arrayAccInfo[8];
+
+        //ngocdt3 bo sung check nodebit
+        tmpAccObj.nodebit = arrayAccInfo[10];
+
+        if (tmpAccObj.udfFieldVal == "6") {
+            tmpArrayJumbo.push(tmpAccObj);
+            tmpJumboStatus = true;
+        }
+        else {
+            //ngocdt3 comment cho hien thi tai khoan
+            <!--if (((parseInt(tmpAccObj.overdraftLimit) > 0) && arrayAccInfo[9] == 1) || (tmpAccObj.accClass == 'T6A001' || tmpAccObj.accClass == 'D7A000') || (tmpAccObj.currency != 'VND')) {-->
+            if (((parseInt(tmpAccObj.overdraftLimit) > 0) && arrayAccInfo[9] == 1) ||(tmpAccObj.accClass == 'D7A000') || (tmpAccObj.currency != 'VND')) {
+                tmpArrayNotJumbo.push(tmpAccObj);
+            }
+            else {
+                tmpArrayJumbo.push(tmpAccObj);
+            }
+        }
+        //gUserInfo.accountList.push(tmpAccObj);
+        //ngocdt3 comment cho hien thi tai khoan tiet kiem tu dong
+        <!--if(tmpAccObj.currency == 'VND' && tmpAccObj.accClass != 'T6A001' && tmpAccObj.accClass != 'D7A000')--> {
+            if(tmpAccObj.currency == 'VND' && tmpAccObj.accClass != 'D7A000'){
+                gUserInfo.accountList.push(tmpAccObj);
+                gUserInfo.accountListLocalTrans.push(tmpAccObj);
+            }
+            else {
+                gUserInfo.accountListOther.push(tmpAccObj);
+                //bo sung tai khoan D7A000 vao tai khoan nhan tien
+                if(tmpAccObj.accClass == 'D7A000') {
+                    gUserInfo.accountListLocalTrans.push(tmpAccObj);
+                }
+            }
+        }
+        if (tmpJumboStatus) {
+            gUserInfo.accountList = tmpArrayJumbo;
+            gUserInfo.accountListOther = tmpArrayNotJumbo;
+        }
+        indx = numAccount + indx;
+        //avatar
+        gUserInfo.userAvatar = gprsResp.arguments[indx];
+        setUserAvatarToLocal(gUserInfo.userAvatar); //anhpv1 avaatar
+        if(gUserInfo.userAvatar && gUserInfo.userAvatar.length > 1 && document.getElementById('menu-profile-avatar')) {
+            document.getElementById('menu-profile-avatar').innerHTML = '<img width="25" height="25" style="margin-top:1px; margin-left:4px" src="' + gUserInfo.userAvatar + '" />';
+            document.getElementById('menu-profile-avatar').style.backgroundColor = "transparent";
+        }
+        //avatar end
+        indx ++;
+        if(gprsResp.arguments[indx] && gprsResp.arguments[indx] == 'MENU') {
+            indx ++;
+            for (var i=indx; i<gprsResp.arguments.length; i++) {
+                if(gprsResp.arguments.length > 1) {
+                    if(gprsResp.arguments[indx] == 'MENU_END') {
+                        indx ++;
+                        break;
+                    }
+                    else {
+                        var tmpMenuArr = gprsResp.arguments[i].split('#');
+                        var tmpMenuObj = new MenuObj();
+                        tmpMenuObj.keyLang = tmpMenuArr[0];
+                        tmpMenuObj.menuID = tmpMenuArr[1];
+                        tmpMenuObj.parentMenuID = tmpMenuArr[2];
+                        tmpMenuObj.iconCode = tmpMenuArr[3];
+                        tmpMenuObj.path = tmpMenuArr[4];
+                        tmpMenuObj.onClick = tmpMenuArr[5];
+                        tmpMenuObj.imgHighlight = tmpMenuArr[6];
+                        tmpMenuObj.requireStatus = tmpMenuArr[7];
+                        tmpMenuObj.priority = tmpMenuArr[8];
+
+                        try {
+                            var deviceID = device.uuid;
+                            gMenuList.push(tmpMenuObj);
+                        } catch (err) {
+                            if (tmpMenuArr[1] != 'liFingerprintPIN') {
+                                gMenuList.push(tmpMenuObj);
+                            }
+                        }
+
+
+
+                        indx ++;
+                    }
+                }
+            }
+        }
+
+        logInfo('Menu list length: ' + gMenuList.length);
+        var tmpMenuOrder = new Array();
+        var tmpSubMenuOrder = new Array();
+        var menuType = '';
+        if(gprsResp.arguments[indx]) {
+            for (var i=indx; i<gprsResp.arguments.length; i++) {
+                if(gprsResp.arguments[i] == 'MENU_USER_END') {
+                    indx++;
+                    break;
+                }
+                else {
+                    var customizeMenuString = gprsResp.arguments[i];
+
+                    if(customizeMenuString.indexOf('-CUSTOM-MENU-') > -1){
+                        var tempArray = customizeMenuString.split('-CUSTOM-MENU-');
+
+                        //            has custom submenu config
+                        // get menu config
+                        if(tempArray.length > 0){
+                            tmpMenuOrder = (tempArray[0]).split('#');
+                        }
+                        //tmpMenuOrder = (customizeMenuString.substring(0, customizeMenuString.indexOf('-CUSTOM-MENU-'))).split('#');
+
+                        // get submenu config
+                        if(tempArray.length > 1){
+                            tmpSubMenuOrder = (tempArray[1]).split('#');
+                        }
+                        //tmpSubMenuOrder = (customizeMenuString.substring(customizeMenuString.indexOf('-CUSTOM-MENU-')+13, customizeMenuString.length)).split('#');
+
+                        // get menu type
+                        if(tempArray.length > 2){
+                            menuType = tempArray[2];
+                        }
+
+                        indx++;
+                    } else {
+                        //            has not custom submenu config (old user < ebv7)
+                        tmpMenuOrder = gprsResp.arguments[i].split('#');
+                        indx++;
+                    }
+
+                }
+            }
+        }
+        //reorder menu
+        if (tmpMenuOrder && tmpMenuOrder.length > 1) {
+            gMenuUserOrder = tmpMenuOrder;
+            for (var i=0; i<gMenuList.length; i++) {
+                var tmpMenuObj = gMenuList[i];
+                if(tmpMenuObj.requireStatus == 'Y' && tmpMenuObj.menuID.length > 0 && tmpMenuObj.parentMenuID.length == 0) {
+                    var tmpStatus = false;
+                    for (var j=0; j<tmpMenuOrder.length; j++) {
+                        if(tmpMenuObj.menuID == tmpMenuOrder[j]) {
+                            tmpStatus = true;
+                            break;
+                        }
+                    }
+                    if(!tmpStatus) {
+                        gMenuUserOrder.push(tmpMenuObj.menuID);
+                    }
+                }
+            }
+        }
+        else {
+            for (var i=0; i<gMenuList.length; i++) {
+                var tmpMenuObj = gMenuList[i];
+                if(tmpMenuObj.menuID.length > 0 && tmpMenuObj.parentMenuID.length == 0) {
+                    gMenuUserOrder.push(tmpMenuObj.menuID);
+                }
+            }
+        }
+
+        //reorder submenu
+        if (tmpSubMenuOrder && tmpSubMenuOrder.length > 1) {
+            gSubMenuUserOrder = tmpSubMenuOrder;
+            for (var i=0; i<gMenuList.length; i++) {
+                var tmpMenuObj = gMenuList[i];
+                if(tmpMenuObj.menuID.length == 0 && tmpMenuObj.parentMenuID.length > 0) {
+                    var tmpStatus = false;
+                    for (var j=0; j<tmpSubMenuOrder.length; j++) {
+                        var subMenuIDKeyLang = tmpMenuObj.parentMenuID + '_' + tmpMenuObj.keyLang;
+                        if(subMenuIDKeyLang == tmpSubMenuOrder[j]) {
+                            tmpStatus = true;
+                            break;
+                        }
+                    }
+                    if(tmpStatus) {
+                        gSubMenuUserOrder.push(subMenuIDKeyLang);
+                        gMenuList[i].hiddenStatus = 'N';
+                    } else {
+                        gMenuList[i].hiddenStatus = 'Y';
+                    }
+                }
+
+            }
+        }
+        else {
+            for (var i=0; i<gMenuList.length; i++) {
+                var tmpMenuObj = gMenuList[i];
+                if(tmpMenuObj.menuID.length == 0 && tmpMenuObj.parentMenuID.length > 0) {
+                    gSubMenuUserOrder.push(tmpMenuObj.parentMenuID + '_' + tmpMenuObj.keyLang);
+                    gMenuList[i].hiddenStatus = 'N';
+                } else {
+                    //gMenuList[i].hiddenStatus = 'Y';
+                }
+            }
+        }
+
+        genMenuSection();
+
+        if(menuType == 'simple'){
+            quickChangeMenuStyleSimple(false);
+        } else if(menuType == 'default'){
+            quickChangeMenuStyleDefault(false);
+        }
+        //request menu
+        /*var arrayArgs = new Array();
+         requestBacgroundMBService("CMD_GET_CUSTOMIZE_MENU", arrayArgs, function(e) {
+         //success
+
+         }, function(e){
+         //fail
+
+         });*/
+
+        return true;
+
+        var indxPayment = numAccount + 6;
+        var numGroupPaymentService = parseInt(gprsResp.arguments[indxPayment + 1]);
+        for (var i=0; i<numGroupPaymentService; i++) {
+            tmpStr = gprsResp.arguments[indxPayment + 2 + i];
+
+            if (tmpStr != undefined){
+                tmpArr = tmpStr.split("#");
+
+                if (tmpArr.length == 7){
+                    var paymentGrp = {groupId:tmpArr[0], srvGroup:tmpArr[1], name:tmpArr[2], description:tmpArr[3], nameEn:tmpArr[4], descriptionEn:tmpArr[5], icon:tmpArr[6]};
+                    gUserInfo.paymentGroupList.push(paymentGrp);
+                }
+            }
+        }
+
+        var numPaymentService = parseInt(gprsResp.arguments[indxPayment + numGroupPaymentService + 2]);
+        for (var i=0; i<numPaymentService; i++) {
+            tmpStr = gprsResp.arguments[numGroupPaymentService + indxPayment + 3 + i];
+
+            if (tmpStr != undefined){
+                tmpArr = tmpStr.split("#");
+
+                if (tmpArr.length == 7){
+                    var paymentService = {srvId:tmpArr[0], srvGroup:tmpArr[1], srvName:tmpArr[2], srvDesc:tmpArr[3], srvNameEn:tmpArr[4], srvDescEn:tmpArr[5], icon:tmpArr[6]};
+                    gUserInfo.paymentServiceList.push(paymentService);
+                }
+            }
+        }
+
+        var numProvider = parseInt(gprsResp.arguments[numPaymentService + numGroupPaymentService + indxPayment + 3]);
+        for (var i=0; i<numProvider; i++) {
+            tmpStr = gprsResp.arguments[numGroupPaymentService + numPaymentService + indxPayment + 4 + i];
+
+            if (tmpStr != undefined){
+                tmpArr = tmpStr.split("#");
+
+                if (tmpArr.length == 6){
+                    var paymentProvider = {srvId:tmpArr[0], srvGroup:tmpArr[1], prName:tmpArr[2], srvCode:tmpArr[3], prDesc:tmpArr[4], prId:tmpArr[5]};
+                    gUserInfo.paymentProviderList.push(paymentProvider);
+                }
+            }
+        }
+
+        var numFieldForm = parseInt(gprsResp.arguments[numProvider + numPaymentService + numGroupPaymentService + indxPayment + 4]);
+        for (var i=0; i<numFieldForm; i++) {
+            tmpStr = gprsResp.arguments[numProvider + numPaymentService + numGroupPaymentService + indxPayment + 5 + i];
+
+            if (tmpStr != undefined){
+                tmpArr = tmpStr.split("#");
+
+                if (tmpArr.length == 14){
+                    var paymentReqField = {srvCode:tmpArr[0], msgType:tmpArr[1], msgFieldId:tmpArr[2], fieldDesc:tmpArr[3], fieldType:tmpArr[4], fieldLength:tmpArr[5], inputType: tmpArr[6], madatory:tmpArr[7], sortIndex:tmpArr[8], id:tmpArr[9], isAmount:tmpArr[10], fieldDescEn:tmpArr[11], dfltVal:tmpArr[12], id1:tmpArr[13]};
+                    gUserInfo.paymentRequestFieldList.push(paymentReqField);
+                }
+            }
+        }
+
+        var numFieldFormCbo = parseInt(gprsResp.arguments[numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 5]);
+        for (var i=0; i<numFieldFormCbo; i++) {
+            gUserInfo.paymentRequestFieldCboList.push(gprsResp.arguments[numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 6 + i]);
+            tmpStr = gprsResp.arguments[numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 6 + i];
+
+            if (tmpStr != undefined){
+                tmpArr = tmpStr.split("#");
+
+                if (tmpArr.length == 4){
+                    var paymentReqFieldCbo = {id:tmpArr[0], mapId:tmpArr[1], fieldVal:tmpArr[2], fieldDesc:tmpArr[3]};
+                    gUserInfo.paymentRequestFieldCboList.push(paymentReqFieldCbo);
+                }
+            }
+        }
+
+        var numFieldFormHistory = parseInt(gprsResp.arguments[numFieldFormCbo + numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 6]);
+        for (var i=0; i<numFieldFormHistory; i++) {
+            gUserInfo.paymentFieldHistoryList.push(gprsResp.arguments[numFieldFormCbo + numFieldForm + numProvider + numPaymentService + numGroupPaymentService + indxPayment + 6 + i]);
+        }
+
+        return true;
+    }
+}
+

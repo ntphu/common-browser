@@ -1,0 +1,892 @@
+// JavaScript Document
+
+var parameterAll = "FURSAV";//Lay tiet kiem dien tu va tiet kiem gui gop
+var destinationACC = "";
+var docXml;
+var pageIndex1 = 1;
+var pageIndex2 = 1;
+var pageIndex =1;
+var ResultControl1;
+var ResultControl2;
+var lstCurr1;
+var lstCurr2;
+var docXslCurr1;
+var docXslCurr2;
+var itemsPerPage = 10;
+var FurSavObj;
+var gFurSaving =[];
+var status_closed = false;
+
+function loadInitXML(){
+	
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	status_closed = true;
+	/*if(withdraw_account != "")
+	{
+	  selectChange(withdraw_account);
+	}*/
+}
+
+function viewDidLoadSuccess(){
+	if(status_closed) {
+		status_closed = false;
+	}
+	else {	
+		//logInfo('Account change infomation load success');
+		//if(withdraw_account == "")
+		//{
+		//document.getElementById('section2').style.display='none';
+		genSequenceForm();
+		sendJSONRequest();
+		//}
+	}
+}
+
+//gen sequence form
+function genSequenceForm() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpStepNo = 401;
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+		tmpNode.innerHTML = oStr;
+	});
+}
+function sendJSONRequest(){
+	var data = {};
+	var arrayArgs = new Array();
+	
+	arrayArgs.push(parameterAll);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+}
+
+function requestMBServiceSuccesss(e){   
+	gprsResp = parserJSON(e);
+	gRespObj = gprsResp; 
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING")))) {
+		document.getElementById("mainViewContent").style.display = '';
+		FurSavObj = new Array();
+		FurSavObj = gprsResp.arguments;
+		showAll();
+		parserViewESaving();	
+		
+		if(ResultControl1.length>0){
+			showLst(1);
+			document.getElementById('div-datainfo').style.display = 'none';
+			genHtmlSearchResult(getItemsPerPage(ResultControl1, pageIndex1),1)
+		}else{
+			hiddenLst(1);
+		}
+		if(ResultControl2.length>0){
+			showLst(2);
+			genHtmlSearchResult(getItemsPerPage(ResultControl2, pageIndex2),2);		
+		}else{
+			hiddenLst(2);
+		}		
+	}
+	else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING"))  || (gprsResp.responseType == '-1')))) {
+		navController.initWithRootView('account/account-scr', true);
+	}
+}
+function showAll(){
+	document.getElementById("mainViewContent").style.display='block';
+}
+
+function hiddenLst(section){
+	if(section == 1){
+		var node = document.getElementById("parent1");
+		if(node !=null){
+			node.style.display = 'none';		
+		}	
+	}else if(section == 2){
+		var node = document.getElementById("parent2");
+		if(node !=null){
+			node.style.display = 'none';		
+		}
+	}
+}
+function showLst(section){
+	if(section == 1){
+		var node = document.getElementById("parent1");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}else
+	if(section == 2){
+		var node = document.getElementById("parent2");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}
+}
+function requestMBServiceFail(e){
+	showAlertText(gprsResp.respContent);
+	navController.initWithRootView('account/account-scr', true);
+}
+//event alert
+function handleAlertEmptyESaving(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "esaving/esaving-close-scr-new")) {
+		document.removeEventListener('closeAlertView', handleAlertEmptyESaving, false);
+		//navController.initWithRootView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+//parser info
+function parserViewESaving() {
+	lstCurr1 = new Array();
+	lstCurr2 = new Array();
+	ResultControl1 = new Array();
+	ResultControl2 = new Array();
+	var objCurr;
+	
+	var tempArrStr;
+	var objtemp = null;
+	//LIST 3
+	var indexEnd = FurSavObj.indexOf("END");
+	for(var k=0;k<indexEnd;k++){		
+		tempArrStr = FurSavObj[k].split("#");
+		objtemp = new Object();			
+		objtemp.brn_code = tempArrStr[0];
+		objtemp.prod_code = tempArrStr[1];
+		objtemp.savingtype = tempArrStr[2];
+		objtemp.accnocont = tempArrStr[3];
+		objtemp.prod_des = tempArrStr[4];
+		objtemp.currcont = tempArrStr[5];
+		objtemp.amountcont = tempArrStr[6];
+					
+		objtemp.sodu = tempArrStr[7];
+		objtemp.sodu_hientai = tempArrStr[8];			
+		objtemp.sodu_bandau = tempArrStr[9];
+		objtemp.so_tien_da_rut = tempArrStr[10];
+		objtemp.valdatecont = tempArrStr[11];
+		objtemp.matdatecont = tempArrStr[12];
+		objtemp.interestcont = tempArrStr[13];			
+		objtemp.tenor_day = tempArrStr[14];
+		objtemp.tenor_month = tempArrStr[15];
+		objtemp.tenor_year = tempArrStr[16];
+		objtemp.is_type = tempArrStr[17];
+		objtemp.estimatedcont = tempArrStr[18];
+		objtemp.so_phong_toa = tempArrStr[19];
+		objtemp.lydo_phong_toa = tempArrStr[20];
+		objtemp.account_name = tempArrStr[21];
+		objtemp.type = 0;
+		
+		//Show total currency 
+		objCurr = new Object();
+		objCurr.type = objtemp.currcont;
+		objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));	
+		if(k==0) {		
+			lstCurr1.push(objCurr);		
+		}else{
+			 var idx = checkKeyInArray(objCurr.type, lstCurr1);
+			 if(idx==-1){				
+			 	lstCurr1.push(objCurr);
+			 }else{
+				lstCurr1[idx].value = parseFloat(lstCurr1[idx].value)+parseFloat(objCurr.value);
+			 }
+		}				
+		ResultControl1.push(objtemp);
+	}	
+	//NgocDT3 bổ sung cho Future saving
+	//LIST 2
+	var index = indexEnd+1;
+	indexEnd = FurSavObj.indexOf("END", index);
+	for(var k=index;k<indexEnd;k++){		
+		tempArrStr = FurSavObj[k].split("#");
+		objtemp = new Object();			
+		objtemp.brn_code = tempArrStr[0];
+		objtemp.prod_code = tempArrStr[1];
+		objtemp.savingtype = tempArrStr[2];
+		objtemp.accnocont = tempArrStr[3];
+		objtemp.prod_des = tempArrStr[4];
+		objtemp.currcont = tempArrStr[5];
+		objtemp.amountcont = tempArrStr[6];
+					
+		objtemp.sodu = tempArrStr[7];
+		objtemp.sodu_hientai = tempArrStr[8];			
+		objtemp.sodu_bandau = tempArrStr[9];
+		objtemp.so_tien_da_rut = tempArrStr[10];
+		objtemp.valdatecont = tempArrStr[11];
+		objtemp.matdatecont = tempArrStr[12];
+		objtemp.interestcont = tempArrStr[13];			
+		objtemp.tenor_day = tempArrStr[14];
+		objtemp.tenor_month = tempArrStr[15];
+		objtemp.tenor_year = tempArrStr[16];
+		objtemp.is_type = tempArrStr[17];
+		objtemp.estimatedcont = tempArrStr[18];
+		objtemp.so_phong_toa = tempArrStr[19];
+		objtemp.lydo_phong_toa = tempArrStr[20];
+		objtemp.account_name = tempArrStr[21];
+		objtemp.frequency_amt = tempArrStr[22];
+		objtemp.purpose = tempArrStr[23];
+		objtemp.channel = tempArrStr[24];
+		objtemp.accamt = tempArrStr[25];
+		objtemp.checktype = tempArrStr[26];
+		objtemp.frequendate = tempArrStr[27];
+		//objtemp.type = 0;
+		objtemp.type = 2;
+		
+		//Show total currency 
+		objCurr = new Object();
+		objCurr.type = objtemp.currcont;
+		objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));	
+		if(k==0) {		
+			lstCurr2.push(objCurr);		
+		}else{
+			 var idx = checkKeyInArray(objCurr.type, lstCurr2);
+			 if(idx==-1){				
+			 	lstCurr2.push(objCurr);
+			 }else{
+				lstCurr2[idx].value = parseFloat(lstCurr2[idx].value)+parseFloat(objCurr.value);
+			 }
+		}				
+		ResultControl2.push(objtemp);
+	}	
+}
+function genPagging(arr, pageIndex, nodepage) {
+	var totalPage = calTotalPage(arr);
+	//var nodepage = document.getElementById('pageIndicatorNums1');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+	
+	//chan nhap ky tu dac biet
+	var tmpArrInputName = document.getElementById('parent1').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+	tmpArrInputName = document.getElementById('parent2').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+}
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+
+	var arrMedial = new Array();
+	
+	if(selectedPage.id == 'pageIndicatorNums1') {
+		pageIndex1 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl1, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 1);
+	}
+	else if(selectedPage.id == 'pageIndicatorNums2') {
+		pageIndex2 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl2, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 2);
+	}
+}
+function genHtmlSearchResult(arr, section) {
+	if(section==1)
+	{
+		var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+		genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback1, failPaggingCallback);
+	}
+	if(section==2)
+	{
+		var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+		genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback2, failPaggingCallback);
+	}
+}
+function successPaggingCallback1(strHtml) {
+	var div = document.getElementById("divSection1");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl1, pageIndex1,document.getElementById('pageIndicatorNums1'));
+}
+function successPaggingCallback2(strHtml) {
+	var div = document.getElementById("divSection2");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl2, pageIndex2, document.getElementById('pageIndicatorNums2'));
+}
+function failPaggingCallback() {
+	
+}
+Number.prototype.formatMoney = function(c, d, t){
+var n = this, 
+    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+    d = d == undefined ? "." : d, 
+    t = t == undefined ? "," : t, 
+    s = n < 0 ? "-" : "", 
+    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+    j = (j = i.length) > 3 ? j % 3 : 0;
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+ };
+function genXmlDataPagging(arr) {
+	docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('esavingChangeInfo','',docXml);
+	var childlistsavingNode = createXMLNode('listaccsaving','',docXml,rootNode);
+	var childlistaccvisNode = createXMLNode('listacccanchange','',docXml,rootNode);
+	var childlistaccnovisNode = createXMLNode('listaccnotchange','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('esavingTitleTable','',docXml,childlistsavingNode);
+	var childNodeTit = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,titleTable);
+	childNodeTit = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,titleTable);
+	var tmpSavings;
+	if (arr && arr.length > 0) {
+		tmpSavings = arr[0];
+	}
+	if(tmpSavings && tmpSavings.prod_code == 'T5A005'){
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,titleTable);
+	}
+	else{
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+	}
+	
+	//childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+	//childNodeTit = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,titleTable);
+	childNodeTit = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,titleTable);
+	childNodeTit = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,titleTable);
+	childNodeTit = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,titleTable);
+	childNodeTit = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,titleTable);
+	//childNodeTit = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,titleTable);
+
+	for(var k=0;k<arr.length;k++){
+		
+		var valTable = createXMLNode('accinfo','',docXml,childlistsavingNode);
+		var nodeVal = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,valTable);
+		
+		//nodeVal = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,valTable);
+		//nodeVal = createXMLNode('selectcont',CONST_STR.get('ESAVING_BTN_CLOSE_TITLE'),docXml,valTable);
+		//so tai khoan
+		nodeVal = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,valTable);
+		nodeVal = createXMLNode('accnocont',arr[k].accnocont,docXml,valTable);
+		//loại tk/muc dich
+		if(tmpSavings && tmpSavings.prod_code == 'T5A005'){
+		nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,valTable);
+		nodeVal = createXMLNode('savingtype',CONST_STR.get(arr[k].purpose),docXml,valTable);
+		}
+		else{
+		nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,valTable);
+		nodeVal = createXMLNode('savingtype',arr[k].savingtype,docXml,valTable);
+		}
+		// so du hien tai
+		nodeVal = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,valTable);
+		nodeVal = createXMLNode('amountcont',arr[k].sodu_hientai + " VND",docXml,valTable);
+		//Lãi suất
+		nodeVal = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,valTable);
+		nodeVal = createXMLNode('interestcont',arr[k].interestcont + "%",docXml,valTable);
+		//ngay gui
+		nodeVal = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,valTable);
+		nodeVal = createXMLNode('valdatecont',arr[k].valdatecont,docXml,valTable);
+		//ngay het han
+		nodeVal = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,valTable);
+		nodeVal = createXMLNode('matdatecont',arr[k].matdatecont,docXml,valTable);
+		/*nodeVal = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,valTable);
+		nodeVal = createXMLNode('currcont',arr[k].typeCurrency,docXml,valTable);			*/
+	}
+	return docXml;
+	
+}
+function checkKeyInArray(key, lstArr){	
+	for(var i=0; i<lstArr.length; i++){
+		if(lstArr[i].type == key){
+			return i;
+		}
+	}
+	return -1;
+}
+function selectChange(accid){
+	if(hasMainContentScrollEvent){
+		hasMainContentScrollEvent= false;
+		return;
+	}
+	//fadeOutMainContentScreen();
+	//setTimeout(function () 	
+		var element = document.getElementById("div-fix");
+		if(element !=null){
+			element.style.webkitTransform = 'none';
+			element.style.MozTransform = 'none';
+			element.style.msTransform = 'none';
+			element.style.OTransform = 'none';
+			element.style.transform = 'none';
+		}
+		
+		var currIndex = 1;
+		var obj = new Object();
+		var arrObj = new Array();
+		obj = getObjWithKey(accid, ResultControl1);
+		if(obj == null){
+			currIndex = 2;
+			obj = getObjWithKey(accid, ResultControl2);		
+		}
+		if(obj!=null){	
+				arrObj.push(obj);
+				gFurSaving.push(obj);
+				//genHtmlSearchResult(arrObj, 1);	
+		
+				var docXml = createXMLDoc();
+				
+				var tmpXmlRootNode;
+				
+				var tmpXmlRootNode = createXMLNode('account', '', docXml);
+				var tmpIndex = getSelectedAccIdx();
+				var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				if(obj.prod_code == 'T5A005' && currIndex == 2 && obj.checktype == 'PRD'){
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_PURPOSE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', CONST_STR.get(obj.purpose), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_BALANCE_NON'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.sodu_hientai +"VND", docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_AMT_PRD'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrency(obj.frequency_amt)+"VND", docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), docXml, tmpXmlNodeInfo);
+				if(obj.prod_des < 12){
+					tmpChildNode = createXMLNode('acccontent2', obj.prod_des + " "+CONST_STR.get('FUTURE_SAVING_MONTH_CUR'), docXml, tmpXmlNodeInfo);
+				}
+				else if(obj.prod_des > 12){
+					tmpChildNode = createXMLNode('acccontent2', (obj.prod_des/12) + " "+CONST_STR.get('TRANS_PERIODIC_YEAR'), docXml, tmpXmlNodeInfo);
+				}
+				
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.valdatecont, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.matdatecont, docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_FREQUENCY'), docXml, tmpXmlNodeInfo);
+				if(obj.is_type =='T30'){
+				tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_VN[0], docXml, tmpXmlNodeInfo);
+				}
+				else if(obj.is_type =='T60'){
+				tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_VN[1], docXml, tmpXmlNodeInfo);
+				}
+				else if(obj.is_type =='T90'){
+				tmpChildNode = createXMLNode('acccontent1',CONST_KEY_ESAVING_FREQUENCY_VN[2], docXml, tmpXmlNodeInfo);
+				}
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_TYPE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', CONST_STR.get('FUTURE_SAVING_PRD'), docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.interestcont +"%", docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.channel, docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.so_phong_toa, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.lydo_phong_toa, docXml, tmpXmlNodeInfo);
+				
+				}
+				else if (obj.prod_code == 'T5A005' && currIndex == 2 && obj.checktype == 'FLX'){
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_PURPOSE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', CONST_STR.get(obj.purpose), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.currcont, docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_BALANCE_NON'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.sodu_hientai, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.prod_des+ " "+CONST_STR.get('FUTURE_SAVING_MONTH_CUR'), docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.valdatecont, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.matdatecont, docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_FREQUENCY'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.is_type, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_TYPE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', CONST_STR.get('FUTURE_SAVING_AUTO'), docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('FUTURE_SAVING_INTEREST'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.interestcont+"%", docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('FUTURE_SAVING_CHANNEL_FULL'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.channel, docXml, tmpXmlNodeInfo);
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.so_phong_toa, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.lydo_phong_toa, docXml, tmpXmlNodeInfo);
+				}
+				else {
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.savingtype, docXml, tmpXmlNodeInfo);
+				
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', obj.currcont, docXml, tmpXmlNodeInfo);
+				
+				//THUANTM THÊM
+				
+				var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_TIEN_GUI_BAN_DAU'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(parseFloat(obj.amountcont)), docXml, tmpXmlNodeInfo);
+				
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_TERM'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent2', getTenor(obj), docXml, tmpXmlNodeInfo);
+				
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.interestcont + "%", docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), docXml, tmpXmlNodeInfo);
+				if(obj.estimatedcont == '-')
+				{
+				tmpChildNode = createXMLNode('acccontent2', obj.estimatedcont, docXml, tmpXmlNodeInfo);
+				}
+				else
+				{				
+				tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrency(obj.estimatedcont), docXml, tmpXmlNodeInfo);
+				}
+				
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_VALDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.valdatecont, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), docXml, tmpXmlNodeInfo);
+				//tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(obj.bamountcont) , docXml, tmpXmlNodeInfo);
+				
+tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(obj.so_phong_toa) , docXml, tmpXmlNodeInfo);
+				
+				tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+				tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acccontent1', obj.matdatecont, docXml, tmpXmlNodeInfo);
+				tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), docXml, tmpXmlNodeInfo);
+				//tmpChildNode = createXMLNode('acccontent2', obj.breason, docXml, tmpXmlNodeInfo);
+tmpChildNode = createXMLNode('acccontent2', obj.lydo_phong_toa, docXml, tmpXmlNodeInfo);
+								
+				}
+				tmpChildNode = createXMLNode('esaving_type', currIndex, docXml, tmpXmlNodeInfo);
+			logInfo(docXml);			
+			//B1 save xml
+			//B2 goto detail screen
+			setReviewXmlStore(docXml);
+			if(obj.prod_code == 'T6A001' && currIndex == 4) {
+				var tmpAccObj = new AccountObj();
+				tmpAccObj.accountNumber = obj.accnocont;
+				tmpAccObj.accClass = obj.prod_code;				
+				//loai tien
+				tmpAccObj.currency = obj.currcont;
+				//so tien
+				tmpAccObj.balance = obj.sodu_hientai;
+				//ky han gui
+				if (gUserInfo.lang == 'VN' && obj.prod_des == 'NO_TENOR') {
+					tmpAccObj.ky_han_gui = 'Không kỳ hạn';
+				}
+				else if (gUserInfo.lang == 'EN' && obj.prod_des == 'NO_TENOR') {
+					tmpAccObj.ky_han_gui = 'Không kỳ hạn';
+				}
+				else {
+					tmpAccObj.ky_han_gui = "-";
+				}
+				//ngay mo tai khoan
+				tmpAccObj.openDate = obj.valdatecont;
+				//ngay đến hạn
+				tmpAccObj.overdraftEndDate = obj.matdatecont;
+				//lai suat
+				tmpAccObj.rate = obj.interestcont;
+				//lai den han (tam tinh)
+				tmpAccObj.profitReven = obj.estimatedcont;
+				//so tien phong toa
+				tmpAccObj.numBlockedAmt = obj.so_phong_toa;
+				//muc dich phong toa
+				tmpAccObj.blockReason = obj.lydo_phong_toa;
+				setSelectedAccInfoObj(tmpAccObj);
+				
+				navController.pushToView("accountxsl/account-history-scr", true, 'xsl');
+			}
+			else {
+				navController.pushToView("esaving/future-esaving-close", true, 'xsl');
+			}
+			
+		}
+		
+}
+
+
+
+
+
+
+function makeAccountNumberList(){
+	var lstAccNumber = new Array();
+	for(var i = 0; i<gESavingObjs.length; i++){
+		lstAccNumber.push(gESavingObjs[i].account);
+	}
+	return lstAccNumber;
+}
+
+//show infomation
+function updateAccDetail(inAccObj) {
+	//Loại tiết kiệm
+	document.getElementById("esavingType").value = CONST_STR.get('ESAVING_REVIEW_SAVINGTYPE');
+	//Account nguồn
+	document.getElementById("sourceAcc").value = inAccObj.account;
+	document.getElementById("balancing").innerHTML = inAccObj.amount +" VND";
+	
+	document.getElementById("actionDeb").value = CONST_STR.get('ESAVING_RUT_VA_TAT_TOAN');
+	//Số lượng tiền tất toán
+	document.getElementById("amount").value =inAccObj.amount;
+	
+	var numStr = convertNum2WordWithLang(removeSpecialChar(inAccObj.amount), gUserInfo.lang); 
+	document.getElementById("amountByText").innerHTML = "<h6>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";
+	//Account đích
+	if(inAccObj.destinationAcc!='NOTFOUND'){
+		document.getElementById("destinationAcc").value = inAccObj.destinationAcc;
+		document.getElementById("destinationAcc").disabled = false;
+	}else{
+		var lstAcc = getLstDestinationAcc();
+		document.getElementById("destinationAcc").value = lstAcc[0];//Display acc destinatuon default
+	}
+}
+
+function getLstDestinationAcc(){
+	var lstDesAcc = new Array();
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+			var tmpAcc = gUserInfo.accountList[i];
+			lstDesAcc.push(tmpAcc.accountNumber);			
+	}
+	return lstDesAcc;
+}
+
+
+
+
+
+
+
+/*function selectChange(account){	
+	fadeOutMainContentScreen();
+	setTimeout(function () {
+		document.getElementById('section2').style.display='block';
+		document.getElementById('pageIndicatorNums').style.display='none';
+		var obj = new Object();
+		obj = getObjWithKey(account, gESavingObjs);
+		var arrObj = new Array();
+		if(obj != null){
+			withdraw_account = account;
+			gESavingObjUsing = obj;
+			arrObj.push(obj);
+			genHtmlSearchResult(arrObj, 1);	
+			showDetail(obj);
+			if(obj.destinationAcc!='NOTFOUND'){
+				document.getElementById("destinationAcc").value = obj.destinationAcc;
+				document.getElementById("destinationAcc").disabled = false;
+			}else{
+				var lstAcc = getLstDestinationAcc();
+				document.getElementById("destinationAcc").value = lstAcc[0];//Display acc destinatuon default
+			}
+		}	
+	},500);   
+	fadeInMainContentScreen();
+}*/
+function getObjWithKey(acc, arr){
+ 	var obj = new Object();		
+	for(var i in arr){
+		if(arr[i].accnocont==acc){
+			return arr[i];
+		}
+	}
+	return null;
+}
+
+/*function showDetail(obj){
+	var docXml = createXMLDoc();
+			
+			var tmpXmlRootNode;
+			
+			var tmpXmlRootNode = createXMLNode('account', '', docXml);
+			var tmpIndex = getSelectedAccIdx();
+			
+			var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+			tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent1', CONST_STR.get('ESAVING_REVIEW_SAVINGTYPE'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent2', obj.typeCurrency, docXml, tmpXmlNodeInfo);
+			
+			tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+			tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_AMO'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent1', (obj.amount) + " VND", docXml, tmpXmlNodeInfo);
+			
+			tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_TERM'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent2',getTenor(obj), docXml, tmpXmlNodeInfo);
+			
+			tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+			tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent1', obj.interest + "%", docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent2', (obj.lai_tam_tinh)+ " VND", docXml, tmpXmlNodeInfo);
+			
+			tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+			tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_VALDATE'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent1', obj.openDate, docXml, tmpXmlNodeInfo);
+			
+			
+			tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(obj.so_phong_toa) + " VND", docXml, tmpXmlNodeInfo);
+			
+			tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+			tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent1', obj.closeDate, docXml, tmpXmlNodeInfo);
+			
+			tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('acccontent2', obj.ly_do_phong_toa, docXml, tmpXmlNodeInfo);
+			
+		
+		
+		var tmpXsl = getCachePageXsl("esaving/esaving-info-table");
+		var tmpHtmlStr = genHTMLStringWithXML(docXml, tmpXsl, function(oStr){
+			var tmpNode = document.getElementById('div-datainfo');
+			tmpNode.innerHTML = oStr;
+			
+			//hidden underline
+			var tmpArrANode = document.getElementById('esaving-info').getElementsByTagName('a');
+			if (tmpArrANode && tmpArrANode.length > 0) {
+				for (var k=0; k< tmpArrANode.length; k++) {
+					var tmpANode = tmpArrANode[k];
+					//tmpANode.parentNode.innerHTML = tmpANode.innerHTML;
+					tmpANode.style.textDecoration = 'none';
+				}
+			}
+		});
+}
+*/
+function getTenor(obj){
+	var tenorday = parseInt(obj.tenor_day);
+	var tenormonth = parseInt(obj.tenor_month);
+	var tenoryear = parseInt(obj.tenor_year);
+	var counttenor = tenorday + 30*tenormonth +365*tenoryear;
+	if(counttenor>0){
+		if(tenorday <1){
+			if(tenormonth >0){
+				if(tenoryear >0){
+					return obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+				}
+				else {
+					return obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH');
+				}
+			}
+			else if(tenormonth <1){
+				return obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR');
+			}
+		}
+		else if(tenorday >0){
+			if(tenormonth >0){
+				if(tenoryear >0){
+					return  obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+ obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+					
+				}
+				else {
+					return  obj.tenor_month + ' ' + CONST_STR.get('TRANS_PERIODIC_MONTH')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+			}
+			else if(tenormonth <1){
+				if(tenoryear >0){
+					return  obj.tenor_year+ ' ' + CONST_STR.get('TRANS_PERIODIC_YEAR')+' '+obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+				else{
+					return obj.tenor_day + ' '+ CONST_STR.get('TRANS_PERIODIC_DATE1');
+				}
+			}
+			
+		}
+	}
+}
+
+/*function genHtmlSearchResult(arr) {
+	var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+	genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback, failPaggingCallback);	
+}
+//Callback successed
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("esaving-info");
+	div.innerHTML = strHtml;
+	genPagging(gESavingObjs, pageIndex ,document.getElementById('pageIndicatorNums'));
+	//document.getElementById('tableButton').style.display = '';
+	//document.getElementById('esavingAccLst').value = gDestinationAcc;
+	
+}
+*/
+function genPagging(arr, pageIndex, nodepage) {
+	var totalPage = calTotalPage(arr);
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}		
+	}	
+	return arrTmp;
+}
+
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	var arrMedial = new Array();
+	/*pageIndex = selectedIdx;
+	arrMedial = getItemsPerPage(gESavingObjs, selectedIdx);		
+	genHtmlSearchResult(arrMedial);	*/	
+	if(selectedPage.id == 'pageIndicatorNums1') {
+		pageIndex1 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl1, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 1);
+	}
+	else if(selectedPage.id == 'pageIndicatorNums2') {
+		pageIndex2 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl2, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 2);
+	}		
+}
+//Callback failed
+/*function 
+() {
+	navController.initWithRootView('account/account-scr', true);	
+}
+*/
+function ReloadPage(){
+	/*fadeOutMainContentScreen();
+	setTimeout(function () {
+		//gESavingObjUsing = null;
+		//document.getElementById('section2').style.display='none';
+		document.getElementById('pageIndicatorNums').style.display='block';
+		genHtmlSearchResult(getItemsPerPage(gESavingObjs, pageIndex));
+	},500);
+	fadeInMainContentScreen();*/
+	document.getElementById('Header1').innerHTML = CONST_STR.get('ESAVING_COUNTER_NAME');
+		document.getElementById('tableButton').style.display = 'none';
+		document.getElementById('div-datainfo').style.display = 'none';
+		document.getElementById('div-sum1').style.display = '';
+		document.getElementById('pageIndicatorNums1').style.display = '';	
+		showLst(1);
+		showLst(2);
+	
+		if(ResultControl1.length>0){
+			genHtmlSearchResult(getItemsPerPage(ResultControl1, pageIndex1),1)
+		}else{
+			hiddenLst(1);
+		}
+		if(ResultControl2.length>0){
+			genHtmlSearchResult(getItemsPerPage(ResultControl2, pageIndex2),2);		
+		}else{
+			hiddenLst(2);
+		}
+}

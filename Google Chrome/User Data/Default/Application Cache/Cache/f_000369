@@ -1,0 +1,911 @@
+
+var tmpDestinationCardAcc;
+var tmpPayeeType;
+var mng;
+var balancecur;
+var flag;
+var tmpTypetrans;
+var typeBills;
+var comboEl;
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+function viewDidLoadSuccess() {
+	initBottomBar();
+    actionbar.addListSequence("paymentxsl/autobilling-register");
+    initComboTextAccount();
+	function MenuContent(title, src) {
+        this.title = title;
+        this.src = src;
+        this.keyLang = title;
+    }
+	//document.getElementById('navBottomBar').style.display = 'none';
+	/*var arrBottom = new Array();
+    arrBottom.push(new MenuContent('AUTO_BILLING_TRANS', 'paymentxsl/autobilling-register'));
+    arrBottom.push(new MenuContent('AUTO_BILLING_MNG', 'paymentxsl/autobilling-manage'));*/
+    //navController.initBottomBarOnlyText(arrBottom[0].src, arrBottom, "id_card-advance-register_main");
+		flag_check = -1;
+	if(flag == true){
+		accountSelected ='';
+	}
+	setInputOnlyNumber('auto_mobile');
+	//document.getElementById('auto_product').value =CONST_KEY_AUTO_BILLING_PROC_VN[0];
+	//set up calendar
+	
+	//Init calendar
+	//Init calendar
+	var today = new Date();						
+	var dd = today.getDate();						
+	var mm = today.getMonth()+1; //January is 0!						
+	var yyyy = today.getFullYear();						
+							
+	if(dd<10) {						
+		dd='0'+dd;					
+	} 						
+							
+	if(mm<10) {						
+		mm='0'+mm;					
+	} 						
+							
+	today = yyyy+'-'+mm+'-'+dd;						
+							
+	var fromDate;						
+	var toDate;						
+    				
+	if (gUserInfo.lang == 'VN') {						
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('trans.enddate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				dom_field    : document.getElementById('span.enddate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+							
+	}						
+	else {						
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('trans.enddate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',					
+				dom_field    : document.getElementById('span.enddate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);		
+						
+	}	
+	//end
+
+    //tai khoan
+    var tmpAcc = gUserInfo.accountList[0];
+    document.getElementById("auto_account").value = tmpAcc.accountNumber;
+
+	if(!flag){
+		mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+	}
+	typeBills = (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_ALL_BILL')]:[CONST_STR.get('AUTO_BILLING_ALL_BILL')];	
+    showHideTableRowByID('tblRow_Bill_Type',false);
+    
+    var valueChoose = (gUserInfo.lang == 'VN')? CONST_STR.get('AUTO_BILLING_ELECTRIC'):CONST_STR.get('AUTO_BILLING_ELECTRIC');
+    if(tmpTypetrans != valueChoose){
+        showHideTableRowByID('tblRow_Bill_Type',false);
+        showHideTableRowByID('tblRow_Bill_Frequency',false);
+        showHideTableRowByID('tblRow_auto_benefic',false);
+//        showHideTableRowByID('tblRow_auto_nickname',true);
+		showHideTableRowByID('tblRow_auto_product',true);
+        setValueById('bill_type', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_MOBILE_NO')]:[CONST_STR.get('AUTO_BILLING_MOBILE_NO')]);
+//        setValueById('bill_benefic_mng', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_BENEFIC_MNG_NEW')]:[CONST_STR.get('AUTO_BILLING_BENEFIC_MNG_NEW')]);
+        setValueById('trans.enddate.title', (gUserInfo.lang == 'VN')? [CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE_NEW')]:[CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE_NEW')]);   
+        tmpTypetrans =  (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_MOBILE')]:[CONST_STR.get('AUTO_BILLING_MOBILE')];
+        setValueById('auto_transtype',tmpTypetrans);
+    }else{
+        showHideTableRowByID('tblRow_Bill_Type',true);
+        showHideTableRowByID('tblRow_Bill_Frequency',false);
+        showHideTableRowByID('tblRow_auto_benefic',false);
+//        showHideTableRowByID('tblRow_auto_nickname',true);
+		showHideTableRowByID('tblRow_auto_product',false);
+        setValueById('bill_type', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_USER_CODE')]:[CONST_STR.get('AUTO_BILLING_USER_CODE')]);
+//        setValueById('bill_benefic_mng', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_CHOOSE')]:[CONST_STR.get('AUTO_BILLING_CHOOSE')]);
+        setValueById('trans.enddate.title', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE')]:[CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE')]);   
+        tmpTypetrans =  (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_ELECTRIC')]:[CONST_STR.get('AUTO_BILLING_ELECTRIC')];
+        setValueById('auto_transtype',tmpTypetrans);
+    }
+}
+//CHON LOAI GIAO DICH
+function showInputTransType(){
+	var tmpArray1 = [];
+    tmpArray1.push((gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_MOBILE')]:[CONST_STR.get('AUTO_BILLING_MOBILE')]);
+   // tmpArray1.push((gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_ELECTRIC')]:[CONST_STR.get('AUTO_BILLING_ELECTRIC')]);
+	document.addEventListener("evtSelectionDialog", showInputTransTypeOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showInputTransTypeClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, false);
+}
+
+
+function showInputTransTypeOpen(e) {
+	if (currentPage == "paymentxsl/autobilling-register") {
+        var ctrTranstype  = document.getElementById('auto_transtype');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showInputTransTypeClose();
+			if (ctrTranstype.nodeName == "INPUT") {
+				ctrTranstype.value = e.selectedValue1;
+			}
+			else {
+				ctrTranstype.innerHTML = e.selectedValue1;
+			}
+            
+            var valueTranstype  = document.getElementById('auto_transtype').value;
+            var valueChoose = (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_ELECTRIC')]:[CONST_STR.get('AUTO_BILLING_ELECTRIC')];
+            if(valueTranstype != valueChoose){
+               	   showHideTableRowByID('tblRow_Bill_Type',false);
+				   showHideTableRowByID('tblRow_Bill_Frequency',false);
+				   showHideTableRowByID('tblRow_auto_benefic',false);
+//				   showHideTableRowByID('tblRow_auto_nickname',true);
+				   showHideTableRowByID('tblRow_auto_product',true);
+				   setValueById('bill_type', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_MOBILE_NO')]:[CONST_STR.get('AUTO_BILLING_MOBILE_NO')]);
+//				   setValueById('bill_benefic_mng', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_BENEFIC_MNG_NEW')]:[CONST_STR.get('AUTO_BILLING_BENEFIC_MNG_NEW')]);
+				   setValueById('trans.enddate.title', (gUserInfo.lang == 'VN')? [CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE_NEW')]:[CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE_NEW')]);   
+				   tmpTypetrans =  (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_MOBILE')]:[CONST_STR.get('AUTO_BILLING_MOBILE')];
+				   setValueById('auto_transtype',tmpTypetrans);
+            }else{
+                 showHideTableRowByID('tblRow_Bill_Type',true);
+                 showHideTableRowByID('tblRow_Bill_Frequency',false);
+                 showHideTableRowByID('tblRow_auto_benefic',false);
+//                 showHideTableRowByID('tblRow_auto_nickname',true);
+				 showHideTableRowByID('tblRow_auto_product',false);
+                 setValueById('bill_type', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_USER_CODE')]:[CONST_STR.get('AUTO_BILLING_USER_CODE')]);
+//                 setValueById('bill_benefic_mng', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_CHOOSE')]:[CONST_STR.get('AUTO_BILLING_CHOOSE')]);
+                 setValueById('trans.enddate.title', (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE')]:[CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE')]);   
+                 tmpTypetrans =  (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_ELECTRIC')]:[CONST_STR.get('AUTO_BILLING_ELECTRIC')];
+            }
+		}			
+	}
+}
+
+function showHideTableRowByID(rowId,isDisplay){
+    var rowObj = document.getElementById(rowId);
+    if(isDisplay){
+        rowObj.style.display = "table-row";
+    }else{
+        rowObj.style.display = "none";
+    }
+}
+
+function showInputTransTypeClose() {
+	if (currentPage == "paymentxsl/autobilling-register") {		
+		document.removeEventListener("evtSelectionDialog", showInputTransTypeOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showInputTransTypeClose, false);
+	}
+}
+
+function showBillingType(){
+	var tmpArray1 = [];
+    tmpArray1.push((gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_ALL_BILL')]:[CONST_STR.get('AUTO_BILLING_ALL_BILL')]);
+    tmpArray1.push((gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_BILL_OWE')]:[CONST_STR.get('AUTO_BILLING_BILL_OWE')]);
+	document.addEventListener("evtSelectionDialog", showBillingTypeOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showBillingTypeClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, false);
+}
+
+function showBillingTypeOpen(e) {
+	if (currentPage == "paymentxsl/autobilling-register") {
+        var ctrTranstype  = document.getElementById('auto_billing_type');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showBillingTypeClose();
+            typeBills =  e.selectedValue1;
+			if (ctrTranstype.nodeName == "INPUT") {
+				ctrTranstype.value = e.selectedValue1;
+			}
+			else {
+				ctrTranstype.innerHTML = e.selectedValue1;
+			}
+        }
+    }
+}
+
+function showBillingTypeClose() {
+	if (currentPage == "paymentxsl/autobilling-register") {		
+		document.removeEventListener("evtSelectionDialog", showBillingTypeOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showBillingTypeClose, false);
+	}
+}
+
+
+function setValueById(objId,objValue){
+    var objIdTemp  = document.getElementById(objId);
+    if (objIdTemp.nodeName == "INPUT") {
+		objIdTemp.value = objValue;
+	}
+	else {
+		objIdTemp.innerHTML = objValue;
+	}
+}
+
+//chon so dien thoai
+/*function showPayeePage()
+{
+	
+	gPayeeCode = CONST_PAYEE_AUTO_BILLING;
+	document.addEventListener("evtSelectionDialogInput", handleInputPayeeAccOpen, false);
+	document.addEventListener("evtSelectionDialogCloseInput", handleInputPayeeAccClose, false);
+
+	document.addEventListener("onInputSelected", okSelected, false);	
+	//Tao dialog
+	dialog = new DialogListInput(CONST_STR.get('AUTO_BILLING_MOBILE_NO'), 'ALL', gPayeeCode);
+	 
+	dialog.showDialog(callbackShowDialogSuccessed, '');
+}
+function handleInputPayeeAccOpen(e){
+	if (currentPage == "paymentxsl/autobilling-register") {
+		handleInputPayeeAccClose();			
+		if(e.tabSelected == 'tab1'){
+			var obj = e.dataObject;
+			tmpPayeeType = obj.transType;
+			tmpDestinationAccName = obj.transValue;
+			tmpPayeeName = obj.peopleName;
+			var destinationAcc = document.getElementById("auto_mobile");
+			var Payeename = document.getElementById('auto_nickname');
+			destinationAcc.value = tmpDestinationAccName;
+			Payeename.value = tmpPayeeName;
+			var payeelist = document.getElementById('id.payee');
+			payeelist.value =CONST_STR.get('AUTO_BILLING_BENEFIC_SAVE');
+			mng =CONST_VAL_PAYEE_NOT_TEMPLATE[1];
+			//payeelist.disabled = 'true';
+			//Payeename.disabled ='true';
+		}else{
+		}
+	}
+}
+function handleInputPayeeAccClose(e){
+	if (currentPage == "paymentxsl/autobilling-register") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputPayeeAccClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputPayeeAccOpen, false);
+		//document.removeEventListener("tabChange", tabChanged, false);
+		document.removeEventListener("onInputSelected", okSelected, false);
+	}
+}
+function callbackShowDialogSuccessed(node){
+	dialog.hiddenTab2();
+}
+function okSelected(e){
+	if (currentPage == "paymentxsl/autobilling-register") {		
+		handleInputPayeeAccClose();
+		var destinationAcc = document.getElementById("auto_mobile");
+		
+		if ((e.selectedValue != undefined) &&(e.selectedValue != null) && (e.selectedValue.length>0)){
+			tmpDestinationCardAcc = e.selectedValue;			
+		}
+		if (tmpDestinationCardAcc != undefined && tmpDestinationCardAcc != '')
+		{
+			destinationAcc.value = tmpDestinationCardAcc;
+			loadLocalTransSuccess();
+		}
+	}
+}*/
+
+//CHON NHA CUNG CAP
+function showInputProduct()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_AUTO_BILLING_PROC_VN: CONST_KEY_AUTO_BILLING_PROC_EN;
+	var tmpArray2 = CONST_VAL_AUTO_BILLING_PROC;
+	document.addEventListener("evtSelectionDialog", handleInputProduct, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputProductClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, tmpArray2, false);
+}
+
+
+function handleInputProduct(e)
+{
+	if (currentPage == "paymentxsl/autobilling-register") {
+		handleInputProductClose();
+		var product = document.getElementById('auto_product');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			if (product.nodeName == "INPUT") {
+				product.value = e.selectedValue1;
+			}
+			else {
+				product.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+				tmpproduct = e.selectedValue2;
+		}
+	}
+		
+}
+
+function handleInputProductClose() {
+	if (currentPage == "paymentxsl/autobilling-register") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputProductClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputProduct, false);
+	}
+}
+//CHON TAI KHOAN TRA TIEN
+function showAccountSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable) +'&nbsp'+tmpAcc.currency);
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);	
+	
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+}
+function handleSelectionAccountList(e) {
+	if (currentPage == "paymentxsl/autobilling-register") {
+        handleSelectionAccountListClose();
+        var accountNumber = e.selectedValue1;
+        var accountBalance = e.selectedValue2;
+        comboEl.refresh({
+            accountNumber : accountNumber,
+            accountBalance : accountBalance
+        });
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("auto_account");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+//		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		
+		if (e.selectedValue2 != undefined) {
+//			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + "</div>";
+//			balancecur =e.selectedValue2;
+		}
+	}
+
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "paymentxsl/autobilling-register") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+//CHON TAN SUAT THANH TOAN
+function showInputFrequency(){
+	var tmpArray1 = (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_MONTH_FREQUENCY')]:[CONST_STR.get('AUTO_BILLING_MONTH_FREQUENCY')];
+	document.addEventListener("evtSelectionDialog", handleInputFrequencyOpen, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, false);
+}
+function handleInputFrequencyOpen(e) {
+	if (currentPage == "paymentxsl/autobilling-register") {
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			handleInputFrequencyClose();
+		}			
+	}
+}
+function handleInputFrequencyClose() {
+	if (currentPage == "paymentxsl/autobilling-register") {		
+		document.removeEventListener("evtSelectionDialog", handleInputFrequencyOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+	}
+}
+//quan ly ten goi nho
+function showInputMNG()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+	var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+	document.addEventListener("evtSelectionDialog", handleInputMNG, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, tmpArray2, false);
+}
+function handleInputMNG(e)
+{
+	if (currentPage == "paymentxsl/autobilling-register") {
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var mnglist = document.getElementById('id.payee');
+			if (mnglist.nodeName == "INPUT") {
+				mnglist.value = e.selectedValue1;
+			}
+			else {
+				mnglist.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			mng = e.selectedValue2;
+		}
+		
+	}
+}
+function handleInputMNGClose() {
+	if (currentPage == "paymentxsl/autobilling-register") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+	}
+}
+function click_Next(){
+    var account = document.getElementById("auto_account").value;
+
+    if (account == undefined || account == "" || account == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') + ' "' + CONST_STR.get('TOPUP_ACC_TITLE') + '"');
+        return;
+    }
+    var balance = comboEl.accountBalance.split(',').join('');
+
+    if (balance == undefined || balance == "" || balance == "0")
+    {
+        showAlertText(CONST_STR.get('TOPUP_EXCEED_AVAIL_BALANCE'));
+        return;
+    }
+
+
+     var valueTranstype  = document.getElementById('auto_transtype').value;
+     var valueChoose = (gUserInfo.lang == 'VN')? [CONST_STR.get('AUTO_BILLING_ELECTRIC')]:[CONST_STR.get('AUTO_BILLING_ELECTRIC')];
+     if(valueTranstype != valueChoose){
+        //alert('nextMobilePayment');
+        nextMobilePayment();
+     }else{
+        nextElectricPayment();    
+     }
+}
+function nextMobilePayment(){
+    var arrayArgs = new Array();
+	var mobile = document.getElementById('auto_mobile');
+	var account = document.getElementById('auto_account');
+	var frequency = document.getElementById('FurSav_frequency');
+	var startdate = document.getElementById('FurSav_startdate');
+	var enddate = document.getElementById('trans.enddate');
+	var benefic = document.getElementById('auto_nickname');
+    var provider = document.getElementById("auto_product").value;
+
+    if(provider == undefined ||provider == "" ||provider == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') + ' "' + CONST_STR.get('AUTO_BILLING_PRODUCT') + '"');
+        return;
+    }
+	
+	if(!mobile || mobile.value ==undefined || mobile.value ==''){
+		showAlertText(CONST_STR.get('AUTO_BILLING_INPUT_MOBILE_ERR'));
+		return;
+	}
+	if (mobile != undefined)  
+	{
+		if (mobile.value.length != 0 && mobile.value.length < 10 || mobile.value.length > 11 || !mobile.value.lastIndexOf('0', 0) == 0)
+		{	
+		showAlertText(CONST_STR.get('AUTO_BILLING_INPUT_MOBILE_ERR1'));
+		return;
+
+		}
+	}
+	if(mng == 'TH'){
+		if(!benefic || benefic.value == undefined || benefic.value ==''){
+		showAlertText(CONST_STR.get('AUTO_BILLING_INPUT_BENEFIC_ERR'));
+		return;
+		}
+	}
+	if(!account || account.value == undefined || account.value ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('AUTO_BILLING_INPUT_ACC_ERR'));
+		return;
+	}
+	if(!startdate || startdate.value == undefined || startdate.value ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('AUTO_BILLING_INPUT_DATE_ERR'));
+		return;
+	}
+//    if(!enddate || enddate.value == undefined || enddate.placeholder =='dd/mm/yyyy'){
+//        showAlertText(CONST_STR.get('AUTO_BILLING_CHOOSE')+'" '+CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE')+'"');
+//        return;
+//    }
+	arrayArgs.push(mobile.value);
+	arrayArgs.push(account.value);
+	arrayArgs.push('month');
+	arrayArgs.push(startdate.value);
+	arrayArgs.push(enddate.value);
+	arrayArgs.push(mng);
+	arrayArgs.push(benefic.value);
+	arrayArgs.push('M');
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_REGISTER_AUTO_BILLING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceReviewSuccess, requestMBServiceReviewFail);	
+}
+
+/*function nextElectricPayment(){
+    var arrayArgs = new Array();
+    var user_code = document.getElementById('auto_mobile');
+    var account = document.getElementById('auto_account');
+    var benefic = document.getElementById('auto_nickname');
+    var startdate = document.getElementById('FurSav_startdate');
+    var enddate = document.getElementById('trans.enddate');
+
+    if(!user_code || user_code.value ==undefined || user_code.value ==''){
+		    showAlertText(CONST_STR.get('AUTO_BILLING_USER_CODE_ERR'));
+		    return;
+	}
+    if(mng == 'TH'){
+		if(!benefic || benefic.value == undefined || benefic.value ==''){
+		    showAlertText(CONST_STR.get('AUTO_BILLING_NICKNAME_ERR'));
+		    return;
+		}
+	}
+
+    if(!account || account.value == undefined || account.value ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('AUTO_BILLING_INPUT_ACC_ERR'));
+		return;
+	}
+
+    if(!startdate || startdate.value == undefined || startdate.value ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('AUTO_BILLING_INPUT_DATE_ERR'));
+		return;
+	}
+    var bills = '';
+    if(typeBills == ((gUserInfo.lang == 'VN')? CONST_STR.get('AUTO_BILLING_ALL_BILL') : CONST_STR.get('AUTO_BILLING_ALL_BILL'))){
+        bills = 'A'; // tat ca hoa don
+    }else{
+        bills = 'P'; // hoa don no xa nhat
+    }
+   // alert(bills);
+    arrayArgs.push(user_code.value);
+	arrayArgs.push(account.value);
+	arrayArgs.push(bills);
+	arrayArgs.push(startdate.value);
+	arrayArgs.push(enddate.value);
+	arrayArgs.push(mng);
+	arrayArgs.push(benefic.value);
+	arrayArgs.push( 'E' );
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_REGISTER_AUTO_BILLING_ECPAY"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+
+	requestMBService(data, true, 0, requestMBServiceReviewSuccessECPay, requestMBServiceReviewFail);
+}
+
+function requestMBServiceReviewSuccessECPay(e){
+	gprsResp = parserJSON(e);
+	(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_REGISTER_AUTO_BILLING_ECPAY")))) {
+	//By Pass Token
+		setRespObjStore(gprsResp);
+		genReviewScreenElectric();
+	}else{
+		//document.addEventListener('closeAlertView', handleAlertEmpty, false);
+		showAlertText(gprsResp.respContent);
+	}
+}*/
+
+function requestMBServiceReviewSuccess(e){
+	gprsResp = parserJSON(e);
+	(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_REGISTER_AUTO_BILLING")))) {
+	//By Pass Token
+		setRespObjStore(gprsResp);
+		genReviewScreen();
+	}else{
+		//document.addEventListener('closeAlertView', handleAlertEmpty, false);
+		showAlertText(gprsResp.respContent);
+	}
+}
+
+function requestMBServiceReviewFail(e){
+	document.addEventListener('closeAlertView', handleAlertEmpty, false);
+	showAlertText(CONST_STR.get('ESAVING_TRANS_FAILED'));	
+}
+function genReviewScreen(){
+    var balance = comboEl.accountBalance;
+	var accountno = document.getElementById('auto_account').value;
+	var mobileno = document.getElementById('auto_mobile').value;
+	var benefic = document.getElementById('auto_nickname').value;
+	var frequency = document.getElementById('FurSav_frequency').value;
+	var startdate = document.getElementById('FurSav_startdate').value;
+	var enddate = document.getElementById('trans.enddate').value;
+	docXml = createXMLDoc();	
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	//review/reviewinfo/reviewtranstitle
+	
+	//loai giao dich
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('AUTO_BILLING_MOBILE'), docXml, tmpChildNodeAcc);
+	//tai khoan tra tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('AUTO_BILLING_ACCOUNT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',accountno, docXml, tmpChildNodeAcc);
+
+	//So du kha dung
+/*	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'), docXml, tmpChildNodeAcc);	
+	tmpChildNode = createXMLNode('transinfocontent',balancecur +" VND", docXml, tmpChildNodeAcc);*/
+	//thong tin dang ky
+	//tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('AUTO_BILLING_REGISTER_INFO'), docXml, tmpXmlNodeInfo);
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('AUTO_BILLING_REGISTER_INFO'), docXml, tmpXmlNodeInfo);
+	//so dien thoai
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_MOBILE_NO'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',mobileno, docXml, tmpChildNodeAcc);
+	//ten goi nho
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_NICKNAME'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', benefic, docXml, tmpChildNodeAcc);
+	//quan ly ten goi nho
+/*	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_BENEFIC_MNG'), docXml, tmpChildNodeAcc);
+	if(mng =='N'){
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('AUTO_BILLING_BENEFIC_NOT_SAVE'), docXml, tmpChildNodeAcc);	
+	}
+	else{
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('AUTO_BILLING_BENEFIC_SAVE'), docXml, tmpChildNodeAcc);	
+	}*/
+	//tan suat thanh toan
+/*	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_FREQUENCY'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', frequency, docXml, tmpChildNodeAcc);*/
+	//ngay bat dau
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_PAY_BILL'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',CONST_STR.get('TRANS_PERIODIC_DATE')+' ' + startdate + ' '+CONST_STR.get('AUTO_BILLING_MONTH_FREQUENCY'), docXml, tmpChildNodeAcc);
+	//ngay ket thuc
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE_NEW'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', enddate, docXml, tmpChildNodeAcc);
+	setReviewXmlStore(docXml);
+    
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+function genReviewScreenElectric(){
+    var accountno = document.getElementById('auto_account').value;
+	var user_code = document.getElementById('auto_mobile').value;
+	var benefic = document.getElementById('auto_nickname').value;
+    var frequency = document.getElementById('FurSav_frequency').value;
+	var startdate = document.getElementById('FurSav_startdate').value;
+    var enddate = document.getElementById('trans.enddate').value;
+
+    docXml = createXMLDoc();	
+    //root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	//review/reviewinfo/reviewtranstitle
+
+    //loai giao dich
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', tmpTypetrans, docXml, tmpChildNodeAcc);
+	//tai khoan tra tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('AUTO_BILLING_ACCOUNT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',accountno, docXml, tmpChildNodeAcc);
+
+	//So du kha dung
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'), docXml, tmpChildNodeAcc);	
+	tmpChildNode = createXMLNode('transinfocontent',balancecur +" VND", docXml, tmpChildNodeAcc);
+   
+    //thong tin hoa don
+	//tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('AUTO_BILLING_REGISTER_INFO'), docXml, tmpXmlNodeInfo);
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('AUTO_BILLING_REGISTER_INFO'), docXml, tmpXmlNodeInfo);
+    //ma khach hang
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_USER_CODE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',user_code, docXml, tmpChildNodeAcc);
+    //kieu hoa don
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_BILL_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', typeBills, docXml, tmpChildNodeAcc);
+    //ten luu vao danh sach
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_NICKNAME'), docXml, tmpChildNodeAcc);
+	if(mng =='N'){
+	    tmpChildNode = createXMLNode('transinfocontent', benefic, docXml, tmpChildNodeAcc);	
+	}
+	else{
+	    tmpChildNode = createXMLNode('transinfocontent', benefic, docXml, tmpChildNodeAcc);	
+	}
+
+	//ngay thanh toan hang thang
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_PAY_BILL'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',CONST_STR.get('TRANS_PERIODIC_DATE')+' ' + startdate + ' '+CONST_STR.get('AUTO_BILLING_MONTH_FREQUENCY'), docXml, tmpChildNodeAcc);
+	//ngay hieu luc
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_BILLING_EFFECTIVE_DATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', enddate, docXml, tmpChildNodeAcc);
+
+    setReviewXmlStore(docXml); 
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+function showInputStartDate(){
+	var ArrayDate = new Array();
+	for(var i=1; i< 32; i++){
+		ArrayDate.push(i);
+	}
+	var tmpArray1 = ArrayDate;		
+		document.addEventListener("evtSelectionDialog", showInputStartDateOpen, false);
+		document.addEventListener("evtSelectionDialogClose", showInputStartDateClose, false);
+		showDialogList(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'), tmpArray1, true);
+}
+function showInputStartDateOpen(e) {
+	if (currentPage == "paymentxsl/autobilling-register") {
+		showInputStartDateClose();
+		var Startdate = document.getElementById('FurSav_startdate');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+	
+			if (Startdate.nodeName == "INPUT") {
+				Startdate.value = e.selectedValue1;
+			}
+			else {
+				Startdate.innerHTML = e.selectedValue1;
+			}
+		}	
+	}
+}
+function showInputStartDateClose(e) {
+	if (currentPage == "paymentxsl/autobilling-register") {
+		document.removeEventListener("evtSelectionDialogClose", showInputStartDateClose, false);
+		document.removeEventListener("evtSelectionDialog", showInputStartDateOpen, false);
+	}
+}
+function initComboTextAccount(){
+
+    var accountName = "Invalid";
+    var accountNumber = "Invalid";
+    var accountBalance = "Invalid";
+
+    try{
+        document.getElementById("holder-account-info").innerHTML = "";
+        var accountName = gUserInfo.accountName;
+        var accountNumber = gUserInfo.accountList[0].accountNumber;
+        var accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable)+'&nbsp'+gUserInfo.accountList[0].currency;
+    }catch(e){
+        logInfo("Khong load duoc thong tin tai khoan")
+    }
+
+    comboEl = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountName : accountName, //account name
+        accountNumber : accountNumber, //account number
+        accountBalance : accountBalance, //account balance
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboEl.show("holder-account-info");
+}
+var lastClickSwitch;
+function onChangeSwitchSubMenu(e){
+    var clickTime = new Date().getTime();
+    if (lastClickSwitch && (clickTime - lastClickSwitch) < 100) {
+        return true;
+    }
+    lastClickSwitch = clickTime;
+
+
+    var inputNode = e.getElementsByTagName('input')[0];
+
+    if(inputNode) {
+        inputNode.checked = !inputNode.checked;
+    }
+    changeSwitchUI(e);
+
+    if(e.id =="bill_benefic_mng" && inputNode.checked){
+        document.getElementById("tblRow_auto_nickname").style.display = "";
+        mng = CONST_VAL_PAYEE_NOT_TEMPLATE[1];
+    }else if(e.id == "bill_benefic_mng" && !inputNode.checked){
+        document.getElementById("tblRow_auto_nickname").style.display = "none";
+        mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+    }
+}
+function initBottomBar(){
+    var arrBottom = new Array();
+    arrBottom.push(new MenuBottom("BOTTOM_BAR_CONTACT", "icon-beneficiaries"));
+    navController.initBottomBarWithCallBack("paymentxsl/autobilling-register", arrBottom, "payment-billing", function (index) {
+        //alert(index);
+        //switchAction(index);
+		console.log("abc");
+		 initDialog(CONST_STR.get('BOTTOM_BAR_CONTACT'),"","paymentxsl/template-payment-doc",
+                function callbackDialogClose(){
+                    callbackCloseDialogSchedulerPayment();
+                },
+                function callbackDialogLoadSuccess(){
+                    modalDialog.showDialogFull();
+                    actionbar.hideActionbar();
+                    bottomBar.hide();
+                    firstLetterArray = [];
+                    bgrColorArray = [];
+                },true,callbackContactPayment);
+            
+    });
+	
+}
+function callbackContactPayment(obj) {
+
+    console.log(obj);
+//    alert(tempDynaId);
+    // double click template tranfer contact doc
+    modalDialog.hideDialogFull();
+    callbackCloseDialogSchedulerPayment();
+    var transAcc = document.getElementById('dynaRow.1').getElementsByTagName("input")[0];
+//    transAcc.attribute("0")[]
+    transAcc.value=obj.transValue;
+
+}
+function callbackCloseDialogSchedulerPayment(param,clickfromtop){
+    console.log(param + " " + clickfromtop);
+    bottomBar.resumeView('paymentxsl/autobilling-register','payment-billing');
+    actionbar.showActionBar();
+}

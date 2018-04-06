@@ -1,0 +1,669 @@
+/**
+ * Created by HuyNT2
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+
+/*** HEADER ***/
+var gprsResp = new GprsRespObj("","","","");
+var countOTP = 0;
+var timerOTP = 90; // OTP timeout = 90s
+var OTPTimeout;
+var tmpOTPkey ="";
+var authenType = 'OTP';
+var strXml = "";
+var XmlLocal;
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+/*** VIEW LOAD SUCCESS ***/
+function viewDidLoadSuccess() {
+	logInfo('authen screen load success');
+	//ngocdt3 
+	var tmpXsl = getCachePageXsl('com-review-authentication');
+	var tmpXml = getReviewXmlStore();
+	if(tmpXml){
+		XmlLocal = tmpXml;
+	if (strXml == '' || strXml == undefined){
+		strXml = XMLToString(tmpXml);
+	}
+	//tmpXml = parseXMLPagging();
+	logInfo(tmpXml);
+	//return tmpXml;
+/*	var tmpHtmlStr = genHTMLStringWithXML(tmpXml, tmpXsl, function(oStr){
+		//var tmpNode = document.getElementById('reviewTransaction');
+		if(tmpNode !=null) tmpNode.innerHTML = oStr;
+        //console.log("SANGNT1 " +oStr);
+	});	*/
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	tmpRespReview = getRespObjStore();
+	var tmpStepNo = getSequenceFormIdx(tmpStepNo);
+	((tmpStepNo == undefined) || (tmpStepNo > 400))? tmpStepNo = 403: tmpStepNo = 302;
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNodeSeq = document.getElementById('seqFormAuthen');
+		tmpNodeSeq.innerHTML = oStr;
+		changeLanguageInView();
+	}, function() {
+		logInfo('gen authen screen fail');
+		goBack();
+	});
+	}
+	else if(!tmpXml || tmpXml == undefined){
+		//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	tmpRespReview = getRespObjStore();
+	var tmpStepNo = getSequenceFormIdx(tmpStepNo);
+	((tmpStepNo == undefined) || (tmpStepNo > 400))? tmpStepNo = 403: tmpStepNo = 302;
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNodeSeq = document.getElementById('seqFormReviewAuthen');
+		//tmpNodeSeq.innerHTML = oStr;
+		changeLanguageInView();
+	}, function() {
+		logInfo('gen authen screen fail');
+		goBack();
+	});
+		var nodeInfo = getReviewHtmlStore();
+		//var nodereview = document.getElementById('reviewTransaction');
+		//genDataReview(nodereview,nodeInfo);
+	}
+
+	if (authenType == 'OTP') {
+		var nodeTokenType = document.getElementById('authen.tokentype');
+		//nodeTokenType.innerHTML = 'OTP CODE';/cu
+		nodeTokenType.innerHTML =CONST_STR.get("AUTHEN_LABEL_OTP"); 
+		var nodeProgressWrapper = document.getElementById('authen.progressbar');
+		nodeProgressWrapper.style.display = 'block';
+		//do not show resend OTP button
+		var nodeResendOTP = document.getElementById('authen.resendotp');
+		//nodeResendOTP.style.display = '';
+		sendJSONRequestOTP();
+	}
+	else if (authenType == 'MTX') {
+		var nodeTokenType = document.getElementById('authen.tokentype');
+		//nodeTokenType.innerHTML = 'MATRIX KEY';//cu
+		nodeTokenType.innerHTML = CONST_STR.get("AUTHEN_LABEL_MATRIX"); 
+		sendJSONRquestMatrix();
+	}
+	//ngocdt3 bo sung cho mobile CA
+	else if(authenType =='MCA'){
+		sendJSONRequestMobileCA();
+	}
+	//ngocdt3 end
+	else {
+		var nodeTokenType = document.getElementById('authen.tokentype');
+		//nodeTokenType.innerHTML = 'TOKEN KEY';//cu
+		nodeTokenType.innerHTML = CONST_STR.get("AUTHEN_LABEL_TOKEN"); 
+	}
+	
+	var nodeAuthenTitle = document.getElementById('auth.title');
+	nodeAuthenTitle.innerHTML = CONST_STR.get('AUTHEN_TXT_INPUT_KEY_TITLE');
+	
+	var nodeInputToken = document.getElementById('authen.tokenkey');
+	setInputOnlyNumber('authen.tokenkey', CONST_STR.get("ERR_INPUT_ONLY_NUMBER"));
+	nodeInputToken.addEventListener('evtSpecialKeyPressed', handleSpecialKeyPressd, false);
+	clickOnDiv('input-trigger');
+	//nodeInputToken.focus();
+	
+}
+function genDataReview(inNode, inStr){
+	var tmpConfigResult = CONFIG_RESULT_FUNC_GOHOME[navArrayScr[0]];
+	var tmpBtnTitle = 'RESULT_GO_HOMEPAGE_BTN';
+	var tmpBtnToScr = 'goToDefaultPage();'
+	//inNode.innerHTML = inStr;
+	var tmpNodeCancelBtn = document.getElementById('trCancel');
+	if(tmpNodeCancelBtn != undefined && tmpNodeCancelBtn != null) {
+		tmpNodeCancelBtn.style.display = 'none';
+	}
+	var tmpNodeBackBtn = document.getElementById('trgoBack');
+	if(tmpNodeBackBtn != undefined && tmpNodeBackBtn != null) {
+		tmpNodeBackBtn.style.display = 'none';
+	}
+	var tmpNodeNextBtn = document.getElementById('trNext');
+	if(tmpNodeNextBtn != undefined && tmpNodeNextBtn != null) {
+		tmpNodeNextBtn.style.display = 'none';
+	}
+	var tmpNodeCondition = document.getElementById('trCondition');
+	if(tmpNodeCondition != undefined && tmpNodeCondition != null) {
+	tmpNodeCondition.style.display = 'none';
+	}
+	
+	var tmpNodeCancelBtn = document.getElementById('goEsavingOpenLnk');
+	if(tmpNodeCancelBtn != undefined && tmpNodeCancelBtn != null) {
+		tmpNodeCancelBtn.style.display = 'none';
+		tmpNodeCancelBtn.parentNode.style.display = 'none';
+	}
+}
+function doOtherTransaction() {
+	statusOtherFunc = true;
+	navController.resetBranchView();
+	//navController.popToRootView(true);
+}
+
+function goToDefaultPage(inPage, inPageType) {
+	//navController.initWithRootView('account/account-scr', true);	
+	if(!inPage) {
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	else {
+		navController.initWithRootView(inPage, true, inPageType);
+	}
+}
+/*** VIEW LOAD SUCCESS END ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('authen screen will unload');
+	clearOTPTimeout();
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+/*** FUNCTIONS ***/
+
+
+function handleSpecialKeyPressd(e)
+{
+	//nodeInputToken.removeEventListener('evtSpecialKeyPressed', handleSpecialKeyPressd, false);
+	var ew = e.keyPress;
+	if (ew == 13) { //Enter pressed
+		//sendJSONAuthenRequest();
+		var tmpNodeBtn = document.getElementById('authen-send-request');
+		var tmpStr = tmpNodeBtn.getAttributeNode('name').value;
+		if( tmpStr == 'vr') {
+			sendJSONRequestVerifyFirstStep();
+		}
+		else {
+			sendJSONAuthenRequest();
+		}
+	}
+	else {
+		return;
+	}
+}
+function sendJSONRequestOTP() {
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var tmpGprsCmd = getGprsCmdStore();
+	arrayArgs.push(cifResetpass);
+	countOTP++;
+	if (countOTP <= 5) {
+		
+		startProgressBar('authen.progressbarotp', timerOTP);
+		OTPTimeout = setTimeout(function doAfterProgress() {
+			handleOTPTimeout();
+		}, timerOTP*1000);
+		
+		//requestMBService(data, false); //send request OTP
+		requestBacgroundMBService('CMD_OTP_RESETPASS', arrayArgs);
+	}
+	else {
+		document.addEventListener("closeAlertView", handleOTPGetOver, false);
+		clearOTPTimeout();
+		showAlertText(CONST_STR.get('MSG_OTP_LIMIT_GET_TIME'));
+	}
+}
+
+//handle OTP time-out
+function handleOTPTimeout() {
+	document.addEventListener("alertConfirmOK", handleOTPResendAlert, false);
+	document.addEventListener("alertConfirmCancel", handleOTPResendAlertCancel, false);
+	clearOTPTimeout();
+	showAlertConfirmText(CONST_STR.get('MSG_OTP_TIME_PERIOD'));
+}
+
+function handleOTPResendAlert(e) {
+	if(currentPage == "com-authentication-scr") {
+		document.removeEventListener("alertConfirmOK", handleOTPResendAlert, false);
+		document.removeEventListener("alertConfirmCancel", handleOTPResendAlertCancel, false);
+		clearOTPTimeout();
+		sendJSONRequestOTP();
+	}
+}
+
+function handleOTPResendAlertCancel(e) {
+	if(currentPage == "com-authentication-scr") {
+		document.removeEventListener("alertConfirmOK", handleOTPResendAlert, false);
+		document.removeEventListener("alertConfirmCancel", handleOTPResendAlertCancel, false);
+		clearOTPTimeout();
+		goToMainScreen();
+	}
+}
+
+//handle OTP over 5 times
+function handleOTPGetOver() {
+	if(currentPage == "com-authentication-scr") {
+		document.removeEventListener("closeAlertView", handleOTPGetOver, false);
+		goToMainScreen();
+	}
+}
+
+//send step 1
+function sendJSONRequestVerifyFirstStep() {
+	var nodeTokenKey = document.getElementById("authen.tokenkey");
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var tmpTokenStr = nodeTokenKey.value;
+	if(tmpTokenStr.length != 6) {
+		showAlertText(CONST_STR.get('ERR_INPUT_TOKEN_EMPTY'));
+		return;
+	}
+	var tmpGprsCmd = getGprsCmdStore();
+	arrayArgs.push(nodeTokenKey.value); //token key
+	if(tmpGprsCmd.arguments != undefined && tmpGprsCmd.arguments.length > 0) arrayArgs.push(tmpGprsCmd.arguments[1]); //transaction id
+	
+	data["cmdType"] = CONSTANTS.get('CMD_AUTHEN_LIMIT');//gGprsCmd.cmdType;
+	data["time"] = tmpGprsCmd.timeCur;
+	data["app"] = tmpGprsCmd.appName;
+	data["version"] = tmpGprsCmd.version;
+	data["language"] = tmpGprsCmd.language;
+	data["args"] = arrayArgs;
+	
+	setGprsCmdStore(tmpGprsCmd);
+	
+	requestMBService(data, true, 0, requestMBAuthenServiceSuccess, requestMBAuthenServiceFail);
+	
+	nodeTokenKey.value = '';
+}
+
+//send confirm message
+function sendJSONAuthenRequest() {
+	
+	var nodeTokenKey = document.getElementById("authen.tokenkey");
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var tmpTokenStr = nodeTokenKey.value;
+	if(tmpTokenStr.length != 6) {
+		showAlertText(CONST_STR.get('ERR_INPUT_TOKEN_EMPTY'));
+		return;
+	}
+	
+	var tmpGprsCmd = getGprsCmdStore();
+	tmpGprsCmd.arguments[2] = nodeTokenKey.value; //Token key --> actual
+	arrayArgs = tmpGprsCmd.arguments;
+	
+	data["cmdType"] = CONSTANTS.get('CMD_TYPE_TICKET_REQUEST');//gGprsCmd.cmdType;
+	data["time"] = tmpGprsCmd.timeCur;
+	data["app"] = tmpGprsCmd.appName;
+	data["version"] = tmpGprsCmd.version;
+	data["language"] = tmpGprsCmd.language;
+	data["args"] = arrayArgs;
+	
+	setGprsCmdStore(tmpGprsCmd);
+	//data = getDataFromGprsCmd(gGprsCmd);
+	
+	requestMBService(data, true, 0, requestMBAuthenServiceSuccess, requestMBAuthenServiceFail);
+	
+	//clear OTP
+	clearOTPTimeout();
+	
+	nodeTokenKey.value = '';
+}
+
+function clearOTPTimeout() {
+	clearTimeout(OTPTimeout);
+	OTPTimeout = null;
+	stopProgressBar('authen.progressbarotp'); //stop progress bar
+}
+
+function resendOTP() {
+	clearOTPTimeout();
+	sendJSONRequestOTP();
+}
+
+function goBack() {
+	navController.resetBranchView();
+}
+
+function goToMainScreen() {
+	clearOTPTimeout();
+	navController.popToRootView(true);
+}
+
+//event listener: http request success
+function requestMBAuthenServiceSuccess(e){
+	gprsResp = parserJSON(e, false);
+	//BYPASS
+	//gprsResp.respCode = '0';
+	//BYPASS
+	if (gprsResp.respCode == '0' && gprsResp.responseType == CONSTANTS.get('CMD_TYPE_TICKET_REQUEST')) {
+		stopProgressBar('authen.progressbarotp'); //stop progress bar
+		
+		//gRespObj = gprsResp;
+		setRespObjStore(gprsResp);
+		navController.pushToView("com-review-result-scr", true);
+		
+		//Query account change 
+		queryInfoOfAccountNo(gUsingAccountNo);
+	}
+	else if (gprsResp.respCode != '0' && gprsResp.responseType == CONSTANTS.get('CMD_AUTHEN_LIMIT')) { //authen 2-step fail
+		showAlertText(gprsResp.respContent);
+	}
+	else if (gprsResp.respCode == '0' && gprsResp.responseType == CONSTANTS.get('CMD_AUTHEN_LIMIT')) { //authen 2-step success
+		showAlertText(gprsResp.respContent);
+		var tmpNodeBtn = document.getElementById('authen-send-request');
+		//if(tmpNodeBtn != undefined) tmpNodeBtn.setAttribute('onclick', 'sendJSONAuthenRequest();');
+		var tmpNodeBtnContainer = document.getElementById('btn-authenrequest');
+		tmpNodeBtnContainer.innerHTML = '<input id="authen-send-request" type="button" class="btnshadow btn-second" name="cf" onclick="sendJSONAuthenRequest();" value="' + CONST_STR.get('CARD_LOCK_BTN_TITLE') + '" />';
+		authenType = 'OTP';
+		var nodeTokenType = document.getElementById('authen.tokentype');
+		nodeTokenType.innerHTML = 'OTP CODE';
+		var nodeProgressWrapper = document.getElementById('authen.progressbar');
+		nodeProgressWrapper.style.display = 'block';
+		var nodeResendOTP = document.getElementById('authen.resendotp');
+		//do not show resend OTP button
+		//nodeResendOTP.style.display = '';
+		sendJSONRequestOTP();
+	}
+	//handle other error code
+	else if (gprsResp.respCode == RESP.get('COM_TRANS_EXT_TIMEOUT') && gprsResp.responseType == CONSTANTS.get('CMD_TYPE_TICKET_REQUEST')) { //go to home page
+		showAlertText(gprsResp.respContent);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	else if (gprsResp.respCode != RESP.get('COM_WRONG_INPUT_TOKEN') && gprsResp.responseType == CONSTANTS.get('CMD_TYPE_TICKET_REQUEST')) { //ask to change view
+		/*document.addEventListener("alertConfirmOK", handleRequestConfirmAlertOK, false);
+		document.addEventListener("alertConfirmCancel", handleRequestConfirmAlertCancel, false);
+		showAlertConfirmText(gprsResp.respContent + CONST_STR.get('ERR_COM_ASK_TO_EXECUTE_AGAIN'));*/
+		document.addEventListener("closeAlertView", handleRequestAlertAuthenOKBtn, false);
+		showAlertText(gprsResp.respContent);
+	}
+	else {
+		showAlertText(gprsResp.respContent);
+		var tmpNodeToken = document.getElementById('authen.tokenkey');
+		if((tmpNodeToken != undefined) && (tmpNodeToken != null)) {
+			tmpNodeToken.value = '';
+		}
+		
+	}
+	
+};
+
+function handleRequestAlertAuthenOKBtn() {
+	document.removeEventListener("closeAlertView", handleRequestAlertAuthenOKBtn, false);
+	navController.resetBranchView();
+}
+
+//event listener: http request fail
+function requestMBAuthenServiceFail(){
+	//stay here
+};
+function handleCloseAlertSuccess(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "com-authentication-scr")) {
+		document.removeEventListener("closeAlertView", handleCloseAlertSuccess, false);
+		gDestinationAcc = ''; //reset destination account to null
+		//navController.popToRootView(true);
+		clearOTPTimeout();
+		navController.resetBranchView(true);
+		//alert("transaction finished!");
+	}
+};
+function goBackReview() {
+	navController.initWithRootView('view-non-ebank/confirm-reset-password-scr', true, 'xsl');
+}
+//ngocdt bo sung cho MobileCA
+function sendJSONRequestMobileCA(){
+       var data = {};
+       var arrayArgs = new Array();
+       var tmpGprsCmd = getGprsCmdStore();
+       tmpGprsCmd.arguments[2] = "123456"; //Token key --> actual
+       arrayArgs = tmpGprsCmd.arguments;
+       
+       data["cmdType"] = CONSTANTS.get('CMD_TYPE_TICKET_REQUEST');//gGprsCmd.cmdType;
+       data["time"] = tmpGprsCmd.timeCur;
+       data["app"] = tmpGprsCmd.appName;
+       data["version"] = tmpGprsCmd.version;
+       data["language"] = tmpGprsCmd.language;
+       data["args"] = arrayArgs;
+       setGprsCmdStore(tmpGprsCmd);
+       requestMBService(data, true, 0, requestMBAuthenServiceCASuccess, requestMBAuthenServiceCAFail);  
+       //clear OTP
+       clearOTPTimeout();
+}
+function requestMBAuthenServiceCASuccess(e){
+       gprsResp = parserJSON(e, false);
+       if (gprsResp.respCode == '0' && gprsResp.responseType == CONSTANTS.get('CMD_TYPE_TICKET_REQUEST')) {
+              stopProgressBar('authen.progressbarotp'); //stop progress bar
+              setRespObjStore(gprsResp);
+              navController.pushToView("com-review-result-scr", true);
+              
+              //Query account change 
+              queryInfoOfAccountNo(gUsingAccountNo);
+       }
+       else if (gprsResp.respCode != '0' && gprsResp.responseType == CONSTANTS.get('CMD_AUTHEN_LIMIT')) { //authen 2-step fail
+              showAlertText(gprsResp.respContent);
+       }
+       else if (gprsResp.respCode == '0' && gprsResp.responseType == CONSTANTS.get('CMD_AUTHEN_LIMIT')) { //authen 2-step success
+              showAlertText(gprsResp.respContent);
+              var tmpNodeBtn = document.getElementById('authen-send-request');
+              var tmpNodeBtnContainer = document.getElementById('btn-authenrequest');
+              tmpNodeBtnContainer.innerHTML = '<input id="authen-send-request" type="button" class="btnshadow btn-second" name="cf" onclick="sendJSONAuthenRequest();" value="' + CONST_STR.get('REVIEW_BTN_CONFIRM') + '" />';
+              authenType = 'OTP';
+              var nodeTokenType = document.getElementById('authen.tokentype');
+              nodeTokenType.innerHTML = 'OTP CODE';
+              var nodeProgressWrapper = document.getElementById('authen.progressbar');
+              nodeProgressWrapper.style.display = 'block';
+              var nodeResendOTP = document.getElementById('authen.resendotp');
+              sendJSONRequestOTP();
+       }
+       //handle other error code
+       else if (gprsResp.respCode == RESP.get('COM_TRANS_EXT_TIMEOUT') && gprsResp.responseType == CONSTANTS.get('CMD_TYPE_TICKET_REQUEST')) { //go to home page
+              showAlertText(gprsResp.respContent);
+              var tmpPageName = navController.getDefaultPage();
+              var tmpPageType = navController.getDefaultPageType();
+              navController.initWithRootView(tmpPageName, true, tmpPageType);
+       }
+       else if (gprsResp.respCode != RESP.get('COM_WRONG_INPUT_TOKEN') && gprsResp.responseType == CONSTANTS.get('CMD_TYPE_TICKET_REQUEST')) { //ask to change view
+              if(gUserInfo.valicationType == 'MCA') {
+
+              }else{
+                     document.addEventListener("alertConfirmOK", handleRequestConfirmAlertOK, false);
+                     document.addEventListener("alertConfirmCancel", handleRequestConfirmAlertCancel, false);
+                     showAlertConfirmText(gprsResp.respContent + CONST_STR.get('ERR_COM_ASK_TO_EXECUTE_AGAIN'));
+              }
+              showAlertText(gprsResp.respContent);
+       }
+       else {
+              showAlertText(gprsResp.respContent);
+              var tmpNodeToken = document.getElementById('authen.tokenkey');
+              if((tmpNodeToken != undefined) && (tmpNodeToken != null)) {
+                     tmpNodeToken.value = '';
+              }    
+       }
+}
+function requestMBAuthenServiceCAFail(){
+       showAlertText('Xác thực giao dịch của quý khách không thành công.');
+}
+//ngocdt3 end
+//ngocdt3 bo sung goi service xac thuc
+function sendJSONAuthenReset(){
+	var data = {};
+    var arrayArgs = new Array();
+	var authencode = document.getElementById("authen.tokenkey").value;
+	arrayArgs.push(TranResetpassID);
+	arrayArgs.push(authencode);
+	arrayArgs.push(cifResetpass);
+	if(authencode =="") {
+		showAlertText(CONST_STR.get('AUTHEN_TXT_INPUT_KEY_TITLE'));
+		return;
+	}
+	else if(authencode.length != 6) {
+		showAlertText(CONST_STR.get('ERR_INPUT_TOKEN_EMPTY'));
+		return;
+	}
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_OTP_AUTHEN_RESETPASS"), "", "", "", "", arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestBacgroundMBService('CMD_OTP_AUTHEN_RESETPASS', arrayArgs, requestMBServiceAuthenSuccess, requestMBServiceAuthenFail);
+}
+function requestMBServiceAuthenSuccess(e){
+	gprsResp = parserJSON(e);
+	if (gprsResp.respCode == '0' && gprsResp.responseType == '319') {
+		stopProgressBar('authen.progressbarotp'); //stop progress bar
+		
+		//gRespObj = gprsResp;
+		setRespObjStore(gprsResp);
+		navController.pushToView("com-review-result-scr", true);
+	}
+}
+function requestMBServiceAuthenFail(){
+}
+//ngocdt3 end
+function clickOnDiv(id){
+    /*  document.getElementById(id).remove();
+     var input = document.createElement("input");
+     input.id = id;
+     document.getElementById('input-group').appendChild(input);*/
+    document.getElementById(id).focus();
+    setListener(id);
+}
+var setListenerInput = false;
+function setListener(id){
+    document.getElementById(id).removeEventListener("keyup",function(){console.log("remove event")});
+    if(!setListenerInput){
+        document.getElementById(id).addEventListener("keyup", function(e){
+            var kCd = e.keyCode || e.which;
+
+            if (kCd == 0 || kCd == 229) { //for android chrome keycode fix
+                kCd = getKeyCode(document.getElementById(id).value);
+            }
+            //alert('keycode : ' + kCd);
+            if(tmpOTPkey.length > 6)
+            {
+                return false;
+            }
+            if(kCd == 8 && tmpOTPkey.length == 0){
+                return false;
+            }
+            if (kCd == 8 && tmpOTPkey.length > 0){
+                var tmpkey = tmpOTPkey;
+                tmpOTPkey = "";
+                for(var i = 0; i < tmpkey.length - 1;i++)
+                {
+                    tmpOTPkey += tmpkey.charAt(i);
+                }
+                checkvalidateotp();
+
+            }else if ((kCd >= 48 && kCd  <= 57) || (kCd  >= 96 && kCd <= 105)) { //0-9 only{
+                //alert('check keycode' + e.keyCode);
+                if(tmpOTPkey.length < 6){
+                    tmpOTPkey = tmpOTPkey +"" + getkeycodeotp(kCd);
+                    checkvalidateotp();
+                }
+            }
+           // alert(tmpOTPkey);
+            var appendotp = document.getElementById('authen.tokenkey');
+            appendotp.value = tmpOTPkey;
+            if(tmpOTPkey.length == 0 )
+            {
+                var hiddendiv = document.getElementById('tess');
+                hiddendiv.style.display = 'none';
+            }
+            else
+            {
+                var hiddendiv = document.getElementById('tess');
+                hiddendiv.style.display = 'block';
+            }
+        });
+        setListenerInput = true;
+    }
+
+}
+
+function checkvalidateotp() {
+    for(var i = 1 ; i < 7;i++)
+    {
+        var tmpli = document.getElementById('li'+ i);
+        tmpli.style.setProperty('font-family','\'eBankPro\'','important');
+        tmpli.setAttribute('class','icon-radio-unchecked');
+        tmpli.innerText = "";
+    }
+    var idt = 1;
+    for(var j = 0 ; j < tmpOTPkey.length;j++)
+    {
+        var tmpli = document.getElementById('li'+ idt);
+        tmpli.setAttribute('class','icon-incheck-number');
+        tmpli.style.setProperty('font-family','TPBNeoSans','important');
+        tmpli.innerText = tmpOTPkey.charAt(j);
+        idt ++;
+    }
+}
+
+function getkeycodeotp(keycode)
+{
+    var keychar;
+    if(keycode == 48 || keycode == 96)
+    {
+        keychar = "0";
+    }
+    else if (keycode == 49 || keycode == 97)
+    {
+        keychar = "1";
+    }
+    else if (keycode == 50 || keycode == 98)
+    {
+        keychar = "2";
+    }
+    else if (keycode == 51 || keycode == 99)
+    {
+        keychar = "3";
+    }
+    else if (keycode == 52 || keycode == 100)
+    {
+        keychar = "4";
+    }
+    else if (keycode == 53 || keycode == 101)
+    {
+        keychar = "5";
+    }
+    else if (keycode == 54 || keycode == 102)
+    {
+        keychar = "6";
+    }
+    else if (keycode == 55 || keycode == 103)
+    {
+        keychar = "7";
+    }
+    else if (keycode == 56 || keycode == 104)
+    {
+        keychar = "8";
+    }
+    else if (keycode == 57 || keycode == 105)
+    {
+        keychar = "9";
+    }
+    return keychar;
+}
+
+function removeotp() {
+    tmpOTPkey = "";
+    checkvalidateotp();
+    var appendotp = document.getElementById('authen.tokenkey');
+    appendotp.value = tmpOTPkey;
+    var hiddendiv = document.getElementById('tess');
+    hiddendiv.style.display = 'none';
+}

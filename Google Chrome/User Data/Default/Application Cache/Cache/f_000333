@@ -1,0 +1,380 @@
+
+/**
+ * Created by QuangNV
+ * User: LamPT
+ * Date: 11/4/13
+ * Time: 5:35 PM
+ * To change this template use File | Settings | File Templates.
+ */
+ var flag_load = 1;
+ var data = CONST_KEY_ESAVING_CHOOSE_RATE_NAME[0];
+var savingType = "EAE"; // Default
+var tmpArray1 = (gUserInfo.lang == 'VN')? CONST_KEY_ESAVING_CHOOSE_RATE_NAME:CONST_KEY_ESAVING_CHOOSE_RATE_NAME_EN;
+
+var htmlInfor1 = "<table style='width: 98%' align = 'center' class='accinfo-table'>" ;
+
+// if(!gIsLogin) {
+// 	var tmpNodeBack = document.getElementById('bankinfo.btn.back');
+// 	tmpNodeBack.style.display = 'block';
+// }
+
+function getRealInterestRate()
+{
+	var dataRequest = {};
+	var valuerate;
+	var arrayArgs = new Array();
+	if(flag_load ==1)
+	{
+		var tmpArray1 = (gUserInfo.lang == 'VN')? CONST_KEY_ESAVING_CHOOSE_RATE_NAME:CONST_KEY_ESAVING_CHOOSE_RATE_NAME_EN;
+		savingType = 'EAE';
+		document.getElementById('esavingType').value = tmpArray1[0];
+	}
+	arrayArgs.push(savingType);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUERY_INTEREST_RATE"), "", "", gUserInfo.lang, "", arrayArgs);
+	dataRequest = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(dataRequest, true, 0, getRealInterestRateSuccess, getRealInterestRateFaild);
+}
+
+function getRealInterestRateSuccess(e)
+{
+	gprsResp = parserJSON(e);
+	//gRespObj = gprsResp; 
+	
+	if((gprsResp.arguments == undefined) || (gprsResp.arguments == null) || (gprsResp.arguments.length==0)) {
+		document.addEventListener('closeAlertView', handleAlertEmptyBankInfo, false);
+		showAlertText(CONST_STR.get('ERR_BANK_INFO_EMPTY_DATA'));
+		
+		return;
+	}
+	
+	setRespObjStore(gprsResp);
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUERY_INTEREST_RATE")))) {
+		if (gprsResp.arguments.length > 0)
+		{
+			if(flag_load==1)
+			{
+				genScreenInterestRate(gprsResp.arguments);
+			}
+			else
+			{
+				
+				if(savingType == CONST_KEY__ESAVING_CHOOSE_RATE_ID[0])
+				{
+					genScreenInterestRate(gprsResp.arguments);
+				}
+				if(savingType == CONST_KEY__ESAVING_CHOOSE_RATE_ID[1])
+				{
+					genScreenInterestRate_ESV(gprsResp.arguments);
+				}
+				if(savingType == CONST_KEY__ESAVING_CHOOSE_RATE_ID[2])
+				{
+					genScreenInterestRate_EPE(gprsResp.arguments);
+				}
+			}
+		}
+		
+	}
+	else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUERY_INTEREST_RATE"))  || (gprsResp.responseType == '-1')))) {
+		if(gIsLogin) {
+			//navController.initWithRootView('account/account-scr', true);
+			var tmpPageName = navController.getDefaultPage();
+			var tmpPageType = navController.getDefaultPageType();
+			navController.initWithRootView(tmpPageName, true, tmpPageType);
+		}
+		else {
+			navController.popView(true);
+		}
+	}
+	/*if ((e.type == "evtHttpSuccess") && (currentPage == "bankinfo/interest-rate")) {
+		document.removeEventListener("evtHttpSuccess", getRealInterestRateSuccess, false);
+		//alert("Http request success!");
+	}*/
+	resizeMainViewContent(currentPage);
+}
+
+function handleAlertEmptyBankInfo(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "bankinfo/interest-rate")) {
+		document.removeEventListener('closeAlertView', handleAlertEmptyBankInfo, false);
+		if(gIsLogin) {
+			//navController.initWithRootView('account/account-scr', true);
+			var tmpPageName = navController.getDefaultPage();
+			var tmpPageType = navController.getDefaultPageType();
+			navController.initWithRootView(tmpPageName, true, tmpPageType);
+		}
+		else {
+			navController.popView(true);
+		}
+	}
+}
+
+function getRealInterestRateFaild()
+{
+	if(gIsLogin) {
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	else {
+		navController.popView(true);
+	}
+}
+
+function showChooseSavingType(){
+
+	var tmpArray1 = (gUserInfo.lang == 'VN')? CONST_KEY_ESAVING_CHOOSE_RATE_NAME:CONST_KEY_ESAVING_CHOOSE_RATE_NAME_EN;
+	var tmpArray2 = CONST_KEY__ESAVING_CHOOSE_RATE_ID;
+	document.addEventListener("evtSelectionDialog", showInputSavingTypeOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showInputSavingTypeClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1,tmpArray2, false);
+}
+
+function showInputSavingTypeOpen(e) {
+	if (currentPage == "bankinfo/interest-rate") {	
+	//alert(e.selectedValue1);	
+	if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+		showInputSavingTypeClose();
+		savingType = e.selectedValue2;
+		document.getElementById('esavingType').value = e.selectedValue1;
+		flag_load = 2;
+		getRealInterestRate();
+		data =e.selectedValue1;			
+	}		
+}
+}
+
+function showInputSavingTypeClose() {
+	if (currentPage == "bankinfo/interest-rate") {		
+		document.removeEventListener("evtSelectionDialog", showInputSavingTypeOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showInputSavingTypeClose, false);
+	}
+}
+
+	//end add
+	function genScreenInterestRate(listInterestRate){
+        if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            var arrTitle = new Array();
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_KYHAN'));
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_VND'));
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_USD'));
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_EUR'));
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_SGD'));
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_AUD'));
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_GBP'));
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_CAD'));
+            arrTitle.push(CONST_STR.get('INTEREST_RATE_JPY'));
+
+            var arrContentData = new Array();
+            arrContentData.push(arrTitle);
+            var arrItemContent;
+            var strHTML ='<div align="right"><tr><td>' + CONST_STR.get('INTEREST_RATE_UNIT') + '</td></tr></div>';
+            for (var i = 0; i < listInterestRate.length; i++)
+            {
+                var arrStrTemp = listInterestRate[i].split('#');
+                arrItemContent = new Array();
+                arrItemContent.push(arrStrTemp[0]);
+                arrItemContent.push(arrStrTemp[1]);
+                arrItemContent.push(arrStrTemp[2]);
+                arrItemContent.push(arrStrTemp[3]);
+                arrItemContent.push(arrStrTemp[4]);
+                arrItemContent.push(arrStrTemp[5]);
+                arrItemContent.push(arrStrTemp[6]);
+                arrItemContent.push(arrStrTemp[7]);
+                arrItemContent.push(arrStrTemp[8]);
+
+                arrContentData.push(arrItemContent);
+            }
+            var recycler = new RecyclerView({
+                type: "DESKTOP_LIST",
+                typeTextAlign: "MIDLE",
+                title: "Tai khoan jumbo",
+                titleAlign:"LEFT",
+                opacity:false
+            });
+
+            recycler.setData(arrContentData);
+            var contentHTML = recycler.init();
+            strHTML+=contentHTML
+            document.getElementById('id.saving.detail').innerHTML=strHTML;
+        }else{
+		var htmlInfor = htmlInfor1;
+		htmlInfor += '<tr><td colspan="9" style = "border:none;" align="right">' + CONST_STR.get('INTEREST_RATE_UNIT') + '</td></tr>'+
+    // '<tr><td colspan="9" style = "border:none;" align="left">' + CONST_STR.get('INTEREST_RATE_KYHAN') + '</td></tr>'
+
+    '<tr>' +
+    	"<table width='98%' align='center' class='recycler-table-ebank recycler-list'>" +
+    		'<tr class="recycler-row-as"><td width="32%" class="recycler-row-align-midle-right-opacity interrest-left">' + CONST_STR.get('INTEREST_RATE_KYHAN') + '</td> <td class="recycler-row-align-midle-right-opacity" width="17%">' + CONST_STR.get('INTEREST_RATE_VND') + '</td><td width="17%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_USD') +'</td><td width="17%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_EUR') +'</td><td width="17%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_SGD') +'</td></tr>'
+                for (var i = 0; i < listInterestRate.length; i++)
+                {
+                    var arrStrTemp = listInterestRate[i].split('#');
+                    htmlInfor = htmlInfor +
+                    '<tr class="recycler-row-parity">' +
+                        '<td width="32%" class="recycler-row-align-midle-right-opacity interrest-left">' +arrStrTemp[0] + '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="17%">' +arrStrTemp[1] + '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="17%">' +arrStrTemp[2] + '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="17%">' +arrStrTemp[3] + '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="17%">' +arrStrTemp[4] + '</td>' +
+                    '</tr>'
+                }
+        '</table>'+
+	'</tr>'
+
+	htmlInfor += 
+	'<tr>' +
+		"<table width='98%' align='center' class='recycler-table-ebank recycler-list' style='margin-top:10px'>" +
+			'<tr class="recycler-row-as"><td width="32%" class="recycler-row-align-midle-right-opacity interrest-left">' + CONST_STR.get('INTEREST_RATE_KYHAN') + '</td> <td class="recycler-row-align-midle-right-opacity" width="17%">' + CONST_STR.get('INTEREST_RATE_AUD') + '</td><td width="17%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_GBP') +'</td><td width="17%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_CAD') +'</td><td width="17%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_JPY') +'</td></tr>'
+                for (var i = 0; i < listInterestRate.length; i++)
+                {
+                    var arrStrTemp = listInterestRate[i].split('#');
+                    htmlInfor = htmlInfor +
+                    '<tr class="recycler-row-parity">' +
+                        '<td width="32%" class="recycler-row-align-midle-right-opacity interrest-left">' +arrStrTemp[0] + '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="17%">' +arrStrTemp[5] + '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="17%">' +arrStrTemp[6] + '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="17%">' +arrStrTemp[7] + '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="17%">' +arrStrTemp[8] + '</td>' +
+                    '</tr>'
+                }
+        '</table>'+
+	'</tr>'
+
+	htmlInfor += '</table>';
+	document.getElementById("id.saving.detail").innerHTML = htmlInfor;
+	// if(!gIsLogin) {
+	// 	var tmpNodeBack = document.getElementById('bankinfo.btn.back');
+	// 	tmpNodeBack.style.display = 'block';
+	// 	//tmpNodeBack.style.width = '35px';
+	// }
+}
+    }
+
+function genScreenInterestRate_ESV(listInterestRate)
+{
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var arrTitle = new Array();
+        arrTitle.push(CONST_STR.get('INTEREST_RATE_TERM'));
+        arrTitle.push(CONST_STR.get('INTEREST_RATE_LSUAT'));
+
+        var arrContentData = new Array();
+        arrContentData.push(arrTitle);
+        var strHTML ='<div align="right"><tr><td>' + CONST_STR.get('INTEREST_RATE_UNIT') + '</td></tr></div>';
+        for (var i = 0; i < listInterestRate.length; i++)
+        {
+            var arrStrTemp = listInterestRate[i].split('#');
+            var arrItemContent = new Array();
+            arrItemContent.push(arrStrTemp[0]);
+            arrItemContent.push(arrStrTemp[1]);
+            arrContentData.push(arrItemContent);
+        }
+        var recycler = new RecyclerView({
+            type: "DESKTOP_LIST",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+
+        recycler.setData(arrContentData);
+        var contentHTML = recycler.init();
+        strHTML+=contentHTML
+        document.getElementById('id.saving.detail').innerHTML=strHTML;
+    }else{
+	var htmlInfor = htmlInfor1;
+	htmlInfor += '<tr><td colspan="2" style = "border:none;" align="right">' + CONST_STR.get('INTEREST_RATE_UNIT') + '</td></tr>'
+	htmlInfor +=
+	 '<tr>' +
+    	"<table width='98%' align='center' class='recycler-table-ebank recycler-list'>" +
+    		'<tr class="recycler-row-as"><td width="50%" class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('INTEREST_RATE_TERM') + '</td><td width="50%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_LSUAT') +'</td></tr>'
+                for (var i = 0; i < listInterestRate.length; i++)
+                {
+                    var arrStrTemp = listInterestRate[i].split('#');
+                    htmlInfor = htmlInfor +
+                    '<tr class="recycler-row-parity">' +
+                        '<td class="recycler-row-align-midle-left-opacity" width="50%">' +arrStrTemp[0]+ '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="50%">' +arrStrTemp[1]+ '</td>' +
+                    '</tr>'
+                }
+        '</table>'+
+	'</tr>'
+
+	htmlInfor += '</table>';
+	document.getElementById("id.saving.detail").innerHTML = htmlInfor;
+    }
+	if(!gIsLogin) {
+		var tmpNodeBack = document.getElementById('bankinfo.btn.back');
+		tmpNodeBack.style.display = 'block';
+		//tmpNodeBack.style.width = '35px';
+	}
+	applyDynamicPageStyleSheet(true);
+}
+
+function genScreenInterestRate_EPE(listInterestRate)
+{
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var arrTitle = new Array();
+        arrTitle.push(CONST_STR.get('INTEREST_RATE_KYHAN'));
+        arrTitle.push(CONST_STR.get('INTEREST_RATE_THANG'));
+        arrTitle.push(CONST_STR.get('INTEREST_RATE_QUY'));
+        var arrContentData = new Array();
+        arrContentData.push(arrTitle);
+        var strHTML ='<div align="right"><tr><td>' + CONST_STR.get('INTEREST_RATE_UNIT') + '</td></tr></div>';
+        for (var i = 0; i < listInterestRate.length; i++)
+        {
+            var arrStrTemp = listInterestRate[i].split('#');
+            var arrItemContent = new Array();
+            arrItemContent.push(arrStrTemp[0]);
+            arrItemContent.push(arrStrTemp[1]);
+            arrItemContent.push(arrStrTemp[2]);
+            arrContentData.push(arrItemContent);
+        }
+        var recycler = new RecyclerView({
+            type: "DESKTOP_LIST",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+
+        recycler.setData(arrContentData);
+        var contentHTML = recycler.init();
+        strHTML+=contentHTML;
+        document.getElementById('id.saving.detail').innerHTML=strHTML;
+    }else{
+	var htmlInfor = htmlInfor1;
+	htmlInfor += '<tr><td colspan="3" style = "border:none;" align="right">' + CONST_STR.get('INTEREST_RATE_UNIT') + '</td></tr>'
+	htmlInfor +=
+	 '<tr>' +
+    	"<table width='98%' align='center' class='recycler-table-ebank recycler-list'>" +
+    		'<tr class="recycler-row-as"><td width="50%" class="recycler-row-align-midle-left-opacity">' + CONST_STR.get('INTEREST_RATE_KYHAN') + '</td><td width="25%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_THANG') +'</td><td width="25%" class="recycler-row-align-midle-right-opacity">'+ CONST_STR.get('INTEREST_RATE_QUY') +'</td></tr>'
+                for (var i = 0; i < listInterestRate.length; i++)
+                {
+                    var arrStrTemp = listInterestRate[i].split('#');
+                    htmlInfor = htmlInfor +
+                    '<tr class="recycler-row-parity">' +
+                        '<td class="recycler-row-align-midle-left-opacity" width="50%">' +arrStrTemp[0]+ '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="25%">' +arrStrTemp[1]+ '</td>' +
+                        '<td class="recycler-row-align-midle-right-opacity" width="25%">' +arrStrTemp[2]+ '</td>' +
+                    '</tr>'
+                }
+        '</table>'+
+	'</tr>'
+	htmlInfor += '</table>';
+	document.getElementById("id.saving.detail").innerHTML = htmlInfor;
+    }
+	if(!gIsLogin) {
+		var tmpNodeBack = document.getElementById('bankinfo.btn.back');
+		tmpNodeBack.style.display = 'block';
+		//tmpNodeBack.style.width = '35px';
+	}
+}
+function goBack() {
+	navController.popView(true);
+}
+getRealInterestRate();
+document.addEventListener("evtChangeWidthDesktop",getRealInterestRate,false);
+document.addEventListener("evtChangeWidthMobile",getRealInterestRate,false);
+function viewWillUnload(){
+    document.removeEventListener("evtChangeWidthDesktop",getRealInterestRate,false);
+    document.removeEventListener("evtChangeWidthMobile",getRealInterestRate,false);
+}

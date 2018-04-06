@@ -1,0 +1,1032 @@
+/**
+ * Created by CuongPV2
+ * User:
+ * Date: 17/04/2017
+ */
+
+ var flag = false;
+
+/*** VIEW LOAD SUCCESS ***/
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+
+function MenuContent(title, src) {
+        this.title = title;
+        this.src = src;
+        this.keyLang = title;
+    }
+
+function viewDidLoadSuccess() {
+    initBottomBar();
+
+    var transactionVal = document.getElementById('id.topup.srvId');
+    var payment = getURLParam('payment');
+    
+    if (!flag) {
+    	initComboTextAccount();
+    }
+
+    document.getElementById('arrow').style.paddingRight = '1.5px';
+    navController.getActionBar().hideNavHeaderBar();
+
+    //set default selection
+    //loai giao dich
+    for (var i=0; i<paymentServices.data.length; i++) {
+        if (paymentServices.data[i].srvGroup == "3") {
+            if (gUserInfo.lang == "VN") {
+                document.getElementById("topup.input.transaction").value = paymentServices.data[i].srvName;
+            }
+            else {
+                document.getElementById("topup.input.transaction").value = paymentServices.data[i].srvNameEn;
+            }
+            transactionVal.value = paymentServices.data[i].srvId;
+            break;
+        }
+    }
+
+    //nha cung cap
+    var srvCode = document.getElementById("id.topup.srvCode");
+    if (transactionVal.value != "") {
+        for (var i=0; i<paymentProviders.data.length; i++) {
+            if (paymentProviders.data[i].srvId == transactionVal.value) {
+                if (gUserInfo.lang == "VN") {
+                    document.getElementById("topup.input.provider").value = paymentProviders.data[i].prDesc;
+                } else {
+                    document.getElementById("topup.input.provider").value = paymentProviders.data[i].prDescEn;
+                }
+                srvCode.value = paymentProviders.data[i].srvCode;
+
+                gpayment=srvCode.value;
+                document.getElementById("id.topup.prId").value = paymentProviders.data[i].prId;
+                break;
+            }
+
+        }
+    }
+
+    //ve lai form
+    reDrawRequestField(srvCode.value);
+
+    genSequenceForm();
+    actionbar.addListSequence("utilitiesxsl/utilities-map-momo");
+
+}
+
+
+var tempDynaId;
+var gpayment;
+var storePayee;
+//gen sequence form
+function genSequenceForm() {
+    //get sequence form xsl
+    var tmpXslDoc = getCachePageXsl("sequenceform");
+    //create xml
+    //var tmpStepNo = 401;
+    var tmpStepNo = 301;
+    setSequenceFormIdx(tmpStepNo);
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+    var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+    //gen html string
+    genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+        var tmpNode = document.getElementById('seqForm');
+        tmpNode.innerHTML = oStr;
+    });
+}
+function showAccountSelection() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    var srvId = document.getElementById("id.topup.srvId").value;
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        if ((tmpAcc.accClass == 'D3A003') || (tmpAcc.nodebit == 'Y')) {
+        }
+        else {
+            tmpArray1.push(tmpAcc.accountNumber);
+            tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable)+' '+tmpAcc.currency);
+        }
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+    showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+
+}
+
+
+
+function showInputAccScreen() {
+    document.addEventListener("evtLoadPageSuccess", loadLocalTransSuccess, false); // event using when load page success
+
+    navController.pushToView('com-input-account', true);
+    gHistoryCode = CONST_HISTORY_CODE[1];
+    document.addEventListener("evtInputAccount", handleInputAcc, false);
+}
+
+function showProviders() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    var transactionVal = document.getElementById('id.topup.srvId');
+
+    if (transactionVal.value != "") {
+        for (var i=0; i<paymentProviders.data.length; i++) {
+            if (paymentProviders.data[i].srvId == transactionVal.value) {
+                if (gUserInfo.lang == "VN") {
+                    tmpArray1.push(paymentProviders.data[i].prDesc);
+                } else {
+                    tmpArray1.push(paymentProviders.data[i].prDescEn);
+                }
+                tmpArray2.push(paymentProviders.data[i].srvCode+ "#" +paymentProviders.data[i].prId);
+            }
+        }
+        document.addEventListener("evtSelectionDialog", handleProvider, false);
+        document.addEventListener("evtSelectionDialogClose", handleProviderClose, false);
+        showDialogList(CONST_STR.get('TOPUP_DIALOG_TITLE_PROVIDER'), tmpArray1, tmpArray2, false);
+    }
+}
+
+
+//event listener: input account
+var statusInputTopupNumber = false; //using check input account ready
+
+//event: selectec account number
+function handleProvider(e) {
+    if (currentPage == "utilitiesxsl/utilities-map-momo") {
+        document.removeEventListener("evtSelectionDialog", handleProvider, false);
+
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var provider = document.getElementById('topup.input.provider');
+            if (provider.nodeName == "INPUT") {
+                provider.value = e.selectedValue1;
+            }
+            else {
+                provider.innerHTML = e.selectedValue1;
+            }
+
+            if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+                var providerID = document.getElementById('id.topup.prId');
+                var serviceCode = document.getElementById('id.topup.srvCode');
+                var selectedVal = e.selectedValue2.split('#');
+
+                providerID.value = selectedVal[1];
+                serviceCode.value = selectedVal[0];
+
+                reDrawRequestField(selectedVal[0]);
+            }
+        }
+
+    }
+}
+
+function handleProviderClose(e) {
+    if (currentPage == "utilitiesxsl/utilities-map-momo") {
+        document.removeEventListener("evtSelectionDialogClose", handleProviderClose, false);
+        document.removeEventListener("evtSelectionDialog", handleProvider, false);
+    }
+}
+
+function showReqCombo(id, title) {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    tempDynaId = id;
+
+    for (var i=0; i<paymentComboFields.data.length; i++) {
+        if (paymentComboFields.data[i].mapId == id) {
+            if (gUserInfo.lang == "VN") {
+                tmpArray1.push(paymentComboFields.data[i].fieldDesc);
+            } else {
+                tmpArray1.push(paymentComboFields.data[i].fieldDescEn);
+            }
+            tmpArray2.push(paymentComboFields.data[i].fieldVal);
+        }
+    }
+    document.addEventListener("evtSelectionDialog", handleReqCombo, false);
+    document.addEventListener("evtSelectionDialogClose", handleReqComboClose, false);
+    showDialogList(title, tmpArray1, tmpArray2, false);
+}
+
+function handleReqCombo(e)
+{
+    if (currentPage == "utilitiesxsl/utilities-map-momo") {
+        document.removeEventListener("evtSelectionDialog", handleReqCombo, false);
+
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var reqCombo = document.getElementById('topup.dynaInput.' + tempDynaId);
+
+            if (reqCombo.nodeName == "INPUT") {
+                reqCombo.value = e.selectedValue1;
+            }
+            else {
+                reqCombo.innerHTML = e.selectedValue1;
+            }
+
+            var reqComboVal = document.getElementById('topup.dynaInput.' + tempDynaId + '.val');
+
+            if (reqComboVal.nodeName == "INPUT") {
+                reqComboVal.value = e.selectedValue2;
+            }
+            else {
+                reqComboVal.innerHTML = e.selectedValue2;
+            }
+        }
+
+    }
+
+    tempDynaId = null;
+}
+
+
+function handleReqComboClose(e) {
+    if (currentPage == "utilitiesxsl/utilities-map-momo") {
+        document.removeEventListener("evtSelectionDialogClose", handleReqComboClose, false);
+        document.removeEventListener("evtSelectionDialog", handleReqCombo, false);
+        tempDynaId = null;
+    }
+}
+
+function showTransactions() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+
+    for (var i=0; i<paymentServices.data.length; i++) {
+        if (paymentServices.data[i].srvGroup == "3") {
+            if (gUserInfo.lang == "VN") {
+                tmpArray1.push(paymentServices.data[i].srvName);
+            }
+            else {
+                tmpArray1.push(paymentServices.data[i].srvNameEn);
+            }
+            tmpArray2.push(paymentServices.data[i].srvId);
+        }
+    }
+    document.addEventListener("evtSelectionDialog", handleTransaction, false);
+    document.addEventListener("evtSelectionDialogClose", handleTransactionClose, false);
+    showDialogList(CONST_STR.get('TOPUP_DIALOG_TITLE_TRANSACTION'), tmpArray1, tmpArray2, false);
+}
+
+
+//Format currency and pronounce to Vietnamese
+
+function handleInputAmount(e, des)
+{
+    var trowConvert = document.getElementById('row_convert');
+    formatCurrency(e, des);
+    var numStr = convertNum2WordWithLang(removeSpecialChar(des.value), gUserInfo.lang); //Lay ra chuoi doc so tien
+    if (numStr)
+    {
+        var nodeNumTxt = document.getElementById("trans.amounttotext");
+        nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+        trowConvert.style.display = "";
+    }
+    else
+    {
+        trowConvert.style.display = 'none';
+    }
+}
+
+
+function clickOptionNone()
+{
+    var obj = document.getElementById("chkOpntionNone");
+    if (obj.className == "icon-checkbox-unchecked")
+    {
+        obj.className = "icon-checked";
+
+    }
+    else
+    {
+        obj.className = "icon-checkbox-unchecked";
+    }
+}
+
+
+//Send request
+var gprsResp = new GprsRespObj("","","","");
+
+function sendJSONRequest() {
+    //dadadasdas
+    // collect the form data while iterating over the inputs
+    var obj = document.getElementById("chkOpntionNone");
+    if(obj.className == "icon-checkbox-unchecked") {
+        showAlertText(CONST_STR.get('SETTING_MAP_MOMO_SHOW_RULES'));    
+        return;
+    }
+
+    var data = {};
+
+    var serviceId = document.getElementById("id.topup.srvId").value;
+
+    if (serviceId == undefined || serviceId == "" || serviceId == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_TRANS_TYPE_TITLE') + '"');
+        return;
+    }
+
+    var sourceAcc = document.getElementById("id.sourceAcc").value;
+    if (sourceAcc == undefined || sourceAcc == "" || sourceAcc == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('SETTING_MAP_MOMO_ERR_ACC'));
+        return;
+    }
+
+    var providerId = document.getElementById("id.topup.prId").value;
+
+    if (providerId == undefined || providerId == "" || providerId == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_PROVIDER_TITLE') + '"');
+        return;
+    }
+
+    var serviceCode = document.getElementById("id.topup.srvCode").value;
+
+    if (serviceCode == undefined || serviceCode == "" || serviceCode == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_PROVIDER_TITLE') + '"');
+        return;
+    }
+
+    var regType = 'CNC-REG';
+    for (var i=0; i<paymentServices.data.length; i++) {
+        if (paymentServices.data[i].srvGroup == "3" && paymentServices.data[i].srvId == serviceId) {
+            regType = paymentServices.data[i].srvDesc;
+            break;
+        }
+    }
+
+    //push into arrayArgs
+    var arrayArgs = new Array();
+    arrayArgs.push('CONNECT'); 
+    arrayArgs.push(regType);  
+    arrayArgs.push(sourceAcc); 
+    arrayArgs.push(gUserInfo.accountName); 
+
+    //collect dynamic request field
+    for (var i= 0; i < paymentRequestFields.data.length; i++) {
+        if (paymentRequestFields.data[i].srvCode == serviceCode && paymentRequestFields.data[i].inputType != 'LABEL') {
+
+            var value = "";
+            if (paymentRequestFields.data[i].inputType == "COMBO") {
+                value = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id + ".val").value;
+
+                if (value == undefined || value == "" || value == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')) {
+                    if (gUserInfo.lang == "VN") {
+                        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDesc + '"');
+                    } else {
+                        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDescEn + '"');
+                    }
+                    return;
+                }
+            } else  if(paymentRequestFields.data[i].inputType != "LABEL"){
+                value = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id).value;
+                 if (value == undefined || value == "" || value == CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER')) {
+                     if (gUserInfo.lang == "VN") {
+                         showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDesc + '"');
+                     } else {
+                         showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDescEn + '"');
+                     }
+                     return;
+                 }
+
+                if (paymentRequestFields.data[i].inputFormat =="PHONE") {
+                    if(!validatePhoneNumber(value)){
+                        return;
+                    }
+                }
+            }
+
+            arrayArgs.push(value);
+        }
+    }
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_CONNECT_EWALLET"), "", "", gUserInfo.lang , gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+
+    requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){    
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); 
+    var stringName="";
+    var stringPasspost="";
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CONNECT_EWALLET")))) {        
+        stringName=gprsResp.arguments[3];
+        stringPasspost=gprsResp.arguments[4];
+        genReviewScreen(stringName,stringPasspost);
+    }else
+    {
+        showAlertText(gprsResp.respContent);
+    }
+};
+
+//event listener: http request fail
+function requestMBServiceFail(){
+    
+};
+
+
+//event: selectect dialog list
+
+function handleSelectionAccountList(e) {
+    if (currentPage == "utilitiesxsl/utilities-map-momo") {
+        handleSelectionAccountListClose();
+        var accountNumber = e.selectedValue1;
+        var accountBalance = e.selectedValue2;
+        comboEl.refresh({
+            accountNumber : accountNumber,
+            accountBalance : accountBalance
+        });
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("id.sourceAcc");
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+        }
+        var nodeAccBal = document.getElementById("payment.sourceaccoutbalance");
+        if (e.selectedValue2 != undefined) {
+            nodeAccBal.innerHTML = "<div class='availblstyle' id='id.balance'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + "VND</div>";
+        }
+    }
+}
+
+
+
+function handleSelectionAccountListClose(e) {    
+    document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+    document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+}
+
+//event listener: input account
+function handleInputAcc(e) {
+    document.removeEventListener("evtInputAccount", handleInputAcc, false);
+    //e.inputValue
+    statusInputAcc = true;
+}
+function handleTransaction(e)
+{
+    document.removeEventListener("evtSelectionDialog", handleTransaction, false);
+
+    if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+        var transaction = document.getElementById('topup.input.transaction');
+
+        if (transaction.nodeName == "INPUT") {
+            transaction.value = e.selectedValue1;
+        }
+        else {
+            transaction.innerHTML = e.selectedValue1;
+        }
+
+        var transactionVal = document.getElementById('id.topup.srvId');
+
+        if (transactionVal.nodeName == "INPUT") {
+            transactionVal.value = e.selectedValue2;
+        }
+        else {
+            transactionVal.innerHTML = e.selectedValue2;
+        }
+        //reset value of providers
+        var provider = document.getElementById('topup.input.provider');
+        var srvCode = document.getElementById("id.topup.srvCode");
+
+        if (transactionVal.value != "") {
+            for (var i=0; i<paymentProviders.data.length; i++) {
+                if (paymentProviders.data[i].srvId == transactionVal.value) {
+                    if (gUserInfo.lang == "VN") {
+                        provider.value = paymentProviders.data[i].prDesc;
+                    } else {
+                        provider.value = paymentProviders.data[i].prDescEn;
+                    }
+                    srvCode.value = paymentProviders.data[i].srvCode;
+                    gpayment=srvCode.value;
+                    document.getElementById("id.topup.prId").value = paymentProviders.data[i].prId;
+                    break;
+                }
+            }
+        }
+
+        reDrawRequestField(srvCode.value);
+        initComboTextAccount();
+    }
+}
+
+function reDrawRequestField(id) {
+    var dynamicTable = document.getElementById("dynamic-topup-table");
+    var rowId = 1;
+    var tRow;
+    var tData;
+    var stringHTML = "";
+
+    if (dynamicTable != null && dynamicTable != undefined) {
+        var trowConvert = document.getElementById('row_convert');
+
+        for (var i= 0; i < dynamicTable.rows.length; i++) {
+            if (dynamicTable.rows[i].id.indexOf("row_convert") != -1) {
+                dynamicTable.deleteRow(i);
+                i--;
+            }
+        }
+
+        //delete old drawn contents
+        for (var i= 0; i < dynamicTable.rows.length; i++) {
+            if (dynamicTable.rows[i].id.indexOf("dynaRow.") != -1) {
+                dynamicTable.deleteRow(i);
+                i--;
+            }
+        }
+        //draw new dynamic contents
+        if (id != null) {
+
+            var transVal = document.getElementById('id.topup.srvId').value;
+            storePayee = 0;
+            //check if this service need store payee
+            for (var i= 0; i < paymentServices.data.length; i++) {
+                if (paymentServices.data[i].srvId == transVal) {
+                    storePayee = paymentServices.data[i].storePayee;
+                    break;
+                }
+            }
+
+
+            for (var i= 0; i < paymentRequestFields.data.length; i++) {
+                if (paymentRequestFields.data[i].srvCode == id) {
+                    var isAmount = false;
+                    tRow = document.createElement('TR');
+                    tRow.id = "dynaRow." + rowId;
+                    rowId++;
+
+                    tData = document.createElement('TD');
+                    tData.setAttribute("colspan",2);
+                    tData.align = "center";
+                    tData.vAlign = "middle";
+                    tData.className = "td-text";
+
+                    stringHTML = "";
+
+                    tDiv = document.createElement('DIV');
+                    tInput = document.createElement('INPUT');
+
+                    if (paymentRequestFields.data[i].inputType == "COMBO") {                       
+                        var reqComboId = paymentRequestFields.data[i].id;
+                        var fieldDesc = gUserInfo.lang == "VN" ? paymentRequestFields.data[i].fieldDesc : paymentRequestFields.data[i].fieldDescEn;
+                        var fieldDescTitle = CONST_STR.get('TOPUP_DIALOG_TITLE_SELECT') + " " + fieldDesc.toLowerCase();
+                        var inputBtnId = "topup.dynaInput." + paymentRequestFields.data[i].id;
+                        var placeHolder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+                        var inputValue = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+                        var fieldVal = "";
+
+                        tempDynaId = reqComboId;
+                        for (var k=0; k<paymentComboFields.data.length; k++) {
+                            if (paymentComboFields.data[k].mapId == reqComboId) {
+                                if (gUserInfo.lang == "VN") {
+                                    inputValue = paymentComboFields.data[k].fieldDesc;
+                                } else {
+                                    inputValue = paymentComboFields.data[k].fieldDescEn;
+                                }
+                                fieldVal = paymentComboFields.data[k].fieldVal;
+                                break;
+                            }
+                        }
+
+                        stringHTML = "<div class='input-group' onclick='showReqCombo(" + reqComboId +", &#39;" + fieldDescTitle + "&#39;);'> <span class='input-group-addon' >" + fieldDesc + "</span>" +
+                                "<input type='button' id='" + inputBtnId + "' class='form-control form-control-righttext' placeholder='" + placeHolder + "' value='" + inputValue + "' />" +
+                                "<span class='icon-movenext input-group-addon input-group-symbol'></span>" +
+                                "</div>";
+
+                        tData.innerHTML = stringHTML;
+                        tRow.appendChild(tData);
+
+                        dynamicTable.appendChild(tRow);
+                    }
+                    else if (paymentRequestFields.data[i].inputType == "TEXT") {
+                        var fieldDesc = gUserInfo.lang == "VN" ? paymentRequestFields.data[i].fieldDesc : paymentRequestFields.data[i].fieldDescEn;
+                        var inputId = "topup.dynaInput." + paymentRequestFields.data[i].id;
+                        var fieldType = paymentRequestFields.data[i].fieldType == "NUMBER" ? "tel" : "text";
+                        var placeHolder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+                        var ip = CONST_STR.get('INPUT_MONEY');
+                        var vnd="VND";
+                        var value = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+                        var contactpayment = CONST_STR.get('TRANSFER_CONTACT_BTN');
+
+                        if (paymentRequestFields.data[i].isPayee == 1 && storePayee == 1) {
+                            stringHTML = "<div class='input-group'> <span class='input-group-addon' style='width: 30%;'>" + fieldDesc + "</span> " +
+                                "<div class='tranfer-item item-infor contact-trans' style='border-bottom: none;'><div class='holder-input-none-icon' style='margin-top: -4px;margin-bottom: -2px;width: 65%;'><input id='" + inputId + "' type='" + fieldType + "'  class='form-control form-control-righttext-datepicker' style='padding-right:1px;padding-top:7px;margin-right: -10%;' placeholder='" + placeHolder + "' maxlength='" + paymentRequestFields.data[i].fieldLength + "'/></div><div onclick='contactPaymentTopup()' class='set-calendar contact-modalfull' style='width: 35%;'><div style='float:right;'><i class='icon-beneficiaries'></i><span>" + contactpayment + "</span></div></div></div>" +
+                                "</div>";
+
+                        }else if (paymentRequestFields.data[i].isPayee == 1 && storePayee == 0) {
+                            stringHTML = "<div class='input-group'> <span class='input-group-addon' style='width: 30%;'>" + fieldDesc + "</span> " +
+                                "<div class='tranfer-item item-infor contact-trans' style='border-bottom: none;'><div class='holder-input-none-icon' style='margin-top: -4px;margin-bottom: -2px;width: 65%;'><input id='" + inputId + "' type='" + fieldType + "'  class='form-control form-control-righttext-datepicker' style='padding-right:1px;padding-top:7px;margin-right: -10%;' placeholder='" + placeHolder + "' maxlength='" + paymentRequestFields.data[i].fieldLength + "' /></div><div onclick='contactPaymentTopup()' class='set-calendar contact-modalfull' style='width: 35%;'><div style='float:right;'><i class='icon-beneficiaries'></i><span>" + contactpayment + "</span></div></div></div>" +
+                                "</div>";
+
+                        }
+                        else {
+
+                            if (paymentRequestFields.data[i].isAmount == 1)
+                            {
+                                isAmount = true;
+                                stringHTML = "<div class='input-group enter-amount' style='border-top: none;margin-top: -2px'> <span class='input-group-addon icon-enter-amount' style='padding-left: 2px'>" + vnd + "</span> " +
+                                        "<input id='" + inputId + "' type='" + fieldType + "'  class='form-control form-control-righttext format-left-input' placeholder='" + ip + "' onkeyup='handleInputAmount(event,this " + ");' maxlength='" + paymentRequestFields.data[i].fieldLength + "'/>" +
+                                        "</div>";
+
+                            }else{                                
+                                stringHTML = "<div class='input-group' id='id.sample'> <span class='input-group-addon' style='width: 40%;white-space:pre-wrap;'>" + fieldDesc + "</span> " +
+                                    "<input id='" + inputId + "' type='" + fieldType +"' class='form-control form-control-righttext' placeholder='" + placeHolder + "' maxlength='" + paymentRequestFields.data[i].fieldLength + "' />" +                                    
+                                    "</div>";
+
+
+                                    "<input type='hidden' id='mng.payee.val' value='" + CONST_VAL_PAYEE_NOT_TEMPLATE[1] + "'/>";
+                            }
+
+                        }
+
+                        tData.innerHTML = stringHTML;
+                        tRow.appendChild(tData);
+
+                        dynamicTable.appendChild(tRow);
+
+                        if (isAmount)
+                        {
+                            var tData = document.createElement('TD');
+                            tData.setAttribute("colspan",2);
+                            tData.align = "left";
+                            tData.innerHTML ='<div id="trans.amounttotext" ><h6></h6></div>';
+                            var tRow = document.createElement('TR');
+                            tRow.id = "row_convert" ;
+                            tRow.style.display='none';
+                            tRow.appendChild(tData);
+                            dynamicTable.appendChild(tRow);
+
+                        }
+
+                    }
+                    else if(paymentRequestFields.data[i].inputType == "LABEL")
+                    {
+                        var fieldDesc = gUserInfo.lang == "VN" ? paymentRequestFields.data[i].fieldDesc : paymentRequestFields.data[i].fieldDescEn;
+                        var tData = document.createElement('TD');
+                        tData.setAttribute("colspan",2);
+                        tData.align = "left";
+                        tData.innerHTML = '<div id="trans.notetext"><h6><span>' + fieldDesc + '</span></h6></div>';
+                        var tRow = document.createElement('TR');
+                        tRow.id = "row_convert" ;
+                        tRow.appendChild(tData);
+                        dynamicTable.appendChild(tRow);
+                    }
+                }
+
+
+
+            }
+
+            //need store payee
+            if (storePayee == 1) {
+
+                tRow = document.createElement('TR');
+                tRow.id = "dynaRow.note";
+
+                tData = document.createElement('TD');
+                tData.setAttribute("colspan",2);
+
+                var mgnPayee = CONST_STR.get('TOPUP_MGN_PAYEE');
+                var placeHolder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+                var inputValue = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+                var inputValue = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN[0]: CONST_VAL_PAYEE_NOT_TEMPLATE_VN[0];
+
+                stringHTML = "<div><h6><span class='notestyle'></span></h6></div>";
+                tData.innerHTML = stringHTML;
+                tRow.appendChild(tData);
+
+                dynamicTable.appendChild(tRow);
+            }
+        }
+
+        tRow = document.createElement('TR');
+        tRow.id = "dynaRow.agrerule";
+        tData = document.createElement('TD');
+        tData.setAttribute("colspan",2);
+
+        stringHTML = "<div style='padding-left:7px;padding-top:7px;border:none' class='input-group' onclick='clickOptionNone()'><span class='icon-checkbox-unchecked' style='font-size:12px; font-weight: bold' id='chkOpntionNone' ></span><span class='text-checkbox'>" + CONST_STR.get('SETTING_MAP_MOMO_RULES') + "</span></div>";
+
+        tData.innerHTML = stringHTML;
+        tRow.appendChild(tData);
+        dynamicTable.appendChild(tRow);
+
+
+
+        tRow = document.createElement('TR');
+        tRow.id = "dynaRow.space";
+        tRow.className = "trow-space";
+        dynamicTable.appendChild(tRow);
+
+        tRow = document.createElement('TR');
+        tRow.id = "dynaRow.submitBtn";
+
+        tData = document.createElement('TD');
+        tData.setAttribute("colspan",2);
+        tData.setAttribute("align",'center');
+
+        stringHTML = "<div class='tdbtndesktop' style='width:50%'>"+"<input style='float:left;margin-left:65px;margin-top:5px;' type='button' class='btnDesktopshadow btnDesktopBack'" +
+                "onclick='clickHomeOrBack();' value='" + CONST_STR.get('INPUT_ACC_BTN_GOBACK') + "'/></div>" 
+        +"<div style='width:50%'><input style='margin-right:40px;margin-top:5px;' type='button' class='btnshadow btn-second'" +
+                "onclick='sendJSONRequest();' value='" + CONST_STR.get('TOPUP_BTN_SENDREQUEST') + "'/></div>";
+
+        tData.innerHTML = stringHTML;
+        tRow.appendChild(tData);
+
+        dynamicTable.appendChild(tRow);
+
+        setInputRuleInNode(dynamicTable);
+
+        if(id == '501-ECPAY' && document.getElementById('topup.dynaInput.1012')){
+            document.getElementById('topup.dynaInput.1012').disabled = true;
+            document.getElementById('topup.dynaInput.1012').value = gUserInfo.identifier;
+        }
+        else if(id == '502-MOMO' && document.getElementById('topup.dynaInput.1014')){
+            document.getElementById('topup.dynaInput.1014').disabled = true;
+            document.getElementById('topup.dynaInput.1014').value = gUserInfo.identifier;
+        }
+        else if(id == '503-PAY365' && document.getElementById('topup.dynaInput.1016')){
+            document.getElementById('topup.dynaInput.1016').disabled = true;
+            document.getElementById('topup.dynaInput.1016').value = gUserInfo.identifier;
+        }
+        else if(id == '504-TRUEMONEY' && document.getElementById('topup.dynaInput.1018')){
+            document.getElementById('topup.dynaInput.1018').disabled = true;
+            document.getElementById('topup.dynaInput.1018').value = gUserInfo.identifier;
+        }
+        else if(id == '505-VNPTPAY' && document.getElementById('topup.dynaInput.1020')){
+            document.getElementById('topup.dynaInput.1020').disabled = true;
+            document.getElementById('topup.dynaInput.1020').value = gUserInfo.identifier;
+        }
+        else if(id == '506-VIMASS' && document.getElementById('topup.dynaInput.1022')){
+            document.getElementById('topup.dynaInput.1022').disabled = true;
+            document.getElementById('topup.dynaInput.1022').value = gUserInfo.identifier;
+        }
+        else if(id == '508-AIRPAY' && document.getElementById('topup.dynaInput.8074')){
+            document.getElementById('topup.dynaInput.8074').disabled = true;
+            document.getElementById('topup.dynaInput.8074').value = gUserInfo.identifier;
+        }
+        else if(id == '510-PAYOO' && document.getElementById('topup.dynaInput.8076')){
+            document.getElementById('topup.dynaInput.8076').disabled = true;
+            document.getElementById('topup.dynaInput.8076').value = gUserInfo.identifier;
+        }
+		//20171215 ngocdt3 bo sung cho MONPAY
+		 else if(id == '512-MONPAY' && document.getElementById('topup.dynaInput.8098')){
+            document.getElementById('topup.dynaInput.8098').disabled = true;
+            document.getElementById('topup.dynaInput.8098').value = gUserInfo.identifier;
+        }
+		//20180110 ngocdt3 bo sung cho IFT
+		 else if(id == '514-IFT' && document.getElementById('topup.dynaInput.8100')){
+            document.getElementById('topup.dynaInput.8100').disabled = true;
+            document.getElementById('topup.dynaInput.8100').value = gUserInfo.identifier;
+        }
+    }
+}
+
+function setInputRuleInNode(inNode) {
+    var tmpArrNodes = inNode.getElementsByTagName('input');
+    for (var i=0; i<tmpArrNodes.length; i++) {
+        var tmpNode = tmpArrNodes[i];
+        if(tmpNode.type == 'text') {
+            setInputOnlySpace(tmpNode);
+        }
+        else if(tmpNode.type == 'tel' || tmpNode.type == 'number') {
+            setInputOnlyNumberTopup(tmpNode);
+        }
+    }
+}
+
+function handleTransactionClose(e) {
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleTransactionClose, false);
+        document.removeEventListener("evtSelectionDialog", handleTransaction, false);
+    }
+}
+
+function callbackShowDialogSuccessed(node){
+    dialog.hiddenTab2();
+}
+
+
+function parserPaymentTopup() {
+    //parser info
+    //gprsResp
+}
+
+function parserQuickQueryAccount() {
+    //gprsResp
+    var nodeDesAcc = document.getElementById("trans.targetaccountname");
+    nodeDesAcc.innerHTML = "<h6>" + CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION_TITLE') + ": <b>" + gprsResp.arguments[0] + "</b></h6>";
+}
+
+function genReviewScreen(stringName,stringPasspost){
+
+    var acc = document.getElementById("id.sourceAcc").value;
+    var name = gUserInfo.accountName;
+    var pewallet = document.getElementById("topup.input.transaction").value;
+    var serviceCode = document.getElementById("id.topup.srvCode").value;
+
+    var transinput = [];
+    //collect dynamic request field
+    for (var i= 0; i < paymentRequestFields.data.length; i++) {
+        if (paymentRequestFields.data[i].srvCode == serviceCode && paymentRequestFields.data[i].inputType != 'LABEL') {
+
+            var value = "";
+            if (paymentRequestFields.data[i].inputType == "COMBO") {
+                value = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id + ".val").value;
+            } else  if(paymentRequestFields.data[i].inputType != "LABEL"){
+                value = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id).value;                 
+            }
+
+            transinput.push(value);
+        }
+    }
+
+
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; 
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd
+    } 
+    if(mm<10){
+        mm='0'+mm
+    } 
+    var todayaction = dd+'/'+mm+'/'+yyyy;
+
+    var htmlReviewInfo = "";
+    
+    htmlReviewInfo = "<table width='100%' align='center'>";
+    htmlReviewInfo = htmlReviewInfo + 
+                "<tr><td><h5 class='Header'>" + 
+                    CONST_STR.get('SETTING_MAP_MOMO_INFOR') + 
+                "</h5>" + "</td></tr>"; 
+    htmlReviewInfo = htmlReviewInfo + 
+                "<tr><td><div class='recycler-list' id='recycler_list'><table width='97%' align='center' class='recycler-table-ebank' id='recycler_table_ebank'>" +
+                    "<tr style='border-bottom: none;' class='recycler-row-parity'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;' >" +
+                        CONST_STR.get('SETTING_TYPE_MAP_MOMO') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        pewallet + 
+                    "</td></tr>";
+    if(serviceCode=='512-MONPAY'){
+		htmlReviewInfo+="<tr style='border-bottom: none;' class='recycler-row-as'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;'>" +
+                        CONST_STR.get('MONPAY_ACCOUNT_WALLET') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        transinput[0] + 
+                    "</td></tr>";
+	}
+	else{
+		 htmlReviewInfo+="<tr style='border-bottom: none;' class='recycler-row-as'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;'>" +
+                        CONST_STR.get('SETTING_NUMBERPHONE_MAP_MOMO') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        transinput[0] + 
+                    "</td></tr>";
+	}
+   
+    htmlReviewInfo+="<tr style='border-bottom: none;' class='recycler-row-parity'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;'>" +
+                    CONST_STR.get('SETTING_MAP_MOMO_FULLNAME_SHOW') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        stringName + 
+                    "</td></tr>";
+    htmlReviewInfo+="<tr style='border-bottom: none;' class='recycler-row-as'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;'>" +
+                    CONST_STR.get('SETTING_MAP_MOMO_PASSPORT_CONNECT') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        stringPasspost + 
+                    "</td></tr></table></td></tr></div>";
+
+    htmlReviewInfo = htmlReviewInfo + 
+                "<tr><td><h5 class='Header'>" + 
+                    CONST_STR.get('SETTING_MAP_MOMO_INFOR_ACC') + 
+                "</h5>" + "</td></tr>";     
+    htmlReviewInfo = htmlReviewInfo + 
+                "<tr><td><div class='recycler-list' id='recycler_list'><table width='100%' align='center' class='recycler-table-ebank' id='recycler_table_ebank'>" +
+                    "<tr style='border-bottom: none;' class='recycler-row-parity'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;' >" +
+                        CONST_STR.get('SETTING_MAP_MOMO_NUMBER_ACC') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        acc + 
+                    "</td></tr>";   
+    htmlReviewInfo+="<tr style='border-bottom: none;' class='recycler-row-as'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;'>" +
+                    CONST_STR.get('SETTING_MAP_MOMO_FULLNAME_INFOR') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        name + 
+                    "</td></tr>";   
+    htmlReviewInfo+="<tr style='border-bottom: none;' class='recycler-row-parity'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;'>" +
+                    CONST_STR.get('SETTING_MAP_MOMO_PASSPORT') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        transinput[1] + 
+                    "</td></tr>";   
+    htmlReviewInfo+="<tr style='border-bottom: none;' class='recycler-row-as'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;'>" +
+                    CONST_STR.get('SETTING_MAP_MOMO_TIME_ACTION') + 
+                    "</td>" + "<td class='recycler-row-align-midle-right'>" +
+                        todayaction + 
+                    "</td></tr>";
+
+    htmlReviewInfo = htmlReviewInfo + "</table></td></tr>" +
+        "<tr class='desktopmode' id='result-export-print' style='display:none;'>" +
+        "<td colspan='2'>" +
+        "<div align='right' style='padding-right: 5px;'>" +
+        "<a href='javascript:void(0)' onclick='printResultHistory();'><img title='In trang này' style='margin-right:5px;' src='css/img/print.png'/></a>" +
+        "</div></td></tr>";
+
+
+    htmlReviewInfo+="<tr><td><div class='recycler-list'><table width='100%' align='center' class='recycler-table-ebank'>" +
+        "<tr id='sendmail' style='border-bottom: none;display:none;' class='recycler-row-as'>" + "<td class='recycler-row-align-midle-left' style='font-weight: normal; width:40%;'>" +
+        CONST_STR.get('BENEFIC_SEND_MAIL_NOTE') +
+        "</td>" + "<td class='recycler-row-align-midle-right'>" +
+        "<a href='javascript:void(0)' onclick='sendmail();'><img width='35px' src='./assets/images/email.png'/></a>" +
+        "</td></tr>";
+    htmlReviewInfo+="</table></div></td></tr>";
+    htmlReviewInfo+="</table>";
+
+    setReviewHtmlStore(htmlReviewInfo);
+    
+    navController.pushToView("com-review-scr", true);
+}
+
+function getToday(){
+    var result = '';
+    var today = new Date();
+
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+    var yyyy = today.getFullYear();
+
+    if(dd<10) {
+        dd='0'+dd;
+    }
+    if(mm<10) {
+        mm='0'+mm;
+    }
+
+    return result = dd+'/'+mm+'/'+yyyy;
+}
+
+function validatePhoneNumber(valueToCheck){
+    if(valueToCheck.length<= 0 || valueToCheck.length >12 ){
+        showAlertText(CONST_STR.get('WALLET_INVALID_NUMBER'));
+        //SĐT không hợp lệ
+        return false;
+    }else{
+        if( valueToCheck.indexOf("0") != 0){
+            //thông báo lỗi
+            showAlertText(CONST_STR.get('WALLET_INVALID_NUMBER'));
+            return false;
+        }
+    }
+    return true;
+}
+//anhntt them hien thi combo chon accout
+var comboEl;
+function initComboTextAccount(){
+
+    var accountName = "Invalid";
+    var accountNumber = "Invalid";
+    var accountBalance = "Invalid";
+
+    try{
+        document.getElementById("holder-account-info").innerHTML = "";
+        var accountName = gUserInfo.accountName;
+        var accountNumber = gUserInfo.accountList[0].accountNumber;
+        var accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + ' ' + gUserInfo.accountList[0].currency;
+        var srvId = document.getElementById("id.topup.srvId").value;
+
+        for (var i = 0; i < gUserInfo.accountList.length; i++) {
+        	var tmpAcc = gUserInfo.accountList[i];
+        	if ((tmpAcc.accClass == 'D3A003') || (tmpAcc.nodebit == 'Y') ) {
+        	}
+        	else {        		
+        		accountNumber = tmpAcc.accountNumber;
+        		accountBalance = formatNumberToCurrency(tmpAcc.balanceAvailable) + ' ' + tmpAcc.currency;
+        		document.getElementById("id.sourceAcc").value = tmpAcc.accountNumber;
+        		break;
+        	}
+        }
+    }catch(e){
+        logInfo("Khong load duoc thong tin tai khoan")
+    }
+
+    comboEl = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountName : accountName, //account name
+        accountNumber : accountNumber, //account number
+        accountBalance : accountBalance, //account balance
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboEl.show("holder-account-info");
+}
+
+function initBottomBar(){
+    var arrBottom = new Array();
+    arrBottom.push(new MenuContent('SETTING_MAP_MOMO_TAB_CONECT', 'utilitiesxsl/utilities-map-momo'));
+    arrBottom.push(new MenuContent('SETTING_MAP_MOMO_TITTLE_DIS', 'utilitiesxsl/utilities-disconnect-momo'));
+    navController.initBottomBarOnlyText(arrBottom[0].src ,arrBottom, "utilities-momo");
+}

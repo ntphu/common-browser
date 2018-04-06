@@ -1,0 +1,1340 @@
+/**
+ * Created by 
+ * User: 
+ * Date: 
+ * Time: 
+ */
+
+var dialog;
+var tmpDestinationAcc;
+var tmpPayeeType;
+var statusAccNoSelect;
+var docXml;
+var transPeriodicObj;
+var mng;
+var gFreq;
+var gSourceVal;
+var gAccType;
+var flgPeriodic;
+//handle input transfer content
+var statustOtherTPBankAcc = false;
+function initTextAreaMessage(){
+    try{
+        var txtArea = document.getElementById('trans.content');
+        if(txtArea!==null){
+            return false;
+        }
+        document.getElementById("holder-transfer-message").innerHTML = "";
+    }catch(e){}
+
+
+    var textAreaEl = new TextArea({
+        containerMargin : "0px",
+        idTextArea : "trans.content",
+        placeholder : CONST_STR.get("PLACEHOLDER_TRANSFER_CONTENT"),
+        iconClass : "icon-content-note",
+        lengthmax : "40",
+
+        //borderColor : "rgba(255, 255, 255, 0.2)",
+        //showBorderBottom : false,
+       // showBorderTop : false,
+        fontSizeIcon : "24px!important",
+        validateInput : function(){
+            console.log("validate function");
+        }
+    });
+    textAreaEl.show("holder-transfer-message");
+}
+function loadInitXML(){
+}
+function viewWillUnload() {
+	//flgPeriodic = true;
+	flgPeriodic = false;
+	logInfo('transfer will unload');
+}
+function viewDidLoadSuccess() {
+	logInfo('transfer load success');
+	genSequenceFormPeriodic();
+    actionbar.addListSequence("transfer/transfer-periodic-create-scr");
+	//mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+	if(flgPeriodic == false || flgPeriodic == undefined){
+		initTextAreaMessage();
+		mng = CONST_VAL_PAYEE_NOT_TEMPLATE[1];
+		if(gUserInfo.lang == 'EN'){
+			//document.getElementById('mng.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_EN[0];
+			document.getElementById('mng.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_EN[1];
+			//document.getElementById('id.selcfunc').value = CONST_KEY_TRANS_PRE_SELCT_EN[0];
+			document.getElementById('trans.type.trans').value = CONST_KEY_PERIODIC_LOCAL_EN[0];
+			document.getElementById('trans.frequency').value = CONST_KEY_PERIODIC_FREQUENCY_EN[2];
+			gFreq = CONST_VAL_PERIODIC_FREQUENCY[2];
+			
+		}else{
+			//document.getElementById('mng.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_VN[0];
+			document.getElementById('mng.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_VN[1];
+			//document.getElementById('id.selcfunc').value = CONST_KEY_TRANS_PRE_SELCT_VN[0];
+			document.getElementById('trans.type.trans').value = CONST_KEY_PERIODIC_LOCAL_VN[0];
+			document.getElementById('trans.frequency').value = CONST_KEY_PERIODIC_FREQUENCY_VN[2];
+			gFreq = CONST_VAL_PERIODIC_FREQUENCY[2];
+		}
+		
+		gAccType = CONST_VAL_PERIODIC_LOCAL[0];
+		document.getElementById('id.accountno').value = gUserInfo.accountList[0].accountNumber;
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		
+		//nodeAccBal.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + "</b>"+"<b> VND</b>"+"</h6>";
+		nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + " VND"+"</div>";
+		
+		gSourceVal = gUserInfo.accountList[0].balanceAvailable;
+		//flgPeriodic = true;
+		//ngocdt3 chi cho phep nhan tai khoan nhan tien dang number
+		
+		setInputOnlyNumber('trans.desaccount',CONST_STR.get("ERR_INPUT_ONLY_NUMBER"));
+	}
+	
+	if(gAccType == CONST_VAL_PERIODIC_LOCAL[0]) {
+		document.getElementById('trans_mng_payee').style.display = 'none';
+		document.getElementById('trans.targetaccountname').style.display = 'none';
+	}
+	else {
+		document.getElementById('trans_mng_payee').style.display = 'table-row';
+		document.getElementById('trans.targetaccountname').style.display = 'block';
+	}
+	if (statusAccNoSelect && currentPage == "transfer/transfer-periodic-create-scr") {
+		
+		var destinationAcc = document.getElementById("trans.desaccount");
+		if (tmpDestinationAcc != undefined && tmpDestinationAcc != '')
+		{
+			destinationAcc.value = tmpDestinationAcc;
+		}
+		else
+		{
+			tmpDestinationAcc = destinationAcc.value;
+		}
+		
+		var payeeDesc = document.getElementById("mng.payee");
+		var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+		var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+		if (tmpPayeeType != '')
+		{
+			//mng = tmpPayeeType;
+			var check = false;
+			for (var i = 0; i < tmpArray2.length; i++)
+			{
+				if (tmpArray2[i] == mng)
+				{
+					payeeDesc.value = tmpArray1[i];
+					check = true;
+				}
+			}
+			if (mng == CONST_VAL_PAYEE_NOT_TEMPLATE[0])
+			{
+				//payeeDesc.setAttribute('disabled', '');
+				payeeDesc.setAttribute('onclick', '');
+			}
+			else{
+				//payeeDesc.setAttribute('disabled', '');
+				payeeDesc.setAttribute('onclick', 'showInputMNG()');
+			}
+		}
+		else
+		{
+			/*mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0] ;
+			payeeDesc.value = tmpArray1[0];*/
+			mng = CONST_VAL_PAYEE_NOT_TEMPLATE[1] ;
+			payeeDesc.value = tmpArray1[1];
+			//payeeDesc.setAttribute('disabled', '');
+			//payeeDesc.removeAttribute('disabled');
+			payeeDesc.setAttribute('onclick', 'showInputMNG()');
+		}
+		
+		setTimeout(function(e) { 
+			statusAccNoSelect = false; 
+			//mainContentScroll.refresh();
+		}, 1000); //fix double click
+		
+		if(gAccType == CONST_VAL_PERIODIC_LOCAL[1]) {
+			statustOtherTPBankAcc = false;
+			var arrayArgs = new Array();
+			arrayArgs.push("QSNAME");
+			arrayArgs.push(tmpDestinationAcc);
+			var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH"), "", "", "VN", gUserInfo.sessionID, arrayArgs);
+			data = getDataFromGprsCmd(gprsCmd);
+			requestBacgroundMBService("CMD_TYPE_QUICK_SEARCH", arrayArgs, requestAccNameMBServiceSuccess, requestAccNameMBServiceFail);
+		}
+	}
+
+	var today = new Date();						
+	var dd = today.getDate();						
+	var mm = today.getMonth()+1; //January is 0!						
+	var yyyy = today.getFullYear();						
+							
+	if(dd<10) {						
+		dd='0'+dd;					
+	} 						
+							
+	if(mm<10) {						
+		mm='0'+mm;					
+	} 						
+							
+	today = yyyy+'-'+mm+'-'+dd;						
+							
+	var fromDate;						
+	var toDate;						
+							
+	if (gUserInfo.lang == 'VN') {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('trans.begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.begindate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('trans.enddate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.enddate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+							
+	}						
+	else {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('trans.begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',		
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',			
+				dom_field    : document.getElementById('span.begindate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('trans.enddate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',			
+				dom_field    : document.getElementById('span.enddate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);				
+	}						
+	
+	//convert tieng viet ra ko dau			
+	setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+	/*var tmpNode = document.getElementById('span.begindate');
+	setTimeout(function() {
+		tmpNode.focus();
+	}, 100);
+	*/
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flgPeriodic = true;
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+function showAccountSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i = 0; i < gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+	showDialogList(CONST_STR.get('COM_DIALOG_TITLE_ACCNO_CHOISE'), tmpArray1, tmpArray2, true);
+}
+
+//event: selection dialog list
+function handleSelectionAccountList(e) {
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		//handleSelectionAccountListClose(e);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("id.accountno");
+			var desAccNo = document.getElementById("trans.desaccount");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+			
+			if (desAccNo.value == e.selectedValue1)
+			{
+				for (var i=0; i<gUserInfo.accountList.length; i++) {
+					var tmpAcc = gUserInfo.accountList[i];
+					if (tmpAcc.accountNumber != desAccNo.value)
+					{
+						desAccNo.value = tmpAcc.accountNumber;
+						break;
+					}
+				}
+			}
+		}
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			
+			//nodeAccBal.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + e.selectedValue2 + "</b>"+"<b> VND</b>"+"</h6>";
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND"+"</div>";
+			
+			gSourceVal = e.selectedValue2;
+		}
+
+	}
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+
+
+function showAccOfCustomer()
+{
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	var sourceAccVal = document.getElementById('id.accountno').value;
+	
+	var cheklength =gUserInfo.accountList.length;  
+	  if(cheklength==1)
+	  {
+	    showAlertText(CONST_STR.get('ERR_INPUT_NOT_ENOUGH_ACC'));
+		return;
+	  }else{
+	   for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		if (sourceAccVal != tmpAcc.accountNumber)
+		{
+			tmpArray1.push(tmpAcc.accountNumber);
+			tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+		}
+		
+	}
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountOfCustomer, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountOfCustomerClose, false);
+	showDialogList(CONST_STR.get('COM_DIALOG_TITLE_ACCNO_CHOISE'), tmpArray1, tmpArray2, true);
+}
+
+function quickSearch(tmpDestinationAcc){
+	if(gAccType == CONST_VAL_PERIODIC_LOCAL[1]) {
+			statustOtherTPBankAcc = false;
+			var arrayArgs = new Array();
+			arrayArgs.push("QSNAME");
+			arrayArgs.push(tmpDestinationAcc);
+			var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH"), "", "", "VN", gUserInfo.sessionID, arrayArgs);
+			data = getDataFromGprsCmd(gprsCmd);
+			requestBacgroundMBService("CMD_TYPE_QUICK_SEARCH", arrayArgs, requestAccNameMBServiceSuccess, requestAccNameMBServiceFail);
+	}
+}
+
+//event: selection dialog list
+function handleSelectionAccountOfCustomer(e) {
+	document.removeEventListener("evtSelectionDialog", handleSelectionAccountOfCustomer, false);
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		//handleSelectionAccountOfCustomerClose(e);
+		//document.removeEventListener("evtSelectionDialog", handleSelectionAccountOfCustomer, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			
+			var desAccountNo = document.getElementById("trans.desaccount");
+			if (desAccountNo.nodeName == "INPUT") {
+				desAccountNo.value = e.selectedValue1;
+			}
+			else {
+				desAccountNo.innerHTML = e.selectedValue1;
+			}
+		}
+	}
+}
+
+function handleSelectionAccountOfCustomerClose(e) {
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountOfCustomer, false);
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountOfCustomerClose, false);
+	}
+}
+
+
+
+
+function showInputAccScreen() {
+	navController.pushToView('com-input-account', true);
+	gHistoryCode = CONST_HISTORY_CODE[5];
+	document.addEventListener("evtInputAccount", handleInputAcc, false);
+}
+
+function showInputTransferTypeAccount() {
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_PERIODIC_LOCAL_EN: CONST_KEY_PERIODIC_LOCAL_VN;
+	var tmpArray2 = CONST_VAL_PERIODIC_LOCAL;
+	document.addEventListener("evtSelectionDialog", handleInputTransferTypeAccount, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputTransferTypeAccountClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_DIALOG_TITLE_ACCTYPE'), tmpArray1, tmpArray2, false);
+}
+
+
+
+function handleInputTransferTypeAccount(e)
+{
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleInputTransferTypeAccount, false);
+		handleInputTransferTypeAccountClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var desAcc = document.getElementById('trans.type.trans');
+			if (desAcc.nodeName == "INPUT") {
+				desAcc.value = e.selectedValue1;
+			}
+			else {
+				desAcc.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			var desAccNoVal = document.getElementById('id.value.trans.type.trans');
+			gAccType = e.selectedValue2;
+			
+			if (e.selectedValue2 == 'INTERNAL')
+			{
+				var tmpAccNo = document.getElementById('trans.desaccount');
+				tmpAccNo.parentNode.setAttribute('onClick', '');
+				//if (desAccNoVal.value != e.selectedValue2){
+				//tmpAccNo.value = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+				//}
+				tmpAccNo.setAttribute('class','form-control form-control-righttext-datepicker');
+				tmpAccNo.setAttribute('type','tel');	
+				tmpAccNo.value = '';		
+				var tmpNodeMng = document.getElementById('trans_mng_payee');
+				tmpNodeMng.style.display = 'table-row';
+				tmpNodeMng.disabled = '';
+				
+				//spantransnote.innerHTML = CONST_STR.get('TRANS_NOTE');
+				document.getElementById('span.trans.target').style.display = '';
+				document.getElementById('id.next.icon').style.display = 'none';
+				
+			}
+			else// if(e.selectedValue2 == 'LOCAL')
+			{
+				document.getElementById('span.trans.target').style.display = 'none';
+				document.getElementById('id.next.icon').style.display = '';
+				var tmpAccNo = document.getElementById('trans.desaccount');
+				tmpAccNo.setAttribute('class','form-control form-control-righttext');
+				tmpAccNo.parentNode.setAttribute('onClick', 'showAccOfCustomer();');
+				tmpAccNo.setAttribute('type','button');
+				var desAccNo = document.getElementById("trans.desaccount");
+				var sourceAccNo = document.getElementById('id.accountno');
+				desAccNo.value = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+				for (var i=0; i < gUserInfo.accountList.length; i++) {
+					var tmpAcc = gUserInfo.accountList[i];
+					if (desAccNo.value != '' && tmpAcc.accountNumber != sourceAccNo.value)// && desAccNo.value != CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+					{
+						desAccNo.value = tmpAcc.accountNumber;
+						break;
+					}
+				}
+				var tmpNodeMng = document.getElementById('trans_mng_payee');
+				tmpNodeMng.style.display = 'none';
+				
+				//spantransnote.innerHTML = '';
+			}
+			
+			
+			if (desAccNoVal.nodeName == "INPUT") {
+				desAccNoVal.value = e.selectedValue2;
+			}
+			else {
+				desAccNoVal.innerHTML = e.selectedValue2;
+			}
+			
+		}
+	}
+		
+}
+
+function handleInputTransferTypeAccountClose() {
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleInputTransferTypeAccount, false);
+		document.removeEventListener("evtSelectionDialogClose", handleInputTransferTypeAccountClose, false);
+	}
+}
+
+function showPayeePage()
+{
+	document.addEventListener("evtSelectionDialogInput", handleInputPayeeAccOpen, false);
+	document.addEventListener("evtSelectionDialogCloseInput", handleInputPayeeAccClose, false);	
+	document.addEventListener("onInputSelected", okSelected, false);	
+	//Tao dialog
+	
+	dialog = new DialogListInput(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), 'TH',
+	CONST_PAYEE_LOCAL_TRANSFER);
+	
+	
+	dialog.showDialog(callbackShowDialogSuccessed, '');
+}
+
+function callbackShowDialogSuccessed(node){
+	dialog.hiddenTab2();
+}
+function handleInputPayeeAccOpen(e){
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		handleInputPayeeAccClose();			
+		if(e.tabSelected == 'tab1'){
+			var destinationAcc = document.getElementById("trans.desaccount");
+			var nodeDesAcc = document.getElementById("trans.targetaccountname");
+			var obj = e.dataObject;
+			destinationAcc.value = obj.transValue;						
+			nodeDesAcc.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION_TITLE') + ": <b>" + obj.peopleName + "</b></h6>";
+			nodeDesAcc.style.display = 'block';
+			statusAccNoSelect = true;	
+			//Load name of user
+			tmpDestinationAcc = obj.transValue;
+						
+		}else{
+			
+		}
+	}
+}
+
+function handleInputPayeeAccClose(e){
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputPayeeAccClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputPayeeAccOpen, false);		
+		document.removeEventListener("onInputSelected", okSelected, false);
+	}
+}
+
+function addDatasuccessefull(node){
+}
+function okSelected(e){
+
+	tmpDestinationAcc = "";
+	tmpDestinationAccName = "";
+	if (currentPage == "transfer/transfer-periodic-create-scr") {		
+		handleInputPayeeAccClose();
+		var destinationAcc = document.getElementById("trans.desaccount");
+		if ((e.selectedValue != undefined) &&(e.selectedValue != null) && (e.selectedValue.length>0)){
+			destinationAcc.value = e.selectedValue;			
+			tmpDestinationAcc = e.selectedValue;
+			statusAccNoSelect = true;
+			
+			
+			quickSearch(tmpDestinationAcc);		
+
+		}
+	}
+}
+
+
+
+function showInputFrequency()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_PERIODIC_FREQUENCY_EN: CONST_KEY_PERIODIC_FREQUENCY_VN;
+	var tmpArray2 = CONST_VAL_PERIODIC_FREQUENCY;
+	document.addEventListener("evtSelectionDialog", handleInputFrequency, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_DIALOG_TITLE_FREQUENCY'), tmpArray1, tmpArray2, false);
+}
+
+
+function handleInputFrequency(e)
+{
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		handleInputFrequencyClose();
+		//document.removeEventListener("evtSelectionDialog", handleInputFrequency, false);
+		var frequency = document.getElementById('trans.frequency');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			if (frequency.nodeName == "INPUT") {
+				frequency.value = e.selectedValue1;
+			}
+			else {
+				frequency.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+				gFreq = e.selectedValue2;
+		}
+	}
+		
+}
+
+function handleInputFrequencyClose() {
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputFrequency, false);
+	}
+}
+
+
+//Format currency and pronounce to Vietnamese
+
+function handleInputAmount (e, des) {
+	var tmpVale = des.value;
+	formatCurrency(e, des);
+	//des.value = formatNumberToCurrency(des.value);
+	var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang); 
+	
+	var nodeNumTxt = document.getElementById("trans.amounttotext");
+	
+	//nodeNumTxt.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";
+	//nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": " + numStr + "</div>";
+	nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+}
+
+//Send request
+var gprsResp = new GprsRespObj("","","","");
+
+
+var conditions = {
+					"account":
+							{
+								"allow":"[0-9]",
+								"notallow":"",
+								"minlength":"11",
+								"maxlength":"11",
+								"func":""
+							}
+				}
+
+function validate(inVal1){
+	if (!validateFunc(inVal1, conditions["account"])) {
+		showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+		return false;
+	}
+	return true;
+}
+
+function checkAccRecieve(){
+	var destinationAcc = document.getElementById("trans.desaccount");
+	/*th khac rong*/
+	if(destinationAcc.value.length != 11 ){
+		showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+		return false;
+	}else if(destinationAcc.value == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_DES_ACC'));
+		return false;
+	}
+	
+	/*
+	if(gAccType == CONST_VAL_PERIODIC_LOCAL[1]) {
+		showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+		return false
+	}
+	*/
+	return true;
+}
+
+function checkAmount(){
+	var amountTrans = document.getElementById("trans.amount");
+	var tmpStr = amountTrans.value.replace(/,/g, '');
+	
+	if (tmpStr == '' || isNaN(tmpStr))
+	{
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_AMOUNT'));
+		return false;
+	}
+	return true;
+	
+}
+function checkFreq(){
+	var freqTrans = document.getElementById("trans.frequency");
+	if(freqTrans.value == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('TRANS_PERIODIC_ERR_FREQ'));
+		return false;
+	}
+	return true;
+}
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	flgPeriodic = false;
+	var data = {};
+	var arrayArgs = new Array();
+	var sourceAcc = document.getElementById("id.accountno");
+	var destinationAcc = document.getElementById("trans.desaccount");
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	var freqTrans = document.getElementById("trans.frequency");
+	var sdateTrans = document.getElementById("trans.begindate");
+	var edateTrans = document.getElementById("trans.enddate");
+	
+	if (gAccType != undefined && gAccType != '')
+	{
+		arrayArgs.push(gAccType);
+	}
+	else
+	{
+		showAlertText(CONST_STR.get('TRANS_PERIODIC_ERR_NO_TRANSTYPE'));
+		return;
+	}
+	
+	var tmpStr = sourceAcc.value;
+	arrayArgs.push(sourceAcc.value);
+	//doing
+	tmpStr = destinationAcc.value;
+	
+	if(checkAccRecieve() == true){
+		arrayArgs.push(destinationAcc.value);
+	}else{
+		return;
+	}
+	var tempDes = destinationAcc.value.substr(0, 8);
+	var tempSource = sourceAcc.value.substr(0, 8);
+	
+	if (gAccType == 'LOCAL')
+	{
+		if (tempDes != tempSource || (destinationAcc.value == sourceAcc.value))
+		{
+			showAlertText(CONST_STR.get('TRANSFER_ERROR_EQUAL_MSG'));
+			return;
+		}
+	}
+	else if(gAccType == 'INTERNAL')
+	{
+		if (tempDes == tempSource)
+		{
+			showAlertText(CONST_STR.get('TRANS_PERIODIC_DES_ACC_NOT_VALID'));
+			return;
+		}
+	}
+	
+	
+	var amount = removeSpecialChar(amountTrans.value);
+	if (checkAmount() == true) {
+		arrayArgs.push(amount);
+	}else{
+		return;
+	}
+	
+	tmpStr = contentTrans.value;
+	if (tmpStr.length < 1) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_CONTENT'));
+		return;
+	}
+	if(!checkAvailableChar(contentTrans.value)) {
+		showAlertText(CONST_STR.get('ERR_INCORRECT_TRANS_CONTENT'));
+		return;
+	}
+	
+	arrayArgs.push(contentTrans.value);
+	arrayArgs.push(mng);
+	var tmpsdate = sdateTrans.value;
+	var sDate = new Date(Date.parse(tmpsdate));
+	if(tmpsdate == '' || tmpsdate == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER_DATE')) {
+		showAlertText(CONST_STR.get('ERR_INPUT_START_DATE'));
+		return;
+	}
+	
+	var tmpedate = edateTrans.value;
+	var eDate = new Date(Date.parse(tmpedate));
+	//ngocdt3 comment de test
+	/*if(tmpedate == '' || tmpedate == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER_DATE')) {
+		showAlertText(CONST_STR.get('ERR_INPUT_END_DATE'));
+		return;
+	}*/
+	
+	
+	var sDateVal = tmpsdate.split('/');
+	var eDateVal = tmpedate.split('/');
+	//ngocdt3 comment de test
+	/*if(sDateVal[2] > eDateVal[2]){
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+		return;
+	} else
+	if(sDateVal[2] == eDateVal[2]){
+		if(sDateVal[1] > eDateVal[1]){
+			showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+			return;
+		}else if(sDateVal[1] == eDateVal[1]){
+			if(sDateVal[0] > eDateVal[0]){
+				showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+				return;
+			}
+		}
+	}*/
+	//ngocdt end
+	arrayArgs.push('');
+	arrayArgs.push(sDateVal[2] + sDateVal[1] + sDateVal[0]);//ngay bat dau
+	arrayArgs.push(eDateVal[2] + eDateVal[1] + eDateVal[0]);//ngay ket thuc
+	if(checkFreq() == true){
+		arrayArgs.push(gFreq);
+	}else{
+		return;
+	}
+	arrayArgs.push('MONDAY');//vao ngay
+	arrayArgs.push('PRD');//vao ngay
+	/*if(checkFreq() == true){
+		arrayArgs.push(gFreq);
+	}else{
+		return;
+	}
+	arrayArgs.push(sdateTrans.value);
+	arrayArgs.push(edateTrans.value);
+	*/
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TRANSFER_PERIODIC"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	//document.addEventListener("evtHttpSuccess", requestMBServiceSuccess, false);
+	//document.addEventListener("evtHttpFail", requestMBServiceFail, false);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	
+	//update account change after success
+	updateAccountInfoIfNeed(sourceAcc.value, CONSTANTS.get("CMD_TRANSFER_PERIODIC"));
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	/*
+	if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANSFER_PERIODIC") || (gprsResp.responseType == '-1')))){
+		//navController.initWithRootView('account/account-scr', true);	
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	*/
+	if ((checkResponseCodeSuccess(gprsResp.respCode) || gprsResp.respCode == CONSTANTS.get("COM_FINGERPRINT_OVER_LIMIT") || gprsResp.respCode == CONSTANTS.get("COM_FINGERPRINT_OVER_DATE_LIMIT")) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANSFER_PERIODIC")))) {
+		//parserLocalTrans();
+		transPeriodicObj = gprsResp.arguments;
+		genReviewScreen();
+		
+	} else if (gprsResp.respCode == '2003' && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANSFER_PERIODIC")))) {
+		transPeriodicObj = gprsResp.arguments;
+		genCacheReviewScreen();
+		navController.pushToView("com-verify-password", true);
+	}
+	/*logInfo('request transfer local create success');
+	if ((e.type == "evtHttpSuccess") && (currentPage == "transfer/transfer-card-create-scr")) {
+		document.removeEventListener("evtHttpSuccess", requestMBServiceSuccess, false);
+	}*/
+};
+
+//event listener: http request fail
+function requestMBServiceFail(e){
+	//navController.initWithRootView('account/account-scr', true);	
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+};
+
+
+function parserLocalTrans() {
+	//parser info
+	//gprsResp
+}
+
+function genReviewScreen() {
+	var sourceAcc = document.getElementById("id.accountno");
+	var destinationAcc = document.getElementById("trans.desaccount");
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	var freqTrans = document.getElementById("trans.frequency");
+	var sdateTrans = document.getElementById("trans.begindate");
+	var edateTrans = document.getElementById("trans.enddate");
+	
+	var docXml = createXMLDoc();
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+	//trans type
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('MENU_TRANS_PERIODIC'), docXml, tmpChildNodeAcc);
+	//tai khoan chuyen tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sourceAcc.value, docXml, tmpChildNodeAcc);
+	// so du kha dung
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(gSourceVal) + ' VND', docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+
+	//review/reviewinfo/reviewtranstitle
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+
+
+	//toan khoan nhan
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_FPTS_ACC_RECIEVE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', destinationAcc.value, docXml, tmpChildNodeAcc);
+	//so tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_FPTS_AMOUNT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', amountTrans.value + ' VND', docXml, tmpChildNodeAcc);
+	var amount = removeSpecialChar(amountTrans.value);
+	logInfo('amountTrans.value: ' + amountTrans.value + ' amount: ' + amount);
+	var balanceCont = gSourceVal - amount;
+	logInfo('balance: ' + gSourceVal + ' balanceCont: ' + balanceCont);
+	//phi dich vu
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_FEE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', '0 VND', docXml, tmpChildNodeAcc);
+    //balance cont
+	/*var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_BALANCE_CONT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(balanceCont,' VND'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc);*/
+	//tan suat chuyen
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_FREQUENCY'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', freqTrans.value, docXml, tmpChildNodeAcc);
+	//Ngay bat dau
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sdateTrans.value, docXml, tmpChildNodeAcc);
+
+	//ngay ket thuc
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_END_DATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', edateTrans.value, docXml, tmpChildNodeAcc);
+	// Noi dung chuyen tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_CONTENT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', contentTrans.value, docXml, tmpChildNodeAcc);
+
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+
+function genCacheReviewScreen() {
+	var sourceAcc = document.getElementById("id.accountno");
+	var destinationAcc = document.getElementById("trans.desaccount");
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	var freqTrans = document.getElementById("trans.frequency");
+	var sdateTrans = document.getElementById("trans.begindate");
+	var edateTrans = document.getElementById("trans.enddate");
+	
+	var docXml = createXMLDoc();
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+	//trans type
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('MENU_TRANS_PERIODIC'), docXml, tmpChildNodeAcc);
+	//tai khoan chuyen tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sourceAcc.value, docXml, tmpChildNodeAcc);
+	// so du kha dung
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(gSourceVal) + ' VND', docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+
+	//review/reviewinfo/reviewtranstitle
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+
+
+	//toan khoan nhan
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_FPTS_ACC_RECIEVE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', destinationAcc.value, docXml, tmpChildNodeAcc);
+	//so tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_FPTS_AMOUNT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', amountTrans.value + ' VND', docXml, tmpChildNodeAcc);
+	var amount = removeSpecialChar(amountTrans.value);
+	logInfo('amountTrans.value: ' + amountTrans.value + ' amount: ' + amount);
+	var balanceCont = gSourceVal - amount;
+	logInfo('balance: ' + gSourceVal + ' balanceCont: ' + balanceCont);
+	//phi dich vu
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_FEE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', '0 VND', docXml, tmpChildNodeAcc);
+    //balance cont
+	/*var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_BALANCE_CONT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(balanceCont,' VND'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc);*/
+	//tan suat chuyen
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_FREQUENCY'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', freqTrans.value, docXml, tmpChildNodeAcc);
+	//Ngay bat dau
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sdateTrans.value, docXml, tmpChildNodeAcc);
+
+	//ngay ket thuc
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_END_DATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', edateTrans.value, docXml, tmpChildNodeAcc);
+	// Noi dung chuyen tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_PERIODIC_CONTENT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', contentTrans.value, docXml, tmpChildNodeAcc);
+
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+}
+
+//LOADING SCREEN EVENT
+/*
+document.addEventListener("evtLoadPageSuccess", function(e){
+	if (statusAccNoSelect && currentPage == "transfer/transfer-periodic-create-scr") {
+		
+		var destinationAcc = document.getElementById("trans.desaccount");
+		destinationAcc.value = tmpDestinationAcc;
+		setTimeout(function(e) { 
+			statusAccNoSelect = false; 
+			mainContentScroll.refresh();
+		}, 1000); //fix double click
+	}
+	
+	
+}, false);
+*/
+
+function openDatePicker(outNodeID) {
+	var tmpNodeBlacktrans = document.getElementById('mask-blacktrans');
+	tmpNodeBlacktrans.style.display = 'block';
+	tmpNodeBlacktrans.style.zIndex = 100;
+	nodePickerOut = document.getElementById(outNodeID); 
+	
+	initDatePicker(gUserInfo.lang); //init date picker with localization:EN, VN
+	
+	SpinningWheel.setCancelAction(cancelVisaDatePicker);
+	SpinningWheel.setDoneAction(doneVisaDatePicker);
+	
+	SpinningWheel.open();
+}
+
+function doneVisaDatePicker() {
+	var tmpNodeBlacktrans = document.getElementById('mask-blacktrans');
+	tmpNodeBlacktrans.style.display = 'none';
+	tmpNodeBlacktrans.style.zIndex = 0;
+	var results = SpinningWheel.getSelectedValues();
+	if (nodePickerOut != undefined && nodePickerOut != null) {
+		nodePickerOut.value = results.values[0] + '/' + (results.keys[1] < 10 ? '0' + results.keys[1] : results.keys[1]) + '/' + results.values[2];
+	}
+}
+
+function cancelVisaDatePicker() {
+	var tmpNodeBlacktrans = document.getElementById('mask-blacktrans');
+	tmpNodeBlacktrans.style.display = 'none';
+	tmpNodeBlacktrans.style.zIndex = 0;
+	console.log('Cancel date picker!!!');
+}
+
+function showSelection(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_TRANS_PRE_SELCT_EN: CONST_KEY_TRANS_PRE_SELCT_VN;
+	var tmpArray2 = CONST_KEY_TRANS_PRE_SLECT_BGN;
+	document.addEventListener("evtSelectionDialog", handleSelectionBGN, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionBGNClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_BTN_SELECT_FUNC'), tmpArray1, tmpArray2, false);
+}
+function handleSelectionBGN(e){
+	var selectionID = "";
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		handleSelectionBGNClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagSelection = document.getElementById("id.selcfunc");
+			if (tagSelection.nodeName == "INPUT") {
+				tagSelection.value = e.selectedValue1;
+			}
+			else {
+				tagSelection.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectionID = e.selectedValue2;
+		}
+		if(selectionID == '1'){
+		}
+		else if(selectionID == '2'){
+			navController.initWithRootView('transfer/transfer-periodic-mng-scr', true, 'xsl');
+		}
+	}
+}
+
+function handleSelectionBGNClose(){
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionBGNClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionBGN, false);
+	}
+}
+						
+function showmngpage(){
+	navController.initWithRootView('transfer/transfer-periodic-mng-scr', true, 'xsl');
+}
+
+function showInputMNG()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+	var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+	document.addEventListener("evtSelectionDialog", handleInputMNG, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_MGN_PAYEE_SELCT'), tmpArray1, tmpArray2, false);
+}
+
+
+function handleInputMNG(e)
+{
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		//document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+		handleInputMNGClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var mnglist = document.getElementById('mng.payee');
+			if (mnglist.nodeName == "INPUT") {
+				mnglist.value = e.selectedValue1;
+			}
+			else {
+				mnglist.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			mng = e.selectedValue2;
+		}
+		
+	}
+}
+
+function handleInputMNGClose() {
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+	}
+}
+
+//handle quick query acc name
+function requestAccNameMBServiceSuccess(e) {
+	var gprsResp = parserJSON(e);
+	//setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH")))) {
+		//parser quick query account name
+		//gprsResp
+		var nodeDesAcc = document.getElementById("trans.targetaccountname");		
+		nodeDesAcc.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION_TITLE') + ": <b>" + gprsResp.arguments[0] + "</b></h6>";
+		nodeDesAcc.style.display = '';
+		statustOtherTPBankAcc = true;
+	}
+}
+
+function requestAccNameMBServiceFail() {
+	
+}
+
+//gen sequence form
+function genSequenceFormPeriodic() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	//var tmpStepNo = 401;
+	var tmpStepNo = 301;
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqFormPeriodic');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+/*** SELECT TRANSFER TYPE ***/
+
+function showPrdTransTypeSelection(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_PRD_TRANS_TYPE_EN: CONST_PRD_TRANS_TYPE_VN;
+	var tmpArray2 = CONST_PRD_TRANS_TYPE_KEY;
+	document.addEventListener("evtSelectionDialog", handleSelectionPrdTransType, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionPrdTransTypeClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_BTN_SELECT_FUNC'), tmpArray1, tmpArray2, false);
+}
+
+function handleSelectionPrdTransType(e){
+	var selectionID = "";
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		handleSelectionPrdTransTypeClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagSelection = document.getElementById("id.selprdfuncs");
+			if (tagSelection.nodeName == "INPUT") {
+				tagSelection.value = e.selectedValue1;
+			}
+			else {
+				tagSelection.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectionID = e.selectedValue2;
+		}
+		if (selectionID == 'LOCAL') {
+			navController.initWithRootView("transfer/transfer-periodic-create-scr", true, 'xsl');
+			
+		}
+		else if (selectionID == 'FASTACC') {
+			navController.initWithRootView("transfer/transfer-periodic-fast-interbank-create-scr", true, 'xsl');
+			
+		}
+		else if (selectionID == 'FASTCARD') {
+			navController.initWithRootView("transfer/transfer-periodic-card-create-scr", true, 'xsl');
+			
+		}
+		else if (selectionID == 'INTERBANK') {
+			navController.initWithRootView("transfer/transfer-periodic-interbank-create-scr", true);
+			
+		}
+	}
+}
+
+function handleSelectionPrdTransTypeClose(){
+	if (currentPage == "transfer/transfer-periodic-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionPrdTransTypeClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionPrdTransType, false);
+	}
+}
+
+

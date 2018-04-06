@@ -1,0 +1,17 @@
+2018/03/21-20:32:19.645 10012 Reusing MANIFEST F:\Browser\Google Chrome\User Data\Default\Session Storage/MANIFEST-000001
+2018/03/21-20:32:20.220 10012 Recovering log #1966
+2018/03/21-20:32:20.221 10012 Level-0 table #1969: started
+2018/03/21-20:32:20.699 10012 Level-0 table #1969: 15919 bytes OK
+2018/03/21-20:32:20.853 10012 Recovering log #1969
+2018/03/21-20:32:20.853 10012 Reusing old log F:\Browser\Google Chrome\User Data\Default\Session Storage/001969.log 
+2018/03/21-20:32:21.150 10012 Delete type=0 #1966
+2018/03/21-20:32:21.150 10012 Delete type=2 #1970
+2018/03/21-20:32:21.291 10472 Compacting 4@0 + 1@1 files
+2018/03/21-20:32:22.424 10472 Generated table #1970@0: 972 keys, 26005 bytes
+2018/03/21-20:32:22.424 10472 Compacted 4@0 + 1@1 files => 26005 bytes
+2018/03/21-20:32:22.890 10472 compacted to: files[ 0 2 12 0 0 0 0 ]
+2018/03/21-20:32:22.957 10472 Delete type=2 #1959
+2018/03/21-20:32:22.957 10472 Delete type=2 #1962
+2018/03/21-20:32:23.015 10472 Delete type=2 #1965
+2018/03/21-20:32:23.015 10472 Delete type=2 #1967
+2018/03/21-20:32:23.016 10472 Delete type=2 #1969

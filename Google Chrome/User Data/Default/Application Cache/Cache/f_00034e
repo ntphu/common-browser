@@ -1,0 +1,424 @@
+/**
+ * Created by JetBrains WebStorm.
+ * User: TucVV.FSOFT
+ * Date: 7/20/16
+ * Time: 8:00 AM
+ * To change this template use File | Settings | File Templates.
+ */
+
+/*** HEADER ***/
+var mMenuList = new Array();
+var myScroll,
+    pullDownEl, pullDownOffset,
+    pullUpEl, pullUpOffset;
+var pieChart = null;
+
+var hiddenNum = 1; // anhntt: 1 hien chu; != 1 an chu
+/*** INIT VIEW ***/
+function loadInitXML() {
+    return '';
+}
+
+function viewBackFromOther() {
+    navController.getActionBar().showNavHeaderBar();
+    navController.getActionBar().setHavingBackground(true);
+     var navBottomBar = document.getElementById('navBottomBar');
+    navBottomBar.style.height = '60px';
+    navBottomBar.style.top = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - 60 + 'px';
+}
+/*** INIT VIEW END ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+    logInfo('homepage-vn load success');
+    actionbar.setTitleBarOnly(CONST_STR.get('FINANCE_OVERVIEW'));
+    // navController.getActionBar().setTitleBarOnly('');
+    var height = document.getElementById('mainViewContent').clientHeight;
+    var plusHeight = height + 2 + 'px';
+    document.getElementById('mainViewContent').style.height = plusHeight;
+    //document.getElementsByClassName('customer-name')[0].innerHTML=gCustomerNanme;
+    refrClock();
+    initOFinance(true);
+    navController.getActionBar().showNavHeaderBar();
+    navController.getActionBar().setHavingBackground(true);
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+    if (pieChart != null) {
+        pieChart.destroyChart();
+        pieChart = null;
+    }
+    navArrayScr[0] = "homepagexsl/homepage-dynamic-scr";
+}
+
+
+function refrClock() {
+
+    var d=new Date();
+
+    var s=d.getSeconds();
+
+    var m=d.getMinutes();
+
+    var h=d.getHours();
+
+    var day=d.getDay();
+
+    var date=d.getDate();
+
+    var month=d.getMonth();
+
+    var year=d.getFullYear();
+
+    var days=((gUserInfo.lang == 'EN') ? CONST_KEY_CALENDAR_DAYNAME_EN : CONST_KEY_CALENDAR_DAYNAME_VN);
+
+    var months=((gUserInfo.lang == 'EN') ? CONST_KEY_CALENDAR_MONTHNAME_EN : CONST_KEY_CALENDAR_MONTHNAME_VN);
+    if (gUserInfo.lang == 'EN') {
+        actionbar.setDateTime(days[day] + ", " + date + ", " + months[month] + ", " + year);
+    }
+    else {
+        actionbar.setDateTime(days[day] + ", ngày " + date + " " + months[month] + " năm " + year);
+    }
+}
+
+function initMFinance(reload){
+    var parent = document.querySelector("#home-page-manage-finance .mobilemode");
+    var holder1 = document.createElement("div");
+    holder1.id = "holder1";
+    holder1.style.height = "100px";
+    holder1.style.width = "100px";
+    holder1.style.background = "red";
+
+    parent.appendChild(holder1);
+
+
+}
+function initLatestAction(){
+    document.getElementById('latest-action').innerHTML = "";
+    document.getElementById('latest-action').innerHTML = "latest action";
+}
+function returnItemTitleNumber(number)
+{
+    var temp = number/1000000;
+    if(temp > 1)
+        return formatNumberToCurrency(Math.round(temp -0.5));
+    else if(temp>0 && temp <1){
+        return temp;
+    }else return formatNumberToCurrency(temp);
+}
+function initOFinance(reload){
+
+    if(!checkElExistDom('holder-chart') || reload) {
+        //get dữ liệu từ webservice
+        // var arrayArgs1=new Array();
+        // var gprsCmd1 = new GprsCmdObj(CONSTANTS.get("CMD_GET_CUS_PROP"), "", "", gUserInfo.lang, gUserInfo.sessionID,arrayArgs1 );
+        // data1 = getDataFromGprsCmd(gprsCmd1);
+        // showLoadingMask(this);
+        //  requestMBService(data1,false,0,function(e){
+        //     var jsonobj1=parserJSON(e);
+        // });
+        var arrayArgs=new Array();
+        var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_CUS_PROP_DETAIL_INFO"), "", "", gUserInfo.lang, gUserInfo.sessionID,arrayArgs );
+        data = getDataFromGprsCmd(gprsCmd);
+        showLoadingMask(this);
+        requestMBService(data, false , 0, function(e){
+            var jsonobj=parserJSON(e);
+            var arguments1=jsonobj.arguments[0];
+            var arrargument1=arguments1.split("#");
+            var arguments2=jsonobj.arguments[1];
+            var arrargument2=arguments2.split("#");
+            var tongtiengui=arrargument1[0];
+            var tongtienvay=arrargument1[1];
+            var sodu=arrargument1[2];
+            var sodukhadung=arrargument1[3];
+            var sodutiengui=arrargument1[4];
+            var laitamtinh=arrargument1[5];
+            var dunoconlai=arrargument1[6];
+            var sotiengocdatra=arrargument1[7];
+            var tongdutienvay = arrargument1[8];
+            var hanmucduoccap=arrargument2[0];
+            var dunohientai=arrargument2[1];
+            var hanmucconlai=arrargument2[2];
+            var screenW =(CONST_DESKTOP_MODE && !checkScreenisMobilePX())? (window.innerWidth/2.8 || document.documentElement.clientWidth/2.8 || document.body.clientWidth/2.8):  (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth);
+            var parentNode =  document.getElementById("overview-finance");
+            parentNode.innerHTML = "";
+            var widthParent = document.getElementById("overview-finance").offsetWidth;
+            var holderChart = document.createElement("div");
+            holderChart.id = 'holder-chart';
+            holderChart.className='break-slide';
+            holderChart.style.width = "100%";
+            parentNode.appendChild(holderChart);
+
+            var d1,d2,d3,d4,d5;
+            if(tongtienvay!=0&&sodutiengui==0)
+                d1=0;
+			else if(tongtienvay==0&&sodutiengui!=0)
+				d1=100;
+            else{
+                d1 = returnPercent( sodutiengui ,tongtienvay);
+            }
+            if(sodukhadung!=0&&sodu==0)
+                d2=0;
+            else if(sodukhadung==0&&sodu!=0)
+                d2=100;
+            else{
+                d2 = returnPercent(sodukhadung,sodu);
+            }
+            if(hanmucconlai!=0&&dunohientai==0)
+                d3=0;
+               else if(hanmucconlai==0&&dunohientai!=0)
+               d3 = 100;
+            else{
+                d3 = returnPercent(hanmucconlai,dunohientai);
+            }
+            if(sodutiengui!=0&&laitamtinh==0)
+                d4=100;
+               else if(sodutiengui==0&&laitamtinh!=0)
+                d4=0;
+            else{
+                d4 = returnPercent(sodutiengui,laitamtinh);
+            }
+
+            if(dunoconlai!=0&&sotiengocdatra==0)
+                d5=0;
+               else if(dunoconlai==0&&sotiengocdatra!=0)
+                d5=100;
+            else{
+                d5 = returnPercent(dunoconlai,sotiengocdatra);
+            }
+
+            if(hiddenNum == 1){
+                var itemtitle1=returnItemTitleNumber(tongtiengui);
+                var itemtitle2=returnItemTitleNumber(hanmucconlai);
+                var itemtitle3=returnItemTitleNumber(sodukhadung);
+                var itemtitle4=returnItemTitleNumber(sodutiengui);
+                var itemtitle5=returnItemTitleNumber(dunoconlai);
+            }else{
+                var itemtitle1="";
+                var itemtitle2="";
+                var itemtitle3="";
+                var itemtitle4="";
+                var itemtitle5="";
+            }
+            if(gModeScreenView == CONST_MODE_SCR_SMALL){
+            pieChart = new PieChart({
+                width: screenW,
+                textColor: '#ffffff',
+                watercolor:'#ffffff',
+                colortitle: '#ffffff',
+                colortitleSelected:"#ffffff",
+                weightLine: 2,
+                textSizePercent : 32,
+                textSizeTitle : 18,
+                paddingTitle : 10,
+                totalItems: 5,
+                stepTouch : 15,
+                titleItems: [CONST_STR.get('PIECHART_ACCOUNT_TITLE'), CONST_STR.get('PIECHART_CARD_TITLE'), CONST_STR.get('PIECHART_OVERVIEW_TITLE'), CONST_STR.get('PIECHART_SAVING_TITLE'), CONST_STR.get('PIECHART_LOAN_TITLE')],
+                colortitleitems:'red',
+//                percentItemsTitle: ["", "", "", "", ""],
+                percentItemsTitle: [itemtitle3, itemtitle2, "", itemtitle4, itemtitle5],
+                percentItems: [d2, d3, d1, d4, d5],
+                strokeColors: ["#22b14c", "#ff00ff", "#FF0000", "#ff7f27", "#0000FF"],
+                beginSelectIndex: function (index) {
+                    var myElem = document.getElementById('chartdata');
+                    if (myElem === null) alert('does not exist!');
+                    else {
+                        myElem.innerHTML = "";
+                    }
+                    myElem.appendChild(generateChartData(index,pieChart.strokeColors[index],tongtiengui,tongtienvay,sodu,sodukhadung,hanmucconlai,dunohientai,hanmucduoccap,sodutiengui,laitamtinh,dunoconlai,sotiengocdatra,tongdutienvay));
+                },
+                endSelectIndex: function (index) {
+                }
+            })};
+            if(gModeScreenView == CONST_MODE_SCR_MEDIUM){
+                pieChart = new PieChart({
+                    width: screenW,
+                    textColor: '#000000',
+                    watercolor:'#8d37b1',
+                    colortitle: '#6a1b9a',
+                    colortitleSelected:"#424242",
+                    weightLine: 2,
+                    textSizePercent : 32,
+                    textSizeTitle : 18,
+                    paddingTitle : 20,
+                    totalItems: 5,
+                    stepTouch : 15,
+                    titleItems: [CONST_STR.get('PIECHART_ACCOUNT_TITLE'), CONST_STR.get('PIECHART_CARD_TITLE'), CONST_STR.get('PIECHART_OVERVIEW_TITLE'), CONST_STR.get('PIECHART_SAVING_TITLE'), CONST_STR.get('PIECHART_LOAN_TITLE')],
+                    colortitleitems:'red',
+                    percentItemsTitle: [itemtitle3, itemtitle2, "", itemtitle4, itemtitle5],
+                    percentItems: [d2, d3, d1, d4, d5],
+                    strokeColors: ["#22b14c", "#ff00ff", "#FF0000", "#ff7f27", "#0000FF"],
+                    beginSelectIndex: function (index) {
+                        var myElem = document.getElementById('chartdata');
+                        if (myElem === null) alert('does not exist!');
+                        else {
+                            myElem.innerHTML = "";
+                        }
+                        myElem.appendChild(generateChartData(index,pieChart.strokeColors[index],tongtiengui,tongtienvay,sodu,sodukhadung,hanmucconlai,dunohientai,hanmucduoccap,sodutiengui,laitamtinh,dunoconlai,sotiengocdatra,tongdutienvay));
+                    },
+                    endSelectIndex: function (index) {
+                    }
+                })
+            } ;
+            // pieChart.showChart("mainview");
+            if(gModeScreenView == CONST_MODE_SCR_SMALL){
+            //DaiTQ cmt chage color bieu do
+            var colorlaytout = localStorage.getItem('TPBankUserLayout');
+            if(colorlaytout==null||colorlaytout==1){
+                pieChart.textColor='#ffffff';
+                pieChart.colortitleSelected = "#ffffff";
+            }else{
+                pieChart.colortitleSelected='#000000';
+                pieChart.textColor ='#000000';
+                pieChart.colortitle ='#6a1b9a';
+                pieChart.watercolor ='#c1bdbd';
+                pieChart.colortitleSelected = "#000000"
+            }
+            }
+            pieChart.showChart("holder-chart");
+            var holderUnit = document.getElementById('holder-unit');
+            if (holderUnit) {
+                holderUnit.remove();
+                holderUnit = null;
+            }
+            holderUnit = document.createElement("div");
+            holderUnit.id = 'holder-unit';
+            holderUnit.align = "center";
+            holderUnit.style.padding = "10px";
+            holderUnit.innerHTML = "<span>"+CONST_STR.get('UNITS_VND')+"</span>";
+            parentNode.appendChild(holderUnit);
+
+            var myElem = document.getElementById('holder-data');
+            if (myElem)
+                myElem.remove();
+
+            var holderData = document.createElement("div");
+            holderData.id = "holder-data";
+            holderData.className="holder-data";
+            holderData.style.width = "100%";
+            var divData = document.createElement("div");
+            divData.id = "chartdata";
+            divData.className="grid-have-arrow mb-grid-have";
+           
+            divData.appendChild(generateChartData(2,pieChart.strokeColors[2],tongtiengui,tongtienvay,sodu,sodukhadung,hanmucconlai,dunohientai,hanmucduoccap,sodutiengui,laitamtinh,dunoconlai,sotiengocdatra,tongdutienvay));
+           
+            var narrow = document.createElement("div");
+            narrow.id = "narrowright";
+            narrow.className="narrowright";
+            holderData.appendChild(divData);
+            holderData.appendChild(narrow);
+            parentNode.appendChild(holderData);
+            var bgspannarrow=document.createElement("div");
+            bgspannarrow.className="bg-spannarrow";
+            narrow.appendChild(bgspannarrow);
+            var spannarrow=document.createElement("span");
+            spannarrow.className="icon-movenext spannarrow";
+            bgspannarrow.appendChild(spannarrow);
+            //if(reload) myScroll.refresh();
+        }, requestMBServiceFail);
+
+
+    }
+
+}
+
+function checkElExistDom(el){
+    var element = document.getElementById(el);
+    if (typeof(element) != 'undefined' && element != null)
+    {
+        console.log('element exists');
+        return true;
+    }
+    else{
+        console.log('element NOT exists');
+        return false;
+    }
+}
+function returnPercent(arg1, arg2) {
+    //var temp = (Math.abs(arg1) > Math.abs(arg2)) ? Math.abs(arg2) : Math.abs(arg1);
+    if ((Math.abs(arg1) + Math.abs(arg2)) == 0)
+        return 0;
+    var result = Math.abs(arg1) / (Math.abs(arg1) + Math.abs(arg2)) * 100;
+    return result;
+}
+//Function Thông tin của Chart
+function generateChartData(index,color,tongtiengui,tongtienvay,sodu,sodukhadung,hanmucconlai,dunohientai,hanmucduoccap,sodutiengui,laitamtinh,dunoconlai,sotiengocdatra,tongdutienvay){
+    var html="";
+    if(index==2){
+    //     if(parseInt(sodutiengui)<parseInt(tongtienvay)){
+             html="<div class='chart-data-item grid-cus-prop' style='border-top-left-radius:7px;'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('TOTAL_SAVING_MONEY_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(tongtiengui)+" VND</div></div>"
+            html+="<div class='chart-data-item grid-cus-prop' style='border-bottom-left-radius:7px;'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('TOTAL_LOAN_MONEY_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(tongtienvay))+" VND</div></div>";
+    //     }
+
+    // else{
+        //html="<div class='chart-data-item'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('TOTAL_SAVING_MONEY_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(sodutiengui)+" VND</div></div>"
+        //html+="<div class='chart-data-item'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('TOTAL_LOAN_MONEY_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(tongtienvay)+" VND</div></div>";
+    // }
+}
+
+    if(index==0 ){
+    //     if(parseInt(sodu)<parseInt(sodukhadung)){
+    //     html="<div class='chart-data-item'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('MONEY_ACTIVE_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(sodu)+" VND</div></div>"
+    //     html+="<div class='chart-data-item'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('MONEY_ACTIVE_AVAIABLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(sodukhadung)+" VND</div></div>";
+    // }
+    // else
+    // {
+        html="<div class='chart-data-item grid-cus-prop' style='border-top-left-radius:7px;'><div class='icon-img' ></div><div class='title-chart-item'>"+CONST_STR.get('MONEY_ACTIVE_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(sodu)+" VND</div></div>"
+        html+="<div class='chart-data-item grid-cus-prop' style='border-bottom-left-radius:7px;'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('MONEY_ACTIVE_AVAIABLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(sodukhadung)+" VND</div></div>";
+    // }
+    }
+    if(index==1){
+    //     if(parseInt(hanmucconlai)<parseInt(dunohientai)){
+		html="<div class='chart-data-item grid-cus-prop' style='border-top-left-radius:7px;'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('LOAN_CURRENT_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(dunohientai))+" VND</div></div>";
+         html+="<div class='chart-data-item grid-cus-prop'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('LIMITED_REMAIN_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(hanmucconlai))+" VND</div></div>"
+         
+//         html+="<div class='chart-data-item' style='border-bottom-left-radius:7px;'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('LIMITED_GRANDED')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(hanmucduoccap))+" VND</div></div>";
+    // }
+    // else
+    // {
+        // html="<div class='chart-data-item'><div class='icon-img' ></div><div class='title-chart-item'>"+CONST_STR.get('LIMITED_REMAIN_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(hanmucconlai)+" VND</div></div>"
+         //html+="<div class='chart-data-item'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('LOAN_CURRENT_TITLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(dunohientai)+" VND</div></div>";
+        // html+="<div class='chart-data-item'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('LIMITED_GRANDED')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(hanmucduoccap)+" VND</div></div>";
+
+    // }
+}
+    if(index==3 ){
+    //     if(parseInt(sodutiengui)<parseInt(laitamtinh)){
+        html="<div class='chart-data-item grid-cus-prop' style='border-top-left-radius:7px;'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('MONEY_SAVING_CURRENT')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(sodutiengui))+" VND</div></div>"
+        html+="<div class='chart-data-item grid-cus-prop' style='border-bottom-left-radius:7px;'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('INTEREST_SAVING_CURRENT')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(laitamtinh))+" VND</div></div>";
+    // }
+    // else
+    // {
+        //html="<div class='chart-data-item'><div class='icon-img' ></div><div class='title-chart-item'>"+CONST_STR.get('MONEY_SAVING_CURRENT')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(sodutiengui)+" VND</div></div>"
+        //html+="<div class='chart-data-item'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('INTEREST_SAVING_CURRENT')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(laitamtinh)+" VND</div></div>";
+
+    // }
+}
+     if(index==4){
+    //     if(parseInt(dunoconlai)<parseInt(sotiengocdatra)){
+         html="<div class='chart-data-item grid-cus-prop' style='border-top-left-radius:7px;'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('LOAN_CURRENT_AVAIABLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(dunoconlai))+" VND</div></div>"
+        html+="<div class='chart-data-item grid-cus-prop' style='border-bottom-left-radius:7px;'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('MONEY_PAID')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(sotiengocdatra))+" VND</div></div>";
+       /* html+="<div class='chart-data-item'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('TOTAL_MONEY_LOAN')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(Math.abs(tongdutienvay))+" VND</div></div>";*/
+    // }
+    // else
+    // {
+       // html="<div class='chart-data-item'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('LOAN_CURRENT_AVAIABLE')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(dunoconlai)+" VND</div></div>"
+        //html+="<div class='chart-data-item'><div class='icon-img' style='border-color:"+color+"'></div><div class='title-chart-item'>"+CONST_STR.get('MONEY_PAID')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(sotiengocdatra)+" VND</div></div>";
+       // html+="<div class='chart-data-item'><div class='icon-img'></div><div class='title-chart-item'>"+CONST_STR.get('TOTAL_MONEY_LOAN')+"</div><div class='value-chart-item'>"+formatNumberToCurrency(tongdutienvay)+" VND</div></div>";
+
+    // }
+}
+    var subMenu = document.createElement('div');
+    subMenu.innerHTML = html;
+    return subMenu;
+}
+
+
+function requestMBServiceFail(){};
+
+

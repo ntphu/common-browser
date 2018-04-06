@@ -1,0 +1,33 @@
+{
+   "author": "Umar Sheikh",
+   "background": {
+      "page": "background.html"
+   },
+   "default_locale": "en",
+   "description": "__MSG_aboutText__",
+   "icons": {
+      "128": "images/branding-icon128.png",
+      "16": "images/branding-icon16.png",
+      "32": "images/branding-icon32.png",
+      "48": "images/branding-icon48.png"
+   },
+   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC73j7wcO9X7kob+MIkKaCbgumgCkHGkNCVIrfOLkxv05V/mtROgyjl4GFfneiFIYFZoFZElwRjwbROJOCesjSf2r+UzuVqo5ztTopY8URvl4yBrzxbZCbpIFrBnCT1+S7rZMh5Y0HDTYLloC1fAVwwwviyKdbbzACngP/kiz6e0wIDAQAB",
+   "manifest_version": 2,
+   "minimum_chrome_version": "22.0",
+   "name": "Recent History",
+   "options_page": "options.html",
+   "page_action": {
+      "default_icon": {
+         "128": "images/main-icon128.png",
+         "19": "images/main-icon19.png",
+         "32": "images/main-icon32.png",
+         "38": "images/main-icon38.png",
+         "48": "images/main-icon48.png"
+      },
+      "default_popup": "popup.html"
+   },
+   "permissions": [ "tabs", "history", "bookmarks", "chrome://favicon/" ],
+   "short_name": "Recent History",
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "3.0.3"
+}

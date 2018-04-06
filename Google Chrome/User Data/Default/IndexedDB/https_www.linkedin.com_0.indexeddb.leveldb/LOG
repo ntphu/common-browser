@@ -1,0 +1,11 @@
+2016/08/15-23:26:19.187 7784 Reusing MANIFEST C:\Users\qu5an9g\AppData\Local\Google\Chrome\User Data\Default\IndexedDB\https_www.linkedin.com_0.indexeddb.leveldb/MANIFEST-000001
+2016/08/15-23:26:19.206 7784 Recovering log #3
+2016/08/15-23:26:19.207 7784 Reusing old log C:\Users\qu5an9g\AppData\Local\Google\Chrome\User Data\Default\IndexedDB\https_www.linkedin.com_0.indexeddb.leveldb/000003.log 
+2016/08/15-23:26:19.211 7784 Current memtable full; waiting...
+2016/08/15-23:26:19.212 7060 Level-0 table #5: started
+2016/08/15-23:26:19.217 7060 Level-0 table #5: 777 bytes OK
+2016/08/15-23:26:19.218 7060 Delete type=0 #3
+2016/08/15-23:26:19.218 7060 Level-0 table #7: started
+2016/08/15-23:26:19.219 7060 Level-0 table #7: 0 bytes OK
+2016/08/15-23:26:19.219 7060 Delete type=0 #4
+2016/08/15-23:26:19.219 7060 Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)

@@ -1,0 +1,6 @@
+2017/11/04-16:24:25.760 13876 Reusing MANIFEST F:\Browser\Google Chrome\User Data\Default\IndexedDB\https_drive.google.com_0.indexeddb.leveldb/MANIFEST-000001
+2017/11/04-16:24:25.908 13876 Recovering log #1339
+2017/11/04-16:24:28.031 13876 Reusing old log F:\Browser\Google Chrome\User Data\Default\IndexedDB\https_drive.google.com_0.indexeddb.leveldb/001339.log 
+2017/11/04-18:24:01.134 15328 Level-0 table #1345: started
+2017/11/04-18:24:01.387 15328 Level-0 table #1345: 4204605 bytes OK
+2017/11/04-18:24:01.438 15328 Delete type=0 #1339

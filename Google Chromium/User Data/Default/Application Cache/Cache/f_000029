@@ -1,0 +1,583 @@
+/**
+ * Created by CongNT1.Fsoft
+ * User: 
+ * Date: 07/07/14
+ * Time: 5:35 PM
+ */
+
+/*** HEADER ***/
+var tmpDestinationAcc;
+var arrObj;
+
+/*
+var brnCode = "";
+var provicenCode = "";
+*/
+var brnCode;
+var provicenCode;
+
+var gprsResp = new GprsRespObj("","","","");
+var arrGift = null;
+var arrObjGrif = null;
+
+var docXml;
+//mang chua ma qua tang
+var giftCodeArr = null;
+
+var flag = false;
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+	
+	var docXml = getReviewXmlStore();
+	logInfo(docXml);
+	return docXml;
+}
+
+/*** INIT VIEW END ***/
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+    bottomBar.hide();
+    navController.getActionBar().hideActionbar();
+    navController.getActionBar().showActionBar();
+	logInfo('transfer load success');
+	if(flag == false) {
+		sendRequestGetGiftList();
+	} else if(flag == true) {
+		loadData();
+	}
+/*var length = branchs.data.length;
+	logInfo(length);*/
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('transfer will unload');
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+function loadData() {
+	giftCodeArr = new Array();
+	arrObjGrif  = new Array();
+	var obj = null;
+	var griftId = "";
+	var griftName = "";
+	var griftPoint = "";
+	var griftQuantity = "";
+	var griftHasPartner = "";
+	var table = document.getElementById("tblGriftList");
+
+	for(var i = 0; i < table.rows.length; i++) {
+		griftId = table.rows[i].cells[1].innerHTML;
+		griftName = table.rows[i].cells[0].innerHTML;
+		griftPoint = table.rows[i].cells[2].innerHTML;
+		griftQuantity = table.rows[i].cells[3].innerHTML;
+		griftHasPartner = table.rows[i].cells[4].innerHTML;
+
+		giftCodeArr[i] = griftId;
+		
+		arrObjGrif.push({
+			id 			: griftId,
+			name 		: griftName,
+			grifpoint 	: griftPoint,
+			quannity 	: griftQuantity,
+			haspartner 	: griftHasPartner,
+			});
+	}
+}
+
+
+
+/*** FUNCTIONS ***/
+
+//tinh tong diem quy doi
+function calc_cost(code, point) {
+
+	var p = Number(point.replace(/,/g, ''));
+	var itemReceive = GetElementDesktopMobile('loyalty_desktop','loyalty_mobile','slq-' + code).value.replace(/,/g, "");
+	var totalPoint = GetElementDesktopMobile('loyalty_desktop','loyalty_mobile','cost-' + code);
+
+	if(Number(itemReceive) > 0) {
+		totalPoint.innerHTML  = formatNumberToCurrency(p * Number(itemReceive));
+	} else {
+		totalPoint.innerHTML  = '';
+	}
+}
+
+/**kiem tra xem co nhap so luong qua muon doi hay ko?*/
+function checkInputSQL(code) {
+
+    var slqObj = GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"slq-" + code);
+
+	
+	if(slqObj.value != "") {
+		var slqNumber = Number(slqObj.value.replace(/,/g, ''));
+		if (slqNumber > 0)
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+/**kiem tra xem co nhap ma doi tac hay ko?*/
+function checkInputPartner(code) {
+	var partner = GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"partner-" + code);
+	var tmpStr = tmppartner.value;
+	if (tmpStr.length >4){ showAlertText(CONST_STR.get('LOYALTY_ERR_PARTNER_CODE'));}
+	if(partner && partner.value.trim() != ""  ) {
+		return true;
+	}
+	return false;
+}
+
+//nhung textbox dc nhap la nhung textbox dc chon
+function checkSelected(code) {
+	return (checkInputSQL(code)/* || checkInputPartner(code)*/);
+}
+
+/**kiem tra neu ko nhap so luong qua muon doi o tat ca textbox so luong qua muon doi*/
+function checkInput(arr) {
+	var flag = false;
+	for(var i in arr) {
+		if(checkSelected(arr[i])){
+			flag = true;
+		}
+	}
+	if(!flag) {
+		showAlertText(CONST_STR.get('LOYALTY_REGIS_ERR_GIFT_NUMBER'));
+	}
+	return flag;
+}
+
+/**kiem tra nhap so luong qua muon doi, nhung ko nhap ma doi tac tuong ung*/
+function checkEnterPartnerMatch(arr) {
+	var flag = true;
+	var obj = null;
+	for(var i =0; i < arr.length; i++) {
+		if (checkSelected(giftCodeArr[i])) {
+            var ParNer= document.getElementById("partner-" + giftCodeArr[i]);
+            if(ParNer!= "" && ParNer!=undefined && ParNer!= null){
+			obj = GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"partner-" + giftCodeArr[i]);
+			if (obj && obj.value.length == 0) {
+				flag = false;
+			}
+            }
+		}
+	}
+	
+	if(!flag) {
+		showAlertText(CONST_STR.get('LOYALTY_REGIS_ERR_PARTNER_CODE'));
+	}
+	return flag;
+}
+
+//kiem tra so luong qua muon nhan co nho hon trong kho ko?
+function checkGiftToReceive(arr) {
+	var flag = true;
+	var objSlq = null;
+	var objTotal = null;
+	var v1, v2;
+	for(var i in arr) {
+		//neu da nhap so qua
+		if(checkInput(arr)) {
+			objSlq = GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"slq-" + arr[i]);
+			objTotal = GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"total-" + arr[i]);
+			v1 = objSlq.value.replace(/,/g,'');
+			v2 = objTotal.innerHTML.replace(/,/g,'');
+			if(Number(v1) > Number(v2)) {
+				flag = false;
+			}
+		}
+	}
+	
+	if(!flag) {
+		showAlertText(CONST_STR.get('LOYALTY_REGIS_ERR_GIFT_RECEVIE'));
+	}
+	return flag;
+}
+
+//kiem tra co du so diem de toi qua ko
+function checkTotalPoint(arr) {
+	var totalPointCIF = document.getElementById("hdnTotalPoint").value;
+	//totalPointCIF =10000;
+	var objPoint = null;
+	var totalPointCal = 0;
+	for(var i in arr) {
+		objPoint = GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"cost-" + arr[i]);
+		totalPointCal += Number(objPoint.innerHTML.replace(/,/g, ""));
+	}
+	
+	if(Number(totalPointCIF) < totalPointCal) {
+		showAlertText(CONST_STR.get('LOYALTY_REGIS_ERR_TOTAL_POINT'));
+		return false;
+	}
+	return true;
+}
+
+
+function handleInputAmount (e, des) {
+	var tmpVale = des.value;
+	formatCurrency(e, des);
+	
+}
+
+
+
+
+var conditions = gConditions; 
+/*** VALIDATE INPUT ***/
+function validate() {
+
+	if(!checkInput(giftCodeArr)) {
+		return false;
+	}
+	
+	if(!checkEnterPartnerMatch(giftCodeArr)) {
+		return false;
+	}
+	
+	if(checkInput(giftCodeArr)) {
+		if(!checkGiftToReceive(giftCodeArr)) {
+			return false;
+		}
+	}
+	
+	if(!checkTotalPoint(giftCodeArr)) {
+		return false;
+	}
+	
+	return true;			
+}
+
+function sendRequestGetGiftList() {
+	
+	logInfo('sendJSON');
+	// collect the form data while iterating over the inputs	
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(gCustomerNo);
+
+	var gprsCmd = new GprsCmdObj("8", "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+
+function requestMBServiceSuccess(e) {
+	logInfo("loyalty regis: " + e);
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp);
+	 arrObjLoyalty = new Array();
+	arrObjLoyalty = gprsResp.arguments;
+	if(gprsResp.respCode == '0') {
+	brnCode = arrObjLoyalty[0];
+	provicenCode = arrObjLoyalty[1];
+	document.getElementById("hdnTotalPoint").value = arrObjLoyalty[2];
+	//var indexEnd = arrObjLoyalty.indexOf("END");
+	arrGift = new Array();
+	//for(var k=3;k<indexEnd;k++){
+		for(var k=3;k<arrObjLoyalty.length;k++){
+		
+		arrGift.push(arrObjLoyalty[k]);
+	}
+		//if(arrGift != null && arrGift.length >0) {
+			genXMLDoc(arrGift);
+			var docXsl = getCachePageXsl("loyalty-register/loyalty-regis-gen-html");
+			logInfo(docXsl);
+			genHTMLStringWithXML(docXml, docXsl, successCallback, failCallback);
+		/*}
+	 	else {
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	      }	*/
+    //arrBranchLoyalty = new Array();
+		/*for(var q =0; q<arrObjLoyalty.length; q++){
+			if(arrObjLoyalty[q] == 'END')
+			{
+				for(var i =q; i <arrObjLoyalty.length; i++){
+					arrBranchLoyalty.push(arrObjLoyalty[i+1]);
+				}
+			}
+		}
+*/	
+	}
+	else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == '8'  || (gprsResp.responseType == '-1')))) {
+		//navController.pushToView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.pushToView(tmpPageName, true, tmpPageType);
+	}
+}
+
+
+function requestMBServiceFail() {
+	//navController.initWithRootView("accountxsl/account-scr", true, 'xsl');
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.pushToView(tmpPageName, true, tmpPageType);
+}
+
+function successCallback(strHtml) {
+	var div = document.getElementById("divGiftContent");
+	div.innerHTML = '';
+	div.innerHTML = strHtml;
+}
+
+function failCallback() {
+	
+}
+
+
+
+function genXMLDoc(arrGift) {
+	docXml = createXMLDoc();
+	var rootNode = createXMLNode('loyaltylist', '', docXml);
+	var tmpXmlNodeInfo;
+	var childNodeInfo;
+	var arrTmp = null;
+	
+
+
+	giftCodeArr = new Array();
+	arrObjGrif  = new Array();
+	for(var i = 0; i< arrGift.length; i++) {
+		arrTmp = new Array();
+		arrTmp = arrGift[i].split("#");
+		
+		arrObjGrif.push({
+			id 			: arrTmp[0],
+			name 		: arrTmp[1],
+			grifpoint 	: arrTmp[2],
+			quannity 	: arrTmp[3],
+			haspartner 	: arrTmp[4],
+			});
+		
+	if(arrTmp[3] !=0){
+
+        tmpXmlNodeInfo = createXMLNode('loyalty', '', docXml, rootNode);
+
+        //ten qua
+        childNodeInfo = createXMLNode('giftnametitle', CONST_STR.get('LOYALTY_REGIS_ITEM_NAME'), docXml, tmpXmlNodeInfo);
+        childNodeInfo = createXMLNode('giftnamecontent', arrTmp[1], docXml, tmpXmlNodeInfo);
+
+        //ma qua
+        childNodeInfo = createXMLNode('giftcodetitle', CONST_STR.get('LOYALTY_REGIS_ITEM_CODE'), docXml, tmpXmlNodeInfo);
+        childNodeInfo = createXMLNode('giftcodecontent', arrTmp[0], docXml, tmpXmlNodeInfo);
+        giftCodeArr.push(arrTmp[0]);
+
+        //so diem/qua
+        childNodeInfo = createXMLNode('giftpointtitle', CONST_STR.get('LOYALTY_REGIS_POINT'), docXml, tmpXmlNodeInfo);
+        childNodeInfo = createXMLNode('giftpointcontent', formatNumberToCurrency(arrTmp[2]), docXml, tmpXmlNodeInfo);
+
+        //so qua trong kho
+        childNodeInfo = createXMLNode('giftnumbertitle', CONST_STR.get('LOYALTY_REGIS_NUMBER_ITEM'), docXml, tmpXmlNodeInfo);
+        childNodeInfo = createXMLNode('giftnumbercontent', formatNumberToCurrency(arrTmp[3]), docXml, tmpXmlNodeInfo);
+
+        //so qua muon doi
+        childNodeInfo = createXMLNode('giftreceivetitle', CONST_STR.get('LOYALTY_REGIS_NUMBER_ITEM_GET'), docXml, tmpXmlNodeInfo);
+
+        //so diem quy doi
+        childNodeInfo = createXMLNode('gifttopointtitle', CONST_STR.get('LOYALTY_REGIS_TOTAL_POINT'), docXml, tmpXmlNodeInfo);
+
+
+        if (arrTmp[4] == "Y") {
+            childNodeInfo = createXMLNode('giftpartnertitle', CONST_STR.get('LOYALTY_REGIS_PARTNER_CODE'), docXml, tmpXmlNodeInfo);
+            childNodeInfo = createXMLNode('giftpartnercontent', arrTmp[0], docXml, tmpXmlNodeInfo);
+            childNodeInfo = createXMLNode('class',"input-group",docXml,tmpXmlNodeInfo);
+        }
+    }
+		//note bong sen vang
+	}
+	
+
+	logInfo(docXml);
+	return docXml;
+}
+
+function genXmlReview(arrObj, totalPoint, totalPointCIF, provinceCode, brnCode, strXml, strXmlName) {
+	
+	logInfo('provinceCode 1: ' + provinceCode);
+	
+	docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('loyaltylist', '', docXml);
+
+	var tmpXmlNodeInfo = createXMLNode('totalpoint', formatNumberToCurrency(totalPoint), docXml, rootNode);
+
+	tmpXmlNodeInfo = createXMLNode('totalpointcif', formatNumberToCurrency(totalPointCIF), docXml, rootNode);
+	tmpXmlNodeInfo = createXMLNode('totalpointremain', formatNumberToCurrency(parseFloat(totalPointCIF) - parseFloat(totalPoint)), docXml, rootNode);
+	tmpXmlNodeInfo = createXMLNode('provincecode', provinceCode, docXml, rootNode);
+	tmpXmlNodeInfo = createXMLNode('brncode', brnCode, docXml, rootNode);
+	tmpXmlNodeInfo = createXMLNode('griftxml', strXml, docXml, rootNode);
+	tmpXmlNodeInfo = createXMLNode('griftnamexml', strXmlName, docXml, rootNode);
+	
+
+	var childNodeInfo;
+	
+	for(var i in arrObj) {
+		tmpXmlNodeInfo = createXMLNode('loyalty', '', docXml, rootNode);
+
+		//ten qua
+		childNodeInfo = createXMLNode('giftnametitle', CONST_STR.get('LOYALTY_REGIS_ITEM_NAME'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('giftnamecontent', arrObj[i].name, docXml, tmpXmlNodeInfo);
+		
+		//ma qua
+		childNodeInfo = createXMLNode('giftcodetitle', CONST_STR.get('LOYALTY_REGIS_ITEM_CODE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('giftcodecontent', arrObj[i].id, docXml, tmpXmlNodeInfo);
+		
+		//so diem/qua
+		childNodeInfo = createXMLNode('giftpointtitle', CONST_STR.get('LOYALTY_REGIS_POINT'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('giftpointcontent', formatNumberToCurrency(arrObj[i].grifpoint), docXml, tmpXmlNodeInfo);
+		
+		//so qua trong kho
+		childNodeInfo = createXMLNode('giftnumbertitle', CONST_STR.get('LOYALTY_REGIS_NUMBER_ITEM'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('giftnumbercontent',formatNumberToCurrency(arrObj[i].quannity), docXml, tmpXmlNodeInfo);
+		
+		//so qua muon doi
+		childNodeInfo = createXMLNode('giftreceivetitle', CONST_STR.get('LOYALTY_REGIS_NUMBER_ITEM_GET'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('giftreceivecontent',formatNumberToCurrency(arrObj[i].numbers), docXml, tmpXmlNodeInfo);
+		
+		//so diem quy doi
+		childNodeInfo = createXMLNode('gifttopointtitle', CONST_STR.get('LOYALTY_REGIS_TOTAL_POINT'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('gifttopointcontent', arrObj[i].cost, docXml, tmpXmlNodeInfo);
+		
+		//ma doi tac
+		childNodeInfo = createXMLNode('giftpartnertitle', CONST_STR.get('LOYALTY_REGIS_PARTNER_CODE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('giftpartnercontent', arrObj[i].haspartner, docXml, tmpXmlNodeInfo);
+	}
+	
+	
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+	
+	
+}
+
+
+
+
+function sendRequestJSON() {
+	var sqlObj = null;
+	var partnerObj = null;
+	var pointObj = null;
+	
+	var arrGriftReceive = new Array();
+	var objTmp  = null;
+	var strId = "";
+	var numbers = 0;
+	//tong diem su dung de doi qua
+	var totalPoint = 0;
+	//diem kha dung cua khach hang
+	var totalPointCIF = document.getElementById("hdnTotalPoint").value;
+	//totalPointCIF = 10000;
+	
+	/*var strXml = "<ROOT>";
+	
+	strXml += "<PROVINCE_CODE>";
+	strXml += provicenCode;
+	strXml += "</PROVINCE_CODE>";
+	
+	strXml += "<BRN_CODE>";
+	strXml += brnCode;
+	strXml += "</BRN_CODE>";*/
+
+	//danh sach qua tang
+	var strXml = "<LOYALTY_LIST>";
+	var strXmlName = "<LOYALTY_LIST_NAME>";
+	
+	
+	if(validate()) {
+		for(var i in giftCodeArr) {
+			objTmp = new Object();
+			strId = giftCodeArr[i];
+			sqlObj 		= GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"slq-" + strId);
+			partnerObj 	= GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"partner-" + strId);
+			pointObj 	= GetElementDesktopMobile('loyalty_desktop','loyalty_mobile',"cost-" + strId);
+			if(sqlObj != undefined && sqlObj.value != undefined) {
+				numbers = Number(sqlObj.value.replace(/,/g, ""));
+				totalPoint += Number(pointObj.innerHTML.replace(/,/g, ""));
+				if(numbers > 0) {
+				for(j=0;j<arrObjGrif.length; j++)
+				{
+					if(strId == arrObjGrif[j].id) {
+						objTmp.id = strId;
+						objTmp.name = arrObjGrif[j].name;
+						objTmp.grifpoint = arrObjGrif[j].grifpoint;
+						objTmp.quannity = arrObjGrif[j].quannity;
+						objTmp.numbers = numbers;
+						objTmp.cost = pointObj.innerHTML;
+						objTmp.haspartner = partnerObj == null? "" : partnerObj.value;
+                        var text =/^[^!@#$%^&*_+\-=\[\]{}();':"\\|,.<>\/?]*$/;
+                        if (!text.test(partnerObj.value)) {
+                            showAlertText(CONST_STR.get("LOYALTY_REGIS_PARTNER_CODE_ENR"));
+                            return;
+                        }
+						arrGriftReceive.push(objTmp);
+						strXml += "<LOYALTY>";
+						//ma qua
+						strXml += "<GRIF_CODE>";
+						strXml += strId;
+						strXml += "</GRIF_CODE>";
+						
+						//so luong qua
+						strXml += "<GRIF_NUMBER>";
+						strXml += numbers;
+						strXml += "</GRIF_NUMBER>";
+						
+						//ma doi tac
+						strXml += "<PARTNER_CODE>";
+						strXml += partnerObj == null? "" : partnerObj.value;
+						strXml += "</PARTNER_CODE>";
+						
+						strXml += "</LOYALTY>";
+						
+						
+						
+						strXmlName += "<LOYALTY>";
+							strXmlName += "<GRIF_NAME>";
+							strXmlName += objTmp.name;
+							strXmlName += "</GRIF_NAME>";
+							
+							strXmlName += "<GRIF_NUMBER>";
+							strXmlName += numbers;
+							strXmlName += "</GRIF_NUMBER>";
+						strXmlName += "</LOYALTY>";
+						
+					}
+				}
+				}
+			}//end if sqlObj != null
+			
+		
+		/*strXml += "</ROOT>";*/
+			
+		}//end for
+
+		strXml += "</LOYALTY_LIST>";
+		strXmlName += "</LOYALTY_LIST_NAME>";
+		//call gen xml review
+		genXmlReview(arrGriftReceive, totalPoint, totalPointCIF, provicenCode, brnCode, strXml, strXmlName);
+		navController.pushToView("loyalty-register/loyalty-regis-review-scr", true, 'xsl');
+
+	}//end if validate
+
+}//end function sendRequestJSON
+
+
+function goBack() {
+	navController.pushToView("loyalty-register/loyalty-regis-create-scr", true, 'xsl');
+}
+
+/*** FUNCTIONS END ***/

@@ -1,0 +1,1069 @@
+/**
+ * Created by HuyNT2.
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+
+/*** HEADER ***/
+//var arrAllAccObj = gUserInfo.accountList.concat(gUserInfo.accountListOther);
+var arrAllAccObj = new Array();
+var totalPage = 0;
+var itemsPerPage = 10;
+var pageIndex = 1;
+var xslAccHisTable ;
+var accDetailFlag = false;
+var arrayArgsJumbo;
+var statusEditingName = false;
+var editingAccNo = "";
+var tempEasylinkGenHtml = "";
+var EasylinkHanMucThauChi = [];
+/*** INIT VIEW ***/
+function loadInitXML() {
+	return '';
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+    bottomBar.hide();
+	logInfo('account load success');
+	genPageAccount();
+    document.addEventListener('evtChangeWidthDesktop',genPageAccount,false);
+    document.addEventListener('evtChangeWidthMobile',genPageAccount,false);
+
+    var arrMedial = getItemsPerPage(arrAllAccObj, pageIndex);
+    //genArrayAccountInfo(arrMedial);
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('account will unload');
+    document.removeEventListener('evtChangeWidthDesktop',genPageAccount,false);
+    document.removeEventListener('evtChangeWidthMobile',genPageAccount,false);
+    selectionOnTableClose();
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	accDetailFlag = true;
+}
+function genPageAccount() {
+    arrAllAccObj = [];
+	//ngocdt3 check neu co dang ky easylink thi hien thi list tai khoan tuong ung
+	if(gJumboAccExistedStat && !gJumboAccActiveStat){
+		var length = gUserInfo.accountList.length;
+		for(var i=0; i<length; i++) {
+            var tmpAccObj = gUserInfo.accountList[i];
+            if(tmpAccObj.udfFieldVal != '6') {
+                arrAllAccObj.push(tmpAccObj);
+            }
+        }
+        var easylink= document.getElementById('accinfo-easylink');
+        if(easylink){
+            easylink.style.display ='';
+            getEasylinkInfo();
+        }
+	}
+	else{
+        document.getElementById('easylink-title-head').style.display = 'none';
+        document.getElementById('account-jumbo-note').style.display = 'none';
+		document.getElementById('accinfo-easylink').style.display ='none';
+		arrAllAccObj = gUserInfo.accountList.concat(gUserInfo.accountListOther);
+	}
+
+	//total page
+	totalPage = calTotalPage(arrAllAccObj);
+	logInfo(arrAllAccObj);
+	//gen page indicator
+	pageIndex = 1;
+	//get object per page
+	var arrMedial = new Array();
+	arrMedial = getItemsPerPage(arrAllAccObj, pageIndex);
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var tmpHtmlContent = genHtmlDoc(arrMedial);
+        var tmpNode = document.getElementById('accinfo-table');
+        tmpNode.innerHTML = tmpHtmlContent;
+        resizeMainViewContent(currentPage);
+        document.addEventListener('evtSelectionOnTable',selectionOnTable, false);
+        document.addEventListener('evtSelectionOnTableClose',selectionOnTableClose, false);
+        genPagging(totalPage, pageIndex);
+        if(document.getElementById('account-jumbo-note')) {
+            var tmpEasyLink = false;
+			var length = gUserInfo.accountList.length;
+            for(var i=0; i<length; i++) {
+                var tmpAccObj = gUserInfo.accountList[i];
+                if(tmpAccObj.udfFieldVal == '6') {
+                    tmpEasyLink = true;
+                    break;
+                }
+            }
+        }
+    }else{
+        //gen xml
+        var tmpXmlDoc = genXmlDoc(arrMedial);
+        //gen xsl
+        xslAccHisTable = getCachePageXsl("accountxsl/account-scr");
+        var tmpXslDoc = xslAccHisTable;
+        //gen html from xml and xsl
+        genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+            var tmpNode = document.getElementById('tabHost');
+            tmpNode.innerHTML = oStr;
+            genPagging(totalPage, pageIndex);
+
+            //show EasyLink note
+          if(document.getElementById('account-jumbo-note')) {
+            var tmpEasyLink = false;
+            var length = gUserInfo.accountList.length;
+            for(var i=0; i<length; i++) {
+                var tmpAccObj = gUserInfo.accountList[i];
+                if(tmpAccObj.udfFieldVal == '6') {
+                    tmpEasyLink = true;
+                    break;
+                }
+            }
+            if(gJumboAccExistedStat== true && gJumboAccActiveStat==false) {
+                document.getElementById('account-jumbo-note').style.display = '';
+                document.getElementById('easylink-title-head').style.display = '';
+            }
+            else {
+                document.getElementById('account-jumbo-note').style.display = 'none';
+                document.getElementById('easylink-title-head').style.display = 'none';
+            }
+          }
+        });
+    }
+
+}
+//lay thong tin Easylink
+function getEasylinkInfo(){
+	var data = {};
+	arrayArgsJumbo = new Array();
+
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_JUMBO_ACC_INFO"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgsJumbo);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+}
+function requestMBServiceSuccesss(e){
+	gprsResp = parserJSON(e);
+	if (gprsResp.respCode != '0' && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_JUMBO_ACC_INFO")))) {
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	if (checkResponseCodeSuccess(gprsResp.respCode) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_JUMBO_ACC_INFO")))) {
+		arrayArgsJumbo = gprsResp.arguments;
+		genPageInfo();
+	}
+}
+
+function requestMBServiceFail(e){
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+//EVENT SELECTED PAGE
+function pageIndicatorSelected(selectedIdx, selectedPage) {
+	pageIndex = selectedIdx;
+    var arrMedial = new Array();
+    arrMedial = getItemsPerPage(arrAllAccObj, selectedIdx);
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var tmpHtmlContent = genHtmlDoc(arrMedial);
+        var tmpNode = document.getElementById('accinfo-table');
+        tmpNode.innerHTML = tmpHtmlContent;
+        if(selectedIdx == 1){
+            document.getElementById('accinfo-easylink').innerHTML = tempEasylinkGenHtml;
+            document.getElementById('account-jumbo-note').style.display='block';
+        }
+        else{
+            document.getElementById('account-jumbo-note').style.display='none';
+            document.getElementById('accinfo-easylink').innerHTML="";
+        }
+        if(tempEasylinkGenHtml == ""){
+            document.getElementById('account-jumbo-note').style.display='none';
+        }
+        genPagging(totalPage, pageIndex);
+    }else{
+        //gen xml
+        var tmpXmlDoc = genXmlDoc(arrMedial);
+        //gen xsl
+        xslAccHisTable = getCachePageXsl('accountxsl/account-scr');
+        var tmpXslDoc = xslAccHisTable;
+
+        genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+            var tmpNode = document.getElementById('tabHost');
+            tmpNode.innerHTML = oStr;
+            if(selectedIdx == 1){
+                document.getElementById('accinfo-easylink').innerHTML = tempEasylinkGenHtml;
+                document.getElementById('account-jumbo-note').style.display='block';
+            }
+            else{
+                document.getElementById('account-jumbo-note').style.display='none';
+            }
+            if(tempEasylinkGenHtml == ""){
+                document.getElementById('account-jumbo-note').style.display='none';
+            }
+            genPagging(totalPage, pageIndex);
+        });
+    }
+}
+
+//GEN PAGGING
+
+function genPagging(arr, pageIdx) {
+	
+	//var nodePager = document.getElementById('pageIndicatorNums');
+	var nodepage = document.getElementById('accdetail-pagination');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIdx));
+	nodepage.innerHTML = tmpStr;
+	
+	//chan nhap ky tu dac biet
+	var tmpArrInputName = document.getElementById('accinfo-table').getElementsByTagName('input');
+	var length = tmpArrInputName.length;
+	for (var i=0; i<length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+}
+
+function calTotalPage(arrObj) {
+	
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+//get items per page
+function getItemsPerPage(arrObj, pageIdx) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	var length = arrObj.length;
+	for(var i = 0; i < length; i++) {
+		from = (pageIdx - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}
+		
+	}
+	
+	return arrTmp;
+}
+
+// create document xml account
+function genXmlDoc(inArrAcc) {
+    //genAccountInfo(inArrAcc);
+    logInfo(inArrAcc);
+
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	
+	var tmpXmlRootNode = createXMLNode('account', '', docXml);
+	var tmpXmlNodeTitle = createXMLNode('acctitle', '', docXml, tmpXmlRootNode);
+	var tmpChildNode = createXMLNode('accnametitle', CONST_STR.get('ACCOUNT_ACC_NAME'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('accnotitle', CONST_STR.get('ACCOUNT_ACC_NO_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('acccurrencytitle', CONST_STR.get('ACCOUNT_ACC_CURRENCY_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('accbaltitle', CONST_STR.get('ACCOUNT_BALANCE_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('accavbaltitle', CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'), docXml, tmpXmlNodeTitle);
+
+//    GEN TABLE FOLLOW NEW DESIGN
+	var length = inArrAcc.length;
+    for(var i = 0; i < length; i++) {
+		
+			var inAccObj = inArrAcc[i];
+		if(inAccObj.accClass != 'T6A001'){
+        var SoTk = [CONST_STR.get('ACCOUNT_ACC_NO_TITLE'), inAccObj.accountNumber];
+		if(inAccObj.descByUser !='' && inAccObj.descByUser !=undefined && inAccObj.descByUser != null){
+			var TenTk = [CONST_STR.get('ACCOUNT_ACC_NAME'), inAccObj.descByUser];
+		}
+		else{
+			var TenTk = [CONST_STR.get('ACCOUNT_ACC_NAME'), inAccObj.description];
+		}
+        
+       // var TienTe = [CONST_STR.get('ACCOUNT_ACC_CURRENCY_TITLE'), inAccObj.currency];
+        var SoDu = [CONST_STR.get('ACCOUNT_BALANCE_TITLE'), formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency)];
+        var SoDuKhaDung = [CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'), formatNumberToCurrencyWithSymbol(inAccObj.balanceAvailable,' ' + inAccObj.currency)];
+
+        // create account
+        account = new Array();
+        account.push(SoTk);
+        account.push(TenTk);
+       // account.push(TienTe);
+        account.push(SoDu);
+        account.push(SoDuKhaDung);
+
+        var recycler = new RecyclerView({
+            type: "ACTION",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+
+        recycler.setData(account);
+        var contentHTML = recycler.init();
+
+        var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+        tmpChildNode1 = createXMLNode('accno', inAccObj.accountNumber, docXml, tmpXmlNodeInfo);
+        tmpChildNode2 = createXMLNode('content', contentHTML, docXml, tmpXmlNodeInfo);
+		}
+        
+    }
+	
+	return docXml;
+}
+
+// create document html account
+function genHtmlDoc(inArrAcc){
+    var contentHTML = '';
+    contentHTML += "<table class='recycler-table-ebank'>";
+    contentHTML += "<tr class='recycler-row-normal recycler-header-hightlight'>";
+    contentHTML += "<th width='20%' class='recycler-row-align-midle_acc'><span style='color: #424242; text-align: center'> "+ CONST_STR.get('ACCOUNT_ACC_NO_TITLE')+"</span></th>";
+    contentHTML += "<th class='recycler-row-align-midle_acc'><span style='color: #424242; text-align: center'> "+ CONST_STR.get('ACCOUNT_ACC_NAME')+"</span></th>";
+    contentHTML += "<th class='recycler-row-align-midle_acc'><span style='color: #424242; text-align: center'> "+ CONST_STR.get('ACCOUNT_BALANCE_TITLE')+"</span></th>";
+    contentHTML += "<th class='recycler-row-align-midle_acc'><span style='color: #424242; text-align: center'> "+ CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE')+"</span></th>";
+    contentHTML += "</tr>";
+
+    var length = inArrAcc.length;
+    var contentItem= '';
+    for(var i=0; i< length; i++){
+        var inAccObj = inArrAcc[i];
+        if(inAccObj.accClass != 'T6A001'){
+            contentItem = contentItem +
+            '<tr class="recycler-row-normal recycler-hover renames" onclick="viewAccDetail(\''+inAccObj.accountNumber+'\')" style="cursor:pointer">'+
+            '<td width="20%" class="recycler-row-align-midle">'+inAccObj.accountNumber+'</td>';
+                if(inAccObj.descByUser !='' && inAccObj.descByUser !=undefined && inAccObj.descByUser != null ){
+                    contentItem = contentItem +
+                   '<td style="width:40%;" class="recycler-row-align-midle" onmouseout="hideEditButton(\''+inAccObj.accountNumber+'\')" onmouseover="showEditButton(\''+inAccObj.accountNumber+'\')">'+
+                        '<div>' +
+                        '<div><span id="displayAccName'+inAccObj.accountNumber+'">'+inAccObj.descByUser+'</span>'+
+                            '<div id="divEdit'+inAccObj.accountNumber+'" style="float:right;"><a class="ref-link rename" onclick="showEditPanel(event,\''+inAccObj.accountNumber+'\')"><span>'+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'</span></a></div>'+
+                        '</div>'+
+                            '<div id="divEditSave'+inAccObj.accountNumber+'" style="display:none;">' +
+                               '<input  placeholder="'+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'" id="txtNewDes'+inAccObj.accountNumber+'" type="text" maxlength="500"><a class="ref-link" onclick="saveContent(event,\''+inAccObj.accountNumber+'\')"><span>'+CONST_STR.get('ACCOUNT_RENAME_SAVE_TITLE')+'</span></a></div>'+
+                        '</div>'+
+                   '</td>';
+                }else{
+                    contentItem = contentItem +
+                        '<td style="width:40%;" class="recycler-row-align-midle" onmouseout="hideEditButton(\''+inAccObj.accountNumber+'\')" onmouseover="showEditButton(\''+inAccObj.accountNumber+'\')">'+
+                        '<div>' +
+                        '<div><span id="displayAccName'+inAccObj.accountNumber+'">'+inAccObj.description+'</span>'+
+                        '<div id="divEdit'+inAccObj.accountNumber+'" style="float:right;"><a class="ref-link rename" onclick="showEditPanel(event,\''+inAccObj.accountNumber+'\')"><span>'+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'</span></a></div>'+
+                        '</div>'+
+                        '<div id="divEditSave'+inAccObj.accountNumber+'" style="display:none;">' +
+                        '<input placeholder="'+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'" id="txtNewDes'+inAccObj.accountNumber+'" type="text" maxlength="500"><a class="ref-link" onclick="saveContent(event,\''+inAccObj.accountNumber+'\')"><span>'+CONST_STR.get('ACCOUNT_RENAME_SAVE_TITLE')+'</span></a></div>'+
+                        '</div>'+
+                        '</td>';
+                }
+
+            contentItem = contentItem +
+                '<td class="recycler-row-align-midle">'+formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency)+'</td>'+
+                '<td class="recycler-row-align-midle">'+formatNumberToCurrencyWithSymbol(inAccObj.balanceAvailable,' ' + inAccObj.currency)+'</td>'+
+            "</tr>"
+    }
+    }
+    contentHTML += contentItem +"</table>";
+    return contentHTML;
+
+    /*var arrTitle = new Array();
+    var arrContentData = new Array();
+    var arrItemContent;
+    var contentHTML ="";
+    arrTitle.push(CONST_STR.get('ACCOUNT_ACC_NO_TITLE'));
+    arrTitle.push(CONST_STR.get('ACCOUNT_ACC_NAME'));
+    //arrTitle.push(CONST_STR.get('ACCOUNT_ACC_CURRENCY_TITLE'));
+    arrTitle.push(CONST_STR.get('ACCOUNT_BALANCE_TITLE'));
+    arrTitle.push(CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'));
+    arrContentData.push(arrTitle);
+	var length = inArrAcc.length;
+    for(var i = 0; i < length; i++) {
+        var inAccObj = inArrAcc[i];
+        arrItemContent = new Array();
+        if(inAccObj.accClass != 'T6A001'){
+            arrItemContent.push(inAccObj.accountNumber);
+            if(inAccObj.descByUser !='' && inAccObj.descByUser !=undefined && inAccObj.descByUser != null ){
+                arrItemContent.push(inAccObj.descByUser);
+            }else{
+                arrItemContent.push(inAccObj.description);
+            }
+            //arrItemContent.push(inAccObj.currency);
+            arrItemContent.push(formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency));
+           	arrItemContent.push(formatNumberToCurrencyWithSymbol(inAccObj.balanceAvailable,' ' + inAccObj.currency));
+            arrContentData.push(arrItemContent);
+            }
+    }
+    var recycler = new RecyclerView({
+        type: "DESKTOP_NORMAL",
+        typeTextAlign: "MIDLE",
+        title: "Tai khoan jumbo",
+        titleAlign:"LEFT",
+        opacity:false
+    });
+   recycler.setData(arrContentData);
+    recycler.setHeaderHightlight(true);
+   contentHTML = recycler.init();
+    return contentHTML;*/
+}
+/*** HANDLE ONCLICK ROW ***/
+
+var gprsResp = new GprsRespObj("","","","");
+var tmpAcc = new AccountObj();
+function viewAccDetail(idx) {
+	if(statusEditingName) return;
+	
+	logInfo('selected account: ' + idx);
+    var data = {};
+	var arrayArgs = new Array();
+	/*if(idx >= gUserInfo.accountList.length) {
+		tmpAcc = gUserInfo.accountListOther[gUserInfo.accountListOther.length - 1 + idx];
+	}
+	else {
+		tmpAcc = gUserInfo.accountList[idx];
+	}*/
+	var ArrListAccount =gUserInfo.accountList.concat(gUserInfo.accountListOther);
+	var length = ArrListAccount.length;
+	for(var i=0; i< length; i++) {
+		var tmpAccIdx = ArrListAccount[i];
+		if(tmpAccIdx.accountNumber == idx) {
+			tmpAcc = tmpAccIdx;
+			setSelectedAccInfoObj(tmpAccIdx);
+			break;
+		}
+	}
+	/*var length = arrAllAccObj.length;
+	for(var i=0; i< length; i++) {
+		var tmpAccIdx = arrAllAccObj[i];
+		if(tmpAccIdx.accountNumber == idx) {
+			tmpAcc = tmpAccIdx;
+			setSelectedAccInfoObj(tmpAccIdx);
+			break;
+		}
+	}*/
+	
+	//if(gUserInfo.accountListDetail && gUserInfo.accountListDetail.length > 0) {
+	if(accDetailFlag && gUserInfo.accountListDetail && gUserInfo.accountListDetail.length > 0) { //chi su dung cache khi quay lai tu man hinh khác
+		var length = gUserInfo.accountListDetail.length;
+		for(var i=0; i< length; i++) {
+			var tmpAccIdx = gUserInfo.accountListDetail[i];
+			if(tmpAccIdx.accountNumber == idx) {
+				tmpAcc = tmpAccIdx;
+				setSelectedAccInfoObj(tmpAccIdx);
+				break;
+			}
+		}
+		navController.pushToView('accountxsl/account-history-scr', true, 'xsl'); //using cache
+	}
+	else {
+		//arrayArgs.push(tmpAcc.accountNumber);
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUERY_ACCOUNT_DETAIL"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+		
+		data = getDataFromGprsCmd(gprsCmd);
+		
+		requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	}
+}
+function requestMBServiceSuccess(e) {
+	gprsResp = parserJSON(e);
+	//setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUERY_ACCOUNT_DETAIL")))) {
+		parserAccDetail(gprsResp);
+	}
+}
+
+function requestMBServiceFail(e) {
+	
+}
+
+function parserAccDetail(inResp) {
+	gUserInfo.accountListDetail = new Array();
+	var length = inResp.arguments.length;
+	for(var i=0; i<length; i++) {
+		var tmpArr = inResp.arguments[i].split('#');
+		var tmpAccObj = new AccountObj();
+		tmpAccObj.accountNumber = tmpArr[0];
+		
+		tmpAccObj.currency = tmpArr[1];
+		tmpAccObj.balance = tmpArr[2];
+		tmpAccObj.balanceAvailable = tmpArr[3];
+		tmpAccObj.overdraftLimit = tmpArr[4];
+		tmpAccObj.openDate = tmpArr[5];
+		tmpAccObj.overdraftStartDate = tmpArr[6];
+		tmpAccObj.overdraftEndDate = tmpArr[7];
+		tmpAccObj.rate = tmpArr[8]; 
+		tmpAccObj.profitReven = tmpArr[9]; //lãi dự chi --> lãi dự thu (do đang bị ngược) 20140825
+		tmpAccObj.profitCost = tmpArr[10]; //lãi dự thu --> lãi dự chi (do đang bị ngược) 20140825
+		tmpAccObj.profitOverall = tmpArr[11]; 
+		tmpAccObj.branchCode = tmpArr[12];
+		tmpAccObj.branchName = tmpArr[13]; 
+		tmpAccObj.numBlockedAmt = tmpArr[14];
+		tmpAccObj.description = tmpArr[15];
+		tmpAccObj.descByUser = tmpArr[16];
+		tmpAccObj.udf        = tmpArr[17];
+		tmpAccObj.accClass = tmpArr[18];
+		tmpAccObj.checkOverdraft =tmpArr[19];
+		if(tmpAcc.accountNumber == tmpAccObj.accountNumber) {
+			setSelectedAccIdx(i);
+			setSelectedAccInfoObj(tmpAccObj);
+		}
+		if (tmpAccObj.accClass != 'T6A001' && tmpAccObj.accClass != 'D7A000') { //Bo tai khoan Tiet kiem tu dong & linh hoat
+			gUserInfo.accountListDetail.push(tmpAccObj);
+		}
+	}
+	if(gUserInfo.accountListDetail && gUserInfo.accountListDetail.length > 0) {
+		accType="";
+		navController.pushToView('accountxsl/account-history-scr', true, 'xsl');
+	}
+}
+
+/*** HANDLE ONCLICK ROW ***/
+
+/* SHOW EDIT BUTTON */
+
+function showEditButton(inID) {
+	if(gModeScreenView == CONST_MODE_SCR_SMALL) return;
+	var tmpEditBtn = document.getElementById('divEdit' + inID);
+	if(tmpEditBtn) {
+		tmpEditBtn.style.display = '';
+	}
+}
+
+function hideEditButton(inID) {
+	var tmpEditBtn = document.getElementById('divEdit' + inID);
+	if(tmpEditBtn) {
+		tmpEditBtn.style.display = 'none';
+	}
+}
+
+function showEditPanel(e,inID) {
+    e.stopPropagation();
+	statusEditingName = true;
+	
+	hideEditButton(inID);
+	
+	var tmpEditPanel = document.getElementById('divEditSave' + inID);
+	if(tmpEditPanel) {
+		tmpEditPanel.style.display = '';
+		document.getElementById('txtNewDes' + inID).value = document.getElementById('displayAccName' + inID).innerHTML;
+	}
+}
+
+function saveContent(e,inID) {
+    e.stopPropagation();
+	statusEditingName = true;
+	
+	var tmpEditPanel = document.getElementById('divEditSave' + inID);
+	if(tmpEditPanel) {
+		tmpEditPanel.style.display = 'none';
+	}
+	var tmpInputNode = document.getElementById('txtNewDes' + inID);
+	//chan nhap ky tu dac biet
+	tmpInputNode.value = removeAccent(tmpInputNode.value);
+	
+	if(tmpInputNode && tmpInputNode.value && tmpInputNode.value.length > 0 && (tmpInputNode.value != document.getElementById('displayAccName' + inID).innerHTML)) {
+		editingAccNo = inID;
+		document.getElementById('displayAccName' + inID).innerHTML = document.getElementById('txtNewDes' + inID).value;
+		var length = gUserInfo.accountList.length;
+		for(var i = 0; i < length; i++) {
+			var tmpObj = gUserInfo.accountList[i];
+			if(tmpObj.accountNumber == inID && tmpObj.descByUser) {
+				tmpObj.descByUser = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+		var lengthAccount =  gUserInfo.accountListOther.length;
+		for(var i = 0; i < lengthAccount; i++) {
+			var tmpObj = gUserInfo.accountListOther[i];
+			if(tmpObj.accountNumber == inID && tmpObj.descByUser) {
+				tmpObj.descByUser = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+		var lengthDetail = gUserInfo.accountListDetail.length;
+		for(var i = 0; i < lengthDetail; i++) {
+			var tmpObj = gUserInfo.accountListDetail[i];
+			if(tmpObj.accountNumber == inID && tmpObj.descByUser) {
+				tmpObj.descByUser = document.getElementById('txtNewDes' + inID).value;
+				break;
+			}
+		}
+		var arrayArgs = new Array();
+		arrayArgs.push(inID);
+		arrayArgs.push(tmpInputNode.value);
+		//arrayArgs.push("NEW#1#HN");
+		requestBacgroundMBService("CMD_TYPE_RENAME_ACC_NO", arrayArgs, requestRenameAccNoSuccess, requestRenameAccNoFail);
+	}
+	else {
+		statusEditingName = false;
+	}
+}
+
+function requestRenameAccNoSuccess(e) {
+	statusEditingName = false;
+	gprsResp = parserJSON(e, false);
+	if(parseInt(gprsResp.respCode) == 0) {
+        var length = gUserInfo.accountList.length;
+        
+        for(var i=0;i<length;i++){
+            if(gUserInfo.accountList[i].accountNumber!=undefined && gUserInfo.accountList[i].accountNumber==editingAccNo){
+                gUserInfo.accountList[i].description = document.getElementById('txtNewDes' + editingAccNo).value;
+            }
+        }
+		var tmpNodeAccName = document.getElementById('displayAccName' + editingAccNo).innerHTML = document.getElementById('txtNewDes' + editingAccNo).value;
+	}
+	else {
+		logInfo('rename account fail');
+	}
+	
+}
+
+function requestRenameAccNoFail() {
+	statusEditingName = false;
+}
+function handleInputAmount (e, des) {
+    var tmpVale = des.value;
+    formatCurrency(e, des);
+    //des.value = formatNumberToCurrency(des.value);
+    var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang);
+
+    var nodeNumTxt = document.getElementById("id.histransamountfrom")
+    }
+function selectionOnTable(e){
+    selectionOnTableClose();
+    viewAccDetail(e.selectedNode.childNodes[0].innerText);
+}
+function selectionOnTableClose(){
+    document.removeEventListener('evtSelectionOnTable',selectionOnTable,false);
+    document.removeEventListener('evtSelectionOnTableClose',selectionOnTableClose,false);
+}
+
+//ngocdt3 them cho easylink
+function genPageInfo() {
+	var tmpXmlDocJumbo = genXmlDocJumbo(arrayArgsJumbo);
+	xslAccHisTable = getCachePageXsl("accountxsl/jumbo-info-table");
+	var tmpXslDoc = xslAccHisTable;
+
+	genHTMLStringWithXML(tmpXmlDocJumbo, tmpXslDoc, function(oStr){
+        tempEasylinkGenHtml = oStr;
+		var tmpNode = document.getElementById('accinfo-easylink');
+		tmpNode.innerHTML = oStr;
+		var respArr = arrayArgsJumbo;
+		var length = respArr.length;
+		for (var i = 0; i < length; i++) {
+			var obj = respArr[i].split('#');
+			if (obj[6] == '6') {
+				respArr.splice(i,1);
+			}
+		}
+		if (length == 0) {
+            document.getElementsByClassName('hideClass').item(i).style.display == 'none'
+		}
+	});
+}
+
+function genXmlDocJumbo(inArrInfo) {
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlRootNode = createXMLNode('result', '', docXml);
+	var isHavingAutoSav = false;
+	var autoSavingBalance;
+	var length = inArrInfo.length;
+	for (var i = 0; i < length; i++) {
+		var items = inArrInfo[i];
+		var inInfoObj = items.split('#');
+		if (inInfoObj[6] == '0') {
+			isHavingAutoSav = true;
+			autoSavingBalance = inInfoObj[1];
+		}
+	}
+	
+	for (var i = 0; i < length; i++) {
+		var items = inArrInfo[i];
+		var inInfoObj = items.split('#');
+		var tmpXmlNodeDetail;
+		var tmpChildNodeType;
+		var tmpChildNodeHeader;
+		var tmpChildNodeFooter;
+		var tmpGrandChildNode;
+		var tmpChildNodeTableDetailID;
+		var tmpChildNodeTableAnchorID;
+		var tmpChildNodeTableImgID;
+		var tmpChildNodeTableAnchorValue;
+		
+		switch (inInfoObj[6]) {
+			case "6": //tai khoan JUMBO
+				var tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				var tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeType = createXMLNode('accno', inInfoObj[5], docXml, tmpXmlNodeDetail);
+				
+				var arrJumboAccInfo = new Array();
+                var row1 = new Array(CONST_STR.get('JUMBO_ACC_NUM'), inInfoObj[5]);
+                arrJumboAccInfo.push(row1);
+				var length = gUserInfo.accountList.length;
+				for(var i=0; i < length; i++){
+					if(gUserInfo.accountList[i].accountNumber ==inInfoObj[5]){
+						if(gUserInfo.accountList[i].descByUser !='' && gUserInfo.accountList[i].descByUser !=undefined && gUserInfo.accountList[i].descByUser != null){
+						var row2 = [CONST_STR.get('ACCOUNT_ACC_NAME'), '<div style="padding: 0"  onmouseout="hideEditButton(\''+gUserInfo.accountList[i].accountNumber+'\')" onmouseover="showEditButton(\''+gUserInfo.accountList[i].accountNumber+'\')">'+"<div>" + "<span id=\x22displayAccName" + gUserInfo.accountList[i].accountNumber+"\x22>" + gUserInfo.accountList[i].descByUser + "</span><div id=\x22divEdit"+gUserInfo.accountList[i].accountNumber+"\x22 style=\x22float:right;display:none;\x22><a class=\x22ref-link usernamenone\x22 onclick=\x22showEditPanel(event,'"+gUserInfo.accountList[i].accountNumber+"')\x22><span style='margin-left: 10px;'>"+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'</span></a></div></div>'+'<div id=\x22divEditSave'+gUserInfo.accountList[i].accountNumber+"\x22 style=\x22display:none;\x22>"
+                            +"<input style='width:85%;' id=\x22txtNewDes"+gUserInfo.accountList[i].accountNumber+"\x22><a class=\x22ref-link\x22 onclick=\x22saveContent(event,'"+gUserInfo.accountList[i].accountNumber+"');\x22><span>"+CONST_STR.get('ACCOUNT_RENAME_SAVE_TITLE')+'</span></a></div></div>'];
+						}
+						else{
+						var row2 = [CONST_STR.get('ACCOUNT_ACC_NAME'), '<div style="padding: 0" onmouseout="hideEditButton(\''+gUserInfo.accountList[i].accountNumber+'\')" onmouseover="showEditButton(\''+gUserInfo.accountList[i].accountNumber+'\')">'+"<div>" + "<span id=\x22displayAccName" + gUserInfo.accountList[i].accountNumber+"\x22>" + gUserInfo.accountList[i].description + "</span><div id=\x22divEdit"+gUserInfo.accountList[i].accountNumber+"\x22 style=\x22float:right;display:none;\x22><a class=\x22ref-link usernamenone\x22 onclick=\x22showEditPanel(event,'"+gUserInfo.accountList[i].accountNumber+"')\x22><span style='margin-left: 10px;'>"+CONST_STR.get('ACCOUNT_RENAME_DESCRIPTION')+'</span></a></div></div>'+'<div id=\x22divEditSave'+gUserInfo.accountList[i].accountNumber+"\x22 style=\x22display:none;\x22>"
+                            +"<input style='width:85%;' id=\x22txtNewDes"+gUserInfo.accountList[i].accountNumber+"\x22><a class=\x22ref-link\x22 onclick=\x22saveContent(event,'"+gUserInfo.accountList[i].accountNumber+"');\x22><span>"+CONST_STR.get('ACCOUNT_RENAME_SAVE_TITLE')+'</span></a></div></div>'];
+						}
+					}
+				}
+				arrJumboAccInfo.push(row2);
+
+               var row3 = new Array(CONST_STR.get('JUMBO_SURPLUS'),formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                arrJumboAccInfo.push(row3);
+               /* if (isHavingAutoSav == true) {
+                    var row3 = new Array(CONST_STR.get('JUMBO_AUTO_SAVING_SURPLUS'), formatNumberToCurrency(autoSavingBalance) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                    arrJumboAccInfo.push(row3);
+                }*/
+               //var row4 = new Array(CONST_STR.get('JUMBO_TOTAL_CREDIT_LIMIT'), formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                //arrJumboAccInfo.push(row4);
+               // var row5 = new Array(CONST_STR.get('JUMBO_TOTAL_AVAILABLE_LIMIT'), formatNumberToCurrency(inInfoObj[3]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+              // arrJumboAccInfo.push(row5);
+                var row6 = new Array(CONST_STR.get('JUMBO_AVAILABLE_SURPLUS'), formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                arrJumboAccInfo.push(row6);
+				var recycler;
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                    recycler = new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                 recycler = new RecyclerView({
+                    type: "ACTION",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:false
+                });
+                }
+                recycler.setData(arrJumboAccInfo);
+                var contentHTML = recycler.init();
+				
+				var tmpChildNodeContent = createXMLNode('content', contentHTML, docXml, tmpXmlNodeDetail);	
+				break;
+			case "0": // Tai khoan tiet kiem tu dong
+                var arrAutoSavingAcc = new Array();
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeType = createXMLNode('accno', inInfoObj[5], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_AUTO_SAVINGS_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblAutoSaving', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorAutoSaving', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageAutoSaving', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);
+                EasylinkHanMucThauChi[1] = createXMLNode('headervalue2', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+				//tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+               // var row1 = new Array(CONST_STR.get('JUMBO_AUTO_SAVING_ACC'), inInfoObj[5]);
+                var row2 = new Array(CONST_STR.get('JUMBO_SURPLUS'), formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+               // arrAutoSavingAcc.push(row1);
+                arrAutoSavingAcc.push(row2);
+				 var recycler;
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                    recycler= new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                 recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:false
+                });
+                }
+                recycler.setData(arrAutoSavingAcc);
+                var contentHTML = recycler.init();
+                var tmpChildNodeContent = createXMLNode('content', contentHTML, docXml, tmpXmlNodeDetail);
+				
+				break;
+			case "2": //Han muc ung so tiet kiem
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeType = createXMLNode('accno', inInfoObj[5], docXml, tmpXmlNodeDetail);
+                tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_SAVING_APPLY_LITMIT_TITLE'), docXml, tmpXmlNodeDetail);
+                tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblStkApplyLimit'+i, docXml, tmpXmlNodeDetail);
+                tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorStkApplyLimit'+i, docXml, tmpXmlNodeDetail);
+                tmpChildNodeTableImgID = createXMLNode('imgid', 'imageStkApplyLimit'+i, docXml, tmpXmlNodeDetail);
+                tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);
+			   //tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' +inInfoObj[5], docXml, tmpXmlNodeDetail);
+                EasylinkHanMucThauChi[1] = createXMLNode('headervalue2', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+				var arrHanMucUngSoTietKiem = new Array();
+                var row1 = new Array(CONST_STR.get('JUMBO_USED_LITMIT'), formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row2 = new Array(CONST_STR.get('EASYLINK_AVAI_LIMIT'), formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                //var row3 = new Array(CONST_STR.get('JUMBO_ITEREST_RATE'), inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'));
+   				//var row0= new Array(CONST_STR.get('JUMBO_SAVING_APPLY_LITMIT_TITLE'),formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+
+				//arrHanMucUngSoTietKiem.push(row0);
+                arrHanMucUngSoTietKiem.push(row1);
+                arrHanMucUngSoTietKiem.push(row2);
+              //  arrHanMucUngSoTietKiem.push(row3);
+ 				var recycler;
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                  recycler  = new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                 recycler = new RecyclerView({
+                    type: "ACTION",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:false
+                });
+                }
+                recycler.setData(arrHanMucUngSoTietKiem);
+                var contentHTML = recycler.init();
+				
+				tmpChildNodeType = createXMLNode('content', contentHTML, docXml, tmpXmlNodeDetail);
+				break;
+			case "5": //Han muc ung the tin dung (ung jumbo)
+                tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+                tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeType = createXMLNode('accno', inInfoObj[5], docXml, tmpXmlNodeDetail);
+                tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_CREDIT_APPLY_LITMIT_TITLE'), docXml, tmpXmlNodeDetail);
+                tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblCreditApplyLimit' + i, docXml, tmpXmlNodeDetail);
+                tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorCreditApplyLimit' + i, docXml, tmpXmlNodeDetail);
+                tmpChildNodeTableImgID = createXMLNode('imgid', 'imageCreditApplyLimit' + i, docXml, tmpXmlNodeDetail);
+               tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);
+//			   tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+                EasylinkHanMucThauChi[1] = createXMLNode('headervalue2', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+                var arrHanMucUngTheTinDung = new Array();
+              //  var row1 = new Array(CONST_STR.get('JUMBO_APPLY_LIMIT'), formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row2 = new Array(CONST_STR.get('JUMBO_USED_LITMIT'), formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row3 = new Array(CONST_STR.get('EASYLINK_AVAI_LIMIT'), formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+               // var row4 = new Array(CONST_STR.get('JUMBO_ITEREST_RATE'), inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'));
+               // var row5 = new Array(CONST_STR.get('JUMBO_CREDIT_LIMIT'), formatNumberToCurrency(inInfoObj[7]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+               // var row6 = new Array(CONST_STR.get('JUMBO_CREDIT_LIMIT_REMAINS'), formatNumberToCurrency(inInfoObj[8]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+
+               // arrHanMucUngTheTinDung.push(row1);
+                arrHanMucUngTheTinDung.push(row2);
+                arrHanMucUngTheTinDung.push(row3);
+               // arrHanMucUngTheTinDung.push(row4);
+                //arrHanMucUngTheTinDung.push(row5);
+               // arrHanMucUngTheTinDung.push(row6);
+ 				var recycler
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                    recycler= new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                 recycler = new RecyclerView({
+                    type: "ACTION",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:false
+                });
+                }
+                recycler.setData(arrHanMucUngTheTinDung);
+                var contentHTML = recycler.init();
+
+                tmpChildNodeType = createXMLNode('content', contentHTML, docXml, tmpXmlNodeDetail);
+				break;
+			case "4": //Ung tien thong minh
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeType = createXMLNode('accno', inInfoObj[5], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_MONEY_SMART_APPLY_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblSmartCash', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorSmartCash', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageSmartCash', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);
+//				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' +inInfoObj[5], docXml, tmpXmlNodeDetail);
+                EasylinkHanMucThauChi[1] = createXMLNode('headervalue2', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+                var arrUngLuongThongMinh = new Array();
+                var row1 = new Array(CONST_STR.get('JUMBO_MONEY_SMART_APPLY_TITLE'), formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row2 = new Array(CONST_STR.get('JUMBO_USED_LITMIT'), formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row3 = new Array(CONST_STR.get('EASYLINK_AVAI_LIMIT'), formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row4 = new Array(CONST_STR.get('JUMBO_ITEREST_RATE'), inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'));
+
+               // arrUngLuongThongMinh.push(row1);
+                arrUngLuongThongMinh.push(row2);
+                arrUngLuongThongMinh.push(row3);
+               // arrUngLuongThongMinh.push(row4);
+ 			var recycler;
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                   recycler = new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                 recycler = new RecyclerView({
+                    type: "ACTION",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:false
+                });
+                }
+                recycler.setData(arrUngLuongThongMinh);
+                var contentHTML = recycler.init();
+                tmpChildNodeType = createXMLNode('content', contentHTML, docXml, tmpXmlNodeDetail);
+				break;
+			case "3": //ung luong tien loi
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeType = createXMLNode('accno', inInfoObj[5], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_SALARY_APPLY_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblConvenientSal', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorConvenientSal', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageConvenientSal', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);
+//				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+                EasylinkHanMucThauChi[1] = createXMLNode('headervalue2', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+                var arrUngLuongTienLoi = new Array();
+                var row1 = new Array(CONST_STR.get('JUMBO_SALARY_APPLY_TITLE'), formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row2 = new Array(CONST_STR.get('JUMBO_USED_LITMIT'), formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row3 = new Array(CONST_STR.get('EASYLINK_AVAI_LIMIT'), formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row4 = new Array(CONST_STR.get('JUMBO_ITEREST_RATE'), inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'));
+
+               // arrUngLuongTienLoi.push(row1);
+                arrUngLuongTienLoi.push(row2);
+                arrUngLuongTienLoi.push(row3);
+               // arrUngLuongTienLoi.push(row4);
+			    var recycler;
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                   recycler = new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                 recycler = new RecyclerView({
+                    type: "ACTION",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:false
+                });
+                }
+                recycler.setData(arrUngLuongTienLoi);
+                var contentHTML = recycler.init();
+                tmpChildNodeType = createXMLNode('content', contentHTML, docXml, tmpXmlNodeDetail);
+				break;
+			case "1": //Han muc thau chi
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeType = createXMLNode('accno', inInfoObj[5], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_OVERDRAFT_LITMIT_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblOverdraftApplyLimit_'+ i, docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorOverdraftApplyLimit_'+i, docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageOverdraftApplyLimit_'+i, docXml, tmpXmlNodeDetail);
+                tmpChildNodeTableAnchorValue=createXMLNode('headervalue',': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);///                EasylinkHanMucThauChi[1] = formatNumberToCurrency(inInfoObj[0]);
+                EasylinkHanMucThauChi[1] = createXMLNode('headervalue2', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue2', ': ' + inInfoObj[5], docXml, tmpXmlNodeDetail);
+
+                var arrHanMucThauChi = new Array();
+                var row1 = new Array(CONST_STR.get('JUMBO_OVERDRAFT_LITMIT'), formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row2 = new Array(CONST_STR.get('JUMBO_USED_LITMIT'), formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row3 = new Array(CONST_STR.get('EASYLINK_AVAI_LIMIT'), formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'));
+                var row4 = new Array(CONST_STR.get('JUMBO_OVERDRAFT_INTEREST_RATE'), inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'));
+
+              //  arrHanMucThauChi.push(row1);
+                arrHanMucThauChi.push(row2);
+                arrHanMucThauChi.push(row3);
+               // arrHanMucThauChi.push(row4);
+			    var recycler;
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                    recycler= new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                 recycler = new RecyclerView({
+                    type: "ACTION",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:false
+                });
+                }
+                recycler.setData(arrHanMucThauChi);
+                var contentHTML = recycler.init();
+                tmpChildNodeType = createXMLNode('content', contentHTML, docXml, tmpXmlNodeDetail);
+				break;
+			default:
+				logInfo('Nothing to return!...');
+		}
+	}
+	//console.log("docXml " +(new XMLSerializer()).serializeToString(docXml));
+	
+	return docXml;
+}
+
+
+//function showHideDetailInfo() {
+//	if (document.getElementsByClassName('hideClass').item(0).style.display == 'none') {
+//		for (var i = 0; i < document.getElementsByClassName('hideClass').length; i++) {
+//			var item = document.getElementsByClassName('hideClass').item(i);
+//			item.style.display = 'table';
+//		}
+//		document.getElementById('anchorShowInfo').innerHTML = CONST_STR.get('JUMBO_MINIMIZE_INFO_LIST_TITLE')
+//		//document.getElementById('i-last-updated-time').style.display = '';
+//		document.getElementById('imgshowdetailinfo').style.transform='rotate(90deg)';
+//
+//	} else {
+//		for (var i = 0; i < document.getElementsByClassName('hideClass').length; i++) {
+//			var item = document.getElementsByClassName('hideClass').item(i);
+//			item.style.display = 'none';
+//		}
+//		document.getElementById('anchorShowInfo').innerHTML = CONST_STR.get('JUMBO_MAXIMIZE_INFO_LIST_TITLE')
+//		//document.getElementById('i-last-updated-time').style.display = 'none';
+//		document.getElementById('imgshowdetailinfo').style.transform='rotate(0deg)';
+//	}
+//}
+
+function showHideItem(tblID, anchorID, imgID,headervalue,headervalue2) {
+	if (document.getElementById(tblID).style.display == 'none') {
+        document.getElementById(tblID).style.display = 'block';
+		document.getElementById(imgID).style.transform='rotate(90deg)';
+        if(headervalue2){
+        document.getElementById(anchorID).innerHTML=headervalue2;
+        }
+	} else {
+		document.getElementById(tblID).style.display = 'none';
+		document.getElementById(imgID).style.transform='rotate(0deg)';
+
+        if(headervalue){
+            document.getElementById(anchorID).innerHTML=headervalue;
+        }
+	}
+}

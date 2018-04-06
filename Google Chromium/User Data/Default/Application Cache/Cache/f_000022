@@ -1,0 +1,1330 @@
+/**
+ * Created by HuyNT2
+ * User: 
+ * Date: 01/20/14
+ */
+
+ /*** HEADER ***/
+
+var gprsResp = new GprsRespObj("","","","");
+var selectedFlowType = 'ALL';
+var selectedTransType = 'ALL';
+var arrAllHisObj = new Array();
+var totalPage = 0;
+var itemsPerPage = 10;
+var pageIndex = 1;
+var xslAccHisTable ;
+var advSearchStatus = true;
+var accid;
+/*** INIT VIEW ***/
+function loadInitXML() {
+	return '';
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	logInfo('account history load success');
+	//var tmpIndex = getSelectedAccIdx();
+	var inAccObj = getSelectedAccInfoObj();//gUserInfo.accountListDetail[tmpIndex];
+	var tagAccNo = document.getElementById("acchis_accountno");
+	tagAccNo.value = inAccObj.accountNumber;
+	accid=inAccObj.accountNumber;
+    document.getElementById("divAccNo").innerHTML = inAccObj.accountNumber;
+	showDetailAcc();
+    document.addEventListener('evtChangeWidthDesktop',showDetailAcc,false);
+    document.addEventListener('evtChangeWidthMobile',showDetailAcc,false);
+	
+	//set up calendar
+	var today = new Date();						
+	var dd = today.getDate();						
+	var mm = today.getMonth()+1; //January is 0!						
+	var yyyy = today.getFullYear();						
+	
+	var prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());	
+			
+	if(dd<10) {						
+		dd='0'+dd;					
+	} 						
+							
+	if(mm<10) {						
+		mm='0'+mm;					
+	} 						
+							
+	today = yyyy+'-'+mm+'-'+dd;						
+							
+	var fromDate;						
+	var toDate;						
+							
+	if (gUserInfo.lang == 'VN') {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('acchis.fromdate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2005',			
+				range_max    : '01-01-2051',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.fromdate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						}
+					}		
+				}			
+			}				
+		);
+		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('acchis.todate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2005',			
+				range_max    : '01-01-2051',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.todate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						}
+					}
+				}			
+			}				
+		);
+							
+	}						
+	else {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('acchis.fromdate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2005',			
+				range_max    : '01-01-2051',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',			
+				dom_field    : document.getElementById('span.fromdate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						}
+					}		
+				}			
+			}				
+		);		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('acchis.todate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2005',			
+				range_max    : '01-01-2051',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',			
+				dom_field    : document.getElementById('span.todate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						}
+					}		
+				}			
+			}				
+		);				
+	}						
+	
+	fromDate.select(prevMonth);			
+	toDate.select(today);
+	if(inAccObj.accClass =='T6A001') {
+		document.getElementById('accinfo-selection-btn').style.display = 'none';
+		document.getElementById('esavinfo-back-btn').style.display = '';
+	}
+	else {
+		document.getElementById('accinfo-selection-btn').style.display = '';
+		document.getElementById('esavinfo-back-btn').style.display = 'none';
+	}
+	//Huynt2: bo sung cho AutoSaving tu module saving
+	// if(getNavRootViewName() == 'esaving/esaving-information') {
+	// 	document.getElementById('accinfo-selection-btn').style.display = 'none';
+	// 	document.getElementById('esavinfo-back-btn').style.display = '';
+	// }
+	// else {
+	// 	document.getElementById('accinfo-selection-btn').style.display = '';
+	// 	document.getElementById('esavinfo-back-btn').style.display = 'none';
+	// }
+	
+	/*setTimeout(function(e){
+		//showDetailAcc();
+		sendJSONRequest();
+	}, 1000);*/
+}
+
+/*** VIEW LOAD SUCCESS END  ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('account history will unload');
+    document.removeEventListener('evtChangeWidthDesktop',showDetailAcc,false);
+    document.removeEventListener('evtChangeWidthMobile',showDetailAcc,false);
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+function goBack() {
+	navController.popView();
+}
+ 
+ function showAccountSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	if(accType=="Easylink"){
+		for (var i=0; i<gUserInfo.accountListDetail.length; i++) {
+			var tmpAcc = gUserInfo.accountListDetail[i];
+			if(tmpAcc.udf=='6'){
+				tmpArray1.push(tmpAcc.accountNumber);
+				tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+			}
+			
+		}
+	}
+	else{
+		for (var i=0; i<gUserInfo.accountListDetail.length; i++) {
+			var tmpAcc = gUserInfo.accountListDetail[i];
+			tmpArray1.push(tmpAcc.accountNumber);
+			tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+		}
+	}
+	
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true, false);
+}
+
+//event: selection dialog list
+function handleSelectionAccountList(e) {
+	if (currentPage == "accountxsl/account-history-scr") {
+		handleSelectionAccountListClose();
+		for(var i=0; i < gUserInfo.accountListDetail.length; i++){
+			if(gUserInfo.accountListDetail[i].accountNumber == e.selectedValue1) {
+				setSelectedAccIdx(i);
+				setSelectedAccInfoObj(gUserInfo.accountListDetail[i]);
+				showDetailAcc();
+			}
+		}
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("acchis_accountno");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+                document.getElementById("divAccNo").innerHTML = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+                document.getElementById("divAccNo").innerHTML = e.selectedValue1;
+			}
+		}
+		/*setTimeout(function(e){
+			//showDetailAcc();
+			sendJSONRequest();
+		}, 1000);*/
+	}
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "accountxsl/account-history-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+
+
+function showDetailAcc() {
+	//reset view
+	resetViewWhenChangeAcc();
+	
+	advSearchStatus = false;
+	showAdvandSearch();
+	
+	var tmpXslDoc = getCachePageXsl("accountxsl/account-info-table");
+	
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	
+	var tmpXmlRootNode = createXMLNode('account', '', docXml);
+	//var tmpIndex = getSelectedAccIdx();
+	var inAccObj = getSelectedAccInfoObj();//gUserInfo.accountListDetail[tmpIndex];
+	/*if(inAccObj.udf==6){
+		document.getElementById('advanceSearch').style.display='';
+	}
+	else{
+		document.getElementById('advanceSearch').style.display='';
+	}*/
+	if (inAccObj.udf == "6") {
+        var data = new Array();
+        var row1 = [CONST_STR.get('ACC_TYPE_TITLE'), CONST_STR.get('ACCOUNT_TYPE_DETAIL_TITLE')];
+        var row2 = [CONST_STR.get('ACC_CURRENCY_TITLE'), inAccObj.currency];
+        var row3 = [CONST_STR.get('ACC_OPENDATE_TITLE'), inAccObj.openDate];
+        var row4 = [CONST_STR.get('ACC_BRANCH_OPEN_TITLE'), inAccObj.branchName];
+        var row5 = [CONST_STR.get('ACC_BALANCE_TITLE'), formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency)];
+        var row6 = [CONST_STR.get('ACC_AVAI_BALANCE_TITLE'), formatNumberToCurrencyWithSymbol(inAccObj.balanceAvailable,' ' + inAccObj.currency)];
+        var row7 = [CONST_STR.get('ACC_OVERDRAFT_RATE_TITLE'), "-"];
+        var row8 = [CONST_STR.get('JUMBO_TOTAL_CREDIT_LIMIT_AUTOSAV'), formatNumberToCurrencyWithSymbol(inAccObj.overdraftLimit, ' ' + inAccObj.currency)];
+        data = [row1, row2, row3, row4,row5, row6, row7, row8];
+        var divAccInfo = document.getElementById('id.accInfo');
+		var contentHTML = "";
+		console.log(CONST_BROWSER_MODE);
+		//20170623 chi HangPTT yeu cau hien thi tim kiem nang cao voi tk easylin
+		if(accType=="Easylink"){
+			document.getElementById('acchis.btnAdvSearchDesktop').style.display='none';
+		}
+       // document.getElementById('acchis.btnAdvSearchDesktop').style.display='none';
+		if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+				var recycler = new RecyclerView({
+					type: "DESKTOP_GRID",
+					typeTextAlign: "MIDLE",
+					title: "Detail tài khoản",
+					titleAlign:"LEFT",
+					opacity:true
+        		});
+
+        		recycler.setData(data);
+		  		contentHTML = recycler.init();
+                divAccInfo.innerHTML = contentHTML;
+		}else{
+			var recycler = new RecyclerView({
+				type: "NORMAL",
+				typeTextAlign: "MIDLE",
+				title: "Tai khoan jumbo",
+				titleAlign:"LEFT",
+				opacity:true
+        	});
+
+        	recycler.setData(data);
+		    contentHTML = recycler.init();
+            divAccInfo.innerHTML = contentHTML;
+		}
+        // document.getElementById('narrowright').style.display='none';
+        // document.getElementById("recycler_table_ebank").style.width = '100%';
+
+		/*
+        var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+        var tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_TYPE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', CONST_STR.get('ACCOUNT_TYPE_DETAIL_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_CURRENCY_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.currency, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_OPENDATE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.openDate, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_BRANCH_OPEN_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.branchName, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_BALANCE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_AVAI_BALANCE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(inAccObj.balanceAvailable,' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_OVERDRAFT_RATE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', "-", docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('JUMBO_TOTAL_CREDIT_LIMIT_AUTOSAV'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(inAccObj.overdraftLimit, ' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);
+
+        logInfo(docXml);
+
+		genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+			var tmpNode = document.getElementById('id.accInfo');
+			tmpNode.innerHTML = oStr;
+		});*/
+	}
+	else if (inAccObj.accClass == "T6A001") {
+        var data = new Array();
+        var row1 = [CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), CONST_STR.get('JUMBO_AUTO_SAVINGS_TITLE')];
+        var row2 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), inAccObj.currency];
+        var row3 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'), formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency)];
+        var row4 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_TERM'), inAccObj.ky_han_gui];
+        var row5 = [CONST_STR.get('ACC_OPENDATE_TITLE'), inAccObj.openDate];
+        var row6 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), inAccObj.overdraftEndDate];
+        var row7 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), inAccObj.rate + " %"];
+        if (inAccObj.profitReven == "0") {
+            var row8 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), "-"];
+        }
+        else {
+            var row8 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), formatNumberToCurrencyWithSymbol(inAccObj.profitReven,' ' + inAccObj.currency)];
+        }
+        var row9 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), inAccObj.numBlockedAmt];
+        var row10 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), inAccObj.blockReason];
+
+        data = [row1, row2, row3, row4,row5, row6, row7, row8, row9, row10];
+        var divAccInfo = document.getElementById('id.accInfo');
+        var contentHTML = "";
+		if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+				var recycler = new RecyclerView({
+					type: "DESKTOP_GRID",
+					typeTextAlign: "MIDLE",
+					title: "Tai khoan jumbo",
+					titleAlign:"LEFT",
+					opacity:true
+        		});
+
+        		recycler.setData(data);
+		  		contentHTML = recycler.init();
+                divAccInfo.innerHTML = contentHTML;
+		}else{
+			var recycler = new RecyclerView({
+				type: "NORMAL",
+				typeTextAlign: "MIDLE",
+				title: "Tai khoan jumbo",
+				titleAlign:"LEFT",
+				opacity:true
+        	});
+
+        	recycler.setData(data);
+		    contentHTML = recycler.init();
+            divAccInfo.innerHTML = contentHTML;
+		}
+
+        // document.getElementById('narrowright').style.display="none";
+        // document.getElementById("recycler_table_ebank").style.width = "100%";
+
+        /*var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		var tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', CONST_STR.get('JUMBO_AUTO_SAVINGS_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_CURR'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.currency, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_TERM'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.ky_han_gui, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_OPENDATE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.openDate, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.overdraftEndDate, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.rate + " %", docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_ACCRU'), docXml, tmpXmlNodeInfo);
+		if (inAccObj.profitReven == "0") {
+			tmpChildNode = createXMLNode('acccontent2', "-", docXml, tmpXmlNodeInfo);
+		}
+		else {
+			tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(inAccObj.profitReven,' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);
+		}
+		
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BAMO'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.numBlockedAmt, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_BRES'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.blockReason, docXml, tmpXmlNodeInfo);
+		
+		genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+			var tmpNode = document.getElementById('id.accInfo');
+			tmpNode.innerHTML = oStr;
+		});*/
+	}
+	else {
+        var data = new Array();
+        var row1 = [CONST_STR.get('ACC_TYPE_TITLE'), CONST_STR.get('ACCOUNT_TYPE_DETAIL_TITLE')];
+        var row2 = [CONST_STR.get('ACC_CURRENCY_TITLE'), inAccObj.currency];
+        var row3 = [CONST_STR.get('ACC_OPENDATE_TITLE'), inAccObj.openDate];
+        var row4 = [CONST_STR.get('ACC_BRANCH_OPEN_TITLE'), inAccObj.branchName];
+        var row5 = [CONST_STR.get('ACC_BALANCE_TITLE'), formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency)];
+        var row6 = [CONST_STR.get('ACC_AVAI_BALANCE_TITLE'), formatNumberToCurrencyWithSymbol(inAccObj.balanceAvailable,' ' + inAccObj.currency)];
+
+        data.push(row1);
+        data.push(row2);
+        data.push(row3);
+        data.push(row4);
+        data.push(row5);
+        data.push(row6);
+
+        var strTitle = "";
+        if(parseInt(inAccObj.profitCost) < parseInt(inAccObj.profitReven)) {
+            strTitle = CONST_STR.get('ACC_OVERDRAFT_RATE_TITLE');
+        }
+        else {
+            strTitle = CONST_STR.get('ACC_RATE_TITLE');
+        }
+        var row7 = [strTitle, inAccObj.rate + ' %' + ((gUserInfo.lang == 'EN')? "/year":"/năm")];
+        data.push(row7);
+
+        strTitle = "";
+        var strContent = "";
+        if(inAccObj.udf ==5){
+            strTitle = CONST_STR.get('ACC_ADVANCE_LIMIT_TITLE');
+        }
+        else{
+            strTitle = CONST_STR.get('ACC_OVERDRAFT_LIMIT_TITLE');
+        }
+        if(inAccObj.checkOverdraft ==0){
+            var overdraftLimit = 0;
+            strContent = formatNumberToCurrencyWithSymbol(overdraftLimit, ' ' + inAccObj.currency);
+        }
+        else{
+            strContent = formatNumberToCurrencyWithSymbol(inAccObj.overdraftLimit, ' ' + inAccObj.currency);
+        }
+        var row8 = [strTitle, strContent];
+        data.push(row8);
+
+        if(inAccObj.checkOverdraft ==1){
+            strTitle = "";
+            strContent = "";
+
+            if(inAccObj.udf ==5){
+                strTitle = CONST_STR.get('ACC_ADVANCE_START_TITLE');
+            }
+            else{
+                strTitle = CONST_STR.get('ACC_OVERDRAFT_START_TITLE');
+            }
+            var row9 = [strTitle, inAccObj.overdraftStartDate];
+            data.push(row9);
+
+            strTitle = "";
+            strContent = "";
+            if(inAccObj.udf ==5){
+                strTitle = CONST_STR.get('ACC_ADNVANCE_END_TITLE');
+            }
+            else{
+                strTitle = CONST_STR.get('ACC_OVERDRAFT_END_TITLE');
+            }
+            var row10 = [strTitle, inAccObj.overdraftEndDate];
+            data.push(row10);
+        }
+        var divAccInfo = document.getElementById('id.accInfo');
+        document.getElementById('acchis.btnAdvSearchDesktop').style.display='block';
+       var contentHTML = "";
+		if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+				var recycler = new RecyclerView({
+					type: "DESKTOP_GRID",
+					typeTextAlign: "MIDLE",
+					title: "Tai khoan jumbo",
+					titleAlign:"LEFT",
+					opacity:true
+        		});
+
+        		recycler.setData(data);
+		  		contentHTML = recycler.init();
+                divAccInfo.innerHTML = contentHTML;
+		}else{
+			var recycler = new RecyclerView({
+				type: "NORMAL",
+				typeTextAlign: "MIDLE",
+				title: "Tai khoan jumbo",
+				titleAlign:"LEFT",
+				opacity:true
+        	});
+
+        	recycler.setData(data);
+		    contentHTML = recycler.init();
+            divAccInfo.innerHTML = contentHTML;
+		}
+
+        // document.getElementById('narrowright').style.display="none";
+        // document.getElementById("recycler_table_ebank").style.width = "100%";
+
+		/*var tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		var tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_TYPE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', CONST_STR.get('ACCOUNT_TYPE_DETAIL_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_CURRENCY_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.currency, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_OPENDATE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.openDate, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_BRANCH_OPEN_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.branchName, docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_BALANCE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent1', formatNumberToCurrencyWithSymbol(inAccObj.balance,' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_AVAI_BALANCE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(inAccObj.balanceAvailable,' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);
+		
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		if(parseInt(inAccObj.profitCost) < parseInt(inAccObj.profitReven)) {
+			tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_OVERDRAFT_RATE_TITLE'), docXml, tmpXmlNodeInfo);
+		}
+		else {
+			tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_RATE_TITLE'), docXml, tmpXmlNodeInfo);
+		}
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.rate + ' %' + ((gUserInfo.lang == 'EN')? "/year":"/năm"), docXml, tmpXmlNodeInfo);
+		if(inAccObj.udf ==5){
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_ADVANCE_LIMIT_TITLE'), docXml, tmpXmlNodeInfo);
+		}
+		else{
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_OVERDRAFT_LIMIT_TITLE'), docXml, tmpXmlNodeInfo);}   
+		if(inAccObj.checkOverdraft ==0){
+			var overdraftLimit = 0;
+			tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(overdraftLimit, ' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);	
+		}
+		else{
+	
+		tmpChildNode = createXMLNode('acccontent2', formatNumberToCurrencyWithSymbol(inAccObj.overdraftLimit, ' ' + inAccObj.currency), docXml, tmpXmlNodeInfo);
+		}
+		if(inAccObj.checkOverdraft ==1){
+		tmpXmlNodeInfo = createXMLNode('accinfo', '', docXml, tmpXmlRootNode);
+		
+		if(inAccObj.udf ==5){
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_ADVANCE_START_TITLE'), docXml, tmpXmlNodeInfo);
+		}
+		else{
+		tmpChildNode = createXMLNode('acctitle1', CONST_STR.get('ACC_OVERDRAFT_START_TITLE'), docXml, tmpXmlNodeInfo);}
+		tmpChildNode = createXMLNode('acccontent1', inAccObj.overdraftStartDate, docXml, tmpXmlNodeInfo);
+			if(inAccObj.udf ==5){
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_ADNVANCE_END_TITLE'), docXml, tmpXmlNodeInfo);
+		}
+		else{
+		tmpChildNode = createXMLNode('acctitle2', CONST_STR.get('ACC_OVERDRAFT_END_TITLE'), docXml, tmpXmlNodeInfo);}
+		tmpChildNode = createXMLNode('acccontent2', inAccObj.overdraftEndDate, docXml, tmpXmlNodeInfo);
+		}
+		
+		genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+			var tmpNode = document.getElementById('id.accInfo');
+			tmpNode.innerHTML = oStr;
+			//sendJSONRequest();
+		});*/
+	}
+	
+}
+
+/*** SHOW TRANSTYPE SELECTION ***/
+
+function showMoneyFlowSelection() {
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_HIS_MONEYFLOW_TYPE_EN: CONST_HIS_MONEYFLOW_TYPE_VN;
+	var tmpArray2 = CONST_HIS_MONEYFLOW_TYPE_ID;
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionMoneyFlowList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionMoneyFlowListClose, false);
+	showDialogList(CONST_STR.get('ACC_HIS_MONEY_FLOW_TITLE'), tmpArray1, tmpArray2, false,false);
+}
+
+//event: selection dialog list
+function handleSelectionMoneyFlowList(e) {
+	if (currentPage == "accountxsl/account-history-scr") {
+		handleSelectionMoneyFlowListClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("id.hismoneyflow");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+				document.getElementById("divHisFlowMoney").innerHTML = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+				document.getElementById("divHisFlowMoney").innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectedFlowType = e.selectedValue2;
+		}
+	}
+}
+
+function handleSelectionMoneyFlowListClose(e) {
+	if (currentPage == "accountxsl/account-history-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionMoneyFlowListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionMoneyFlowList, false);
+	}
+}
+
+/*** SHOW TRAS TYPE ***/
+
+function showTransTypeSelection() {
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_HIS_TRANS_TYPE_EN: CONST_HIS_TRANS_TYPE_VN;
+	var tmpArray2 = CONST_HIS_TRANS_TYPE_ID;
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionTransTypeList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionTransTypeListClose, false);
+	showDialogList(CONST_STR.get('ACC_HIS_TRANS_TYPE_TITLE'), tmpArray1, tmpArray2, false,false);
+}
+
+//event: selection dialog list
+function handleSelectionTransTypeList(e) {
+	if (currentPage == "accountxsl/account-history-scr") {
+		handleSelectionTransTypeListClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("id.histranstype");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+				document.getElementById("divHisTransType").innerHTML = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+				document.getElementById("divHisTransType").innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectedTransType = e.selectedValue2;
+		}
+	}
+}
+
+function handleSelectionTransTypeListClose(e) {
+	if (currentPage == "accountxsl/account-history-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionTransTypeListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionTransTypeList, false);
+	}
+}
+
+/*** SHOW ADVAND SEARCH ***/
+function showAdvandSearch() {
+	//var tmpMoneyFlowBtn = document.getElementById('acchis.moneyflow');
+	//var tmpTransTypeBtn = document.getElementById('acchis.transtype');
+	var tmpTransTypeOther = document.getElementById('acchis.transtypeother');
+	if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var tmpBtnAdvSearch = document.getElementById('acchis.btnAdvSearchDesktop');
+    }else{
+	var tmpBtnAdvSearch = document.getElementById('acchis.btnAdvSearch');
+    }
+	if(advSearchStatus) {
+		//tmpMoneyFlowBtn.style.display = 'table-row';
+		//tmpTransTypeBtn.style.display = 'table-row';
+		tmpTransTypeOther.style.display = 'table';
+		advSearchStatus = false;
+		
+		//tmpBtnAdvSearch.value = CONST_STR.get('ACC_HIS_ADV_NOR_SEARCH_BTN');
+		tmpBtnAdvSearch.innerHTML = CONST_STR.get('ACC_HIS_ADV_NOR_SEARCH_BTN');
+	}
+	else {
+		//tmpMoneyFlowBtn.style.display = 'none';
+		//tmpTransTypeBtn.style.display = 'none';
+		tmpTransTypeOther.style.display = 'none';
+		advSearchStatus = true;
+		
+		//tmpBtnAdvSearch.value = CONST_STR.get('ACC_HIS_ADV_SEARCH_BTN');
+		tmpBtnAdvSearch.innerHTML = CONST_STR.get('ACC_HIS_ADV_SEARCH_BTN');
+	}
+	
+	selectedFlowType = 'ALL';
+	selectedTransType = 'ALL';
+	var tmpInputArr = tmpTransTypeOther.getElementsByTagName('input');
+	for (var idx=0; idx<tmpInputArr.length; idx++) {
+		var tmpInputNode = tmpInputArr[idx];
+		tmpInputNode.value = '';
+	}
+	document.getElementById('id.hismoneyflow').value = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+	document.getElementById('id.histranstype').value = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+}
+
+/*** SEND REQUEST ***/
+
+function sendJSONRequest() {
+	
+	var data = {};
+	var arrayArgs = new Array();
+	
+	//var tmpIndex = getSelectedAccIdx();
+	var inAccObj = getSelectedAccInfoObj();//gUserInfo.accountListDetail[tmpIndex];
+	var fromDateNode = document.getElementById('acchis.fromdate');
+	var toDateNode = document.getElementById('acchis.todate');
+	
+	arrayArgs.push(inAccObj.accountNumber);
+	
+	if(!isValidDate(fromDateNode.value) || !isValidDate(toDateNode.value)) {
+		showAlertText(CONST_STR.get('ACC_HIS_WRONG_DATE_FORMAT'));
+		return;
+	}
+	var numDays = getDiffDaysBetween(fromDateNode.value, toDateNode.value, 'dd/MM/yyyy');
+	
+	var today = new Date();
+	var numDaysYear = getDiffDaysBetween(fromDateNode.value, getStringFromDate(today), 'dd/MM/yyyy');
+	
+	if(numDays < 0 || numDaysYear < 0) {
+		showAlertText(CONST_STR.get('ACC_HIS_INVALID_QUERY_DATE'));
+		return;
+	}
+	if(numDays > 92) {//20170921 ngocdt3 chinh sua ngya tra cuu len 92
+		showAlertText(CONST_STR.get('ACC_HIS_DATE_OVER_90DAYS'));
+		return;
+	}
+	
+	arrayArgs.push(fromDateNode.value); //from date
+	arrayArgs.push(toDateNode.value); //to date
+	
+	arrayArgs.push(selectedFlowType); //money flow
+	arrayArgs.push(selectedTransType); //transaction type
+	
+	var tmpInputStr = document.getElementById('id.histransamountfrom').value;
+	tmpInputStr = (!tmpInputStr || tmpInputStr.length == 0)? '0': tmpInputStr;
+	arrayArgs.push(removeSpecialChar(tmpInputStr)); //from amount
+	
+	tmpInputStr = document.getElementById('id.histransamountto').value;
+	tmpInputStr = (!tmpInputStr || tmpInputStr.length == 0)? '0': tmpInputStr;
+	arrayArgs.push(removeSpecialChar(tmpInputStr)); //to amount
+	
+	arrayArgs.push(document.getElementById('id.histransrefno').value); //ref no
+	arrayArgs.push(document.getElementById('id.histransdesc').value); //description
+	
+	arrayArgs.push(document.getElementById('id.histransaccno').value); //destination account no
+	arrayArgs.push(document.getElementById('id.histransaccname').value); //destination account name
+	if(accType=="Easylink"){
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get('CMD_QUERY_TRANSACTION_EASYLINK'), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+		data = getDataFromGprsCmd(gprsCmd);
+	
+		requestMBService(data, true, 0, requestEasyLinkInfoSuccess, requestEasyLinkInfoFail);
+	}
+	else{
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get('CMD_TYPE_QUERY_ACCOUNT'), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+		data = getDataFromGprsCmd(gprsCmd);
+	
+		requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	}
+	
+}
+function requestEasyLinkInfoSuccess(e) {
+	gprsResp = parserJSON(e);
+	//setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get('CMD_QUERY_TRANSACTION_EASYLINK')))) {
+		//resetViewWhenChangeAcc();
+		parserAccHistory(gprsResp);
+	}
+}
+
+function requestEasyLinkInfoFail(e) {
+	
+}
+function requestMBServiceSuccess(e) {
+	gprsResp = parserJSON(e);
+	//setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get('CMD_TYPE_QUERY_ACCOUNT')))) {
+		//resetViewWhenChangeAcc();
+		parserAccHistory(gprsResp);
+	}
+}
+
+function requestMBServiceFail(e) {
+	
+}
+
+
+function parserAccHistory(inResp) {
+	if((inResp.arguments == undefined) || (inResp.arguments.length < 2)) {
+		resetViewWhenChangeAcc();
+		var tmpNode = document.getElementById('id.historyInfo');
+		tmpNode.innerHTML = CONST_STR.get('ACC_HIS_NO_DATA_FOUND');//"Không có dữ liệu";
+		document.getElementById('acchis-exportFunc').style.display='none';
+		return;
+	}
+	else{
+	arrAllHisObj = new Array();
+	totalPage = 0;
+	
+	//set link download file at index 0
+	var tmpLinkFile = inResp.arguments[0];
+	setDownloadFileAccHis(tmpLinkFile);
+	
+	//start index from 1
+	
+	for(var i=1; i<inResp.arguments.length; i++) {
+		var tmpStrArgs = inResp.arguments[i].split('#');
+		var tmpHisTrans = new TransactionHistoryObj();
+		tmpHisTrans.transactionID = tmpStrArgs[0];
+		tmpHisTrans.transOwnID = tmpStrArgs[1];
+		tmpHisTrans.sourceAcc = tmpStrArgs[2];
+		tmpHisTrans.debitAmount = tmpStrArgs[3];
+		tmpHisTrans.creditAmount = tmpStrArgs[4];
+		tmpHisTrans.balance = tmpStrArgs[5];
+		tmpHisTrans.valueDate = tmpStrArgs[6];
+		tmpHisTrans.date = tmpStrArgs[7];
+		tmpHisTrans.description = tmpStrArgs[8];
+		tmpHisTrans.destinationAccount = tmpStrArgs[9];
+		tmpHisTrans.destAccName = tmpStrArgs[10];
+		tmpHisTrans.transactionType = tmpStrArgs[11];
+		arrAllHisObj.push(tmpHisTrans);
+		
+	}
+	if(arrAllHisObj.length > 0) {
+		//show button export file
+		//var nodeExport = document.getElementById('acchis-exportFunc');
+		//nodeExport.style.display = 'none';
+		
+		//total page
+		totalPage = calTotalPage(arrAllHisObj);
+		
+		//save history transaction
+		//var tmpIndex = getSelectedAccIdx();
+		var inAccObj = getSelectedAccInfoObj();//gUserInfo.accountListDetail[tmpIndex];
+		inAccObj.transactionHistory = arrAllHisObj;
+		
+		//gen page indicator
+		pageIndex = 1;
+		genPagging(totalPage, pageIndex);
+		
+		//get object per page
+		var arrMedial = new Array();
+		
+		arrMedial = getItemsPerPage(arrAllHisObj, pageIndex);
+		
+		//gen xml
+		if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+			
+			
+			var htmlContentGen = genHtmlHistoryDoc(arrMedial); 
+			
+			var tmpNode = document.getElementById('id.historyInfo');
+			tmpNode.innerHTML = htmlContentGen;
+            document.getElementById('acchis-exportFunc').style.display='block';
+	
+		}else{;
+			//gen xml
+			var tmpXmlDoc = genXMLHistoryDoc(arrMedial);
+			//gen xsl
+			xslAccHisTable = getCachePageXsl("accountxsl/history-table");
+			var tmpXslDoc = xslAccHisTable;
+			
+			genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+				var tmpNode = document.getElementById('id.historyInfo');
+				tmpNode.innerHTML = oStr;
+			});
+			
+		}
+		  
+	}
+	}
+	
+	
+}
+
+
+//EVENT SELECTED PAGE
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	pageIndex = selectedIdx;
+	
+	var arrMedial = new Array();
+	arrMedial = getItemsPerPage(arrAllHisObj, selectedIdx);
+	if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+		var  oStr = genHtmlHistoryDoc(arrMedial);
+		var tmpNode = document.getElementById('id.historyInfo');
+		tmpNode.innerHTML = oStr;
+		
+		
+	//genHtmlSearchResult(arrMedial);
+	
+	//genPagging(arrAllHisObj, selectedIdx);
+	}else{
+		//gen xml
+		var tmpXmlDoc = genXMLHistoryDoc(arrMedial);
+		//gen xsl
+		var tmpXslDoc = xslAccHisTable;
+		
+		genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+			var tmpNode = document.getElementById('id.historyInfo');
+			tmpNode.innerHTML = oStr;
+		});	
+	}
+
+}
+
+//GEN PAGGING
+
+function genPagging(arr, pageIndex) {
+	
+	//var nodePager = document.getElementById('pageIndicatorNums');
+	var nodepage = document.getElementById('acc.pagination');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}
+		
+	}
+	
+	return arrTmp;
+}
+
+
+function genXMLHistoryDoc(inHisArray) {
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	
+	var tmpXmlRootNode = createXMLNode('resptable', '', docXml);
+	var tmpXmlNodeTitle = createXMLNode('tabletitle', '', docXml, tmpXmlRootNode);
+	//20170922 ngoct3 chinh sua bo sung cot ngay hieu luc & ngay giao dic
+	var tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('ACCOUNT_TRANS_DATE'), docXml, tmpXmlNodeTitle);
+	var tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('ACCOUNT_VALUE_DATE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('ACC_HIS_DESCRIPTION_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('ACC_OUT_AMOUNT_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle5', CONST_STR.get('ACC_IN_AMOUNT_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle6', CONST_STR.get('ACCOUNT_BALANCE_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('coltitle7', CONST_STR.get('ACC_TRAS_ID_TITLE'), docXml, tmpXmlNodeTitle);
+	
+	for(var i = 0; i < inHisArray.length; i++) {
+		var tmpHisObj = inHisArray[i];
+	
+		
+		// tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('ACC_HIS_TIME_TITLE'), docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('colcontent1', tmpHisObj.date, docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('ACC_HIS_DESCRIPTION_TITLE'), docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('colcontent2', tmpHisObj.description, docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('ACC_OUT_AMOUNT_TITLE'), docXml, tmpXmlNodeInfo);
+		// var tmpAmount = formatNumberToCurrency(tmpHisObj.debitAmount);
+		// if(tmpAmount == '0' || tmpAmount == 0 || !tmpAmount) tmpAmount = '';
+		// tmpChildNode = createXMLNode('colcontent3', tmpAmount, docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('ACC_IN_AMOUNT_TITLE'), docXml, tmpXmlNodeInfo);
+		// tmpAmount = formatNumberToCurrency(tmpHisObj.creditAmount);
+		// if(tmpAmount == '0' || tmpAmount == 0 || !tmpAmount) tmpAmount = '';
+		// tmpChildNode = createXMLNode('colcontent4', tmpAmount, docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('coltitle5', CONST_STR.get('ACCOUNT_BALANCE_TITLE'), docXml, tmpXmlNodeInfo);
+		// //tmpChildNode = createXMLNode('colcontent5',formatNumberToCurrency(tmpHisObj.balance), docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('colcontent5',tmpHisObj.balance, docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('coltitle6', CONST_STR.get('ACC_TRAS_ID_TITLE'), docXml, tmpXmlNodeInfo);
+		// tmpChildNode = createXMLNode('colcontent6', tmpHisObj.transactionID, docXml, tmpXmlNodeInfo);
+		
+		
+		//20170922 ngoct3 chinh sua bo sung cot ngay hieu luc & ngay giao dic
+		var arrTransdate = [CONST_STR.get('ACCOUNT_TRANS_DATE'),  tmpHisObj.valueDate];
+		var arrValuedate = [CONST_STR.get('ACCOUNT_VALUE_DATE'),  tmpHisObj.date];
+        var arrDescription = [CONST_STR.get('ACC_HIS_DESCRIPTION_TITLE'), tmpHisObj.description];
+		 var tmpAmountOut = formatNumberToCurrency(tmpHisObj.debitAmount);
+		 if(tmpAmountOut == '0' || tmpAmountOut == 0 || !tmpAmountOut) tmpAmountOut = '';
+        var arrAmountOut = [CONST_STR.get('ACC_OUT_AMOUNT_TITLE'), tmpAmountOut];
+		var tmpAmountIn = formatNumberToCurrency(tmpHisObj.creditAmount);
+		 if(tmpAmountIn == '0' || tmpAmountIn == 0 || !tmpAmountIn) tmpAmountIn = '';
+        var arrAmountIn = [CONST_STR.get('ACC_IN_AMOUNT_TITLE'), tmpAmountIn];
+        var arrBlance = [CONST_STR.get('ACCOUNT_BALANCE_TITLE'), tmpHisObj.balance];
+		var arrTransid = [CONST_STR.get('ACC_TRAS_ID_TITLE'), tmpHisObj.transactionID];
+
+        // create account
+       var account = new Array();
+        account.push(arrTransdate);
+		account.push(arrValuedate);
+        account.push(arrDescription);
+        account.push(arrAmountOut);
+        account.push(arrAmountIn);
+        account.push(arrBlance);
+		account.push(arrTransid);
+
+
+        var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+
+        recycler.setData(account);
+        var contentHTML = recycler.init();
+
+      	var tmpXmlNodeInfo = createXMLNode('tabletdetail', '', docXml, tmpXmlRootNode);
+         tmpChildNode1 = createXMLNode('contentHistory', contentHTML, docXml, tmpXmlNodeInfo);
+	}
+	return docXml;
+}
+
+function genHtmlHistoryDoc(inHisArray) {
+	
+	var arrTitle = new Array();
+	
+	arrTitle.push(CONST_STR.get('ACCOUNT_TRANS_DATE'));
+	arrTitle.push(CONST_STR.get('ACCOUNT_VALUE_DATE'));
+	arrTitle.push(CONST_STR.get('ACC_HIS_DESCRIPTION_TITLE'));
+	arrTitle.push(CONST_STR.get('ACC_OUT_AMOUNT_TITLE'));
+	arrTitle.push(CONST_STR.get('ACC_IN_AMOUNT_TITLE'));
+	arrTitle.push(CONST_STR.get('ACCOUNT_BALANCE_TITLE'));
+	arrTitle.push(CONST_STR.get('ACC_TRAS_ID_TITLE'));
+	
+	
+	var arrContentData = new Array();
+	if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+		arrContentData.push(arrTitle);
+	}
+	var arrItemContent;
+	var contentHTML ="";
+	for(var i = 0; i < inHisArray.length; i++) {
+		var tmpHisObj = inHisArray[i];
+		arrItemContent = new Array();
+		var outtmpAmount = formatNumberToCurrency(tmpHisObj.debitAmount);
+		if(outtmpAmount == '0' || outtmpAmount == 0 || !outtmpAmount) outtmpAmount = '';
+		
+		var intmpAmount = formatNumberToCurrency(tmpHisObj.creditAmount);
+		if(intmpAmount == '0' || intmpAmount == 0 || !intmpAmount) intmpAmount = '';
+		
+		if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+		arrItemContent.push(tmpHisObj.valueDate);
+			arrItemContent.push(tmpHisObj.date);
+			arrItemContent.push(tmpHisObj.description);
+		
+			arrItemContent.push(outtmpAmount);
+		
+			arrItemContent.push(intmpAmount);
+			arrItemContent.push(tmpHisObj.balance);
+			arrItemContent.push(tmpHisObj.transactionID);
+			arrContentData.push(arrItemContent);
+		}else{
+			var arrTransdate = new Array();
+			arrTransdate.push(CONST_STR.get('ACCOUNT_TRANS_DATE'));
+			arrTransdate.push(tmpHisObj.date);
+			
+			var arrValuedate = new Array();
+			arrValuedate.push(CONST_STR.get('ACCOUNT_VALUE_DATE'));
+			arrValuedate.push(tmpHisObj.date);
+			
+			var arrDescription = new Array();
+			arrDescription.push(CONST_STR.get('ACC_HIS_DESCRIPTION_TITLE'));
+			arrDescription.push(tmpHisObj.description);
+			
+			var arrAmountOut = new Array();
+			arrAmountOut.push(CONST_STR.get('ACC_OUT_AMOUNT_TITLE'));
+			arrAmountOut.push(outtmpAmount);
+			
+			var arrAmountIn = new Array();
+			arrAmountIn.push(CONST_STR.get('ACC_IN_AMOUNT_TITLE'));
+			arrAmountIn.push(intmpAmount);
+			
+			var arrBlance = new Array();
+			arrBlance.push(CONST_STR.get('ACCOUNT_BALANCE_TITLE'));
+			arrBlance.push(tmpHisObj.balance);
+			
+			var arrTransid = new Array();
+			arrTransid.push(CONST_STR.get('ACC_TRAS_ID_TITLE'));
+			arrTransid.push(tmpHisObj.transactionID);
+			
+			var arrContent = new Array();
+			arrContent.push(arrTransdate);
+			arrContent.push(arrValuedate);
+			arrContent.push(arrDescription);
+			arrContent.push(arrAmountOut);
+			arrContent.push(arrAmountIn);
+			arrContent.push(arrBlance);
+			arrContent.push(arrTransid);
+			
+			var recycler = new RecyclerView({
+					type: "NORMAL",
+					typeTextAlign: "MIDLE",
+					title: "Tai khoan jumbo",
+					titleAlign:"LEFT",
+					opacity:true
+        		});
+
+			recycler.setData(arrContent);
+			var strHTML = recycler.init();
+			contentHTML = contentHTML +"<br>"+ strHTML;
+		}
+		
+	}
+	
+	if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+		var recycler = new RecyclerView({
+					type: "DESKTOP_LIST",
+					typeTextAlign: "MIDLE",
+					title: "Tai khoan jumbo",
+					titleAlign:"LEFT",
+					opacity:false
+        		});
+
+       recycler.setData(arrContentData);
+	   contentHTML = recycler.init();
+	}
+	return contentHTML;
+}
+
+
+//OTHER FUNCTION
+
+function setDownloadFileAccHis(inLink) {
+	
+	var nodeLoadFile = document.getElementById('acchis.exportfile');
+	if(nodeLoadFile!=undefined)
+		nodeLoadFile.setAttribute('onClick', 'openLinkInWindows("' + inLink + '")');
+}
+
+function printAccHistory() {
+	
+	var div1 = 99;
+	for (i=0;i<document.getElementById("mainViewContent").childNodes.length;i++)
+	{				
+		//alert("Nodename: " + tmpParent.childNodes[i].nodeName + "Nodetype: " + tmpParent.childNodes[i].nodeType);
+		if (document.getElementById("mainViewContent").childNodes[i].nodeType == 1)
+		{
+			if (div1 == 99)
+			{
+				div1 = i;	
+				break;
+			}
+		}
+	}
+	
+	var printNode = document.getElementById("mainViewContent").childNodes[div1];	
+	printNodeWithAll(printNode);
+}
+
+//RESET VIEW
+function resetViewWhenChangeAcc() {
+	document.getElementById('id.historyInfo').innerHTML = '';
+	document.getElementById('acc.pagination').innerHTML = '';
+	//document.getElementById('acchis-exportFunc').style.display = 'none';
+}
+// ----------DucNT--------
+function isNumberKeyNotDot(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+function handleInputAmount (e, des) {
+    var tmpVale = des.value;
+    formatCurrency(e, des);
+    //des.value = formatNumberToCurrency(des.value);
+    var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang);
+
+    var nodeNumTxt = document.getElementById("id.histransamountfrom")
+    }
+//ngocdt3 bo sung cho tiet kiem tu dong
+function WithDraw(){
+	var tmpAccObj = new AccountObj();
+				tmpAccObj.accountNumber = gArraySav.accnocont;
+				tmpAccObj.accClass = gArraySav.prod_code;				
+				//loai tien
+				tmpAccObj.currency = gArraySav.currcont;
+				//so tien
+				tmpAccObj.balance = gArraySav.sodu_hientai;
+				//ky han gui
+				if (gUserInfo.lang == 'VN' && gArraySav.prod_des == 'NO_TENOR') {
+					tmpAccObj.ky_han_gui = 'Không kỳ hạn';
+				}
+				else if (gUserInfo.lang == 'EN' && gArraySav.prod_des == 'NO_TENOR') {
+					tmpAccObj.ky_han_gui = 'Không kỳ hạn';
+				}
+				else {
+					tmpAccObj.ky_han_gui = "-";
+				}
+				//ngay mo tai khoan
+				tmpAccObj.openDate = gArraySav.valdatecont;
+				//ngay đến hạn
+				tmpAccObj.overdraftEndDate = gArraySav.matdatecont;
+				//lai suat
+				tmpAccObj.rate = gArraySav.interestcont;
+				//lai den han (tam tinh)
+				tmpAccObj.profitReven = gArraySav.estimatedcont;
+				//so tien phong toa
+				tmpAccObj.numBlockedAmt = gArraySav.so_phong_toa;
+				//muc dich phong toa
+				tmpAccObj.blockReason = gArraySav.lydo_phong_toa;
+				setSelectedAccInfoObj(tmpAccObj);
+	navController.pushToView("esaving/auto-saving-close", true, 'xsl');
+	navController.getActionBar().setTitleBarOnly(CONST_STR.get("JUMBO_AUTO_SAVINGS_TITLE"));
+}
+function ChangeInfo(){
+AutoSavAcc=accid;	
+navController.pushToView("jumbo/jumbo_check_auto_saving", true, 'xsl');
+navController.getActionBar().setTitleBarOnly(CONST_STR.get("JUMBO_AUTO_SAVINGS_TITLE"));
+
+}

@@ -1,0 +1,1100 @@
+/**
+ * Created by HuyNT2
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+
+var tmpPageName;
+var tmpPageType;
+var gprsResp = getRespObjStore();
+var statusOtherFunc = false;
+var tmpReviewResult = '';
+//timer to redirect
+var timerToRedirect;
+var timerCountdown = 5; //set timer to redirect
+var timerNoteStatus = false;
+
+// lay ra mesage giao dich thanh cong
+// if(mailservice=='293'){
+// 	gUserInfo.valicationType='PUS';
+// }
+	if(mailservice =='18'){
+		tmpReviewResult = "<table width='100%'><tr>" +
+                  "<td align='center'>"+
+                    "<div class='icon-correct' style='display: inline;color: #FAA60D;font-size: 24px;vertical-align:middle'>"+
+                    "</div>"+
+                    "<span style='font-size:16px; vertical-align:middle'>" +gprsResp.respContent+"<span id='hint-icon-3' class='icon-help icon-helpstyle icon-direction' " +
+                 // "style='position: static;padding-left: 10px;' onClick='show_hint(event, 1);'></span></span>"+
+				  "onClick='show_hint(event, 1);'></span></span>"+
+                   "</td>"+
+                "</tr>"+
+            "<tr></table>";
+			/*"<table width='100%' align='center' class='background-blacktrans' style='margin-top:15px;'>";*/
+	}
+	else if (mailservice == '60') { //CuongPV2
+		var tmpAfter = "";
+		if (gUserInfo.lang == 'VN')
+			tmpAfter = " Đăng kí tài khoản TPBank Mastercard eMoney thành công. Cám ơn quý khách đã sử dụng dịch vụ của TPBank! Quý khách vui lòng truy cập <a target='_blank' href='https://app.emoney.tpb.vn'>https://app.emoney.tpb.vn</a> để đăng nhập.";
+		else
+			tmpAfter = " You have susscessfully registered a TPBank Mastercard eMoney account. Thank you for using TPBank services! Please visit <a target='_blank' href='https://app.emoney.tpb.vn'>https://app.emoney.tpb.vn</a> to sign-in.";
+
+		tmpReviewResult = "<table width='100%'><tr>" +
+                  "<td align='center'>" +
+                    "<div class='icon-correct' style='display: inline;color: #FAA60D;font-size: 24px;vertical-align:middle'>" +
+                    "</div>" +
+                    "<span style='font-size:16px; vertical-align:middle'>" + (gprsResp.respCode == "0") ? (tmpAfter) : gprsResp.respContent + "</span>" +
+                   "</td>" +
+                "</tr>" +
+            "<tr></table>";
+	}
+    else if(mailservice == '407'){
+        tmpReviewResult = "<table width='100%'><tr>" +
+            "<td align='center'>"+
+            "<div class='icon-correct' style='display: inline;color: #FAA60D;font-size: 24px;vertical-align:middle'>"+
+            "</div>"+
+            "<span style='font-size:16px; vertical-align:middle'>" +CONST_STR.get('SCHEDULE_RESPCONTENT1')+"</span>"+"<br/>"+
+            "<span style='font-size:16px; vertical-align:middle'>" +CONST_STR.get('SCHEDULE_RESPCONTENT2')+"</span>"+
+            "</td>"+
+            "</tr>"+
+            "<tr></table>";
+    }
+	else
+	{
+		tmpReviewResult = "<table width='100%'><tr>" +
+                  "<td align='center'>"+
+                    "<div class='icon-correct' style='display: inline;color: #FAA60D;font-size: 24px;vertical-align:middle'>"+
+                    "</div>"+
+                    "<span style='font-size:16px; vertical-align:middle'>" +gprsResp.respContent+"</span>"+
+                   "</td>"+
+                "</tr>"+
+            "<tr></table>";
+			/*"<table width='100%' align='center' style='margin-top:15px;'>";*/
+	}
+ 
+
+// lay ra ma giao dich va thoi gian thuc hien
+
+	if(gprsResp && gprsResp.arguments && gprsResp.arguments.length > 0) {
+        var data = new Array();
+
+		for(var i=0; i<gprsResp.arguments.length; i++) {
+			if(gprsResp.arguments[i] && gprsResp.arguments[i].length > 0) {
+				var tmpArr = gprsResp.arguments[i].split('#');
+				if(tmpArr.length > 1) {
+					if(tmpArr[0] == 'url_redirect_link') {
+						timerNoteStatus = true;
+					}
+					else {
+						//if(tmpArr[1] == CONST_STR.get("ESAVING_INTEREST_RATE"))
+						//{
+
+                            //var row1 = []
+                            /*tmpReviewResult += "<tr class='trow-default'>" +
+                            "<td class='td-left'><span class='mobilemode' style='font-size: 14px'>" +
+                                tmpArr[1] +
+                            "</span><span class='desktopmode'>" +
+                                tmpArr[1] +
+                            "</span></td>" + "<td class='td-right'><span class='mobilemode' style='font-size: 14px'>" +
+                                tmpArr[0] +((gUserInfo.lang == 'EN')? "/year":"/năm") +
+                            "</span><span class='desktopmode'>" +
+                                tmpArr[0] +((gUserInfo.lang == 'EN')? "/year":"/năm") +
+                            "</span></td></tr>";*/
+                          //  logInfo("1:" + tmpReviewResult);
+					//	}
+						//else
+						/* if(tmpArr[1] == CONST_STR.get("ESAVING_ESTIMATED_INTEREST"))
+						{
+                            tmpReviewResult += "<tr class='trow-default'>" +
+                            "<td class='td-left'><span class='mobilemode' style='font-size: 14px'>" +
+                                tmpArr[1] +
+                            "</span><span class='desktopmode'>" +
+                                tmpArr[1] +
+                            "</span></td>" + "<td class='td-right'><span class='mobilemode' style='font-size: 14px'>" +
+                                tmpArr[0] + " " + CONST_STR.get('INTEREST_RATE_VND') +
+                            "</span><span class='desktopmode'>" +
+                                tmpArr[0] + " " + CONST_STR.get('INTEREST_RATE_VND') +
+                            "</span></td></tr>";
+                            logInfo("2:" + tmpReviewResult);
+						}
+						else
+						{*/
+
+                            var row = [tmpArr[1], tmpArr[0]];
+                            logInfo("else: " + row);
+                            if(mailservice == "96"&& i==2){
+								
+							}
+							else{
+								data.push(row);
+							}
+                            
+
+
+
+                            /*tmpReviewResult += "<tr class='trow-default'>" +
+                            "<td class='td-left'><span class='mobilemode' style='font-size: 14px'>" +
+                                tmpArr[1] +
+                            "</span><span class='desktopmode'>" +
+                                tmpArr[1] +
+                            "</span></td>" + "<td class='td-right'><span class='mobilemode' style='font-size: 14px'>" +
+                                tmpArr[0] +
+                            "</span><span class='desktopmode'>" +
+                                tmpArr[0] +
+                            "</span></td></tr>";*/
+
+                            //logInfo("3:" + tmpReviewResult);
+						//}
+					}
+				}				
+			}
+		} // end for loop
+
+        logInfo("mang data: " + data);
+        var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign:"LEFT",
+            opacity:true
+        });
+        recycler.setData(data);
+        var contentHTML = recycler.init();
+        tmpReviewResult += contentHTML;
+		
+	} //end if statement
+	tmpReviewResult += "</table></div>";
+ 
+ //store sequence review index
+	
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpStepNo = getSequenceFormIdx(tmpStepNo);
+	((tmpStepNo == undefined) || (tmpStepNo > 400))? tmpStepNo = 404: tmpStepNo = 303;
+
+    // check tmpStepNo
+    if (tmpStepNo!= 404||tmpStepNo!= 303);
+    {
+        setSequenceFormIdx(tmpStepNo);
+    }
+    // addListSequence
+    actionbar.addListSequence('com-review-result-scr');
+
+
+    var docXml = createXMLDoc();
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		
+		var nodeReviewTransID = document.getElementById('reviewReviewTransaction');
+		nodeReviewTransID.innerHTML = '<div id="sequence-form-result">' + oStr + '</div>' + tmpReviewResult;
+		
+		changeLanguageInView();
+	}, function() {
+		logInfo('gen review screen fail');
+		goBack();
+	});	
+
+	if ((checkCachePageXsl(navArrayScr[2]) && !page_html)) {
+	var tmpXml = getReviewXmlStore();
+	logInfo("haink1");
+    logInfo(tmpXml);
+
+    // vi da convert ben trang com-review-xsl-scr nen k can convert lai
+	if(tmpXml!=undefined){
+		//tmpXml = convertToNewStructureXML(XMLToString(tmpXml));
+		tmpXml = convertToNewStructureXML(xml_review);
+	}
+    
+	
+	xml_review='';
+	/*HaiNM - xóa review với đổi mk*/
+	if(navArrayScr[navArrayScr.length - 2] =="com-resetpass-scr"){
+		var nodeReviewInfo = document.getElementById("reviewResultInfo");
+		var tmpReviewHTML = "<table width='100%'> <tbody> <tr>" +
+							 "<td><div style='text-align: center;'> <input class='btnshadow-after btn-second-after' onclick='goToDefaultPage()' type='button' value='RESULT_GO_HOMEPAGE_BTN' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'> </div> </td>"
+							 "</tr> </tbody> </table>";
+		genResultInfo(nodeReviewInfo, tmpReviewHTML);
+	}
+	else if (navArrayScr[2] =="accountxsl/account-change-password-scr"){
+		var nodeReviewInfo = document.getElementById("reviewResultInfo");
+		var tmpReviewHTML = getReviewHtmlStore();
+			tmpReviewHTML += "<table width='100%'> <tbody> <tr>" +
+							 "<td><div style='text-align: center;'> <input id='another_trans' class='btnshadow-after btn-second-after btn-changecolor' onclick='doOtherTransaction()' type='button' value='RESULT_MORE_TRANS_BTN' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'><input class='btnshadow-after btn-second-after' onclick='goToDefaultPage()' type='button' value='RESULT_GO_HOMEPAGE_BTN' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'> </div> </td>"
+							 "</tr> </tbody> </table>";
+		genResultInfo(nodeReviewInfo, tmpReviewHTML);
+		
+	}else{
+		var tmpXsl = getCachePageXsl('com-review-result-tmp');
+		logInfo(tmpXsl);
+
+		genXslPageWithXML(tmpXml, tmpXsl, function loadSuccess(oDoc, type) {
+				logInfo('load page success');
+				var nodeReviewInfo = document.getElementById("reviewResultInfo");
+				if(type=='ms') {
+					//var tmpReview = oDoc.querySelector('#reviewInfo');
+					nodeReviewInfo.innerHTML = oDoc;
+					var tmpNodeReview = document.getElementById('reviewInfo');
+					var tmpNodeScreenTitle = tmpNodeReview.getElementsByClassName('screen-title')[0];
+					if (tmpNodeScreenTitle != undefined && tmpNodeScreenTitle != null) tmpNodeScreenTitle.parentNode.style.display = 'none';
+					var tmpStr = tmpNodeReview.innerHTML;
+					genResultInfo(nodeReviewInfo, tmpStr);
+				}
+				else if(type=='webkit') {
+					var tmpNodeReview = oDoc.querySelector('#reviewInfo');
+					var tmpNodeScreenTitle = tmpNodeReview.getElementsByClassName('screen-title')[0];
+					if (tmpNodeScreenTitle != undefined && tmpNodeScreenTitle != null) tmpNodeScreenTitle.parentNode.style.display = 'none';
+					var tmpReview = tmpNodeReview.innerHTML;
+					if(navigator.userAgent.toLocaleLowerCase().indexOf('firefox') != -1){
+						tmpReview = tmpReview.replace(/&lt;/gi, "<");
+						tmpReview = tmpReview.replace(/&gt;/gi, ">");
+						tmpReview = tmpReview.replace(/&amp;#60;/gi, "&lt;");
+						tmpReview = tmpReview.replace(/&amp;#62;/gi, "&gt;");
+					}
+					genResultInfo(nodeReviewInfo, tmpReview);
+				}
+				
+			}, function loadFail() {
+				logInfo('load page fail');
+		});
+	}
+	/*End - HaiNM*/
+	
+	
+}
+else {
+	var nodeReviewInfo = document.getElementById("reviewResultInfo");
+	var tmpReviewHTML = getReviewHtmlStore();
+	if (navArrayScr[2] == "utilitiesxsl/utilities-disconnect-momo" || navArrayScr[2] == "utilitiesxsl/utilities-map-momo" || navArrayScr[2] =="accountxsl/account-change-password-scr")
+	{
+		tmpReviewHTML += "<table width='100%'> <tbody> <tr>" +
+						 "<td><div style='text-align: center;'> <input id='another_trans' class='btnshadow-after btn-second-after btn-changecolor' onclick='doOtherTransaction()' type='button' value='RESULT_MORE_TRANS_BTN' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'><input class='btnshadow-after btn-second-after' onclick='goToDefaultPage()' type='button' value='RESULT_GO_HOMEPAGE_BTN' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'> </div> </td>"
+						 "</tr> </tbody> </table>";
+	}
+   
+	genResultInfo(nodeReviewInfo, tmpReviewHTML);
+}
+ 
+
+//change language after load trang
+changeLanguageInView();
+
+
+
+function convertToNewStructureXML(strXml) {
+    var parser = new DOMParser();
+    xmlDoc = parser.parseFromString(strXml,"text/xml");
+
+    // check neu da duoc convert thi khong convert nua
+    if(xmlDoc.getElementsByTagName("content").length > 0) {
+        return xmlDoc;
+    }
+
+    // create new documnet
+    var newDoc = createXMLDoc();
+    var tmpXmlRootNode = createXMLNode('review', '', newDoc);
+    //review/reviewtitle //screen title
+
+    // var tmpXmlReviewTitle = createXMLNode('reviewtitle', xmlDoc.getElementsByTagName("reviewtitle")[0].firstChild.nodeValue, newDoc, tmpXmlRootNode);
+    var tagReviewTitle = xmlDoc.getElementsByTagName("reviewtitle");
+
+    var tmpXmlReviewTitle = null;
+    if(tagReviewTitle != null && tagReviewTitle[0] != undefined)
+    {
+        if (tagReviewTitle[0].firstChild != null)
+        {
+            tmpXmlReviewTitle = createXMLNode('reviewtitle', tagReviewTitle[0].firstChild.nodeValue,
+                newDoc, tmpXmlRootNode);
+        }
+    }
+
+
+
+    //review/reviewinfo/reviewtranstitle
+    var tagReviewInfoXml = xmlDoc.getElementsByTagName("reviewinfo");
+    var tagTs = '';
+    for (i=0; i< tagReviewInfoXml.length;i++) {
+        tagTs = tagReviewInfoXml[i].getElementsByTagName("transinfo");
+        tagReviewTranTitle = tagReviewInfoXml[i].getElementsByTagName("reviewtranstitle");
+
+        var tmpXmlReviewInfo = createXMLNode('reviewinfo', '', newDoc, tmpXmlRootNode);
+       // var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', tagReviewTranTitle[0].firstChild.nodeValue, newDoc, tmpXmlReviewInfo);
+
+        data = new Array();
+
+        if(i==1&& trans_type=="transfer" && checkTransferPage()){
+			for (j=0; j< tagTs.length;j++) {
+	            try{
+	                var title = tagTs[j].getElementsByTagName('transinfotitle')[0].firstChild.nodeValue;
+	                var content = tagTs[j].getElementsByTagName('transinfocontent')[0].firstChild.nodeValue;
+	                var row = [title,content];
+	                data.push(row);
+	            }catch(e){
+	            }
+	        }
+		}else{
+			for (j=0; j< tagTs.length;j++) {
+	            try{
+	                var title = tagTs[j].getElementsByTagName('transinfotitle')[0].firstChild.nodeValue;
+	                var content = tagTs[j].getElementsByTagName('transinfocontent')[0].firstChild.nodeValue;
+					if(tagTs[j].getElementsByTagName('transinfodisplay')[0]!= undefined && tagTs[j].getElementsByTagName('transinfodisplay')[0] != null &&tagTs[j].getElementsByTagName('transinfodisplay'[0]) != ''){
+						if(tagTs[j].getElementsByTagName('transinfocontent')[0].firstChild.nodeValue=='review'){	
+						}
+					}
+					else{
+						 var row = [title, content];
+	                	data.push(row);
+					}
+	               
+	            }catch(e){
+	            }
+	        }
+		}
+        
+
+        //gen listview
+        if(i==1&& trans_type=="transfer" && checkTransferPage()){
+				var recycler = new RecyclerView({
+				type: "TITLE",
+				typeTextAlign: "MIDLE",
+				title: "Chuyển tới",
+				titleAlign:"LEFT",
+				opacity:false
+			});
+			recycler.setData(data);
+		}
+		else{
+			//gen listview
+			var recycler = new RecyclerView({
+				type: "NORMAL",
+				typeTextAlign: "MIDLE",
+				title: "Tai khoan jumbo",
+				titleAlign:"LEFT",
+				opacity:false
+			});
+			recycler.setData(data);
+		}
+        var contentHTML = recycler.init();
+        var reviewTb = xmlDoc.getElementsByTagName("reviewtable")[0];
+        var contentTableHTML = '';
+        if(reviewTb != undefined && reviewTb != null && (i+ 1) >= tagReviewInfoXml.length){
+	        var dataTable =  new Array();
+	        var dataTableTitle =  new Array();
+	        
+	        var a = reviewTb.getElementsByTagName('reviewtabletitle')[0];
+	        for(var k = 1; k <= a.childElementCount; k++){
+	        	dataTableTitle.push(a.getElementsByTagName('tbcol' + k)[0].firstChild.nodeValue);
+	        }
+	        dataTable.push(dataTableTitle);
+	        var rowDetail = reviewTb.getElementsByTagName('reviewtabledetail');
+	        for(var k = 0; k < rowDetail.length;k++){
+	        	var dataTableContent =  new Array();
+	        	for(var m = 1;m <= (rowDetail[k].childElementCount/2);m++){
+	        		dataTableContent.push(rowDetail[k].getElementsByTagName('tbcontent'+m)[0].firstChild.nodeValue);
+	        	}
+	        	dataTable.push(dataTableContent);
+	        }
+
+
+	        var recycler = new RecyclerView({
+	            type: "DESKTOP_NORMAL",
+	            typeTextAlign: "MIDLE",
+	            opacity:false
+	        });
+	        recycler.setData(dataTable);
+	        recycler.setHeaderHightlight(true);
+	        contentTableHTML = '<br>' + recycler.init();	      
+        }
+        contentHTML = contentHTML + contentTableHTML;
+        var tmpContent = createXMLNode('content', contentHTML, newDoc, tmpXmlReviewInfo);
+    }
+    //console.log(data);
+
+    //tmpXml = parseXMLPagging();
+    logInfo(newDoc);
+    return newDoc;
+}
+/*** VIEW LOAD SUCCESS ***/
+function viewBackFromOther() {
+    logInfo('Back from other view');
+
+//	setDefaultInfo(newCusInfoObj);
+}
+
+function viewDidLoadSuccess() {
+	logInfo('result load success');
+	document.getElementById('nav.btn.home').style.display='none';
+    var idSendMail = document.getElementById('sendmail');
+	/*if(mailservice =='14'){
+		gUserInfo.valicationType = AuthenTypeNew;
+	}*/
+	if(mailservice =='17'||mailservice =='70'||mailservice =='150'||mailservice =='18'||mailservice =='150'||mailservice =='12'||mailservice =='20'||mailservice =='231'||mailservice =='192'||mailservice =='291'||mailservice =='203'){
+        if(idSendMail != null){
+            idSendMail.style.display ='';
+        }
+	}
+	else{
+        if(idSendMail != null){
+            idSendMail.style.display ='none';
+        }
+
+	}
+	if(mailservice=='155'){
+		gUserInfo.accountList= gUserInfo.accountList.concat(gUserInfo.autoSavingList);
+	}
+	//20170629 ngocdt3 bo sung cho dat lich rut vang
+	if(mailservice=='334'){
+		document.getElementById('qrcodenote').style.display='';
+		document.getElementById('qrcode').src= gprsResp.respRaw;
+		document.getElementById('qrcodevalue').style.display ='';
+	}
+    if(mailservice=='407'){
+        document.getElementById('qrcodenotesch').style.display='';
+        document.getElementById('qrcode').src= gprsResp.respRaw;
+		document.getElementById('qrcodevalue').style.display ='';
+    }
+
+ 
+    //var tmpStepNo = 303;
+    //setSequenceFormIdx(tmpStepNo);
+    var pages = [/*"transfer/transfer-local-create-scr",
+                 "transfer/transfer-inter-bank",
+                 "transfer/transfer-card-create-scr",
+                 "transfer/transfer-fpts-create-scr",
+                 "transfer/transfer-id-create-scr",*/
+				 "jumbo/jumbo_create_acc_complete_confirm",
+				 "jumbo/jumbo_create_acc_components",
+				 "jumbo/jumbo_create_acc",
+				 "esaving/future-esaving-close",
+				 "loan/loan-adjust-term-confirm-scr",
+				 "loan/loan-active-authen-overdraft",
+				 "jumbo/jumbo-check-auto-saving",
+              //   "jumbo/jumbo_change_auto_saving",
+                // "jumbo/jumbo-close-auto-saving",
+                 //"jumbo/jumbo_create_auto_saving",
+                 "com-review-xsl-scr",
+                 "com-review-scr",
+                 "com-authentication-scr",
+				 "com-authentication-scr-gold",
+				 "accountxsl/account-history-scr"];
+               //  "jumbo/jumbo_check_auto_saving"];
+    navController.removePageInCache(pages);
+    if(mailservice =='106'){
+    	setTimeout(function(){
+    		ajaxTimeNextRequestStatus = true;
+    		getInfoUpdateBackground();
+    	} , 2000);
+		//getInfoUpdateBackground();
+	}
+	
+	if (mailservice == '60')
+    {
+    	document.getElementById('divactionresult').innerHTML = "<table width='100%'><tbody><tr class='trow-space'></tr>" +
+        "<tr><td width='32%'> <input type='button' class='btnshadow btn-primary' onclick='doOtherTransaction()' value='" + CONST_STR.get('RESULT_MORE_TRANS_BTN') + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' /> </td>" +
+            "<td width='32%'> <input type='button' class='btnshadow btn-second' onclick=\"parent.open('https://app.emoney.tpb.vn/ ')\" value='" + CONST_STR.get('WELCOME_BTN_LOGIN') + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' /> </td>" +
+            "<td width='32%'> <input type='button' class='btnshadow btn-second' onclick='goToDefaultPage()' value='" + CONST_STR.get('RESULT_GO_HOMEPAGE_BTN') + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off' /> </td>" +
+        "</tr> </tbody></table>";
+    }
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('review result will unload');
+	clearInterval(timerToRedirect);
+	timerToRedirect = null;
+	if(!statusOtherFunc) {
+		navController.resetCacheBranch();
+	}
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+function genResultInfo(inNode, inStr) {
+		
+	var tmpConfigResult = CONFIG_RESULT_FUNC_GOHOME[navArrayScr[2]];
+	var tmpBtnTitle = 'RESULT_GO_HOMEPAGE_BTN';
+	var tmpBtnToScr = 'goToDefaultPage();';
+
+
+	if(tmpConfigResult && navArrayScr[3] != "jumbo/jumbo-close-auto-saving"&& navArrayScr[3] != "esaving/esaving-information" ) {
+		tmpPageName = tmpConfigResult['btnHomePageName']; 
+		tmpBtnTitle = tmpConfigResult['btnHomeTitle'];
+		tmpPageType = tmpConfigResult['btnHomePageType'];
+		if(!tmpPageType) tmpPageType = "";
+	}
+	
+	if(!tmpConfigResult || !tmpPageName || !tmpBtnTitle) {
+		inStr = inStr.replace('sendJSONRequest()', tmpBtnToScr);
+		inStr = inStr.replace('REVIEW_BTN_CONFIRM', tmpBtnTitle);
+		inStr = inStr.replace('checkAQ()', tmpBtnToScr);
+		inStr = inStr.replace('REVIEW_BTN_NEXT', tmpBtnTitle);
+	}
+	else {
+		//THUANTM CHANGED (MUST ASK BEFORE DELETE)
+       
+		if(tmpPageName =="loan/loan-open-standby-overdraft"){
+			var titles = CONST_STR.get('SAVNO_BEFORE_MATDATE_MENU');
+            var isTaiLoc = inStr.indexOf(titles) > -1;
+			if(parseInt(esaving_tenor_open)<=3 && !isTaiLoc){
+				inStr = inStr.replace('checkAgree()', "doOtherTransaction()");	
+				inStr = inStr.replace('sendJSONRequest()', "doOtherTransaction()");			
+				inStr = inStr.replace('REVIEW_BTN_CONFIRM', CONST_STR.get('RESULT_MORE_TRANS_BTN'));
+				inStr = inStr.replace('REVIEW_BTN_NEXT', CONST_STR.get('RESULT_MORE_TRANS_BTN'));
+			}else{
+				inStr = inStr.replace('sendJSONRequest()', "goToOpenOverdraftPage()");
+				inStr = inStr.replace('checkAgree()', "goToOpenOverdraftPage()");
+				inStr = inStr.replace('REVIEW_BTN_CONFIRM', tmpBtnTitle);
+				inStr = inStr.replace('REVIEW_BTN_NEXT', tmpBtnTitle);
+				inStr = inStr.replace(/btnshadow/g, 'btnshadowOpenEsaving');
+				inStr = inStr.replace('width:100%;', 'width:109%;');
+			}
+			
+		}
+		else if(tmpPageName =="loan/loan-active-standby-overdraft"){
+			inStr = inStr.replace('sendJSONRequest()', "goToActiveOverdraft()");
+			inStr = inStr.replace('checkAgree()', "goToActiveOverdraft()");
+			inStr = inStr.replace('REVIEW_BTN_CONFIRM', tmpBtnTitle);
+			inStr = inStr.replace('REVIEW_BTN_NEXT', tmpBtnTitle);
+		}
+		//THUANTM END	
+		else{
+			if(navArrayScr[2]=="jumbo/jumbo_check_auto_saving" &&navArrayScr[3]=="com-review-xsl-scr" ){
+				if(mailservice=='264'){
+					 tmpBtnTitle = 'RESULT_GO_HOMEPAGE_BTN';
+					 tmpBtnToScr = 'goToDefaultPage();';
+					 tmpPageName = 'homepagexsl/homepage-dynamic-scr';
+					inStr = inStr.replace('sendJSONRequest()', "goToDefaultPage(&#039;" + tmpPageName + "&#039;, &#039;" + tmpPageType+ "&#039;);");
+					inStr = inStr.replace('REVIEW_BTN_CONFIRM', tmpBtnTitle);
+				}
+			}
+			else{
+			inStr = inStr.replace('sendJSONRequest()', "goToDefaultPage(&#039;" + tmpPageName + "&#039;, &#039;" + tmpPageType+ "&#039;);");
+			inStr = inStr.replace('checkAgree()', "goToDefaultPage(&#039;" + tmpPageName + "&#039;, &#039;" + tmpPageType + "&#039;);");
+			inStr = inStr.replace('REVIEW_BTN_CONFIRM', tmpBtnTitle);
+			inStr = inStr.replace('REVIEW_BTN_NEXT', tmpBtnTitle);}
+		
+		}
+	}
+	
+	var tmpConfigTransResult = CONFIG_RESULT_FUNC_OTHERTRANS[navArrayScr[2]];
+	var tmpBtnTransTitle = 'RESULT_MORE_TRANS_BTN';
+	var tmpBtnTransToScr = 'doOtherTransaction();';
+	var tmpPageTransName;
+	var tmpPageTransType;
+	var tmpConfigTransRecent =navArrayScr[3];
+	if(tmpConfigTransResult) {
+		tmpPageTransName = tmpConfigTransResult['btnOtherTransPageName']; 
+		tmpBtnTransTitle = tmpConfigTransResult['btnOtherTransTitle'];
+		tmpPageTransType = tmpConfigTransResult['btnOtherTransType'];
+		if(!tmpPageTransType) tmpPageTransType = "";
+	}
+
+
+
+	
+	if(!tmpConfigTransResult || !tmpPageTransName || !tmpBtnTransTitle || tmpConfigTransRecent =="jumbo/jumbo-close-auto-saving") {
+		inStr = inStr.replace('goBack()', tmpBtnTransToScr);
+		inStr = inStr.replace('INPUT_ACC_BTN_GOBACK', 'RESULT_MORE_TRANS_BTN');
+		inStr = inStr.replace('REVIEW_BTN_CANCEL', 'RESULT_MORE_TRANS_BTN');
+	}
+	else {
+		
+		inStr = inStr.replace('btnCancelClick()', "goToOtherPage(&#039;" + tmpPageTransName + "&#039;, &#039;" + tmpPageTransType + "&#039;,&#039;"+tmpBtnTransTitle+"&#039;);");
+		inStr = inStr.replace('goBack()', "doOtherTransaction();");
+		inStr = inStr.replace('INPUT_ACC_BTN_GOBACK', 'RESULT_MORE_TRANS_BTN');
+		inStr = inStr.replace('REVIEW_BTN_CANCEL', tmpBtnTransTitle);
+		inStr = inStr.replace('sendJSONRequest()', "goToOtherPage(&#039;" + tmpPageTransName + "&#039;, &#039;" + tmpPageTransType + "&#039;,&#039;"+tmpBtnTransTitle+"&#039;);");
+		inStr = inStr.replace('REVIEW_BTN_CONFIRM', tmpBtnTransTitle);
+	}
+	
+	/*inStr = inStr.replace('goBack()', 'doOtherTransaction()');
+	inStr = inStr.replace('INPUT_ACC_BTN_GOBACK', 'RESULT_MORE_TRANS_BTN');
+	inStr = inStr.replace('REVIEW_BTN_CANCEL', 'RESULT_MORE_TRANS_BTN');*/
+	
+	inNode.innerHTML = inStr;
+	
+	var tmpNodePrint = document.getElementById('result-export-print');
+	if(tmpNodePrint != undefined && tmpNodePrint != null && !isModelMobile) {
+		tmpNodePrint.style.display = '';
+	}
+	var tmpNodeMail = document.getElementById('sendmail');
+	if(tmpNodeMail != undefined && tmpNodeMail != null) {
+		tmpNodeMail.style.display = '';
+	}
+	
+	var tmpNodeCondition = document.getElementById('trCondition');
+	if(tmpNodeCondition != undefined && tmpNodeCondition != null) {
+	tmpNodeCondition.style.display = 'none';
+	}
+	
+	var tmpNodeCancelBtn = document.getElementById('goEsavingOpenLnk');
+	/*if(tmpNodeCancelBtn != undefined && tmpNodeCancelBtn != null) {
+		tmpNodeCancelBtn.style.display = 'none';
+		tmpNodeCancelBtn.parentNode.style.display = 'none';
+	}*/
+	//hide nút hủy giao dịch ở màn hình review
+	var tmpNodeCancelBtn = document.getElementById('trCancel');
+	if(tmpNodeCancelBtn != undefined && tmpNodeCancelBtn != null) {
+		tmpNodeCancelBtn.style.display = 'none';
+	}
+	//show/hide các trường cần thiết/không cần thiết ở màn hình review
+	var tmpArrNode = getElementsByAttrName('scrinfo');
+	for(var i=0; i<tmpArrNode.length; i++) {
+		var tmpNode = tmpArrNode[i];
+		if(tmpNode && tmpNode.getAttribute('scrinfo') == 'review') {
+			tmpNode.style.display = 'none';
+		}
+		else if(tmpNode && tmpNode.getAttribute('scrinfo') == 'result') {
+			tmpNode.style.display = '';
+		}
+	}
+	//ngocdt3 check voi tiet kiem dien tu (bo tick chon dkdk)
+	var setCheck = document.getElementById('setCheck');
+	if(setCheck != null && setCheck != undefined && setCheck != ''){
+		setCheck.style.display ='none';
+	}
+	
+
+    //SANGNT1 - CHECK IS OPEN SAVING
+    var elementEsaving = document.getElementById('intro_alert_saving');
+   // if(elementEsaving!=null || elementEsaving!= undefined){
+        //var titleEsaving = elementEsaving.innerText;
+
+       // if(titleEsaving == CONST_STR.get('SAVNO_BEFORE_MATDATE_MENU')){
+          //  var nodeEsaving =  document.getElementById('intro_alert_saving');
+
+            if(elementEsaving != undefined && elementEsaving != null) {
+
+                elementEsaving.style.display = '';
+            }
+
+        //}
+  //  }
+
+    //END SANGNT1
+	//check nếu có link redirect thì tự động load trang theo đường dẫn mới
+	if(mailservice=="96"){
+		var tmpNodeCondition = document.getElementById('trgoBack');
+		if(tmpNodeCondition != undefined && tmpNodeCondition != null) {
+			tmpNodeCondition.style.display = 'none';
+		}
+        var tmpNodeCancelBtn = document.getElementById('trCancel');
+        if(tmpNodeCancelBtn != undefined && tmpNodeCancelBtn != null) {
+            tmpNodeCancelBtn.style.display = '';
+        }
+	}
+    if(mailservice=="97"){
+        var tmpNodeCondition = document.getElementById('trgoBack');
+        if(tmpNodeCondition != undefined && tmpNodeCondition != null) {
+            tmpNodeCondition.style.display = 'none';
+        }
+        var tmpNodeCancelBtn = document.getElementById('trCancel');
+        if(tmpNodeCancelBtn != undefined && tmpNodeCancelBtn != null) {
+            tmpNodeCancelBtn.style.display = '';
+        }
+    }
+	
+	if(timerNoteStatus) {
+		startTimerToRedirect();
+	}
+	
+	
+	
+	
+	
+	
+	// var tmpConfigResult = CONFIG_RESULT_FUNC_GOHOME[navArrayScr[0]];
+	// var tmpBtnTitle = CONST_STR.get('RESULT_GO_HOMEPAGE_BTN');
+	// var tmpBtnToScr = 'goToDefaultPage();';
+
+	// if(tmpConfigResult) {
+	// 	tmpPageName = tmpConfigResult['btnHomePageName']; 
+	// 	tmpBtnTitle = tmpConfigResult['btnHomeTitle'];
+	// 	tmpPageType = tmpConfigResult['btnHomePageType'];
+	// 	if(!tmpPageType) tmpPageType = "";
+	// }
+	
+	// if(!tmpConfigResult || !tmpPageName || !tmpBtnTitle) {
+	// 	inStr = inStr.replace('sendJSONRequest()', tmpBtnToScr);
+	// 	inStr = inStr.replace('REVIEW_BTN_CONFIRM', tmpBtnTitle);
+	// 	inStr = inStr.replace('checkAQ()', tmpBtnToScr);
+	// 	inStr = inStr.replace('REVIEW_BTN_NEXT', tmpBtnTitle);
+	// }
+	// else {
+	// 	//THUANTM CHANGED (MUST ASK BEFORE DELETE)				
+	// 	if(tmpPageName =="loan/loan-open-standby-overdraft"){
+	// 		if(parseInt(esaving_tenor_open)<=3){
+	// 			inStr = inStr.replace('checkAgree()', "doOtherTransaction()");	
+	// 			inStr = inStr.replace('sendJSONRequest()', "doOtherTransaction()");			
+	// 			inStr = inStr.replace('REVIEW_BTN_CONFIRM', CONST_STR.get('RESULT_MORE_TRANS_BTN'));
+	// 			inStr = inStr.replace('REVIEW_BTN_NEXT', CONST_STR.get('RESULT_MORE_TRANS_BTN'));
+	// 			//inStr = inStr.replace(/btnshadow/g, 'btnshadowOpenEsaving');
+	// 			//inStr = inStr.replace('width:100%;', 'width:109%;');
+				
+	// 		}else{
+	// 			inStr = inStr.replace('sendJSONRequest()', "goToOpenOverdraftPage()");
+	// 			inStr = inStr.replace('checkAgree()', "goToOpenOverdraftPage()");
+	// 			inStr = inStr.replace('REVIEW_BTN_CONFIRM', tmpBtnTitle);
+	// 			inStr = inStr.replace('REVIEW_BTN_NEXT', tmpBtnTitle);
+	// 			inStr = inStr.replace(/btnshadow/g, 'btnshadowOpenEsaving');
+	// 			inStr = inStr.replace('width:100%;', 'width:109%;');
+	// 		}
+	// 	}	
+	// 	//THUANTM END	
+	// 	else{
+	// 		inStr = inStr.replace('sendJSONRequest()', "goToDefaultPage(&#039;" + tmpPageName + "&#039;, &#039;" + tmpPageType + "&#039;);");
+	// 		inStr = inStr.replace('checkAgree()', "goToDefaultPage(&#039;" + tmpPageName + "&#039;, &#039;" + tmpPageType + "&#039;);");
+	// 		inStr = inStr.replace(CONST_STR.get('REVIEW_BTN_CONFIRM'), tmpBtnTitle);
+	// 		inStr = inStr.replace(CONST_STR.get('REVIEW_BTN_NEXT'), tmpBtnTitle);
+		
+	// 	}
+	// }
+	
+	// var tmpConfigTransResult = CONFIG_RESULT_FUNC_OTHERTRANS[navArrayScr[0]];
+	// var tmpBtnTransTitle = CONST_STR.get('RESULT_MORE_TRANS_BTN');
+	// var tmpBtnTransToScr = 'doOtherTransaction();';
+	// var tmpPageTransName;
+	// var tmpPageTransType;
+	// if(tmpConfigTransResult) {
+	// 	tmpPageTransName = tmpConfigTransResult['btnOtherTransPageName']; 
+	// 	tmpBtnTransTitle = tmpConfigTransResult['btnOtherTransTitle'];
+	// 	tmpPageTransType = tmpConfigTransResult['btnOtherTransType'];
+	// 	if(!tmpPageTransType) tmpPageTransType = "";
+	// }
+
+
+
+	
+	// if(!tmpConfigTransResult || !tmpPageTransName || !tmpBtnTransTitle) {
+	// 	inStr = inStr.replace('goBack()', tmpBtnTransToScr);
+	// 	inStr = inStr.replace('INPUT_ACC_BTN_GOBACK', CONST_STR.get('RESULT_MORE_TRANS_BTN'));
+	// 	inStr = inStr.replace('REVIEW_BTN_CANCEL', CONST_STR.get('RESULT_MORE_TRANS_BTN'));
+	// }
+	// else {
+		
+		
+	// 	inStr = inStr.replace('goBack()', "goToOtherPage(&#039;" + tmpPageTransName + "&#039;, &#039;" + tmpPageTransType + "&#039;);");
+	// 	inStr = inStr.replace('INPUT_ACC_BTN_GOBACK', tmpBtnTransTitle);
+	// 	inStr = inStr.replace('REVIEW_BTN_CANCEL', tmpBtnTransTitle);
+		
+	// }
+	
+	// /*inStr = inStr.replace('goBack()', 'doOtherTransaction()');
+	// inStr = inStr.replace('INPUT_ACC_BTN_GOBACK', 'RESULT_MORE_TRANS_BTN');
+	// inStr = inStr.replace('REVIEW_BTN_CANCEL', 'RESULT_MORE_TRANS_BTN');*/
+	
+	// inNode.innerHTML = inStr;
+
+	
+	// var tmpNodePrint = document.getElementById('result-export-print');
+	// if(tmpNodePrint != undefined && tmpNodePrint != null && !isModelMobile) {
+	// 	tmpNodePrint.style.display = '';
+	// }
+	// var tmpNodeMail = document.getElementById('sendmail');
+	// if(tmpNodeMail != undefined && tmpNodeMail != null) {
+	// 	tmpNodeMail.style.display = '';
+	// }
+	
+	// var tmpNodeCondition = document.getElementById('trCondition');
+	// if(tmpNodeCondition != undefined && tmpNodeCondition != null) {
+	// tmpNodeCondition.style.display = 'none';
+	// }
+	
+	// var tmpNodeCancelBtn = document.getElementById('goEsavingOpenLnk');
+	// if(tmpNodeCancelBtn != undefined && tmpNodeCancelBtn != null) {
+	// 	tmpNodeCancelBtn.style.display = 'none';
+	// 	tmpNodeCancelBtn.parentNode.style.display = 'none';
+	// }
+	// //hide nút hủy giao dịch ở màn hình review
+	// var tmpNodeCancelBtn = document.getElementById('trCancel');
+	// if(tmpNodeCancelBtn != undefined && tmpNodeCancelBtn != null) {
+	// 	tmpNodeCancelBtn.style.display = 'none';
+	// }
+	// //show/hide các trường cần thiết/không cần thiết ở màn hình review
+	// var tmpArrNode = getElementsByAttrName('scrinfo');
+	// for(var i=0; i<tmpArrNode.length; i++) {
+	// 	var tmpNode = tmpArrNode[i];
+	// 	if(tmpNode && tmpNode.getAttribute('scrinfo') == 'review') {
+	// 		tmpNode.style.display = 'none';
+	// 	}
+	// 	else if(tmpNode && tmpNode.getAttribute('scrinfo') == 'result') {
+	// 		tmpNode.style.display = '';
+	// 	}
+	// }
+
+    // //SANGNT1 - CHECK IS OPEN SAVING
+	// var titleES =  document.getElementById('categorySavingTitle');
+	// if(titleES!=undefined){
+	// 	var titleEsaving = titleES.innerText;
+	// 	if(titleEsaving == CONST_STR.get('SAVNO_BEFORE_MATDATE_MENU')){
+	// 		var nodeEsaving =  document.getElementById('intro_alert_saving');
+
+	// 		if(nodeEsaving != undefined && nodeEsaving != null) {
+
+	// 			nodeEsaving.style.display = '';
+	// 		}
+
+	// 	}
+	// }
+    // //END SANGNT1
+	// //check nếu có link redirect thì tự động load trang theo đường dẫn mới
+	// if(timerNoteStatus) {
+	// 	startTimerToRedirect();
+	
+	// }
+   
+}
+
+function goToDefaultPage(inPage, inPageType) {
+    //navController.initWithRootView('account/account-scr', true);
+    if(!inPage) {
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.initWithRootView(tmpPageName, true, tmpPageType);
+    }
+    else {
+        navController.initWithRootView(inPage, true, inPageType);
+		if(inPage.indexOf('loan/loan-active-standby-overdraft') != -1){
+			function MenuContent(title, src) {
+				this.title = title;
+				this.src = src;
+				this.keyLang = title;
+			}
+			var arrBottom = new Array();
+			arrBottom.push(new MenuContent('LOAN_INFORMATION_SB_OD_TITLE', 'loan/loan-info-sb-od'));
+			arrBottom.push(new MenuContent('LOAN_OPEN_SB_OD_TITLE', 'loan/loan-open-standby-overdraft'));
+			arrBottom.push(new MenuContent('LOAN_ADJUST_SB_OD_TITLE', 'loan/loan-adjust-standby-overdraft'));
+			arrBottom.push(new MenuContent('LOAN_ACTIVE_SB_OD_TITLE', 'loan/loan-active-standby-overdraft'));
+			navController.initBottomBarOnlyText(arrBottom[3].src ,arrBottom, "loan-info-overdreaft");
+    	
+			setTimeout(function name(params) {
+					navController.pushToViewAndRemoveOtherPage(arrBottom[3].src,arrBottom, tmpPageName, true, 'html');
+			},300);
+		}
+    }
+}
+
+function doOtherTransaction() {
+    statusOtherFunc = true;
+    navController.removePageInCache('esaving/future-esaving-close');
+	 var pages = [
+				  "jumbo/jumbo_create_acc_complete_confirm",
+				 "jumbo/jumbo_create_acc_components",
+				 "jumbo/jumbo_create_acc",
+                 "com-review-xsl-scr",
+                 "com-review-scr",
+                 "com-authentication-scr",
+				 "com-authentication-scr-gold",
+				 "loan/loan-active-authen-overdraft",
+				 "loan/loan-adjust-term-confirm-scr",
+				  "accountxsl/account-history-scr",
+				   "jumbo/jumbo_change_auto_saving",
+				    "jumbo/jumbo-close-auto-saving",
+				 "jumbo/jumbo_create_auto_saving",
+				 "loan/loan-adjust-term-confirm-scr",
+                  "esaving/esaving-information-table-detail",
+				 "esaving/auto-saving-close",
+				 "esaving/future-esaving-prd-changeinfo"];
+
+                // "jumbo/jumbo_check_auto_saving"];
+	 navController.removePageInCache(pages);
+
+	 if (mailservice == "60") {
+	 	pages = ["esaving/future-esaving-prd-changeinfo",
+                  "cardservicexsl/card-register",
+                  "cardservicexsl/emoney-detail",
+                  "cardservicexsl/card-emoney-register",
+                  "com-review-result-scr"];
+	 	navController.removePageInCache(pages);
+
+	 	navController.pushToView('paymentxsl/payment-topup-create-scr', true, 'xsl');
+	 	setTitleBar(CONST_STR.get('TOPUP_REPAYMENT_SCREEN_TITLE'));
+	 }
+	else if(navArrayScr.indexOf("com-authentication-scr")!= -1){
+		navArrayScr.splice((navArrayScr.length-1), 1);
+    	navController.popViewInit(true);
+	}
+     else if(navArrayScr[navArrayScr.length - 2]=="com-resetpass-scr"){
+         statusOtherFunc = true;
+         navController.popToRootView(true);
+     }
+	else {
+		navController.popViewInit(true);
+	}
+	
+	//navController.resetBranchView();
+	//navController.popToRootView(true);
+}
+
+/*function goToDefaultPage(inPage, inPageType) {
+	if(!inPage) {
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	else {
+		navController.initWithRootView(inPage, true, inPageType);
+	}
+}*/
+
+/*** SET COUNTDOWN TO REDIRECT ***/
+function startTimerToRedirect() {
+	//if(CONST_BROWSER_MODE) {
+		timerToRedirect = setInterval(function(){
+			var tmpNote = document.getElementById('resultNote');
+			if(tmpNote) tmpNote.style.display = '';
+			var tmpNt = document.getElementById('divResultNode');
+			var tmpNoteStr = CONST_STR.get('RESULT_NOTE_COUNTDOWN');
+			if(tmpNt) tmpNt.innerHTML = tmpNoteStr.format(timerCountdown, tmpArr[1]);
+			timerCountdown--;
+			if(timerCountdown < 1) {
+				clearInterval(timerToRedirect);
+				timerToRedirect = null;
+				timerCountdown = 5;
+				if(tmpArr[1] && tmpArr[1].length > 0) window.location = tmpArr[1];
+			}
+			else {
+				var tmpNote = document.getElementById('resultNote');
+				if(tmpNote) tmpNote.style.display = '';
+				var tmpNt = document.getElementById('divResultNode');
+				var tmpNoteStr = CONST_STR.get('RESULT_NOTE_COUNTDOWN');
+				if(tmpNt) tmpNt.innerHTML = tmpNoteStr.format(timerCountdown, tmpArr[1]);
+			}
+		}, 1000);
+	//}
+}
+
+//==============THUANTM SHOW DIALOG BOX WHEN CLICK ON BUTTON TO GO TO OPEN OVERDRAFT======//
+function goToOpenOverdraftPage() {
+	document.addEventListener("alertConfirmOK", alertConfirmOK, false);
+	document.addEventListener("alertConfirmCancel", alertConfirmCancel, false);
+	var strMSG = "<p>"+CONST_STR.get('ESAVING_MSG_GO_TO_OPEN_OD1')+"</p><p>"+CONST_STR.get('ESAVING_MSG_GO_TO_OPEN_OD2')+"</p>";
+	showAlertConfirmText(strMSG, alertConfirmOK, alertConfirmCancel);	
+}
+
+function alertConfirmCancel() {
+	if (currentPage == "com-review-result-scr") {
+		document.removeEventListener("alertConfirmCancel", alertConfirmCancel, false);
+		document.removeEventListener("alertConfirmOK", alertConfirmOK, false);
+	}
+}
+function alertConfirmOK() {		
+	if (currentPage == "com-review-result-scr") {		
+		alertConfirmCancel();		
+		logInfo(tmpPageName);
+		if(tmpPageName =="loan/loan-open-standby-overdraft"){
+			navArrayScr.splice((navArrayScr.length-1), 1);
+			navArrayScr.splice((navArrayScr.length-1), 1);
+			
+			 function MenuContent(title, src) {
+				this.title = title;
+				this.src = src;
+				this.keyLang = title;
+			}
+			var arrBottom = new Array();
+			arrBottom.push(new MenuContent('LOAN_INFORMATION_SB_OD_TITLE', 'loan/loan-info-sb-od'));
+			arrBottom.push(new MenuContent('LOAN_OPEN_SB_OD_TITLE', 'loan/loan-open-standby-overdraft'));
+			arrBottom.push(new MenuContent('LOAN_ADJUST_SB_OD_TITLE', 'loan/loan-adjust-standby-overdraft'));
+			arrBottom.push(new MenuContent('LOAN_ACTIVE_SB_OD_TITLE', 'loan/loan-active-standby-overdraft'));
+			navController.initBottomBarOnlyText(arrBottom[1].src ,arrBottom, "loan-info-overdreaft");
+    	
+			setTimeout(function name(params) {
+					navController.pushToViewAndRemoveOtherPage(arrBottom[1].src,arrBottom, tmpPageName, true, 'xsl');
+			},300);
+		
+		
+			
+			//navController.pushToView(tmpPageName, true, 'xsl');	
+		}else{
+			navController.initWithRootView(tmpPageName, true, tmpPageType);		
+		}
+		
+	}
+}
+function goToActiveOverdraft() {
+	if (currentPage == "com-review-result-scr") {		
+		alertConfirmCancel();		
+		logInfo(tmpPageName);
+		if(tmpPageName =="loan/loan-active-standby-overdraft"){
+			navArrayScr.splice((navArrayScr.length-1), 1);
+			navArrayScr.splice((navArrayScr.length-1), 1);
+			
+			 function MenuContent(title, src) {
+				this.title = title;
+				this.src = src;
+				this.keyLang = title;
+			}
+			var arrBottom = new Array();
+			arrBottom.push(new MenuContent('LOAN_INFORMATION_SB_OD_TITLE', 'loan/loan-info-sb-od'));
+			arrBottom.push(new MenuContent('LOAN_OPEN_SB_OD_TITLE', 'loan/loan-open-standby-overdraft'));
+			arrBottom.push(new MenuContent('LOAN_ADJUST_SB_OD_TITLE', 'loan/loan-adjust-standby-overdraft'));
+			arrBottom.push(new MenuContent('LOAN_ACTIVE_SB_OD_TITLE', 'loan/loan-active-standby-overdraft'));
+			navController.initBottomBarOnlyText(arrBottom[3].src ,arrBottom, "loan-info-overdreaft");
+    	
+			setTimeout(function name(params) {
+					navController.pushToViewAndRemoveOtherPage(arrBottom[3].src,arrBottom, tmpPageName, true, 'xsl');
+			},300);
+		
+		
+			
+			//navController.pushToView(tmpPageName, true, 'xsl');	
+		}else{
+			navController.initWithRootView(tmpPageName, true, tmpPageType);		
+		}
+		
+	}
+}
+
+
+
+
+//=========================================================================================//
+function goToOtherPage(inPage, inPageType,title) {
+	if(!inPage) {
+		statusOtherFunc = true;
+		navController.resetBranchView();
+	}
+	else {
+		
+		navArrayScr.splice((navArrayScr.length-1), 1);
+		navController.pushToView(inPage, true, inPageType);
+		navController.getActionBar().setTitleBarOnly(CONST_STR.get(title));
+		navController.getActionBar().hideNavHeaderBar();
+		navController.getActionBar().setHavingBackground(false);
+		
+		
+	}
+}
+function goToOtherPageSav(inPage,inPageType,title){
+	if(!inPage) {
+		statusOtherFunc = true;
+		navController.resetBranchView();
+	}
+	else {
+		
+		navArrayScr.splice((navArrayScr.length-1), 1);
+		navController.pushToView(inPage, true, inPageType);
+		navController.getActionBar().setTitleBarOnly(CONST_STR.get(title));
+		navController.getActionBar().hideNavHeaderBar();
+		navController.getActionBar().setHavingBackground(false);
+		
+		
+	}
+}
+
+function printResultHistory() {
+	var tmpNodeMain = document.getElementById("content-result"); 
+	if(!(tmpNodeMain!=undefined))
+	 tmpNodeMain = document.getElementById("mainViewContent");
+	var printNode = tmpNodeMain.getElementsByTagName("div")[0];
+	printNodeWithAll(printNode);
+}
+function sendmail(){
+	navController.pushToView("transfer/temp-mail", true, 'xsl');
+	navController.getActionBar().setTitleBarOnly(CONST_STR.get('SEND_MAIL_BUTTON'));
+}

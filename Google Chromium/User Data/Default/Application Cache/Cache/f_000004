@@ -1,0 +1,771 @@
+// JavaScript Document
+
+var tmpDestinationAcc;
+var tmpBankCode;
+
+var fasttransObj;
+var gSourceVal;
+var mng;
+
+var tmpPayeeType;
+var tmpBankName;
+var statusInputFastAcc;
+function loadInitXML(){
+	return '';
+	
+}
+var flgAcc;
+
+function initTextAreaMessage(){
+    try{
+        var txtArea = document.getElementById('trans.content');
+        if(txtArea!==null){
+            return false;
+        }
+        document.getElementById("holder-transfer-message").innerHTML = "";
+    }catch(e){}
+
+
+    var textAreaEl = new TextArea({
+        containerMargin : "0px",
+        idTextArea : "trans.content",
+        placeholder : CONST_STR.get("PLACEHOLDER_TRANSFER_CONTENT"),
+        iconClass : "icon-content-note",
+        lengthmax : "40",
+
+        //borderColor : "rgba(255, 255, 255, 0.2)",
+        //showBorderBottom : false,
+       // showBorderTop : false,
+        fontSizeIcon : "24px!important",
+        validateInput : function(){
+            console.log("validate function");
+        }
+    });
+    textAreaEl.show("holder-transfer-message");
+}
+
+//document.addEventListener("evtLoadPageSuccess", function(e){
+function viewDidLoadSuccess() {
+	//mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+	//showTransType();
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		logInfo('transfer load success');
+		if(flgAcc == undefined || flgAcc == false){
+			initTextAreaMessage();
+			if(gUserInfo.lang == 'EN'){
+				document.getElementById('id.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_EN[1];
+			}else{
+				document.getElementById('id.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_VN[1];
+			}
+		
+			document.getElementById('id.accountno').value = gUserInfo.accountList[0].accountNumber;
+			var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+			
+			//nodeAccBal.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + "</b>"+"<b> VND</b>"+"</h6>";
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + " VND"+"</div>";
+			
+			gSourceVal = gUserInfo.accountList[0].balanceAvailable;
+			mng = CONST_VAL_PAYEE_NOT_TEMPLATE[1];
+			//flgAcc = true;
+		}
+	setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+	if(statusInputFastAcc) {
+				loadFastTransSuccess();
+			}
+			setTimeout(function(e) { statusInputFastAcc = false; }, 1000); //fix double click
+	}
+	genSequenceFormFastAcc();
+    actionbar.addListSequence("transfer/transfer-local-create-scr");
+//}, false);
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flgAcc = true;
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewWillUnload() {
+	//flgPeriodic = true;
+	//flgAcc = false;
+	logInfo('transfer will unload');
+}
+
+function loadFastTransSuccess()
+{
+	logInfo('loadFastTransSuccess');
+	if ((statusInputFastAcc) && (currentPage == "transfer/transfer-inter-fast-create-scr")) {
+		mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+		var payeeDesc = document.getElementById("id.payee");
+		var bankName = document.getElementById("trans.bankname");
+		
+		var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+		var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+		
+		
+		if (tmpBankName != undefined && tmpBankName != '')
+		{
+			bankName.value = tmpBankName;
+			bankName.setAttribute('disabled', 'disabled');
+			bankName.setAttribute('onclick', '');
+		}
+		else
+		{
+			bankName.value = '';
+			bankName.setAttribute('disabled', '');
+			bankName.removeAttribute('disabled');
+			bankName.setAttribute('onclick', 'showInputBankCodeScreen()');
+		}
+		
+		if (tmpPayeeType != '')
+		{
+			//mng = tmpPayeeType;
+			var check = false;
+			for (var i = 0; i < tmpArray2.length; i++)
+			{
+				if (tmpArray2[i] == mng)
+				{
+					payeeDesc.value = tmpArray1[i];
+					check = true;
+				}
+			}
+			if (mng == CONST_VAL_PAYEE_NOT_TEMPLATE[0])
+			{
+				payeeDesc.setAttribute('disabled', 'disabled');
+				payeeDesc.setAttribute('onclick', '');
+			}
+			else{
+				payeeDesc.setAttribute('disabled', '');
+				payeeDesc.removeAttribute('disabled');
+				payeeDesc.setAttribute('onclick', 'showInputMNG()');
+			}
+		}
+		else
+		{
+				/*mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0] ;
+				payeeDesc.value = tmpArray1[0];*/
+				mng = CONST_VAL_PAYEE_NOT_TEMPLATE[1] ;
+				payeeDesc.value = tmpArray1[1];
+				payeeDesc.setAttribute('disabled', '');
+				payeeDesc.removeAttribute('disabled');
+				payeeDesc.setAttribute('onclick', 'showInputMNG()');
+		}
+	}
+	
+}
+
+
+
+function handleInputAmount (e, des) {
+	formatCurrency(e, des);
+	var numStr = convertNum2WordWithLang(keepOnlyNumber(des.value), gUserInfo.lang); 
+	
+	var nodeNumTxt = document.getElementById("trans.amounttotext");
+	//nodeNumTxt.innerHTML = "<h6>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";
+	//nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": " + numStr + "</div>";
+	nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+}
+
+function changeType(){
+	navController.initWithRootView('transfer/transfer-inter-create-scr', true);
+}
+
+function showAccountSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+}
+
+function handleSelectionAccountList(e) {
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		//document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+		handleSelectionAccountListClose(e);
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("id.accountno");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			
+			//nodeAccBal.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + e.selectedValue2 + "</b>"+"<b> VND</b>"+"</h6>";
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND"+"</div>";
+			
+			gSourceVal = e.selectedValue2;
+		}
+	}
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+
+function showInputBankCodeScreen() {
+	navController.pushToView('transfer/trans-input-sml-bankcode', true);
+	gHistoryCode = CONST_HISTORY_CODE[3]; // get history code
+	document.addEventListener("evtInputBankCode", handleInputBankcode, false);
+}
+
+//event listener: input account
+var statusInputBankcode; //using check input account ready
+function handleInputBankcode(e) {
+	document.removeEventListener("evtInputBankCode", handleInputBankcode, false);
+	tmpBankCode = e.inputValue;
+	statusInputBankcode = true;
+}
+
+function showInputAccScreen() {
+	navController.pushToView('com-input-account', true);
+	gHistoryCode = CONST_HISTORY_CODE[3]; // get history code
+	document.addEventListener("evtInputAccount", handleInputAcc, false);
+}
+
+//event listener: input account
+//var statusInputFastAcc; //using check input account ready
+function handleInputAcc(e) {
+	document.removeEventListener("evtInputAccount", handleInputAcc, false);
+	tmpDestinationAcc = e.inputValue;
+	statusInputFastAcc = true;
+}
+
+document.addEventListener("evtLoadPageSuccess", function(e){
+	if ((statusInputFastAcc) && (currentPage == "transfer/transfer-inter-fast-create-scr")) {
+		///alert("Transfer local create load success: " + tmpDestinationAcc);
+		logInfo('input account done');
+		var tmpNodeDestAcc = document.getElementById('trans.destaccountnofast');
+		if (tmpDestinationAcc != undefined && tmpDestinationAcc != '')
+		{
+			tmpNodeDestAcc.value = tmpDestinationAcc;
+		}
+		setTimeout(function(e) { statusInputFastAcc = false; }, 1000); //fix double click
+		
+	}
+	else if ((statusInputBankcode) && (currentPage == "transfer/transfer-inter-fast-create-scr")) {
+		setTimeout(function(e) { statusInputBankcode = false; }, 1000); //fix double click
+		logInfo('selected bank code done');
+		var tmpNodeBank = document.getElementById('trans.bankname');
+		tmpNodeBank.value = tmpBankCode.split('#')[1];
+	}
+	
+}, false);
+
+function genCacheReviewScreen() {
+	var sourceAcc = document.getElementById("id.accountno");
+	var bankName = document.getElementById("trans.bankname");
+	var destinationAcc = document.getElementById("trans.destaccountnofast");
+	var amountTrans = document.getElementById('trans.amount');
+	var contentTrans = document.getElementById("trans.content");
+	var payeeType = document.getElementById('id.payee');
+
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	//formatNumberToCurrencyWithSymbol
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('FAST_TRANS_ACCNO_SELCT_BG'), docXml, tmpChildNodeAcc);
+	
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sourceAcc.value, docXml, tmpChildNodeAcc);
+
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(gSourceVal) + ' VND', docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+	
+	//review/reviewinfo/reviewtranstitle
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', destinationAcc.value, docXml, tmpChildNodeAcc);
+	
+	//nguoi thu huong
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_BENEFICIARY'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', fasttransObj[2], docXml, tmpChildNodeAcc);
+	
+	//ngan hang
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_BANK_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', fasttransObj[1], docXml, tmpChildNodeAcc);
+	
+	//mo ta phi
+	//var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	//var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_FEE_DES'), docXml, tmpChildNodeAcc);
+	//tmpChildNode = createXMLNode('transinfocontent', fasttransObj[5], docXml, tmpChildNodeAcc);
+
+	//so tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_AMOUNT_CONT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(fasttransObj[6])+" VND", docXml, tmpChildNodeAcc);
+		
+	//phi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_FEE_CONT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(fasttransObj[4])+" VND", docXml, tmpChildNodeAcc);
+	
+	var balance = keepOnlyNumber(gSourceVal);//gSourceVal.replace(/,/g,'');
+	var amounttemp = removeSpecialChar(fasttransObj[6]);
+	var fee = keepOnlyNumber(fasttransObj[4]);
+	var balanceCont = balance - amounttemp - parseInt(fee);	
+	
+	//balance cont
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_BALANCE_CONT'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(balanceCont,' VND'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeTrans);
+	
+	//noi dung chuyen tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_AMOUNT_DES'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', fasttransObj[7], docXml, tmpChildNodeAcc);
+
+	//so tai khoan nguoi thu huong
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_BENEFICIARY_ACCOUNT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', payeeType.value, docXml, tmpChildNodeAcc);
+	
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd
+    } 
+    if(mm<10){
+        mm='0'+mm
+    } 
+    var today = dd+'/'+mm+'/'+yyyy;	
+	
+	//execute date
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_DATE_TRANS'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', today, docXml, tmpChildNodeTrans);	
+	
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+}
+
+function genReviewScreen() {
+	var sourceAcc = document.getElementById("id.accountno");
+	var bankName = document.getElementById("trans.bankname");
+	var destinationAcc = document.getElementById("trans.destaccountnofast");
+	var amountTrans = document.getElementById('trans.amount');
+	var contentTrans = document.getElementById("trans.content");
+	var payeeType = document.getElementById('id.payee');
+
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	//formatNumberToCurrencyWithSymbol
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('FAST_TRANS_ACCNO_SELCT_BG'), docXml, tmpChildNodeAcc);
+	
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sourceAcc.value, docXml, tmpChildNodeAcc);
+
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(gSourceVal) + ' VND', docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+	
+	//review/reviewinfo/reviewtranstitle
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', destinationAcc.value, docXml, tmpChildNodeAcc);
+	
+	//nguoi thu huong
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_BENEFICIARY'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', fasttransObj[2], docXml, tmpChildNodeAcc);
+	
+	//ngan hang
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_BANK_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', fasttransObj[1], docXml, tmpChildNodeAcc);
+	
+	//mo ta phi
+	//var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	//var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_FEE_DES'), docXml, tmpChildNodeAcc);
+	//tmpChildNode = createXMLNode('transinfocontent', fasttransObj[5], docXml, tmpChildNodeAcc);
+
+	//so tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_AMOUNT_CONT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(fasttransObj[6])+" VND", docXml, tmpChildNodeAcc);
+		
+	//phi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_FEE_CONT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(fasttransObj[4])+" VND", docXml, tmpChildNodeAcc);
+	
+	var balance = keepOnlyNumber(gSourceVal);//gSourceVal.replace(/,/g,'');
+	var amounttemp = removeSpecialChar(fasttransObj[6]);
+	var fee = keepOnlyNumber(fasttransObj[4]);
+	var balanceCont = balance - amounttemp - parseInt(fee);	
+	
+	//balance cont
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_BALANCE_CONT'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(balanceCont,' VND'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeTrans);
+	
+	//noi dung chuyen tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_AMOUNT_DES'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', fasttransObj[7], docXml, tmpChildNodeAcc);
+
+	//so tai khoan nguoi thu huong
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_ACCNO_BENEFICIARY_ACCOUNT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', payeeType.value, docXml, tmpChildNodeAcc);
+	
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd
+    } 
+    if(mm<10){
+        mm='0'+mm
+    } 
+    var today = dd+'/'+mm+'/'+yyyy;	
+	
+	//execute date
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_DATE_TRANS'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', today, docXml, tmpChildNodeTrans);	
+	
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+
+var conditions = {
+					"account":
+							{
+								"allow":"[0-9]",
+								"notallow":"",
+								"minlength":"11",
+								"maxlength":"11",
+								"func":""
+							},
+					"desaccno":
+							{
+								"allow":"[0-9]",
+								"notallow":"",
+								"minlength":"1",
+								"maxlength":"50",
+								"func":""
+							},		
+					"content":
+							{
+								"allow":"[a-zA-Z0-9]",
+								"notallow":"",
+								"minlength":"0",
+								"maxlength":"200",
+								"func":""
+							},
+					"amount":
+							{
+								"allow":"[,.0-9]",
+								"notallow":"",
+								"minlength":"0",
+								"maxlength":"18",
+								"func":"checkAmount"
+							}
+				}
+
+
+function checkAmount(){
+	var amountTrans = document.getElementById("trans.amount");
+	var tempamount = removeSpecialChar(gSourceVal);
+	var tmpStr;
+	tmpStr = removeSpecialChar(amountTrans.value);
+	//if(amountTrans.length < 1 && amountTrans.length > 16){
+	if(tmpStr.length < 1) { // && tmpStr.length > 16){
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_AMOUNT'));
+		return false;
+	}
+	if(parseInt(tmpStr)>parseInt(tempamount)){
+		showAlertText(CONST_STR.get('ERR_INPUT_TRANS_AMOUNT_WRONG'));
+		return false;
+	}
+	return true;
+	
+}
+
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	var sourceAcc = document.getElementById("id.accountno");
+	var destinationAcc = document.getElementById("trans.destaccountnofast");
+	var bankName = document.getElementById('trans.bankname');
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	
+	
+	if (!validateFunc(sourceAcc.value, conditions["account"])) {
+		showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+		return;
+	}
+	arrayArgs.push(sourceAcc.value);
+	
+	if (!validateFunc(destinationAcc.value, conditions["desaccno"])) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_ACC_NUMBER'));
+		return;
+	}
+	
+	if(bankName.value == CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_BANKCODE'));
+		return;
+	}
+	arrayArgs.push(tmpBankCode.split('#')[0]);
+	
+	arrayArgs.push(destinationAcc.value);
+	var amount = removeSpecialChar(amountTrans.value);
+	if(checkAmount() == true){
+	
+	arrayArgs.push(amount);
+	}
+	else{
+		return;
+	}
+	if (!validateFunc(contentTrans.value, conditions["content"])) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_CONTENT'));
+		return;
+	}
+	if(!checkAvailableChar(contentTrans.value)) {
+		showAlertText(CONST_STR.get('ERR_INCORRECT_TRANS_CONTENT'));
+		return;
+	}
+	arrayArgs.push(contentTrans.value);
+	arrayArgs.push(mng);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_FAST_TRANS_ACC_VERIFY"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((checkResponseCodeSuccess(gprsResp.respCode) || gprsResp.respCode == CONSTANTS.get("COM_FINGERPRINT_OVER_LIMIT") || gprsResp.respCode == CONSTANTS.get("COM_FINGERPRINT_OVER_DATE_LIMIT")) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_FAST_TRANS_ACC_VERIFY")))) {
+		//parserLocalTrans();
+		fasttransObj = gprsResp.arguments;
+		genReviewScreen();
+		
+	} else if (gprsResp.respCode == '2003' && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_FAST_TRANS_ACC_VERIFY")))) {
+		fasttransObj = gprsResp.arguments;
+		genCacheReviewScreen();
+		navController.pushToView("com-verify-password", true);
+	}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(e){
+};
+
+function showInputMNG()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+	var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+	document.addEventListener("evtSelectionDialog", handleInputMNG, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_MGN_PAYEE_SELCT'), tmpArray1, tmpArray2, false);
+}
+
+
+function handleInputMNG(e)
+{
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var mnglist = document.getElementById('id.payee');
+			if (mnglist.nodeName == "INPUT") {
+				mnglist.value = e.selectedValue1;
+			}
+			else {
+				mnglist.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			mng = e.selectedValue2;
+		}
+		
+	}
+}
+
+function handleInputMNGClose() {
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+	}
+}
+
+function showPayeePage()
+{
+
+	gPayeeCode = CONST_PAYEE_FAST_TRANS_ACCNO;
+
+	document.addEventListener("evtSelectionDialogInput", handleInputPayeeAccOpen, false);
+	document.addEventListener("evtSelectionDialogCloseInput", handleInputPayeeAccClose, false);
+
+	document.addEventListener("onInputSelected", okSelected, false);	
+	//Tao dialog
+	dialog = new DialogListInput(CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION'), 'ALL', gPayeeCode);
+	
+	dialog.showDialog(callbackShowDialogSuccessed, '');
+}
+function callbackShowDialogSuccessed(node){
+	dialog.hiddenTab2();
+}
+function handleInputPayeeAccOpen(e){
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		handleInputPayeeAccClose();			
+		if(e.tabSelected == 'tab1'){
+			var obj = e.dataObject;
+			var bankName = document.getElementById('trans.bankname');
+			var destinationAcc = document.getElementById("trans.destaccountnofast");
+			if(bankName!=null && destinationAcc != null){
+				bankName.value = obj.partnerName;
+				destinationAcc.value = obj.transValue;
+				tmpPayeeType = obj.transType;
+				tmpBankName = obj.partnerName;
+				tmpBankCode = obj.citadCode+"#"+obj.partnerName;
+			}
+		}else{			
+		}
+	}
+}
+
+function handleInputPayeeAccClose(e){
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputPayeeAccClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputPayeeAccOpen, false);
+		//document.removeEventListener("tabChange", tabChanged, false);
+		document.removeEventListener("onInputSelected", okSelected, false);
+	}
+}
+
+function okSelected(e){
+
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {		
+		handleInputPayeeAccClose();
+		var destinationAcc = document.getElementById("trans.destaccountnofast");
+		
+		if ((e.selectedValue != undefined) &&(e.selectedValue != null) && (e.selectedValue.length>0)){
+			destinationAcc.value = e.selectedValue;			
+		}		
+	}
+}
+//gen sequence form
+function genSequenceFormFastAcc() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	//var tmpStepNo = 401;
+	var tmpStepNo = 301;
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqFormFastAcc');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+
+//chon loai giao dich
+function showTransType(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_TRANS_INTER_EN: CONST_KEY_TRANS_INTER_VN;
+	var tmpArray2 = CONST_VAL_TRANS_INTER;
+	document.addEventListener("evtSelectionDialog", handleshowTransType, false);
+	document.addEventListener("evtSelectionDialogClose", handleshowTransTypeClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_BTN_SELECT_FUNC'), tmpArray1, tmpArray2, false);
+}
+function handleshowTransType(e){
+	var selectionID = "";
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		handleshowTransTypeClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagSelection = document.getElementById("id.transtype");
+			if (tagSelection.nodeName == "INPUT") {
+				tagSelection.value = e.selectedValue1;
+			}
+			else {
+				tagSelection.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectionID = e.selectedValue2;
+		}
+		if(selectionID == '1'){
+			navController.initWithRootView('transfer/transfer-inter-create-scr', true);
+			
+		}else
+		if(selectionID == '2'){
+		}
+	}
+}
+
+function handleshowTransTypeClose(){
+	if (currentPage == "transfer/transfer-inter-fast-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleshowTransTypeClose, false);
+		document.removeEventListener("evtSelectionDialog", handleshowTransType, false);
+	}
+}

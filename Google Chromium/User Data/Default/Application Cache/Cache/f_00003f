@@ -1,0 +1,830 @@
+var xmlDetail = '';
+var ResultControl =[];
+var ResultControl1 =[];
+var ResultControl7 =[];
+var sourceacc;
+var resultAccVis = new Array();
+var resultAccNoVis = new Array();
+var docXsl;
+var listaccvis = '';
+var listaccnovis = '';
+var listsaving = '';
+var gESavingrevObj;
+var valRd = '';
+var gAccConf = '';
+var tempObj = new Object();
+var tmpseobj = 1;
+var tempRd1,tempRd2;
+function loadInitXML(){
+
+}
+
+function viewDidLoadSuccess(){
+    bottomBar.hide();
+    genSequenceForm();
+//    document.getElementById('getAccno').style.display = 'none';
+    actionbar.addListSequence("esaving/esaving-online-changeinfo");
+    //actionbar.showStepSequence("esaving/esaving-online-changeinfo");
+    sendJSONRequest();
+    console.log(JSON.stringify(gFurSaving));
+	ResultControl =gFurSaving;
+	genHtmlSearchResult(ResultControl);
+//    document.addEventListener("evtChangeWidthDesktop",genHtmlSearchResult,false);
+//    document.addEventListener("evtChangeWidthMobile",genHtmlSearchResult,false);
+    //console.log("gFurSaving " +gFurSaving.length );
+    if(gFurSaving.length > 0){
+        ResultControl =gFurSaving[0];
+        genHtmlSearchResult(ResultControl);
+    }
+   /* document.addEventListener("evtChangeWidthDesktop",genHtmlSearchResult,false);
+    document.addEventListener("evtChangeWidthMobile",genHtmlSearchResult,false);*/
+}
+
+function callbackClose(){
+    //document.getElementById('secAccNo').value = CONST_STR.get('ESAVING_BGN_CHOICE');
+    document.getElementById('dfAccNo').value = CONST_STR.get('ESAVING_BGN_CHOICE');
+    document.getElementById('dfAccNo').value = CONST_STR.get('ESAVING_BGN_CHOICE');
+    if(tmpseobj == 1)
+    {
+        document.getElementById('rd1').checked = true;
+        document.getElementById('rd2').checked = false;
+        document.getElementById('gangiatri').value = document.getElementById('gan1').innerHTML;
+        //document.getElementById('gangiatri1').value = document.getElementById('tmpAccNo').value;
+        document.getElementById('dfAccNo').value = document.getElementById('tmpAccNo').value;
+
+    }
+    else if(tmpseobj == 2)
+    {
+        document.getElementById('rd2').checked = true;
+        document.getElementById('rd1').checked = false;
+        document.getElementById('gangiatri').value = document.getElementById('gan2').innerHTML;
+        //document.getElementById('gangiatri1').value = document.getElementById('tmpAccNo').value;
+        document.getElementById('secAccNo').value = document.getElementById('tmpAccNo').value;
+    }
+    document.getElementById('getAccno').style.display = 'table-row';
+    console.log('close dialog');
+    actionbar.showActionBar();
+}
+
+function tmpcheckingrd(id) {
+    if(id == 1){
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-checked');
+        document.getElementById('tmpcheckingrd1').style.color = '#fb8c00';
+        document.getElementById('tmpcheckingrd2').style.color = 'black';
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-unchecked');
+        tmpseobj = 1;
+        return;
+    }
+    if(id == 2){
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-checked');
+        document.getElementById('tmpcheckingrd2').style.color = '#fb8c00';
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-unchecked');
+        document.getElementById('tmpcheckingrd1').style.color = 'black';
+        tmpseobj = 2;
+        return;
+    }
+}
+
+function callbackLoadXsl(){
+    document.getElementById('gan1').innerHTML = document.getElementById('id.ren').innerHTML;
+    document.getElementById('gan2').innerHTML = document.getElementById('id.noren').innerHTML;
+    if(document.getElementById('rd2').checked == true){
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-unchecked');
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-checked');
+        document.getElementById('tmpcheckingrd2').style.color = '#fb8c00';
+        tmpseobj = 2;
+    }else{
+        document.getElementById('tmpcheckingrd2').setAttribute('class','icon-radio-unchecked');
+        document.getElementById('tmpcheckingrd1').setAttribute('class','icon-radio-checked');
+        document.getElementById('tmpcheckingrd1').style.color = '#fb8c00';
+        tmpseobj = 1;
+
+    }
+    actionbar.hideActionbar();
+    modalDialog.showDialogFull();
+}
+function openModalDialog(){
+    tempRd1 = undefined;
+    tempRd2 = undefined;
+    initDialog(CONST_STR.get('ESAVING_INPUT_INFO_NEW'),"","esaving/esaving-change-schedule",callbackClose,callbackLoadXsl,false);
+
+}
+function sendJSONRequest(){
+    var data = {};
+    var arrayArgs = new Array();
+    //arrayArgs.push(gCustomerNo);
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_ESAVING_CHANGEINFO_VIEW"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+
+}
+function requestMBServiceSuccesss(e){
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_ESAVING_CHANGEINFO_VIEW") || (gprsResp.responseType == '-1')))){
+        //navController.pushToView('account/account-scr', true);
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.pushToView(tmpPageName, true, tmpPageType);
+    }
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_ESAVING_CHANGEINFO_VIEW")))) {
+        gESavingInputObj = new Array();
+        gESavingInputObj = gprsResp.arguments;
+        var tempArrStr;
+        var objtemp = null;
+        var indexEnd = gESavingInputObj.indexOf("END");
+        for(var k=0;k<indexEnd;k++){
+            tempArrStr = gESavingInputObj[k].split("#");
+            objtemp = new Object();
+            objtemp.savingtype = tempArrStr[0];
+            objtemp.accnocont = tempArrStr[1];
+            objtemp.amountcont = tempArrStr[2];
+            objtemp.valdatecont = tempArrStr[3];
+            objtemp.matdatecont = tempArrStr[4];
+            objtemp.interestcont = tempArrStr[5];
+            objtemp.termcont = tempArrStr[6];
+            objtemp.currcont = tempArrStr[7];
+            objtemp.accrucont = tempArrStr[8];
+            objtemp.bamountcont = tempArrStr[9];
+            objtemp.breason = tempArrStr[10];
+            objtemp.brancode = tempArrStr[11];
+            objtemp.rollinfo = tempArrStr[12];
+            objtemp.dfacc = tempArrStr[13];
+            objtemp.sttblock = tempArrStr[14];
+            ResultControl1.push(objtemp);
+        }
+        for(var k=0;k<indexEnd;k++){
+            tempArrStr = gESavingInputObj[k].split("#");
+            objtemp = new Object();
+            objtemp.savingtype = tempArrStr[0];
+            objtemp.accnocont = tempArrStr[1];
+            objtemp.amountcont = tempArrStr[2];
+            objtemp.valdatecont = tempArrStr[3];
+            objtemp.matdatecont = tempArrStr[4];
+            objtemp.interestcont = tempArrStr[5];
+            objtemp.termcont = tempArrStr[6];
+            objtemp.currcont = tempArrStr[7];
+            objtemp.accrucont = tempArrStr[8];
+            objtemp.bamountcont = tempArrStr[9];
+            objtemp.breason = tempArrStr[10];
+            objtemp.brancode = tempArrStr[11];
+            objtemp.rollinfo = tempArrStr[12];
+            objtemp.dfacc = tempArrStr[13];
+            objtemp.sttblock = tempArrStr[14];
+            ResultControl7.push(objtemp);
+        }
+        genSavingOnline();
+    }
+}
+function genSavingOnline(){
+    fadeOutMainContentScreen();
+    setTimeout(function(){
+        var tableedit = document.getElementById("tableEdit");
+        var tableedit1 = document.getElementById("tableEdit1");
+        var tableButton = document.getElementById("tableButton");
+        var tableInfoSaving = document.getElementById('div-datainfo');
+        var txtexiren = document.getElementById('id.exiren');
+        var txtren = document.getElementById('id.ren');
+        var txtnoren = document.getElementById('id.noren');
+        var dfAccNo = document.getElementById('dfAccNo');
+        var secAccNo = document.getElementById('secAccNo');
+        var autoacc = document.getElementById('id.dfacc');
+        var tmpnow;
+        var tmpren;
+        var tmpnoren;
+        var acc;
+        var objTr = null;
+        var tmpArr = new Array();
+        for(var i=0; i<ResultControl1.length;i++){
+            tmpArr =ResultControl1[i];
+            if(ResultControl.accnocont == tmpArr.accnocont){
+                if(tmpArr.rollinfo == 'I'){
+                    txtexiren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    tmpnow = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    txtren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    tmpren = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    txtnoren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    tmpnoren = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    autoacc.innerHTML = '';
+                    secAccNo.disabled = true;
+                    dfAccNo.style.display = '';
+                }
+                else if(tmpArr.rollinfo == 'P'){
+                    txtexiren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    txtren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    txtnoren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    dfAccNo.style.display = 'none';
+                    secAccNo.disabled = true;
+                    tmpnow = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    tmpren = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    tmpnoren = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    autoacc.innerHTML = tmpArr.dfacc;
+                    acc = tmpArr.dfacc;
+                }
+                else if(tmpArr.rollinfo == 'C'){
+                    txtexiren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    txtren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    txtnoren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    dfAccNo.style.display = 'none';
+                    secAccNo.disabled = true;
+                    tmpnow = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    tmpren = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    tmpnoren = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    autoacc.innerHTML = tmpArr.dfacc;
+                    acc = tmpArr.dfacc;
+                }
+                else {
+                    logInfo('ESaving change info - exception roll info');
+                }
+                objTr = document.getElementById("tr-" + tmpArr.accnocont);
+                tempObj.roll = tmpArr.rollinfo;
+                tempObj.accno = tmpArr.accnocont;
+                tempObj.valdate = tmpArr.valdatecont;
+                tempObj.matdate = tmpArr.matdatecont;
+                tempObj.amount = formatNumberToCurrency(tmpArr.amountcont);
+                tempObj.inter = tmpArr.interestcont;
+                tempObj.curre = tmpArr.currcont;
+                tempObj.now = tmpnow;
+                tempObj.ren = tmpren;
+                tempObj.noren = tmpnoren;
+                tempObj.autoacc = acc;
+                var arrTmp = new Array();
+                arrTmp.push(tempObj);
+
+            } else {
+                objTr = document.getElementById("tr-" + tmpArr.accnocont);
+                if(objTr != undefined || objTr != null) objTr.style.display = 'none';
+                //document.getElementById('pageIndicatorNums').style.display = 'none';
+            }
+        }
+        for(var i=0; i<ResultControl7.length;i++){
+            tmpArr =ResultControl7[i];
+            if(ResultControl.accnocont == tmpArr.accnocont){
+                if(tmpArr.rollinfo == 'I'){
+                    txtexiren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    tmpnow = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    txtren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    tmpren = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    txtnoren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    tmpnoren = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    autoacc.innerHTML = '';
+                    secAccNo.disabled = true;
+                    dfAccNo.style.display = '';
+                }
+                else if(tmpArr.rollinfo == 'P'){
+                    txtexiren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    txtren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    txtnoren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    dfAccNo.style.display = 'none';
+                    secAccNo.disabled = true;
+                    tmpnow = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    tmpren = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    tmpnoren = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    autoacc.innerHTML = tmpArr.dfacc;
+                    acc = tmpArr.dfacc;
+                }
+                else if(tmpArr.rollinfo == 'C'){
+                    txtexiren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    txtren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    txtnoren.innerHTML = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    dfAccNo.style.display = 'none';
+                    secAccNo.disabled = true;
+                    tmpnow = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+                    tmpren = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+                    tmpnoren = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+                    autoacc.innerHTML = tmpArr.dfacc;
+                    acc = tmpArr.dfacc;
+                }
+                else {
+                    logInfo('ESaving change info - exception roll info');
+                }
+                objTr = document.getElementById("tr-" + tmpArr.accnocont);
+                tempObj.roll = tmpArr.rollinfo;
+                tempObj.accno = tmpArr.accnocont;
+                tempObj.valdate = tmpArr.valdatecont;
+                tempObj.matdate = tmpArr.matdatecont;
+                tempObj.amount = formatNumberToCurrency(tmpArr.amountcont);
+                tempObj.inter = tmpArr.interestcont;
+                tempObj.curre = tmpArr.currcont;
+                tempObj.now = tmpnow;
+                tempObj.ren = tmpren;
+                tempObj.noren = tmpnoren;
+                tempObj.autoacc = acc;
+                var arrTmp = new Array();
+                arrTmp.push(tempObj);
+
+            } else {
+                objTr = document.getElementById("tr-" + tmpArr.accnocont);
+                if(objTr != undefined || objTr != null) objTr.style.display = 'none';
+                //document.getElementById('pageIndicatorNums').style.display = 'none';
+            }
+        }
+
+
+        var linktdhide = document.getElementsByClassName('tdselct');
+
+        for(var i=0; i<linktdhide.length; i++) {
+            linktdhide[i].style.display = 'none';
+        }
+        //tableInfoSaving.style.display = '';
+        tableedit.style.display = '';
+        tableButton.style.display = '';
+        tableedit1.style.display = '';
+        //document.getElementById('div-datainfo').style.display = '';
+        //document.getElementById('tr-'+accid).className='';
+
+        //hidden underline
+        /*var tmpArrANode = document.getElementById('tbldata').getElementsByTagName('a');
+        if (tmpArrANode && tmpArrANode.length > 0) {
+            for (var k=0; k< tmpArrANode.length; k++) {
+                var tmpANode = tmpArrANode[k];
+                tmpANode.style.textDecoration = 'none';
+            }
+        }*/
+    },500);
+    fadeInMainContentScreen();
+}
+function requestMBServiceFail(e){
+    //navController.pushToView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.pushToView(tmpPageName, true, tmpPageType);
+}
+
+
+function genHtmlSearchResult(arr) {
+    var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+    genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback, failPaggingCallback);
+}
+function successPaggingCallback(strHtml) {
+    var div = document.getElementById("Fur_saving_close");
+    div.innerHTML = strHtml;
+    //genPagging(ResultControl, pageIndex ,document.getElementById('pageIndicatorNums'));
+}
+//Callback failed
+function failPaggingCallback() {
+    navController.pushToView('account/account-scr', true);
+}
+function genXmlDataPagging(arr) {
+    docXml = createXMLDoc();
+
+    var rootNode = createXMLNode('esavingChangeInfo','',docXml);
+    var childlistsavingNode = createXMLNode('listaccsaving','',docXml,rootNode);
+    var childlistsavingNode1 = createXMLNode('type','1',docXml,rootNode);
+    var childlistaccvisNode = createXMLNode('listacccanchange','',docXml,rootNode);
+    var childlistaccnovisNode = createXMLNode('listaccnotchange','',docXml,rootNode);
+
+    var titleTable = createXMLNode('esavingTitleTable','',docXml,childlistsavingNode);
+    var childNodeTit = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,titleTable);
+    childNodeTit = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,titleTable);
+    if(arr && arr.prod_code == 'T5A005'){
+        childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,titleTable);
+    }
+    else{
+        childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+    }
+
+    //childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+    childNodeTit = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,titleTable);
+    childNodeTit = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,titleTable);
+    childNodeTit = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,titleTable);
+    childNodeTit = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,titleTable);
+    //childNodeTit = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,titleTable);
+
+    var valTable = createXMLNode('data','',docXml,childlistsavingNode);
+
+    var row1 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'), arr.accnocont];
+    var row2;
+    if(arr && arr.prod_code == 'T5A005'){
+        row2 = [CONST_STR.get('FUTURE_SAVING_PURPOSE'), arr.purpose];
+    }
+    else{
+        row2 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'), arr.savingtype];
+    }
+    var row3 = [CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'), arr.sodu_hientai + " VND"];
+    var row4 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'), arr.interestcont + "%"];
+    var row5 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), arr.valdatecont];
+    var row6 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), arr.matdatecont];
+    var data = [row1, row2, row3, row4, row5, row6];
+
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var recycler = new RecyclerView({
+            type: "DESKTOP_GRID",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign:"LEFT",
+            opacity:true
+        });
+    }else{
+    var recycler = new RecyclerView({
+        type: "NORMAL",
+        typeTextAlign: "MIDLE",
+        title: "Tai khoan jumbo",
+        titleAlign:"LEFT",
+        opacity:true
+    });
+    }
+
+    recycler.setData(data);
+    var contentHTML = recycler.init();
+    var valTable = createXMLNode('data','',docXml,childlistsavingNode);
+    valTable = createXMLNode('content',contentHTML,docXml,valTable);
+
+    /*var valTable = createXMLNode('accinfo','',docXml,childlistsavingNode);
+    var nodeVal = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,valTable);
+
+    //nodeVal = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,valTable);
+    //nodeVal = createXMLNode('selectcont',CONST_STR.get('ESAVING_BTN_CLOSE_TITLE'),docXml,valTable);
+    //so tai khoan
+    nodeVal = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,valTable);
+    nodeVal = createXMLNode('accnocont',arr.accnocont,docXml,valTable);
+    //loại tk/muc dich
+    if(arr && arr.prod_code == 'T5A005'){
+        nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,valTable);
+        nodeVal = createXMLNode('savingtype',arr.purpose,docXml,valTable);
+    }
+    else{
+        nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,valTable);
+        nodeVal = createXMLNode('savingtype',arr.savingtype,docXml,valTable);
+    }
+    // so du hien tai
+    nodeVal = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,valTable);
+    nodeVal = createXMLNode('amountcont',arr.sodu_hientai + " VND",docXml,valTable);
+    //Lãi suất
+    nodeVal = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,valTable);
+    nodeVal = createXMLNode('interestcont',arr.interestcont + "%",docXml,valTable);
+    //ngay gui
+    nodeVal = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,valTable);
+    nodeVal = createXMLNode('valdatecont',arr.valdatecont,docXml,valTable);
+    //ngay het han
+    nodeVal = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,valTable);
+    nodeVal = createXMLNode('matdatecont',arr.matdatecont,docXml,valTable);*/
+    logInfo(docXml);
+    return docXml;
+}
+//gen sequence form
+function genSequenceForm() {
+    //get sequence form xsl
+    var tmpXslDoc = getCachePageXsl("sequenceform");
+    //create xml
+    var tmpStepNo = 301;
+    setSequenceFormIdx(tmpStepNo);
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+    var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+    //gen html string
+    genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+        var tmpNode = document.getElementById('seqForm');
+        tmpNode.innerHTML = oStr;
+    });
+}
+// function goBack() {
+//     navController.popView(true);
+// }
+function viewBackFromOther() {
+    logInfo('Back from other view');
+}
+/*function viewBackFromOther() {
+    genSequenceForm();
+    actionbar.addListSequence("esaving/esaving-online-changeinfo");
+//    actionbar.showStepSequence("esaving/esaving-online-changeinfo");
+}*/
+function viewWillUnload(){
+    document.removeEventListener("evtChangeWidthDesktop",genHtmlSearchResult,false);
+    document.removeEventListener("evtChangeWidthMobile",genHtmlSearchResult,false);
+}
+function showAccountSelection() {
+
+    var tmpArray1 = [];
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        tmpArray1.push(tmpAcc.accountNumber);
+
+    }
+    document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+    showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, true);
+}
+
+function handleSelectionAccountList(e) {
+
+    if (currentPage == "esaving/esaving-online-changeinfo") {
+        handleSelectionAccountListClose(e);
+        var tagAccNo;
+            tagAccNo = document.getElementById('tmpAccNo');
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+                if (tmpseobj == 1)
+                {
+                    document.getElementById('dfAccNo').value = document.getElementById('tmpAccNo').value;
+                }
+                else
+                {
+                    document.getElementById('secAccNo').value = document.getElementById('tmpAccNo').value;
+                }
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+        }
+    }
+}
+
+function handleSelectionAccountListClose(e) {
+    bottomBar.hide();
+    if (currentPage == "esaving/esaving-online-changeinfo") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    }
+}
+function rdSelected(){
+    if(document.getElementById('rd1').checked == true){
+        document.getElementById('secAccNo').disabled = true;
+        document.getElementById('dfAccNo').disabled = false;
+    }
+    if(document.getElementById('rd2').checked == true){
+        document.getElementById('dfAccNo').disabled = true;
+        document.getElementById('secAccNo').disabled = false;
+    }
+    tempRd1 = undefined;
+    tempRd2 = undefined;
+}
+
+function setRdSelected(inId){
+    if(inId == 'rd1') {
+        document.getElementById('rd1').checked = true;
+        document.getElementById('secAccNo').disabled = true;
+        document.getElementById('dfAccNo').disabled = false;
+    }
+    else if(inId == 'rd2') {
+        document.getElementById('rd2').checked = true;
+        document.getElementById('dfAccNo').disabled = true;
+        document.getElementById('secAccNo').disabled = false;
+    }
+    tempRd1 = undefined;
+    tempRd2 = undefined;
+
+}
+// function ReloadPage(){
+//     navController.pushToView('esaving/esaving-changeinfo-input-scr', true,'xsl');
+// }
+
+function sendRequestNext(){
+    var data = {};
+    var arrayArgs = new Array();
+    var tmpRd,tmpRd1,tmpRd2;
+    if(tempRd1 !=undefined && tempRd2!=undefined){
+        tmpRd1 = tempRd1;
+        tmpRd2 = tempRd2;
+    }else{
+        tmpRd1 = document.getElementById('rd1');
+        tempRd1 = tmpRd1;
+        tmpRd2 = document.getElementById('rd2');
+        tempRd2 = tmpRd2;
+    }
+
+    var tmpStr;
+    //check radio button
+    if(tempObj.roll == 'I'){
+        if(tmpRd1.checked == true && tmpRd2.checked == false){
+            tmpStr = '2';
+            valRd = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+        }else
+        if(tmpRd1.checked == false && tmpRd2.checked == true){
+            tmpStr = '3';
+            valRd = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+        }
+    }else
+    if(tempObj.roll == 'C'){
+        if(tmpRd1.checked == true && tmpRd2.checked == false){
+            tmpStr = '1';
+            valRd = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+        }else
+        if(tmpRd1.checked == false && tmpRd2.checked == true){
+            tmpStr = '2';
+            valRd = CONST_STR.get('ESAVING_CHANGEINFO_RD_REN');
+        }
+    }else
+    if(tempObj.roll == 'P'){
+        if(tmpRd1.checked == true && tmpRd2.checked == false){
+            tmpStr = '1';
+            valRd = CONST_STR.get('ESAVING_CHANGEINFO_EXI_REN');
+        }else
+        if(tmpRd1.checked == false && tmpRd2.checked == true){
+            tmpStr = '3';
+            valRd = CONST_STR.get('ESAVING_CHANGEINFO_RD_NOREN');
+        }
+    }
+	if(tmpRd1.checked == false && tmpRd2.checked == false){
+		showAlertText(CONST_STR.get('ESAVING_CHANGEINFO_ERR_NO_CHOICE'));
+		return;
+	}
+    arrayArgs.push(tmpStr);
+    //push account select change
+    arrayArgs.push(tempObj.accno);
+
+    //push roll over info
+    arrayArgs.push(tempObj.roll);
+
+    //push drop acc des
+    if(tempObj.roll == 'I'){
+        if(tmpRd1.checked == true && tmpRd2.checked == false){
+            if(document.getElementById('dfAccNo').value == CONST_STR.get('ESAVING_BGN_CHOICE')){
+                showAlertText(CONST_STR.get('ERR_INPUT_ACC_NOT_INPUT'));
+                return;
+            }
+            gAccConf = document.getElementById('dfAccNo').value;
+        }else
+        if(tmpRd1.checked == false && tmpRd2.checked == true){
+            if(document.getElementById('secAccNo').value == CONST_STR.get('ESAVING_BGN_CHOICE')){
+                showAlertText(CONST_STR.get('ERR_INPUT_ACC_NOT_INPUT'));
+                return;
+            }
+            gAccConf = document.getElementById('secAccNo').value;
+        }
+    }else
+    if(tempObj.roll == 'C' || tempObj.roll == 'P'){
+        if(tmpRd1.checked == true && tmpRd2.checked == false){
+            gAccConf = tempObj.accno;
+        }else
+        if(tmpRd1.checked == false && tmpRd2.checked == true){
+            if(document.getElementById('secAccNo').value == CONST_STR.get('ESAVING_BGN_CHOICE')){
+                showAlertText(CONST_STR.get('ERR_INPUT_ACC_NOT_INPUT'));
+                return;
+            }
+            gAccConf = document.getElementById('secAccNo').value;
+        }
+    }
+    arrayArgs.push(gAccConf);
+
+    //push value date
+    arrayArgs.push(tempObj.valdate)
+
+    //push maturity date
+    arrayArgs.push(tempObj.matdate);
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_ESAVING_CHANGEINFO_VERIFY"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+
+    requestMBService(data, true, 0, requestsendRequestNextSuccess, requestsendRequestNextFail);
+}
+//event listener: http request success
+function requestsendRequestNextSuccess(e){
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_ESAVING_CHANGEINFO_VERIFY") || (gprsResp.responseType == '-1')))){
+        //navController.pushToView('account/account-scr', true);
+        //var tmpPageName = navController.getDefaultPage();
+        //var tmpPageType = navController.getDefaultPageType();
+        //navController.pushToView(tmpPageName, true, tmpPageType);
+    }
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_ESAVING_CHANGEINFO_VERIFY")))) {
+        //parserLocalTrans();
+        gESavingrevObj = gprsResp.arguments;
+        genReviewScreen();
+
+    }
+};
+
+//event listener: http request fail
+function requestsendRequestNextFail(e){
+    //navController.pushToView('account/account-scr', true);
+    //var tmpPageName = navController.getDefaultPage();
+    //var tmpPageType = navController.getDefaultPageType();
+    //navController.pushToView(tmpPageName, true, tmpPageType);
+};
+function genReviewScreen(){
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlRootNode = createXMLNode('review', '', docXml);
+    //review/reviewtitle //screen title
+    var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+    //review/reviewinfo
+    var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+    var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('ESAVING_CHANGEINFO_TXT_TITLE'), docXml, tmpXmlNodeInfo);
+    //review/reviewinfo/transinfo
+    //so tai khoan chon thay doi
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', tempObj.accno, docXml, tmpChildNodeAcc);
+
+    //so tien
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_AMO'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', tempObj.amount, docXml, tmpChildNodeAcc);
+
+    //lai suat
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_INRATE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', tempObj.inter + '%', docXml, tmpChildNodeAcc);
+
+    //ngay bat dau
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_VALDATE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', tempObj.valdate, docXml, tmpChildNodeAcc);
+
+    //ngay ket thuc
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', tempObj.matdate, docXml, tmpChildNodeAcc);
+
+    //loai tien
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', tempObj.curre, docXml, tmpChildNodeAcc);
+
+
+    //review/reviewinfo/reviewtranstitle
+    tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+    tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+
+    //chi thi tai tuc hien tai
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_INPUT_INFO_OLD'), docXml, tmpChildNodeAcc);
+
+    if(tempObj.roll == 'I'){
+        tmpChildNode = createXMLNode('transinfocontent', tempObj.now, docXml, tmpChildNodeAcc);
+    }else
+    if(tempObj.roll == 'C' || tempObj.roll == 'P'){
+        tmpChildNode = createXMLNode('transinfocontent', tempObj.now + tempObj.autoacc, docXml, tmpChildNodeAcc);
+    }
+
+
+  
+    
+    var tmpRd1,tmpRd2;
+    if(tempRd1 !=undefined && tempRd2!=undefined){
+        tmpRd1 = tempRd1;
+        tmpRd2 = tempRd2;
+    }else{
+        tmpRd1 = document.getElementById('rd1');
+        tempRd1 = tmpRd1;
+        tmpRd2 = document.getElementById('rd2');
+        tempRd2 = tmpRd2;
+    }
+
+
+    //chi thi tai tuc
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_TXT_REVIEW'), docXml, tmpChildNodeAcc);
+    if(tempObj.roll == 'I'){
+        if(tmpRd1.checked == true && tmpRd2.checked == false){
+            tmpChildNode = createXMLNode('transinfocontent', valRd + gAccConf, docXml, tmpChildNodeAcc);
+        }else
+        if(tmpRd1.checked == false && tmpRd2.checked == true){
+            tmpChildNode = createXMLNode('transinfocontent', valRd + gAccConf, docXml, tmpChildNodeAcc);
+        }
+    }else
+    if(tempObj.roll == 'C'){
+        if(tmpRd1.checked == true && tmpRd2.checked == false){
+            tmpChildNode = createXMLNode('transinfocontent', valRd, docXml, tmpChildNodeAcc);
+        }else
+        if(tmpRd1.checked == false && tmpRd2.checked == true){
+            tmpChildNode = createXMLNode('transinfocontent', valRd + gAccConf, docXml, tmpChildNodeAcc);
+        }
+    }else
+    if(tempObj.roll == 'P'){
+        if(tmpRd1.checked == true && tmpRd2.checked == false){
+            tmpChildNode = createXMLNode('transinfocontent', valRd, docXml, tmpChildNodeAcc);
+        }else
+        if(tmpRd1.checked == false && tmpRd2.checked == true){
+            tmpChildNode = createXMLNode('transinfocontent', valRd + gAccConf, docXml, tmpChildNodeAcc);
+        }
+    }
+
+
+    //logInfo(docXml);
+    //luu xml trong cache
+    setReviewXmlStore(docXml);
+
+    navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+function testaa(){
+
+    modalDialog.hideDialogFull();
+    //document.getElementById('secAccNo').value = CONST_STR.get('ESAVING_BGN_CHOICE');
+    document.getElementById('dfAccNo').value = CONST_STR.get('ESAVING_BGN_CHOICE');
+    document.getElementById('dfAccNo').value = CONST_STR.get('ESAVING_BGN_CHOICE');
+    if(tmpseobj == 1)
+    {
+        document.getElementById('rd1').checked = true;
+        document.getElementById('rd2').checked = false;
+        document.getElementById('gangiatri').value = document.getElementById('gan1').innerHTML;
+        //document.getElementById('gangiatri1').value = document.getElementById('tmpAccNo').value;
+        document.getElementById('dfAccNo').value = document.getElementById('tmpAccNo').value;
+
+    }
+    else if(tmpseobj == 2)
+    {
+        document.getElementById('rd2').checked = true;
+        document.getElementById('rd1').checked = false;
+        document.getElementById('gangiatri').value = document.getElementById('gan2').innerHTML;
+        //document.getElementById('gangiatri1').value = document.getElementById('tmpAccNo').value;
+        document.getElementById('secAccNo').value = document.getElementById('tmpAccNo').value;
+    }
+    document.getElementById('getAccno').style.display = 'table-row';
+    console.log('close dialog');
+    actionbar.showActionBar();
+}

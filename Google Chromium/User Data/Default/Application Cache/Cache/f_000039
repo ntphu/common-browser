@@ -1,0 +1,855 @@
+// JavaScript Document
+
+var parameterAll = "FURSAV";//lay tiet kiem dien tu va tiet kiem gui gop
+var destinationACC = "";
+var docXml;
+var pageIndex1 = 1;
+var pageIndex2 = 1;
+var pageIndex3 = 1;
+var pageIndex4 = 1;
+var ResultControl1;
+var ResultControl2;
+var ResultControl3;
+var ResultControl4;
+var lstCurr1;
+var lstCurr2;
+var lstCurr3;
+var lstCurr4;
+var docXslCurr1;
+var docXslCurr2;
+var docXslCurr3;
+var docXslCurr4;
+var itemsPerPage = 10;
+var FurSavObj;
+var gFurSaving =[];
+var status_closed = false;
+
+function loadInitXML(){
+	
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	status_closed = true;
+    genSequenceForm();
+    actionbar.addListSequence("esaving/esaving-changeinfo-input-scr");
+}
+
+function viewDidLoadSuccess(){
+	bottomBar.hide();	
+	if(status_closed) {
+		status_closed = false;	
+	}
+	else {	
+		genSequenceForm();
+        actionbar.addListSequence("esaving/esaving-changeinfo-input-scr");
+		
+	}
+	sendJSONRequest();
+}
+function genSequenceForm() {
+    //get sequence form xsl
+    var tmpXslDoc = getCachePageXsl("sequenceform");
+    //create xml
+    var tmpStepNo = 401;
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+    var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+    //gen html string
+    /*genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+        var tmpNode = document.getElementById('seqForm');
+        tmpNode.innerHTML = oStr;
+    });*/
+}
+function sendJSONRequest(){
+	var data = {};
+	var arrayArgs = new Array();
+	
+	arrayArgs.push(parameterAll);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+}
+
+function requestMBServiceSuccesss(e){   
+	gprsResp = parserJSON(e);
+	gRespObj = gprsResp; 
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING")))) {
+		document.getElementById("mainViewContent").style.display = '';
+		FurSavObj = new Array();
+		FurSavObj = gprsResp.arguments;
+		showAll();
+		parserViewESaving();	
+		if(ResultControl1.length == 0 &&ResultControl2.length == 0 && ResultControl3.length == 0&&ResultControl4.length==0)
+	{
+		showAlertText(CONST_STR.get('ESAVING_ERR_NULL_VAL'));//cu la thon bao bao up
+		//navController.initWithRootView('loan/loan_alert', true);day la hien len trang trang
+		// var tmpPageName = navController.getDefaultPage();
+		// var tmpPageType = navController.getDefaultPageType();
+		navController.popView();
+		return;
+	}
+		if(ResultControl1.length>0){
+			showLst(1);
+			document.getElementById('div-datainfo').style.display = 'none';
+			genHtmlSearchResult(getItemsPerPage(ResultControl1, pageIndex1),1)
+		}else{
+			hiddenLst(1);
+		}
+		if(ResultControl2.length>0){
+			showLst(2);
+			genHtmlSearchResult(getItemsPerPage(ResultControl2, pageIndex2),2);		
+		}else{
+			hiddenLst(2);
+		}
+		//ngocdt3 bo sung tiet kiem tu dong
+		if(ResultControl3.length>0){
+			showLst(3);
+			genHtmlSearchResult(getItemsPerPage(ResultControl3, pageIndex3),3);		
+		}else{
+			hiddenLst(3);
+		}
+        if(ResultControl4.length>0){
+            showLst(4);
+            genHtmlSearchResult(getItemsPerPage(ResultControl4, pageIndex4),4);
+        }else{
+			hiddenLst(4);
+		}		
+	}
+	else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING"))  || (gprsResp.responseType == '-1')))) {
+		navController.pushToView('account/account-scr', true);
+	}
+}
+function showAll(){
+	document.getElementById("mainViewContent").style.display='block';
+}
+
+function hiddenLst(section){
+	if(section == 0){
+		showAlertText(CONST_STR.get('LOAN_NO_DATA_FOUND'));	
+		}	
+	if(section == 1){
+		var node = document.getElementById("parent1");
+		if(node !=null){
+			node.style.display = 'none';		
+		}	
+	}else if(section == 2){
+		var node = document.getElementById("parent2");
+		if(node !=null){
+			node.style.display = 'none';		
+		}
+	}
+	else if(section == 3){
+		var node = document.getElementById("parent3");
+		if(node !=null){
+			node.style.display = 'none';		
+		}
+	}
+    else if(section == 4){
+        var node = document.getElementById("parent4");
+        if(node !=null){
+            node.style.display = 'none';
+        }
+    }
+}
+function showLst(section){
+	if(section == 1){
+		var node = document.getElementById("parent1");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}else
+	if(section == 2){
+		var node = document.getElementById("parent2");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}
+	else
+	if(section == 3){
+		var node = document.getElementById("parent3");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}
+    else
+    if(section == 4){
+        var node = document.getElementById("parent4");
+        if(node !=null){
+            node.style.display = 'block';
+        }
+    }
+}
+function requestMBServiceFail(e){
+	showAlertText(gprsResp.respContent);
+	navController.pushToView('account/account-scr', true);
+}
+//event alert
+function handleAlertEmptyESaving(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "esaving/esaving-changeinfo-input-scr")) {
+		document.removeEventListener('closeAlertView', handleAlertEmptyESaving, false);
+		//navController.pushToView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+//parser info
+function parserViewESaving() {
+	lstCurr1 = new Array();
+	lstCurr2 = new Array();
+	lstCurr3 = new Array();
+    lstCurr4 = new Array();
+	ResultControl1 = new Array();
+	ResultControl2 = new Array();
+	ResultControl3 = new Array();
+    ResultControl4 = new Array();
+	var objCurr;
+	
+	var tempArrStr;
+	var objtemp = null;
+	//LIST 3
+	var indexEnd = FurSavObj.indexOf("END");
+	for(var k=0;k<indexEnd;k++){		
+		tempArrStr = FurSavObj[k].split("#");
+		objtemp = new Object();			
+		objtemp.brn_code = tempArrStr[0];
+		objtemp.prod_code = tempArrStr[1];
+		objtemp.savingtype = tempArrStr[2];
+		objtemp.accnocont = tempArrStr[3];
+		objtemp.prod_des = tempArrStr[4];
+		objtemp.currcont = tempArrStr[5];
+		objtemp.amountcont = tempArrStr[6];
+					
+		objtemp.sodu = tempArrStr[7];
+		objtemp.sodu_hientai = tempArrStr[8];			
+		objtemp.sodu_bandau = tempArrStr[9];
+		objtemp.so_tien_da_rut = tempArrStr[10];
+		objtemp.valdatecont = tempArrStr[11];
+		objtemp.matdatecont = tempArrStr[12];
+		objtemp.interestcont = tempArrStr[13];			
+		objtemp.tenor_day = tempArrStr[14];
+		objtemp.tenor_month = tempArrStr[15];
+		objtemp.tenor_year = tempArrStr[16];
+		objtemp.is_type = tempArrStr[17];
+		objtemp.estimatedcont = tempArrStr[18];
+		objtemp.so_phong_toa = tempArrStr[19];
+		objtemp.lydo_phong_toa = tempArrStr[20];
+		objtemp.account_name = tempArrStr[21];
+		objtemp.type = 0;
+		
+		//Show total currency 
+		objCurr = new Object();
+		objCurr.type = objtemp.currcont;
+		objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));	
+		if(k==0) {		
+			lstCurr1.push(objCurr);		
+		}else{
+			 var idx = checkKeyInArray(objCurr.type, lstCurr1);
+			 if(idx==-1){				
+			 	lstCurr1.push(objCurr);
+			 }else{
+				lstCurr1[idx].value = parseFloat(lstCurr1[idx].value)+parseFloat(objCurr.value);
+			 }
+		}				
+		ResultControl1.push(objtemp);
+	}	
+	//NgocDT3 bổ sung cho Future saving
+	//LIST 2
+	var index = indexEnd+1;
+	indexEnd = FurSavObj.indexOf("END", index);
+	for(var k=index;k<indexEnd;k++){		
+		tempArrStr = FurSavObj[k].split("#");
+		objtemp = new Object();			
+		objtemp.brn_code = tempArrStr[0];
+		objtemp.prod_code = tempArrStr[1];
+		objtemp.savingtype = tempArrStr[2];
+		objtemp.accnocont = tempArrStr[3];
+		objtemp.prod_des = tempArrStr[4];
+		objtemp.currcont = tempArrStr[5];
+		objtemp.amountcont = tempArrStr[6];
+					
+		objtemp.sodu = tempArrStr[7];
+		objtemp.sodu_hientai = tempArrStr[8];			
+		objtemp.sodu_bandau = tempArrStr[9];
+		objtemp.so_tien_da_rut = tempArrStr[10];
+		objtemp.valdatecont = tempArrStr[11];
+		objtemp.matdatecont = tempArrStr[12];
+		objtemp.interestcont = tempArrStr[13];			
+		objtemp.tenor_day = tempArrStr[14];
+		objtemp.tenor_month = tempArrStr[15];
+		objtemp.tenor_year = tempArrStr[16];
+		objtemp.is_type = tempArrStr[17];
+		objtemp.estimatedcont = tempArrStr[18];
+		objtemp.so_phong_toa = tempArrStr[19];
+		objtemp.lydo_phong_toa = tempArrStr[20];
+		objtemp.account_name = tempArrStr[21];
+		objtemp.frequency_amt = tempArrStr[22];
+		objtemp.purpose = tempArrStr[23];
+		objtemp.channel = tempArrStr[24];
+		objtemp.accamt = tempArrStr[25];
+		objtemp.checktype = tempArrStr[26];
+		objtemp.frequendate = tempArrStr[27];
+		//objtemp.type = 0;
+		objtemp.type = 2;
+		
+		//Show total currency 
+		objCurr = new Object();
+		objCurr.type = objtemp.currcont;
+		objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));	
+		if(k==0) {		
+			lstCurr2.push(objCurr);		
+		}else{
+			 var idx = checkKeyInArray(objCurr.type, lstCurr2);
+			 if(idx==-1){				
+			 	lstCurr2.push(objCurr);
+			 }else{
+				lstCurr2[idx].value = parseFloat(lstCurr2[idx].value)+parseFloat(objCurr.value);
+			 }
+		}				
+		ResultControl2.push(objtemp);
+	}
+	//ngocdt3 bo sung tiet kiem tu dong
+	var index = indexEnd+1;
+	indexEnd = FurSavObj.indexOf("END", index);
+	for(var k=index;k<indexEnd;k++){		
+		tempArrStr = FurSavObj[k].split("#");
+		objtemp = new Object();			
+		objtemp.brn_code = tempArrStr[0];
+		objtemp.prod_code = tempArrStr[1];
+		objtemp.savingtype = tempArrStr[2];
+		objtemp.accnocont = tempArrStr[3];
+		objtemp.prod_des = tempArrStr[4];
+		objtemp.currcont = tempArrStr[5];
+		objtemp.amountcont = tempArrStr[6];
+					
+		objtemp.sodu = tempArrStr[7];
+		objtemp.sodu_hientai = tempArrStr[8];			
+		objtemp.sodu_bandau = tempArrStr[9];
+		objtemp.so_tien_da_rut = tempArrStr[10];
+		objtemp.valdatecont = tempArrStr[11];
+		objtemp.matdatecont = tempArrStr[12];
+		objtemp.interestcont = tempArrStr[13];			
+		objtemp.tenor_day = tempArrStr[14];
+		objtemp.tenor_month = tempArrStr[15];
+		objtemp.tenor_year = tempArrStr[16];
+		objtemp.is_type = tempArrStr[17];
+		objtemp.estimatedcont = tempArrStr[18];
+		objtemp.so_phong_toa = tempArrStr[19];
+		objtemp.lydo_phong_toa = tempArrStr[20];
+		objtemp.account_name = tempArrStr[21];
+		objtemp.type = 0;
+		
+		//Show total currency 
+		objCurr = new Object();
+		objCurr.type = objtemp.currcont;
+		objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));	
+		if(k==0) {		
+			lstCurr3.push(objCurr);		
+		}else{
+			 var idx = checkKeyInArray(objCurr.type, lstCurr3);
+			 if(idx==-1){				
+			 	lstCurr3.push(objCurr);
+			 }else{
+				lstCurr3[idx].value = parseFloat(lstCurr3[idx].value)+parseFloat(objCurr.value);
+			 }
+		}				
+		ResultControl3.push(objtemp);
+	}	
+
+    //SANGNT1 bổ sung tiết kiệm tài lộc không rút trước hạn
+    var index = indexEnd+1;
+    indexEnd = FurSavObj.indexOf("END", index);
+    for(var k=index;k<indexEnd;k++){
+        tempArrStr = FurSavObj[k].split("#");
+        objtemp = new Object();
+        objtemp.brn_code = tempArrStr[0];
+        objtemp.prod_code = tempArrStr[1];
+        objtemp.savingtype = tempArrStr[2];
+        objtemp.accnocont = tempArrStr[3];
+        objtemp.prod_des = tempArrStr[4];
+        objtemp.currcont = tempArrStr[5];
+        objtemp.amountcont = tempArrStr[6];
+
+        objtemp.sodu = tempArrStr[7];
+        objtemp.sodu_hientai = tempArrStr[8];
+        objtemp.sodu_bandau = tempArrStr[9];
+        objtemp.so_tien_da_rut = tempArrStr[10];
+        objtemp.valdatecont = tempArrStr[11];
+        objtemp.matdatecont = tempArrStr[12];
+        objtemp.interestcont = tempArrStr[13];
+        objtemp.tenor_day = tempArrStr[14];
+        objtemp.tenor_month = tempArrStr[15];
+        objtemp.tenor_year = tempArrStr[16];
+        objtemp.is_type = tempArrStr[17];
+        objtemp.estimatedcont = tempArrStr[18];
+        objtemp.so_phong_toa = tempArrStr[19];
+        objtemp.lydo_phong_toa = tempArrStr[20];
+        objtemp.account_name = tempArrStr[21];
+        objtemp.type = 0;
+
+        //Show total currency
+        objCurr = new Object();
+        objCurr.type = objtemp.currcont;
+        objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));
+        if(k==0) {
+            lstCurr4.push(objCurr);
+        }else{
+            var idx = checkKeyInArray(objCurr.type, lstCurr4);
+            if(idx==-1){
+                lstCurr4.push(objCurr);
+            }else{
+                lstCurr4[idx].value = parseFloat(lstCurr4[idx].value)+parseFloat(objCurr.value);
+            }
+        }
+        ResultControl4.push(objtemp);
+    }
+}
+function genPagging(arr, pageIndex, nodepage) {
+	var totalPage = calTotalPage(arr);
+	//var nodepage = document.getElementById('pageIndicatorNums1');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+	
+	//chan nhap ky tu dac biet
+	var tmpArrInputName = document.getElementById('parent1').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+	tmpArrInputName = document.getElementById('parent2').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+	tmpArrInputName = document.getElementById('parent3').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+    tmpArrInputName = document.getElementById('parent4').getElementsByTagName('input');
+    for (var i=0; i<tmpArrInputName.length; i++) {
+        var tmpInputID = tmpArrInputName[i].getAttribute('id');
+        setInputOnlyASCII(tmpInputID);
+    }
+}
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+
+	var arrMedial = new Array();
+	
+	if(selectedPage.id == 'pageIndicatorNums1') {
+		pageIndex1 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl1, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 1);
+	}
+	else if(selectedPage.id == 'pageIndicatorNums2') {
+		pageIndex2 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl2, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 2);
+	}
+	else if(selectedPage.id == 'pageIndicatorNums3') {
+		pageIndex3 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl3, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 3);
+	}
+    else if(selectedPage.id == 'pageIndicatorNums4') {
+        pageIndex4 = selectedIdx;
+        arrMedial = getItemsPerPage(ResultControl4, selectedIdx);
+        genHtmlSearchResult(arrMedial, 4);
+    }
+}
+function genHtmlSearchResult(arr, section) {
+	if(section==1)
+	{
+		var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+		genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback1, failPaggingCallback);
+	}
+	if(section==2)
+	{
+		var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+		genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback2, failPaggingCallback);
+	}
+	if(section==3)
+	{
+		var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+		genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback3, failPaggingCallback);
+	}
+    if(section==4)
+    {
+        var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+        genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback4, failPaggingCallback);
+    }
+}
+function successPaggingCallback1(strHtml) {
+	var div = document.getElementById("divSection1");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl1, pageIndex1,document.getElementById('pageIndicatorNums1'));
+}
+function successPaggingCallback2(strHtml) {
+	var div = document.getElementById("divSection2");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl2, pageIndex2, document.getElementById('pageIndicatorNums2'));
+}
+function successPaggingCallback3(strHtml) {
+	var div = document.getElementById("divSection3");
+	div.innerHTML = strHtml;
+	genPagging(ResultControl3, pageIndex3, document.getElementById('pageIndicatorNums3'));
+}
+function successPaggingCallback4(strHtml) {
+    var div = document.getElementById("divSection4");
+    div.innerHTML = strHtml;
+    genPagging(ResultControl4, pageIndex4, document.getElementById('pageIndicatorNums4'));
+}
+function failPaggingCallback() {
+	
+}
+Number.prototype.formatMoney = function(c, d, t){
+var n = this, 
+    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+    d = d == undefined ? "." : d, 
+    t = t == undefined ? "," : t, 
+    s = n < 0 ? "-" : "", 
+    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+    j = (j = i.length) > 3 ? j % 3 : 0;
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+ };
+function genXmlDataPagging(arr) {
+	docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('esavingChangeInfo','',docXml);
+    var childlistsavingNode1 = createXMLNode('type','1',docXml,rootNode);
+    var childlistsavingNode = createXMLNode('listaccsaving','',docXml,rootNode);
+	var childlistaccvisNode = createXMLNode('listacccanchange','',docXml,rootNode);
+	var childlistaccnovisNode = createXMLNode('listaccnotchange','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('esavingTitleTable','',docXml,childlistsavingNode);
+	var childNodeTit = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,titleTable);
+	childNodeTit = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,titleTable);
+	var tmpSavings;
+	if (arr && arr.length > 0) {
+		tmpSavings = arr[0];
+	}
+	if(tmpSavings && tmpSavings.prod_code == 'T5A005'){
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,titleTable);
+	}
+	else{
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+	}
+	childNodeTit = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,titleTable);
+	childNodeTit = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,titleTable);
+	if(tmpSavings && tmpSavings.prod_code == 'T6A001'){
+		childNodeTit = createXMLNode('valdatetit',CONST_STR.get('OPEN_DATE_OF_ACC'),docXml,titleTable);
+	}
+	else{
+		childNodeTit = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,titleTable);
+	}
+	childNodeTit = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,titleTable);
+
+    var contentHTML = "";
+    for(var k=0;k<arr.length;k++) {
+        var data = new Array();
+        var row1 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'), arr[k].accnocont];
+        if(tmpSavings && tmpSavings.prod_code == 'T5A005'){
+            var row2 = [CONST_STR.get('FUTURE_SAVING_PURPOSE'), CONST_STR.get(arr[k].purpose)];
+        }
+        else{
+            var row2 = [CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'), arr[k].savingtype];
+        }
+
+        var row3 = [CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'), arr[k].sodu_hientai + " VND"];
+        var row4 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'), arr[k].interestcont + "%"];
+        if(tmpSavings && tmpSavings.prod_code == 'T6A001'){
+            var row5 = [CONST_STR.get('OPEN_DATE_OF_ACC'), arr[k].valdatecont];
+        }
+        else{
+            var row5 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), arr[k].valdatecont];
+        }
+        var row6 = [CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), arr[k].matdatecont];
+
+        data.push(row1);
+        data.push(row2);
+        data.push(row3);
+        data.push(row4);
+        data.push(row5);
+        data.push(row6);
+
+        var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+        recycler.setData(data);
+        var tempHTML = recycler.init();
+
+        //create div account
+        /*var div = document.createElement("div");
+        div.setAttribute('id', "id.account" + i);
+        document.getElementById("dataListview").appendChild(div);*/
+
+        /*var tmpNode = document.getElementById("id.account" + i);
+        tmpNode.innerHTML = tempHTML;
+        tmpNode.style.marginBottom = "10px";
+        tmpNode.setAttribute('onclick',"selectChange(" + arr[k].accnocont + ")") ;*/
+
+
+        var tmpChildNodeContent = createXMLNode('data', '', docXml, childlistsavingNode);
+        var tmpChildNodeContent1 = createXMLNode('accno', arr[k].accnocont, docXml, tmpChildNodeContent);
+        var tmpChildNodeContent2 = createXMLNode('content', tempHTML, docXml, tmpChildNodeContent);
+//        var tmpChildNodeContent3 = createXMLNode('type', '1', docXml, tmpChildNodeContent);
+    }
+
+
+
+	/*for(var k=0;k<arr.length;k++){
+		
+		var valTable = createXMLNode('accinfo','',docXml,childlistsavingNode);
+		var nodeVal = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,valTable);
+		//so tai khoan
+		nodeVal = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,valTable);
+		nodeVal = createXMLNode('accnocont',arr[k].accnocont,docXml,valTable);
+		//loại tk/muc dich
+		if(tmpSavings && tmpSavings.prod_code == 'T5A005'){
+            nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,valTable);
+            nodeVal = createXMLNode('savingtype',CONST_STR.get(arr[k].purpose),docXml,valTable);
+		}
+		else{
+            nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,valTable);
+            nodeVal = createXMLNode('savingtype',arr[k].savingtype,docXml,valTable);
+		}
+		// so du hien tai
+		nodeVal = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,valTable);
+		nodeVal = createXMLNode('amountcont',arr[k].sodu_hientai + " VND",docXml,valTable);
+		//Lãi suất
+		nodeVal = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,valTable);
+		nodeVal = createXMLNode('interestcont',arr[k].interestcont + "%",docXml,valTable);
+		//ngay gui
+		if(tmpSavings && tmpSavings.prod_code == 'T6A001'){
+			nodeVal = createXMLNode('valdatetit',CONST_STR.get('OPEN_DATE_OF_ACC'),docXml,valTable);
+			nodeVal = createXMLNode('valdatecont',arr[k].valdatecont,docXml,valTable);
+		}
+		else{
+			nodeVal = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,valTable);
+			nodeVal = createXMLNode('valdatecont',arr[k].valdatecont,docXml,valTable);
+		}
+		//ngay het han
+		nodeVal = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,valTable);
+		nodeVal = createXMLNode('matdatecont',arr[k].matdatecont,docXml,valTable);
+		*//*nodeVal = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,valTable);
+		nodeVal = createXMLNode('currcont',arr[k].typeCurrency,docXml,valTable);			*//*
+	}*/
+    console.log(docXml);
+
+	return docXml;
+	
+}
+function checkKeyInArray(key, lstArr){	
+	for(var i=0; i<lstArr.length; i++){
+		if(lstArr[i].type == key){
+			return i;
+		}
+	}
+	return -1;
+}
+function selectChange(accid){
+	//fadeOutMainContentScreen();
+	//setTimeout(function () 	
+		var element = document.getElementById("div-fix");
+		if(element !=null){
+			element.style.webkitTransform = 'none';
+			element.style.MozTransform = 'none';
+			element.style.msTransform = 'none';
+			element.style.OTransform = 'none';
+			element.style.transform = 'none';
+		}
+		var currIndex = 1;
+		var obj = new Object();
+		var arrObj = new Array();
+		obj = getObjWithKey(accid, ResultControl1);
+		if(obj == null){
+			currIndex = 2;
+			obj = getObjWithKey(accid, ResultControl2);		
+		}
+		if(obj == null){
+			currIndex = 3;
+			obj = getObjWithKey(accid, ResultControl3);		
+		}
+			// if((removeSpecialChar(obj.so_phong_toa)) >0){
+			// 	showAlertText(CONST_STR.get('ESAVING_CHANGEINFO_ERR_BLOCK_ACC'));
+			// 		return;
+			// }
+        if(obj == null){
+            currIndex = 4;
+            obj = getObjWithKey(accid, ResultControl4);
+        }
+		if((removeSpecialChar(obj.so_phong_toa)) >0 && obj.prod_code != 'T5A004' && obj.prod_code != 'T5A003'&& obj.prod_code != 'TEA001'){
+			showAlertText(CONST_STR.get('ESAVING_CHANGEINFO_ERR_BLOCK_ACC'));
+				return;
+		}
+		if(obj!=null){	
+				arrObj.push(obj);
+				gFurSaving.push(obj);
+				if(obj.prod_code == 'T5A005' && currIndex == 2 && obj.checktype =='PRD'){
+				navController.pushToView("esaving/future-esaving-prd-changeinfo", true, 'xsl');
+				}
+				else if(obj.prod_code == 'T5A005' && currIndex == 2 && obj.checktype =='FLX'){
+				navController.pushToView("esaving/future-esaving-auto-changeinfo", true, 'xsl');
+				}
+				else if(obj.prod_code == 'T6A001'){
+					navController.pushToView("esaving/esaving-check-auto-saving", true, 'xsl');
+					AutoSavAcc=accid;
+				}
+				else {
+				navController.pushToView("esaving/esaving-online-changeinfo", true, 'xsl');
+				}
+			
+		}
+		
+}
+function makeAccountNumberList(){
+	var lstAccNumber = new Array();
+	for(var i = 0; i<gESavingObjs.length; i++){
+		lstAccNumber.push(gESavingObjs[i].account);
+	}
+	return lstAccNumber;
+}
+
+//show infomation
+function updateAccDetail(inAccObj) {
+	//Loại tiết kiệm
+	document.getElementById("esavingType").value = CONST_STR.get('ESAVING_REVIEW_SAVINGTYPE');
+	//Account nguồn
+	document.getElementById("sourceAcc").value = inAccObj.account;
+	document.getElementById("balancing").innerHTML = inAccObj.amount +" VND";
+	
+	document.getElementById("actionDeb").value = CONST_STR.get('ESAVING_RUT_VA_TAT_TOAN');
+	//Số lượng tiền tất toán
+	document.getElementById("amount").value =inAccObj.amount;
+	
+	var numStr = convertNum2WordWithLang(removeSpecialChar(inAccObj.amount), gUserInfo.lang); 
+	document.getElementById("amountByText").innerHTML = "<h6>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";
+	//Account đích
+	if(inAccObj.destinationAcc!='NOTFOUND'){
+		document.getElementById("destinationAcc").value = inAccObj.destinationAcc;
+		document.getElementById("destinationAcc").disabled = false;
+	}else{
+		var lstAcc = getLstDestinationAcc();
+		document.getElementById("destinationAcc").value = lstAcc[0];//Display acc destinatuon default
+	}
+}
+
+function getLstDestinationAcc(){
+	var lstDesAcc = new Array();
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+			var tmpAcc = gUserInfo.accountList[i];
+			lstDesAcc.push(tmpAcc.accountNumber);			
+	}
+	return lstDesAcc;
+}
+
+function getObjWithKey(acc, arr){
+ 	var obj = new Object();		
+	for(var i in arr){
+		if(arr[i].accnocont==acc){
+			return arr[i];
+		}
+	}
+	return null;
+}
+function getTenor(obj){
+	try{
+		if(parseInt(obj.tenor_day)>0){
+			return obj.tenor_day +" "+ CONST_STR.get('TRANS_PERIODIC_DATE1')
+		}
+		if(parseInt(obj.tenor_month)>0){
+			return obj.tenor_month + " "+ CONST_STR.get('TRANS_PERIODIC_MONTH')
+		}
+		if(parseInt(obj.tenor_year)>0){
+			return obj.tenor_year+ " "+ CONST_STR.get('TRANS_PERIODIC_YEAR')
+		}
+	}
+	catch(e){}
+}
+function genPagging(arr, pageIndex, nodepage) {
+	var totalPage = calTotalPage(arr);
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}		
+	}	
+	return arrTmp;
+}
+
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	/*var arrMedial = new Array();
+	pageIndex = selectedIdx;
+	arrMedial = getItemsPerPage(gESavingObjs, selectedIdx);		
+	genHtmlSearchResult(arrMedial);	*/	
+	var arrMedial = new Array();
+	if(selectedPage.id == 'pageIndicatorNums1') {
+		pageIndex1 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl1, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 1);
+	}
+	else if(selectedPage.id == 'pageIndicatorNums2') {
+		pageIndex2 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl2, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 2);
+	}
+	else if(selectedPage.id == 'pageIndicatorNums3') {
+		pageIndex3 = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl3, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 3);
+	}				
+    else if(selectedPage.id == 'pageIndicatorNums4') {
+        pageIndex4 = selectedIdx;
+        arrMedial = getItemsPerPage(ResultControl4, selectedIdx);
+        genHtmlSearchResult(arrMedial, 4);
+    }
+}
+//Callback failed
+function failPaggingCallback() {
+	navController.pushToView('account/account-scr', true);
+}
+
+/*function ReloadPage(){
+	fadeOutMainContentScreen();
+	setTimeout(function () {
+		//gESavingObjUsing = null;
+		//document.getElementById('section2').style.display='none';
+		document.getElementById('pageIndicatorNums').style.display='block';
+		genHtmlSearchResult(getItemsPerPage(gESavingObjs, pageIndex));
+	},500);
+	fadeInMainContentScreen();
+}*/
+function CancelbtnClick()
+{
+	withdraw_account = "";
+	//navController.resetBranchView();
+    //goBack();
+	navController.popViewInit(true);
+}

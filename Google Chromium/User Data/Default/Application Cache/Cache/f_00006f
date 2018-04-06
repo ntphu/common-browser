@@ -1,0 +1,752 @@
+/**
+ * Created by TuanNQ1.FSoft
+ * User: 
+ * Date: 14/7/14
+ */
+ 
+/*** VIEW LOAD SUCCESS ***/
+
+var cusInfoObj;
+var newCusInfoObj;
+
+//take picture
+var imgSelected;
+var currentFile;
+var resultUserImg;
+//var canvasIg = document.getElementById("canvasImg");
+var infoNode1 = document.getElementById('info1');
+var icropper1;
+var isSmallScrMode;
+var clientCusWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+var canvasImg = document.createElement("canvas");
+var ctxImg = canvasImg.getContext("2d");
+var scaledImage = null;
+var angleRotate = 0;
+var flag_check = false; //ngocdt3 bo sung check trang thai la back hya cancel
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag_check = true;
+	setDefaultInfo(newCusInfoObj);
+}
+
+
+function viewDidLoadSuccess() {
+    bottomBar.hide();
+    navController.getActionBar().setTitleBarOnly(CONST_STR.get('UTILITIES_CHNG_PER_INFO_SCREEN_TITLE'));
+    navController.getActionBar().hideNavHeaderBar();
+    navController.removePageInCache('utilitiesxsl/personal-info-view-scr');
+	if(flag_check == false){
+	sendJSONRequest();
+	}
+	
+	//take picture
+	document.getElementById("btnFile").value = CONST_STR.get('TRANSFER_LIST_CHOICE_FILE');
+
+	imgSelected = document.getElementById("id.fileUpload01");
+	resultUserImg = document.getElementById('cropperContainer2');
+	resultUserImg.innerHTML = '';
+	document.getElementById('tb-prevPicture').style.display = 'none';
+	//canvasIg = document.getElementById("canvasImg");
+	infoNode1 = document.getElementById('info1');
+	clientCusWidth -= 25;// padding size
+	if(gModeScreenView == CONST_MODE_SCR_SMALL) {
+		isSmallScrMode = true;
+	}
+	else {
+		isSmallScrMode = false;
+	}
+	imgSelected.onchange = function(e) {
+		
+		e.preventDefault();
+		var target = e.dataTransfer || e.target;
+		var file = target && target.files && target.files[0];
+		var options = {
+				maxWidth: resultUserImg.width,
+				canvas: true
+			};
+		if (!file) {
+			logInfo("Not exist file");
+			return;
+		}
+		//if(!file.type.match(/image.*/)){
+//			logInfo("Not an image: ", file.type);
+//			return;
+//		}
+		loadImage.parseMetaData(file, function (data) {
+			/*if (data.exif) {
+				options.orientation = data.exif.get('Orientation');
+				//displayExifData(data.exif);
+			}*/
+			displayImage(file, options);
+		});
+		fnChange(imgSelected);
+	}
+	//only enable camera: ios > 5 & android > 4 & chrome moi
+	if(isAndroidBrowserAbove4 || iOSversion() > 5) {
+		document.getElementById('take-picture-icon').style.display = '';
+	}
+	else {
+		document.getElementById('take-picture-icon').style.display = 'none'
+	}
+
+	setInputOnlyASCII('currAddress1');
+	setInputOnlyASCII('currAddress2');
+	setInputOnlyASCII('currAddress3');
+	setInputOnlyASCII('currAddress4');
+	setInputOnlyNumberInfo('mobile');
+	setInputOnlyASCIIinfo('email');
+	setInputOnlyASCII('occupation');
+	setInputOnlyASCII('workPlace');
+	setInputOnlyASCII('workAddress1');
+	setInputOnlyASCII('workAddress2');
+	setInputOnlyASCII('workAddress3');
+	setInputOnlyNumberInfo('workTel');
+}
+
+//Send request
+var gprsResp = new GprsRespObj("","","","");
+
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_CHNG_CUS_INFO"), "", "", gUserInfo.lang , gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp);
+	
+	if ((gprsResp.respCode == '0') && 
+		(parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CHNG_CUS_INFO"))) &&
+		gprsResp.arguments != undefined) {
+		logInfo(gprsResp.arguments);
+		
+		var tmpArr = gprsResp.arguments;
+		if (tmpArr.length >= 15) {
+			cusInfoObj = {"name":tmpArr[0], "birthday":tmpArr[1], "idPassport":tmpArr[2], "occupation":tmpArr[3],
+					"workPlace":tmpArr[4], "workAddress1":tmpArr[5], "workAddress2":tmpArr[6], "workAddress3":tmpArr[7],
+					"workTel":tmpArr[8], "currAddress1":tmpArr[9], "currAddress2":tmpArr[10], "currAddress3":tmpArr[11], 
+					"currAddress4":tmpArr[12], "mobile":tmpArr[13], "email":tmpArr[14]};
+					
+			setDefaultInfo(cusInfoObj);
+		} else {
+			showAlertText(CONST_STR.get('UTILITIES_CHNG_PER_INFO_SERVICE_ERROR_MSG'));
+		}
+		
+	}
+	 //else {
+//		showAlertText(CONST_STR.get('UTILITIES_CHNG_PER_INFO_SERVICE_ERROR_MSG'));
+//	}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(){
+	/*if ((e.type == "evtHttpFail") && (currentPage == "utilitiesxsl/change-personal-info-scr")) {
+		document.removeEventListener("evtHttpFail", requestMBServiceFail, false);
+		//alert("Http request fail!");
+	}*/
+};
+
+function setDefaultInfo(cusInfo) {
+	document.getElementById("name").innerHTML = cusInfo.name;
+	document.getElementById("birthday").innerHTML = cusInfo.birthday;
+	document.getElementById("idPassport").innerHTML = cusInfo.idPassport;
+	document.getElementById("occupation").value = cusInfo.occupation;
+	//document.getElementById("occupation").disabled = true;
+	
+	document.getElementById("workPlace").value = cusInfo.workPlace;
+	//document.getElementById("workPlace").disabled = true;
+	
+	document.getElementById("workAddress1").value = cusInfo.workAddress1;
+	//document.getElementById("workAddress1").disabled = true;
+	
+	document.getElementById("workAddress2").value = cusInfo.workAddress2;
+	//document.getElementById("workAddress2").disabled = true;
+	
+	document.getElementById("workAddress3").value = cusInfo.workAddress3;
+	//document.getElementById("workAddress3").disabled = true;
+	
+	document.getElementById("workTel").value = cusInfo.workTel;
+	//document.getElementById("workTel").disabled = true;
+	
+	document.getElementById("currAddress1").value = cusInfo.currAddress1;
+	//document.getElementById("currAddress1").disabled = true;
+	
+	document.getElementById("currAddress2").value = cusInfo.currAddress2;
+	//document.getElementById("currAddress2").disabled = true;
+	
+	document.getElementById("currAddress3").value = cusInfo.currAddress3;
+	//document.getElementById("currAddress3").disabled = true;
+	
+	document.getElementById("currAddress4").value = cusInfo.currAddress4;
+	//document.getElementById("currAddress4").disabled = true;
+	
+	document.getElementById("mobile").value = cusInfo.mobile;
+	//document.getElementById("mobile").disabled = true;
+	
+	document.getElementById("email").value = cusInfo.email;
+	//document.getElementById("email").disabled = true;
+	
+	//document.getElementById("confirmBtn").disabled = true;
+}
+
+function editOccupation() {
+	document.getElementById("occupation").disabled = "";
+}
+
+function editWorkPlace() {
+	document.getElementById("workPlace").disabled = "";
+}
+
+function editWorkAddress() {
+	document.getElementById("workAddress1").disabled = "";
+	document.getElementById("workAddress2").disabled = "";
+	document.getElementById("workAddress3").disabled = "";
+}
+
+function editWorkTel() {
+	document.getElementById("workTel").disabled = "";
+}
+
+function editCurrentAddress() {
+	document.getElementById("currAddress1").disabled = "";
+	document.getElementById("currAddress2").disabled = "";
+	document.getElementById("currAddress3").disabled = "";
+	document.getElementById("currAddress4").disabled = "";
+}
+
+function editMobile() {
+	document.getElementById("mobile").disabled = "";
+}
+
+function editEmail() {
+	document.getElementById("email").disabled = "";
+}
+
+function cancel() {
+	setDefaultInfo(cusInfoObj);
+	logInfo("cancel");
+	
+}
+/*function goBack(){
+	navController.popView(true);
+}*/
+function confirmChange() {
+	document.getElementById("occupation").value = removeAccent(document.getElementById("occupation").value);
+	document.getElementById("workPlace").value = removeAccent(document.getElementById("workPlace").value);
+	document.getElementById("workAddress1").value = removeAccent(document.getElementById("workAddress1").value);
+	document.getElementById("workAddress2").value = removeAccent(document.getElementById("workAddress2").value);
+	document.getElementById("workAddress3").value = removeAccent(document.getElementById("workAddress3").value);
+	document.getElementById("currAddress1").value = removeAccent(document.getElementById("currAddress1").value);
+	document.getElementById("currAddress2").value = removeAccent(document.getElementById("currAddress2").value);
+	document.getElementById("currAddress3").value = removeAccent(document.getElementById("currAddress3").value);
+	document.getElementById("currAddress4").value = removeAccent(document.getElementById("currAddress4").value);
+	document.getElementById("workTel").value = removeAccent(document.getElementById("workTel").value);
+	document.getElementById("mobile").value = removeAccent(document.getElementById("mobile").value);
+	
+	var occupation = document.getElementById("occupation").value;
+	var workPlace = document.getElementById("workPlace").value;
+	var workAddress1 = document.getElementById("workAddress1").value;
+	var workAddress2 = document.getElementById("workAddress2").value;
+	var workAddress3 = document.getElementById("workAddress3").value;
+	var currAddress1 = document.getElementById("currAddress1").value;
+	var currAddress2 = document.getElementById("currAddress2").value;
+	var currAddress3 = document.getElementById("currAddress3").value;
+	var currAddress4 = document.getElementById("currAddress4").value;
+	var fileUpload01 = document.getElementById("id.fileUpload01");
+	
+	
+	
+	var workTel = document.getElementById("workTel").value;
+    var reText =/^[^!@#$%^&*_+\=\[\]{}();':"\\|,.<>\/?]*$/;
+	var RE = /^[\d\.\-\s]+$/;
+	if (occupation != cusInfoObj.occupation && !reText.test(occupation)){
+        showAlertText(CONST_STR.get('UTILITIES_CHNG_PER_INFO_OCCUPATION_ERROR_MSG'));
+        return;
+    }
+	if (workTel != cusInfoObj.workTel && !reText.test(workTel)) {
+		showAlertText(CONST_STR.get('UTILITIES_CHNG_PER_INFO_WORK_TEL_ERROR_MSG'));
+		return;
+	}
+	
+	var mobile = document.getElementById("mobile").value;
+	
+	if (mobile != cusInfoObj.mobile && !reText.test(mobile)) {
+		showAlertText(CONST_STR.get('UTILITIES_CHNG_PER_INFO_MOBILE_ERROR_MSG'));
+		return;
+	}
+	
+	var email = document.getElementById("email").value;
+	
+	var MAIL = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+
+	if (email != cusInfoObj.email && !MAIL.test(email)) {
+		showAlertText(CONST_STR.get('UTILITIES_CHNG_PER_INFO_EMAIL_ERROR_MSG'));
+		return;
+	}
+	// check image
+	var stringInfo= "";
+	var arrayArgs = new Array();
+	tmpStr = fileUpload01.value;
+	var checkImage = tmpStr.split('.');
+	var checkTypeImage = checkImage[checkImage.length-1];
+	if (checkTypeImage != "" && checkTypeImage.toLowerCase() != "jpg" && checkTypeImage.toLowerCase() != "png" && checkTypeImage.toLowerCase() != "gif"){
+		status=1;
+		document.getElementById("id.checkFile").style.display='';
+		//document.getElementById("id.lbCheckFile").innerHTML = CONST_STR.get('ERR_INPUT_VALUE');	
+		showAlertText(CONST_STR.get('ERR_INPUT_FILE_VALUE'));
+		return;	
+	}
+	/*else{
+		document.getElementById("id.checkFile").style.display='none';
+	}*/
+	/*isSendReq = false;
+	if(status==1) {
+		return;
+	}
+	*/
+    
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	//fill data
+	arrayArgs.push(occupation);
+	arrayArgs.push(workPlace);
+	arrayArgs.push(workAddress1);
+	arrayArgs.push(workAddress2);
+	arrayArgs.push(workAddress3);
+	arrayArgs.push(workTel);
+	arrayArgs.push(currAddress1);
+	arrayArgs.push(currAddress2);
+	arrayArgs.push(currAddress3);
+	arrayArgs.push(currAddress4);
+	arrayArgs.push(mobile);
+	arrayArgs.push(email);
+	
+	newCusInfoObj = cusInfoObj;
+	newCusInfoObj.occupation = occupation;
+	newCusInfoObj.workPlace = workPlace;
+	newCusInfoObj.workAddress1 = workAddress1;
+	newCusInfoObj.workAddress2 = workAddress2;
+	newCusInfoObj.workAddress3 = workAddress3;
+	newCusInfoObj.workTel = workTel;
+	newCusInfoObj.currAddress1 = currAddress1;
+	newCusInfoObj.currAddress2 = currAddress2;
+	newCusInfoObj.currAddress3 = currAddress3;
+	newCusInfoObj.currAddress4 = currAddress4;
+	newCusInfoObj.mobile = mobile;
+	newCusInfoObj.email = email;
+	
+	//HuyNT2: upload image
+	var tmpResult = document.getElementById('cropperContainer2');
+	var tmpCanvas = tmpResult.getElementsByTagName('canvas')[0];
+	var base64string = '';
+	if(tmpCanvas) {
+		base64string = tmpCanvas.toDataURL('image/jpeg');
+	}
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_CHNG_CUS_INFO_CONFIRM"), "", "", gUserInfo.lang , gUserInfo.sessionID, arrayArgs, encodeURIComponent(base64string));
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, confirmChangeSuccess, confirmChangeFail);
+	
+	logInfo("confirmChange");
+}
+
+
+//event listener: http request success
+function confirmChangeSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp);
+	
+	if ((gprsResp.respCode == '0') && 
+		(parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CHNG_CUS_INFO_CONFIRM"))) &&
+		gprsResp.arguments != undefined) {
+			if(gprsResp.arguments[1]=='EMAIL' || gprsResp.arguments[1]=='SDT'|| gprsResp.arguments[1]=='TTCN'){
+				tmpArr= gprsResp.arguments[2].split('#');
+				amountFee = parseInt(tmpArr[1])+ parseInt(tmpArr[2]);
+				if(amountFee=='1650'){
+			showAlertAppText1(CONST_STR.get('LOGIN_NOTIFICATION'),CONST_STR.get('CHANGE_TTCN_ACC_CONFIRM_NV'),CONST_STR.get('REVIEW_BTN_CANCEL'),CONST_STR.get('AUTOBILL_ALERT_CANCEL_OK'));
+		}
+		else{
+			showAlertAppText1(CONST_STR.get('LOGIN_NOTIFICATION'),CONST_STR.get('CHANGE_TTCN_ACC_CONFIRM_KH'),CONST_STR.get('REVIEW_BTN_CANCEL'),CONST_STR.get('AUTOBILL_ALERT_CANCEL_OK'));
+		}
+		document.addEventListener('alertAppConfirmOK', showChoiceConfirmPre, false);
+    document.addEventListener('alertAppConfirmCancel', showChoiceConfirmPreClose, false);
+			}
+			else {
+				genReviewScreen();
+			}
+		
+		
+	} 
+		else if((gprsResp.respCode == '3') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CHNG_CUS_INFO_CONFIRM")))){
+		var tmpArr = new Array();
+		tmpArr= gprsResp.arguments[2].split('#');
+		amountFee = parseInt(tmpArr[1])+ parseInt(tmpArr[2]);
+		if(amountFee=='1650'){
+			showAlertText(CONST_STR.get('CHANGE_TTCN_ACC_WRONG_NV'));
+			return;
+		}
+		else{
+			showAlertText(CONST_STR.get('CHANGE_TTCN_ACC_WRONG_KH'));
+			return;
+		}
+		
+		}
+		else if((gprsResp.respCode == '2') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CHNG_CUS_INFO_CONFIRM")))){
+			showAlertText(CONST_STR.get('CHARGE_FEE_ACCOUNT_ERR'));
+		return;
+		}
+};
+function showChoiceConfirmPre(){
+	if (currentPage == "utilitiesxsl/change-personal-info-scr") {
+		showChoiceConfirmPreClose();
+		genReviewScreen();
+	}
+}
+function showChoiceConfirmPreClose() {
+	if (currentPage == "utilitiesxsl/change-personal-info-scr") {
+		document.removeEventListener("alertAppConfirmCancel", showChoiceConfirmPreClose, false);
+		document.removeEventListener("alertAppConfirmOK", showChoiceConfirmPre, false);
+	}
+}
+//event listener: http request fail
+function confirmChangeFail(){
+	/*if ((e.type == "evtHttpFail") && (currentPage == "utilitiesxsl/change-personal-info-scr")) {
+		document.removeEventListener("evtHttpFail", requestMBServiceFail, false);
+		//alert("Http request fail!");
+	}*/
+};
+
+function genReviewScreen() {
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlNodeInfo;
+	var tmpChildNodeAcc;
+	var tmpChildNode;
+	
+	//root node 
+	tmpXmlRootNode = createXMLNode('review', '', docXml);
+	tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+		
+	
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	//Thong tin ca nhan
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	//Ho ten
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_NAME_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.name, docXml, tmpChildNodeAcc);
+	
+	//Ngay sinh
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_BIRTHDAY_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.birthday, docXml, tmpChildNodeAcc);
+
+	//So CMND/Ho chieu
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_ID_PASSPORT_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.idPassport, docXml, tmpChildNodeAcc);
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	//Thong tin lien he
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_CONTACT_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	//Dia chi hien tai
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_CURR_ADDR_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.currAddress1 + "  " + newCusInfoObj.currAddress2 + "  " + newCusInfoObj.currAddress3 + "  " + newCusInfoObj.currAddress4, docXml, tmpChildNodeAcc);
+	
+	//Dien thoai di dong
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_MOBILE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.mobile, docXml, tmpChildNodeAcc);
+	
+	//Email
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_EMAIL_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.email, docXml, tmpChildNodeAcc);
+	
+	
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	//Thong tin nghe nghiep
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_OCCUPATION_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	
+	//Nghe nghiep
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_OCCUPATION_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.occupation, docXml, tmpChildNodeAcc);
+	
+	//Co quan
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_WORK_PLACE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.workPlace, docXml, tmpChildNodeAcc);
+	
+	//Dia chi co quan
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_WORK_ADDR_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.workAddress1 + "  " + newCusInfoObj.workAddress2 + "  " + newCusInfoObj.workAddress3, docXml, tmpChildNodeAcc);
+	
+	//Dien thoai co quan
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('UTILITIES_CHNG_PER_INFO_WORK_TEL_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', newCusInfoObj.workTel, docXml, tmpChildNodeAcc);
+	
+	
+	
+	
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+
+function checkChange(tbx, limit) {
+	
+	// limit text length on field
+	if(tbx.value.length > Number(limit)) {
+		tbx.value = tbx.value.substring(0, Number(limit));
+	}
+	
+	//disable confirm button
+	document.getElementById("confirmBtn").disabled = true;
+		
+	if (document.getElementById("occupation").value != cusInfoObj.occupation) {
+		logInfo("edit occupation");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("workPlace").value != cusInfoObj.workPlace) {
+		logInfo("edit workPlace");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("workAddress1").value != cusInfoObj.workAddress1) {
+		logInfo("edit workAddress1");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("workAddress2").value != cusInfoObj.workAddress2) {
+		logInfo("edit workAddress2");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("workAddress3").value != cusInfoObj.workAddress3) {
+		logInfo("edit workAddress3");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("workTel").value != cusInfoObj.workTel) {
+		logInfo("edit workTel");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("currAddress1").value != cusInfoObj.currAddress1) {
+		logInfo("edit currAddress1");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("currAddress2").value != cusInfoObj.currAddress2) {
+		logInfo("edit currAddress2");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("currAddress3").value != cusInfoObj.currAddress3) {
+		logInfo("edit currAddress3");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("currAddress4").value != cusInfoObj.currAddress4) {
+		logInfo("edit currAddress4");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("mobile").value != cusInfoObj.mobile) {
+		logInfo("edit mobile");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+	
+	if (document.getElementById("email").value != cusInfoObj.email) {
+		logInfo("edit email");
+		//enable confirm button
+		document.getElementById("confirmBtn").disabled = "";
+		return;
+	}
+}
+
+/*upload file*/
+function fnChange(obj) {
+	resultUserImg.innerHTML = ''; //clear result loaded-file
+
+	var objTmp = document.getElementById("btnFile");
+	if(obj.value.trim().length > 0)  {
+	objTmp.value = obj.value;
+	} else {
+		objTmp.value = '';
+	}
+
+}
+
+/* Take picture */
+
+function displayImage(file, options) {
+	document.getElementById('tb-prevPicture').style.display = '';
+	//alert('em day');
+	currentFile = file;
+		if (!loadImage(
+				file,
+				replaceResults,
+				{
+					maxWidth: 200,
+					maxHeight: 200,
+					crop: true
+					/*aspectRatio: 1*/
+				}
+			)) {
+			logInfo('Not support the URL or FileReader API');
+		}
+}
+
+function replaceResults(img) {
+	var content;
+	
+	if (!(img.src || img instanceof HTMLCanvasElement)) {
+		logInfo('Loading image file failed');
+	} else {
+		/*var scaledImage = loadImage.scale(
+			img, // img or canvas element
+			{
+				maxWidth: isSmallScrMode? clientCusWidth: 640,
+				canvas: true
+			}
+		);*/
+		var maxWidthImage = 200;
+		clientCusWidth = (clientCusWidth < maxWidthImage)? clientCusWidth: maxWidthImage; //limit image size
+		var tmpMaxWidth = isSmallScrMode? clientCusWidth: maxWidthImage;
+		var tmpRatio = img.height / img.width;
+		var tmpMaxSize = tmpMaxWidth;
+		
+		scaledImage = loadImage.scale(
+			img, // img or canvas element
+			{
+				maxWidth: tmpMaxWidth,
+				canvas: true
+			}
+		);
+		
+		/*if(img.height < img.width) {
+			resultUserImg.setAttribute('width', tmpMaxWidth);
+			resultUserImg.setAttribute('height', tmpMaxWidth);
+		}
+		else {
+			resultUserImg.setAttribute('width', tmpMaxWidth);//tmpRatio * tmpMaxWidth);
+			resultUserImg.setAttribute('height', tmpMaxWidth); //tmpRatio * tmpMaxWidth);
+			tmpMaxSize = tmpMaxWidth;//tmpRatio * tmpMaxWidth;
+		}*/
+		//resultUserImg.setAttribute('width', tmpMaxWidth);
+		//resultUserImg.setAttribute('height', tmpRatio * tmpMaxWidth);
+		//resultUserImg.setAttribute('width', tmpMaxWidth);
+		//resultUserImg.setAttribute('height', tmpRatio * tmpMaxWidth);
+		//resultUserImg.innerHTML = ''; //clear result loaded-file
+		//resultUserImg.appendChild(scaledImage); //show loaded-file
+		
+		//dataURL = scaledImage.toDataURL();
+		//if(!isSmallScrMode) {
+			//setUpCropImage(dataURL);
+		//}
+		//else {
+			resultUserImg.innerHTML = ''; //clear result loaded-file
+			//resultUserImg.appendChild(scaledImage);
+			
+			//Canvas
+			//var canvasImg = document.createElement("canvas");
+			canvasImg.width = tmpMaxWidth;
+			canvasImg.height = tmpMaxWidth;
+    		//var ctxImg = canvasImg.getContext("2d");
+			ctxImg.drawImage(scaledImage, canvasImg.width/2-scaledImage.width/2, canvasImg.height/2-scaledImage.width/2);
+			//ctxImg.drawImage(scaledImage, canvasImg.width, canvasImg.height);
+			resultUserImg.appendChild(canvasImg);
+		//}
+	}
+	/*if (img.getContext) { //check image ready
+		var ctx = img.getContext();
+		if(ctx) {
+			ctx.clearRect(0, 0, img.width, img.height);
+			ctx.drawImage(dataURL, 0, 0, img.width, img.height);
+			logInfo('show image replaced');
+		}
+	}*/
+}
+
+function setUpCropImage(inBlob) {
+	//iCropper
+	if(icropper1) icropper1.destroy(); //clear memory
+	document.getElementById('previewBig1').innerHTML = ''; //clear preview
+	resultUserImg.innerHTML = ''; //clear result loaded-file
+	icropper1 = new ICropper(
+		'cropperContainer2' //set workspace to crop
+		,{
+			ratio: 0.75
+			,image: inBlob
+			,onChange: function(info){	//onChange must be set when constructing.
+				//infoNode1.innerHTML = 'Left: ' + info.l + 'px, Top: '+ info.t + 'px, Width: ' + info.w + 'px, Height: ' + info.h+'px';
+				infoNode1.innerHTML = 'Width: ' + info.w + 'px, Height: ' + info.h+'px';
+			}
+			,preview: [
+				'previewBig1' //set preview node
+			]
+		});
+}
+
+function rotateImageIntroCus(inDegree) {
+	angleRotate += inDegree;
+	ctxImg.clearRect(0,0,canvasImg.width,canvasImg.height);
+    ctxImg.save();
+	ctxImg.fillStyle = "#FFFFFF"; // blue
+	logInfo("Canvas gap size: " + Math.abs(canvasImg.height - canvasImg.width) / 2);
+    ctxImg.translate(canvasImg.width/2, canvasImg.height/2);
+	ctxImg.rotate(angleRotate*Math.PI/180);
+    //ctxImg.drawImage(scaledImage,-scaledImage.width/2,-scaledImage.width/2 + Math.abs(scaledImage.height-scaledImage.width)/2);
+	ctxImg.drawImage(scaledImage,-scaledImage.width/2,-scaledImage.width/2);// + Math.abs(scaledImage.height-scaledImage.width)/2);
+    ctxImg.restore();
+}
+
+/* Take picture end */

@@ -1,0 +1,581 @@
+/**
+ * Created by TuanNQ1.FSoft
+ * User: 
+ * Date: 14/7/14
+ */
+
+var numberRecordsPerPage = 5;
+var selectedPageIndex;
+
+var startDate;
+var endDate;
+var searchStatusName;
+var searchStatusVal;
+var resultArr;
+var resultArrGrouping;
+var displayArr;
+var isSetDatePicker;
+var flag = false;
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+    bottomBar.hide();
+    navController.getActionBar().hideActionbar();
+    navController.getActionBar().showActionBar();
+	if (gUserInfo.lang == "VN") {
+		document.getElementById('status').value= CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[0];
+		searchStatusName = CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[0];
+	} else {
+		document.getElementById('status').value = CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[0];
+		searchStatusName = CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[0];
+	}	
+	document.getElementById('statusVal').value = CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[0];
+	searchStatusVal = CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[0];
+	selectedPageIndex = 1;
+	//if (!isSetDatePicker) {
+		setDatePicker();
+	//	isSetDatePicker = true;
+	//}
+}
+
+function setDatePicker() {
+	var today = new Date();
+	var dd = today.getDate();
+	var mm = today.getMonth()+1; //January is 0!
+	var yyyy = today.getFullYear();
+	
+	if(dd<10) {
+		dd='0'+dd;
+	} 
+	
+	if(mm<10) {
+		mm='0'+mm;
+	} 
+	
+	today = yyyy+'-'+mm+'-'+dd;
+	
+	var fromDate;
+	var toDate;
+	
+	if (gUserInfo.lang == 'VN') {
+		fromDate = new DatePicker(
+			{
+				show : function(data) {},
+				hide : function(data) {},
+				seek : function(data) {},
+				select : function(data, fn) {
+					document.getElementById('fromDate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+					}
+			},
+			{
+				tmpl_field   : 'd/m/Y',
+				range_min    :  '01-01-2008',
+				range_max    :  '12-31-2999',
+				//dom_id       : 'fromDate',
+				//dom_field    : document.getElementById('fromDate'),
+				
+				dom_field    : document.getElementById('span.fromDate'), //node make action
+				async_selection : true,
+								
+				dictionaries : {
+					'custom' : {
+						common : {
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},
+						weekdays : {
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},
+						monthes : {
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},
+					}
+				}
+			}
+		);
+	}
+	else {
+		fromDate = new DatePicker(
+			{
+				show : function(data) {},
+				hide : function(data) {},
+				seek : function(data) {},
+				select : function(data, fn) {
+					document.getElementById('fromDate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+					}
+			},
+			{
+				tmpl_field   : 'd/m/Y',
+				range_min    :  '01-01-2008',
+				range_max    :  '12-31-2999',
+				//dom_id       : 'fromDate',
+				//dom_field    : document.getElementById('fromDate'),
+				
+				dom_field    : document.getElementById('span.fromDate'), //node make action
+				async_selection : true,
+				
+				dictionaries : {
+					'custom' : {
+						common : {
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},
+						weekdays : {
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},
+						monthes : {
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},
+					}
+				}
+			}
+		);
+	}
+	
+	
+	toDate = new DatePicker(
+		{
+			show : function(data) {},
+			hide : function(data) {},
+			seek : function(data) {},
+			select : function(data) {
+				document.getElementById('toDate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+				toDate.hide();
+				}
+		},
+		{
+			tmpl_field : 'd/m/Y',
+			range_min    :  '01-01-2008',
+			range_max    :  '12-31-2999',
+			//dom_id     : 'toDate',
+			//dom_field  : document.getElementById('toDate')
+			
+			dom_field    : document.getElementById('span.toDate'), //node make action
+			async_selection : true
+		}
+	);
+	DatePicker.sub(fromDate.id, '<', toDate.id);
+	DatePicker.sub(toDate.id, '>', fromDate.id);
+	
+	if (startDate != undefined && endDate != undefined && flag) {
+            fromDate.select(startDate);
+            toDate.select(endDate);
+	} else {
+		fromDate.select(today);
+		toDate.select(today);
+	}
+	
+	if (searchStatusName != undefined && searchStatusVal != undefined) {
+		document.getElementById('status').value = searchStatusName;
+		document.getElementById('statusVal').value = searchStatusVal;
+	}
+}
+function viewBackFromOther() {
+    logInfo('Back from other view');
+    flag = true;
+}
+function showStatusSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	
+	if (gUserInfo.lang == "VN") {
+		tmpArray1 = CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN;
+	} else {
+		tmpArray1 = CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN;
+	}
+	tmpArray2 = CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL;
+			
+	document.addEventListener("evtSelectionDialog", handleStatusSelection, false);
+	document.addEventListener("evtSelectionDialogClose", handleStatusSelectionClose, false);
+	showDialogList(CONST_STR.get('TOPUP_DIALOG_TITLE_TRANSACTION'), tmpArray1, tmpArray2, false);
+}
+
+//event: selectec account number
+function handleStatusSelection(e) {
+	if (currentPage == "loyaltyxsl/gift-exchange-history-scr") {
+		document.removeEventListener("evtSelectionDialog", handleStatusSelection, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var status = document.getElementById('status');
+			if (status.nodeName == "INPUT") {
+				status.value = e.selectedValue1;
+			}
+			else {
+				status.innerHTML = e.selectedValue1;
+			}
+			
+			searchStatusName = e.selectedValue1;
+			
+			if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+				var statusVal = document.getElementById('statusVal');
+				statusVal.value = e.selectedValue2;
+				
+				searchStatusVal = e.selectedValue2;
+			}
+		}
+		
+	}
+}
+
+function handleStatusSelectionClose(e) {
+	if (currentPage == "loyaltyxsl/gift-exchange-history-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleStatusSelectionClose, false);
+		document.removeEventListener("evtSelectionDialog", handleStatusSelection, false);
+	}
+}
+
+
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	
+	var fromDate = document.getElementById("fromDate").value;
+	
+	if (fromDate == undefined || fromDate == "") {
+		showAlertText(CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER') + ' "' + CONST_STR.get('GIFT_XCHNG_HIS_FROM_DATE_TITLE') + '"');
+		return;
+	} 
+	else if (!isValidDate(fromDate)) {
+		showAlertText(CONST_STR.get('GIFT_XCHNG_HIS_DATE_ERR_MSG') + ": " + fromDate);
+		return;
+	}
+	
+	var tmpDateArr = fromDate.split('/');
+	startDate = tmpDateArr[2] + '-' + tmpDateArr[1] + '-' + tmpDateArr[0];
+	
+	var toDate = document.getElementById("toDate").value;
+	
+	if (toDate == undefined || toDate == "")
+	{
+		showAlertText(CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER') + ' "' + CONST_STR.get('GIFT_XCHNG_HIS_TO_DATE_TITLE') + '"');
+		return;
+	}
+	else if (!isValidDate(toDate)) {
+		showAlertText(CONST_STR.get('GIFT_XCHNG_HIS_DATE_ERR_MSG') + ": " + toDate);
+		return;
+	}
+	
+	var tmpDateArr = toDate.split('/');
+	endDate = tmpDateArr[2] + '-' + tmpDateArr[1] + '-' + tmpDateArr[0];
+	
+	var sToday = new Date();
+	sToday.setHours(23,59,59,999);
+	
+	var sDate = new Date(startDate);
+	var eDate = new Date(endDate);
+	
+	//alert(sToday + " " + sDate + " " + eDate);
+	
+	if (sDate > sToday || eDate > sToday || sDate > eDate) {
+		showAlertText(CONST_STR.get('GIFT_XCHNG_HIS_DATE_FROM_TO_ERR_MSG'));
+		return;
+	}
+	
+	var status = document.getElementById("statusVal").value;
+	if (status == undefined || status == "" || status == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') + ' "' + CONST_STR.get('GIFT_XCHNG_HIS_STATUS_TITLE') + '"');
+		return;
+	}
+	
+	//push into arrayArgs
+	var arrayArgs = new Array();
+	arrayArgs.push(gCustomerNo); // cif
+	arrayArgs.push(fromDate);
+	arrayArgs.push(toDate);
+	arrayArgs.push(status);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_GIFT_XCHNG_HIS"), "", "", gUserInfo.lang , gUserInfo.sessionID, arrayArgs);
+	
+	var data = {};
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	//gRespObj = gprsResp; 
+	//setRespObjStore(gprsResp);
+	
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_GIFT_XCHNG_HIS")))) {
+		resultArr = gprsResp.arguments;
+		resultArrGrouping = new Array();
+		var giftRegisIdTemp = "";
+		if (resultArr != undefined && resultArr.length > 0)
+		{
+			for (var i = 0; i < resultArr.length; i++)
+			{
+				var giftRegisDetail =  resultArr[i].split("#");
+				var giftRegisId = giftRegisDetail[0];
+				if (giftRegisId != giftRegisIdTemp)
+				{
+					resultArrGrouping.push(resultArr[i]);
+				}
+				giftRegisIdTemp = giftRegisId;
+			}
+		}
+		
+		var docXml = genXmlDoc();
+		
+		var docXsl = getCachePageXsl("loyaltyxsl/gift-exchange-history-scr");
+	    genHTMLStringWithXML(docXml, docXsl, successCallback, failCallback);
+	}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(){
+	/*if ((e.type == "evtHttpFail") && (currentPage == "paymentxsl/payment-topup-create-scr")) {
+		document.removeEventListener("evtHttpFail", requestMBServiceFail, false);
+		//alert("Http request fail!");
+	}*/
+};
+
+function successCallback(oStr)
+{
+	var tabh = document.getElementById("tabHost");
+	tabh.innerHTML = oStr;
+	
+	//set control back
+	setDatePicker();
+	
+	genPagging(resultArrGrouping, selectedPageIndex);
+}
+
+function failCallback(){
+	logInfo('failCallback');
+}
+
+function showDetailScreen(giftId) {
+
+	var detailXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlNodeInfo;
+	var tmpChildNodeAcc;
+	var tmpChildNode;
+	var tmpChildNoteDetails;
+	var tmpChildNoteDetail;
+	
+	//root node 
+	tmpXmlRootNode = createXMLNode('giftinfo', '', detailXml);
+	
+	for (var i = 0; i < resultArr.length; i++) {
+		
+		tmpArr = resultArr[i].split('#');
+	
+		/*if (tmpArr.length >= 11 && tmpArr[0] == giftId) {
+			var giftObj = {"transId":tmpArr[0], "date":tmpArr[1], "totalPoint":tmpArr[2], "status":tmpArr[3], "statusName":"",
+							 "giftName":tmpArr[4], "giftQuantity":tmpArr[5], "usedPoint":tmpArr[6], "pointOnGift":tmpArr[7], 
+							 "receivedGiftQuantity":tmpArr[8], "placeOfGettingGift":tmpArr[9], "dateOfGettingGift":tmpArr[10]};*/
+			if (tmpArr.length >= 10 && tmpArr[0] == giftId) {
+			var giftObj = {"transId":tmpArr[0], "date":tmpArr[1], "totalPoint":tmpArr[2], "status":tmpArr[3], "statusName":"",
+							 "giftName":tmpArr[4], "giftQuantity":tmpArr[5], "usedPoint":tmpArr[6], "pointOnGift":tmpArr[7], 
+							 "placeOfGettingGift":tmpArr[8], "dateOfGettingGift":tmpArr[9]};
+							 
+			//Ma giao dich
+			tmpChildNode = createXMLNode('transId', giftObj.transId, detailXml, tmpXmlRootNode);
+		
+			//Ngay tao
+			tmpChildNode = createXMLNode('date', giftObj.date, detailXml, tmpXmlRootNode);
+			
+			//Tong diem
+			tmpChildNode = createXMLNode('totalPoint', formatNumberToCurrency(giftObj.totalPoint), detailXml, tmpXmlRootNode);
+			
+			//Trang thai
+			if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[0]) {
+				giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[0] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[0];
+			} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[1]) {
+				giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[1] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[1];
+			} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[2]) {
+				giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[2] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[2];
+			} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[3]) {
+				giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[3] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[3];
+			}
+			
+			tmpChildNode = createXMLNode('status', giftObj.statusName, detailXml, tmpXmlRootNode);
+			//So luong qua da nhan
+			tmpChildNode = createXMLNode('receivedGiftQuantity', giftObj.receivedGiftQuantity, detailXml, tmpXmlRootNode);
+			
+			//Dia diem nhan qua
+			tmpChildNode = createXMLNode('placeOfGettingGift', giftObj.placeOfGettingGift, detailXml, tmpXmlRootNode);
+			
+			//Ngay nhan qua
+			tmpChildNode = createXMLNode('dateOfGettingGift', giftObj.dateOfGettingGift, detailXml, tmpXmlRootNode);
+			
+			break;
+		}
+	}
+	tmpChildNoteDetails = createXMLNode('gifts', '', detailXml, tmpXmlRootNode);
+	for (var i = 0; i < resultArr.length; i++) {
+		
+		tmpArr = resultArr[i].split('#');
+	
+		/*if (tmpArr.length >= 11 && tmpArr[0] == giftId) {
+			var giftObj = {"transId":tmpArr[0], "date":tmpArr[1], "totalPoint":tmpArr[2], "status":tmpArr[3], "statusName":"",
+							 "giftName":tmpArr[4], "giftQuantity":tmpArr[5], "usedPoint":tmpArr[6], "pointOnGift":tmpArr[7], 
+							 "receivedGiftQuantity":tmpArr[8], "placeOfGettingGift":tmpArr[9], "dateOfGettingGift":tmpArr[10]};*/
+		if (tmpArr.length >= 10 && tmpArr[0] == giftId) {
+			var giftObj = {"transId":tmpArr[0], "date":tmpArr[1], "totalPoint":tmpArr[2], "status":tmpArr[3], "statusName":"",
+							 "giftName":tmpArr[4], "giftQuantity":tmpArr[5], "usedPoint":tmpArr[6], "pointOnGift":tmpArr[7], 
+							 "placeOfGettingGift":tmpArr[8], "dateOfGettingGift":tmpArr[9]};
+			//Trang thai
+			if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[0]) {
+				giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[0] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[0];
+			} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[1]) {
+				giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[1] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[1];
+			} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[2]) {
+				giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[2] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[2];
+			} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[3]) {
+				giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[3] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[3];
+			}							 
+							 
+			tmpChildNoteDetail = createXMLNode('gift', '', detailXml, tmpChildNoteDetails);
+			
+			tmpChildNode = createXMLNode('status', giftObj.statusName, detailXml, tmpChildNoteDetail);
+			
+			//Ten qua
+			tmpChildNode = createXMLNode('giftName', giftObj.giftName, detailXml, tmpChildNoteDetail);
+			
+			//So luong qua
+			tmpChildNode = createXMLNode('giftQuantity', formatNumberToCurrency(giftObj.giftQuantity), detailXml, tmpChildNoteDetail);
+			
+			//So diem su dung
+			tmpChildNode = createXMLNode('usedPoint', formatNumberToCurrency(giftObj.usedPoint), detailXml, tmpChildNoteDetail);
+			
+			//Diem tren 1 qua
+			tmpChildNode = createXMLNode('pointOnGift', formatNumberToCurrency(giftObj.pointOnGift), detailXml, tmpChildNoteDetail);
+		}
+	}
+	
+	//luu xml trong cache
+	setReviewXmlStore(detailXml);
+		
+	navController.pushToView("loyaltyxsl/gift-exchange-history-detail-scr", true, 'xsl');
+}
+
+function genXmlDoc() {
+	
+	var docXml = createXMLDoc();
+	
+	//root node 
+	var tmpXmlRootNode = createXMLNode('gifts', '', docXml);
+	
+	if (resultArrGrouping != undefined) {
+		var transId;
+		var date;
+		var totalPoint;
+		var status;
+		var giftName;
+		var giftQuantity;
+		var usedPoint;
+		var pointOnGift;
+		var receivedGiftQuantity;
+		
+		var tmpArr;
+
+		var tmpXmlNodeInfo;
+		var tmpChildNodeAcc;
+		var tmpChildNode;
+		
+		//get display data based on selectedPageIndex
+		var minIndex = (selectedPageIndex - 1) * numberRecordsPerPage;
+		var maxIndex = selectedPageIndex * numberRecordsPerPage - 1;
+		maxIndex = maxIndex < resultArrGrouping.length ? maxIndex : resultArrGrouping.length - 1;
+	
+		for (var i = minIndex; i <= maxIndex; i++) {
+			tmpArr = resultArrGrouping[i].split('#');
+		
+			/*if (tmpArr.length >= 11) {
+				var giftObj = {"transId":tmpArr[0], "date":tmpArr[1], "totalPoint":tmpArr[2], "status":tmpArr[3], "statusName":"",
+							 "giftName":tmpArr[4], "giftQuantity":tmpArr[5], "usedPoint":tmpArr[6], "pointOnGift":tmpArr[7], 
+							 "receivedGiftQuantity":tmpArr[8], "placeOfGettingGift":tmpArr[9], "dateOfGettingGift":tmpArr[10]};*/
+			if (tmpArr.length >= 10) {
+				var giftObj = {"transId":tmpArr[0], "date":tmpArr[1], "totalPoint":tmpArr[2], "status":tmpArr[3], "statusName":"",
+							 "giftName":tmpArr[4], "giftQuantity":tmpArr[5], "usedPoint":tmpArr[6], "pointOnGift":tmpArr[7], 
+							 "placeOfGettingGift":tmpArr[8], "dateOfGettingGift":tmpArr[9]};
+				
+				
+				tmpXmlNodeInfo = createXMLNode('giftinfo', '', docXml, tmpXmlRootNode);
+				
+				//Ma giao dich
+				tmpChildNode = createXMLNode('transId', giftObj.transId, docXml, tmpXmlNodeInfo);
+			
+				//Ngay tao
+				tmpChildNode = createXMLNode('date', giftObj.date, docXml, tmpXmlNodeInfo);
+				
+				//Tong diem
+				tmpChildNode = createXMLNode('totalPoint', formatNumberToCurrency(giftObj.totalPoint), docXml, tmpXmlNodeInfo);
+				
+				//Trang thai
+				if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[0]) {
+					giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[0] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[0];
+				} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[1]) {
+					giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[1] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[1];
+				} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[2]) {
+					giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[2] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[2];
+				} else if (giftObj.status == CONST_KEY_GIFT_XCHNG_HIS_STATUS_VAL[3]) {
+					giftObj.statusName = gUserInfo.lang == 'VN' ? CONST_KEY_GIFT_XCHNG_HIS_STATUS_VN[3] : CONST_KEY_GIFT_XCHNG_HIS_STATUS_EN[3];
+				}
+				tmpChildNode = createXMLNode('status', giftObj.statusName, docXml, tmpXmlNodeInfo);
+				
+				//Ten qua
+				tmpChildNode = createXMLNode('giftName', giftObj.giftName, docXml, tmpXmlNodeInfo);
+				
+				//So luong qua
+				tmpChildNode = createXMLNode('giftQuantity', formatNumberToCurrency(giftObj.giftQuantity), docXml, tmpXmlNodeInfo);
+				
+				//So diem su dung
+				tmpChildNode = createXMLNode('usedPoint', formatNumberToCurrency(giftObj.usedPoint), docXml, tmpXmlNodeInfo);
+				
+				//Diem tren 1 qua
+				tmpChildNode = createXMLNode('pointOnGift', formatNumberToCurrency(giftObj.pointOnGift), docXml, tmpXmlNodeInfo);
+				
+				//So luong qua da nhan
+				tmpChildNode = createXMLNode('receivedGiftQuantity', giftObj.receivedGiftQuantity, docXml, tmpXmlNodeInfo);
+				
+				//Dia diem nhan qua
+				tmpChildNode = createXMLNode('placeOfGettingGift', giftObj.placeOfGettingGift, docXml, tmpXmlNodeInfo);
+				
+				//Ngay nhan qua
+				tmpChildNode = createXMLNode('dateOfGettingGift', giftObj.dateOfGettingGift, docXml, tmpXmlNodeInfo);
+			}
+			else{
+				logInfo('Invalid data: ' + data[i]);
+			}
+		}
+	}
+	
+	logInfo(docXml);
+	
+	return docXml;
+}
+
+function calcTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/numberRecordsPerPage);
+	}
+	return 0;
+}
+
+function genPagging(arr, pageIndex) {
+	var totalPage = calcTotalPage(arr);
+	var nodePager = document.getElementById('pageIndicatorNums');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodePager.innerHTML = tmpStr;
+	applyDynamicCommonStyleSheet();
+	applyDynamicPageStyleSheet(true);
+}
+
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	selectedPageIndex = selectedIdx;
+	
+	var docXml = genXmlDoc();
+	var docXsl = getCachePageXsl("loyaltyxsl/gift-exchange-history-scr");
+	genHTMLStringWithXML(docXml, docXsl, successCallback, failCallback);
+	
+	genPagging(resultArrGrouping, selectedPageIndex);
+}

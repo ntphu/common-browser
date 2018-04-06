@@ -1,0 +1,540 @@
+/**
+ * Created by JetBrains WebStorm.
+ * User: LanTB.FSOFT
+ * Date: 8/1/16
+ * Time: 3:07 PM
+ * To change this template use File | Settings | File Templates.
+ */
+var editobj = {};
+var temptranfer;
+var tempindextranfer;
+var gprsResp = new GprsRespObj("","","","");
+var resultDocRowArray = new Array();
+var fieldRowDoc = ['name','tai_khoan_dich','ngan_hang_nhan'];
+var fieldHiddenDoc =  ['name','tai_khoan_nguon','ten_tai_khoan_dich',
+                        'tai_khoan_dich',
+                        'noi_dung',
+                    'so_tien','ngan_hang_nhan','ma_citad','loai_chuyen_tien', 'bincode',
+                    'so_dien_thoai', 'noi_cap_cmnd', 'ngay_cap_cmnd', 'so_cmnd','bank_code'];
+
+var pBottomOffsetDocTranfer = null;
+
+
+
+var buttonDoc = [
+    { name : 'func', icon : 'icon-detail', action: function(id){
+        console.log('func' + id);
+        var parent = document.getElementById(id);
+        // lay vi tri cua li de show detail
+        pBottomOffsetDocTranfer = parent.getBoundingClientRect().bottom;
+
+        //lay data
+        var objectVal = getObjectValue(parent);
+
+        showDetailTranferDoc(parent.event, objectVal);
+
+    }, type: 'func'},
+
+    { name : 'edit', icon : 'icon-edit', action: function(id){
+        modalDialog.hideDialogFull();
+        var parent = document.getElementById(id);
+        var obj = getObjectValue(parent);
+        logInfo(obj);
+
+        var newDoc = createXMLDoc();
+        var tmpXmlRootNode = createXMLNode('info', '', newDoc);
+        var tmpXmlType = createXMLNode('type', '1', newDoc, tmpXmlRootNode);
+        var tmpXmlElement = createXMLNode('element', '', newDoc, tmpXmlRootNode);
+        var tmpXmlElementValue1 = createXMLNode('ten_mau', obj.name, newDoc, tmpXmlElement);
+        var tmpXmlElementValue7 = createXMLNode('taikhoannguon', obj.tai_khoan_nguon, newDoc, tmpXmlElement);
+        var tmpXmlElementValue2 = createXMLNode('sotien', obj.so_tien, newDoc, tmpXmlElement);
+        var tmpXmlElementValue3 = createXMLNode('nganhangnhan', obj.ngan_hang_nhan, newDoc, tmpXmlElement);
+        var tmpXmlElementValue4 = createXMLNode('taikhoandich', obj.tai_khoan_dich, newDoc, tmpXmlElement);
+        var tmpXmlElementValue5 = createXMLNode('tentaikhoandich', obj.ten_tai_khoan_dich, newDoc, tmpXmlElement);
+        var tmpXmlElementValue6 = createXMLNode('noidung', obj.noi_dung, newDoc, tmpXmlElement);
+        var tmpXmlElementValue8 = createXMLNode('bank_code', obj.ma_citad, newDoc, tmpXmlElement);
+        var tmpXmlElementValue9 = createXMLNode('so_dien_thoai', obj.so_dien_thoai, newDoc, tmpXmlElement);
+        var tmpXmlElementValue9 = createXMLNode('noi_cap_cmnd', obj.noi_cap_cmnd, newDoc, tmpXmlElement);
+        var tmpXmlElementValue10 = createXMLNode('so_cmnd', obj.so_cmnd, newDoc, tmpXmlElement);
+        var tmpXmlElementValue11 = createXMLNode('ngay_cap_cmnd', obj.ngay_cap_cmnd, newDoc, tmpXmlElement);
+        var tmpXmlElementValue12 = createXMLNode('ngan_hang_nhan', obj.ngan_hang_nhan, newDoc, tmpXmlElement);
+        var tmpXmlElementValue12 = createXMLNode('bankcode', obj.bank_code, newDoc, tmpXmlElement);
+
+        logInfo(newDoc);
+        setReviewXmlStore(newDoc);
+        navController.pushToView('transfer/template-transfer-doc-edit', true, 'xsl');
+
+    }, type: 'func'},
+
+    { name : 'delete', icon : 'icon-delete', action: function(id){
+        var node = document.getElementById(id);
+        var pValue = node.getElementsByClassName("p-value")[0];
+        var idNo = pValue.childNodes[0].innerHTML;
+        showPopUpTranferDocDelete(idNo)
+    }, type: 'delete', idPopup :  'btnAlertConfirmOk'}
+];
+
+
+var dbclickShowTranfer = function(node){
+    console.log("click from transfer doc");
+    try{
+        var objectVal = getObjectValue(node);
+       // callbackDocTranfer(objectVal);
+        try{
+            modalDialog.fireCallBack(objectVal);
+        }catch(e){}
+    }catch(e){
+        console.log("loi id node");
+        console.log(node);
+        console.log(e);
+    }
+
+};
+
+
+function sendRequest(){
+    console.log("send request in template transfer doc");
+    var arrayArgs = new Array();
+   /* arrayArgs.push("");
+    arrayArgs.push('0');*/
+    arrayArgs.push(transferParam.transferParam1);
+    arrayArgs.push(transferParam.transferParam2);
+    var gprsCmd = new GprsCmdObj(transferParam.transferServices, "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+    data = getDataFromGprsCmd(gprsCmd);
+
+    requestMBService(data, true, 0, handleSuccess, handleFail);
+}
+
+function handleSuccess(e){
+    console.log("receive in template transfer doc");
+    gprsResp = parserJSON(e);
+    accountInTempl = (gprsResp.arguments == undefined) ? 0 : gprsResp.arguments.length;
+    var historyArray = (gprsResp.arguments == "undefined") ? new Array() : gprsResp.arguments;
+    if(historyArray === null || historyArray == "" || historyArray === undefined) {
+        resultListNull("divListDoc");
+        document.getElementById('template-dk-right').style.display = 'none';
+        return;
+    }
+    document.getElementById('template-dk-right').style.display = '';
+    var length = historyArray.length;
+    if(length > 0){
+        var tempArrStr;
+        var payeeObjTemp;
+        var lstTemplate = new Array();
+        var args = new Array();
+        for(var i=0;i<length ; i++){
+            tempArrStr = historyArray[i].split("#");
+
+            objtemp = new Object();
+            objtemp.name = tempArrStr[0];
+            objtemp.tai_khoan_nguon = tempArrStr[1];
+            objtemp.ten_tai_khoan_dich = tempArrStr[2];
+            objtemp.tai_khoan_dich = tempArrStr[3];
+            objtemp.so_tien = tempArrStr[4];
+            objtemp.noi_dung = tempArrStr[5];
+            if(gEdit  == 1){
+                //trong ngan hang
+                objtemp.ngan_hang_nhan = CONST_STR.get("TPBANK_TITLE");
+            }
+            else{
+                objtemp.ngan_hang_nhan = tempArrStr[6] ;
+            }
+
+            objtemp.ma_citad = tempArrStr[7];
+            objtemp.loai_chuyen_tien = tempArrStr[8];
+            objtemp.bincode = tempArrStr[9];
+            objtemp.ngay_chuyen = tempArrStr[10];
+            logInfo("gEdit: " + gEdit);
+            if(gEdit === 1){
+                objtemp.ngan_hang_nhan = CONST_STR.get('TPBANK_TITLE');
+            } else if(gEdit === 2){
+              //lien ngan hang
+                objtemp.name = tempArrStr[0];
+                objtemp.tai_khoan_nguon = tempArrStr[1];
+                objtemp.ten_tai_khoan_dich= tempArrStr[2];
+                objtemp.tai_khoan_dich = tempArrStr[3];
+                objtemp.so_tien = tempArrStr[4];
+                objtemp.noi_dung = tempArrStr[5];
+                var nganhangnhan = tempArrStr[6].replace(/(\r\n|\n|\r)/gm," ");
+                objtemp.ngan_hang_nhan = nganhangnhan;
+                objtemp.ma_citad = tempArrStr[7];
+                objtemp.loai_chuyen_tien = tempArrStr[8];
+                objtemp.bincode = tempArrStr[9];
+                console.log('lien ngan hang : ' + objtemp.ngan_hang_nhan);
+                fieldRowDoc = ['name','tai_khoan_dich', 'ngan_hang_nhan'];
+
+            }else if (gEdit == 4) {
+                objtemp.so_tien = tempArrStr[4];
+                // chi lay noi dung chuyen tien
+                objtemp.noi_dung = tempArrStr[5].split("-")[2];
+                logInfo("gan lai so tien cho chuyen tien qua tkck: [sotien: "+ objtemp.so_tien + "], [noidung: " + objtemp.noi_dung+"]");
+            } else if (gEdit == 5) { // chuyen tien qua CMND
+                logInfo("tempArrStr: " + tempArrStr);
+                objtemp.name = tempArrStr[0];
+                objtemp.tai_khoan_nguon = tempArrStr[1];
+                /*objtemp.ten_tai_khoan_dich = tempArrStr[2];
+                objtemp.ngay_cap_cmnd = tempArrStr[3]; chinh sua theo services cua ngoc
+                objtemp.noi_cap_cmnd = tempArrStr[4];
+                objtemp.so_dien_thoai = tempArrStr[5];*/
+                var tmp = tempArrStr[2].split('~');//du lieu o vi tri 2 bao gom : tai khoan nhan tien, ngay cmnd, noi cap,so dien thoai
+                objtemp.ten_tai_khoan_dich = tmp[0];
+                objtemp.ngay_cap_cmnd = tmp[1];
+                objtemp.noi_cap_cmnd = tmp[2];
+                objtemp.so_dien_thoai = tmp[3];
+                objtemp.so_cmnd = tempArrStr[3];
+                objtemp.so_tien = tempArrStr[4];
+                objtemp.noi_dung = tempArrStr[5];
+                objtemp.ngan_hang_nhan = tempArrStr[6];
+                objtemp.bank_code = tempArrStr[7];
+                objtemp.loai_chuyen_tien = tempArrStr[8];
+                objtemp.ngay_chuyen = tempArrStr[10];
+                fieldRowDoc = ['name','so_cmnd', 'ngan_hang_nhan'];
+            }
+
+            lstTemplate.push(objtemp);
+
+            var obj = new Object();
+            obj.value1 = objtemp.tai_khoan_dich;
+            obj.value2 = objtemp.name;
+            obj.index = i;
+            args.push(obj);
+
+
+        }
+
+        resultDocRowArray = lstTemplate;
+        if(gModeScreenView == CONST_MODE_SCR_SMALL){
+        genScreen("divListDoc", lstTemplate, false,
+            fieldRowDoc,
+            fieldHiddenDoc,
+            buttonDoc,
+            dbclickShowTranfer,true
+        );
+        }else{
+            gentemptran("divListDoc",lstTemplate);
+            document.getElementById('tr-nametranfer').style.display='';
+            if(gEdit == 5){
+                document.getElementById('tr-accnotitle').style.display='none';
+            }else{
+                document.getElementById('tr-accnotitle').style.display='';
+            }
+
+            document.getElementById('tr-bank').style.display='';
+            document.getElementById('tr-money').style.display='';
+            document.getElementById('tr-content').style.display='';
+            document.getElementById('tr-day').style.display='';
+        }
+    }else{
+        resultListNull("divListDoc");
+    }
+
+}
+
+function handleFail(e){
+
+}
+
+function viewDialogLoadSuccess(){
+    document.getElementById("txtSearch").placeholder = CONST_STR.get('INTRODUCE_SREACH_TITLE');
+    sendRequest();
+}
+
+function SearchDocRow(objKeyword)
+{
+    if(gModeScreenView == CONST_MODE_SCR_SMALL){
+    searchListArr("divListDoc", resultDocRowArray, objKeyword,false,
+        fieldRowDoc,
+        fieldHiddenDoc,
+        buttonDoc,
+        dbclickShowTranfer, true);
+    }else{
+        searchListDesktop(objKeyword,resultDocRowArray);
+    }
+}
+function searchListDesktop(keyword,arr){
+    var strKeyword = keyword.value;
+    var arrSearchTmp = new Array();
+    for(var i in arr) {
+        if(arr[i]['name'] !== undefined && arr[i]['tai_khoan_nguon'] !== undefined){
+            if(arr[i]['name'].toLowerCase().indexOf(strKeyword.toLowerCase()) != -1 || arr[i]['tai_khoan_nguon'].toLowerCase().indexOf(strKeyword.toLowerCase()) != -1){
+                arrSearchTmp.push(arr[i]);
+            }
+        }
+    }
+    logInfo(arrSearchTmp);
+    gentemptran("divListDoc",arrSearchTmp);
+}
+
+function showDetailTranferDoc(e, data){
+    var htmlStr = "";
+    if (gEdit == 1 || gEdit == 2) {
+        htmlStr = "<div class='hint-title'>"+CONST_STR.get('HEADER_TRANSFER_TO')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.ten_tai_khoan_dich +"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.tai_khoan_dich +" </div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.ngan_hang_nhan +" </div>";
+        htmlStr += "<div class='hint-title'>"+CONST_STR.get('TRANS_FUND_MONEY_CURRENCY')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + formatNumberToCurrency(data.so_tien) +"</div>";
+        htmlStr += "<div class='hint-title'>"+CONST_STR.get('VISA_HISTORY_CONTENT')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.noi_dung +"</div>";
+        htmlStr += "<div>" + CONST_STR.get('DAY_TRANSFER')+ " : " + objtemp.ngay_chuyen +"</div>";
+    } else if (gEdit == 3) {
+        htmlStr = "<div class='hint-title'>"+CONST_STR.get('HEADER_TRANSFER_TO')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.ten_tai_khoan_dich +"</div>";
+
+        htmlStr += "<div style='margin-left: 20px'>" + data.tai_khoan_dich +" </div>";
+
+        if(data.ngan_hang_nhan != ""){
+         htmlStr += "<div style='margin-left: 20px'>" + data.ngan_hang_nhan +" </div>";
+        }
+        htmlStr += "<div class='hint-title'>"+CONST_STR.get('TRANS_FUND_MONEY_CURRENCY')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + formatNumberToCurrency(data.so_tien) +"</div>";
+        htmlStr += "<div class='hint-title'>"+CONST_STR.get('VISA_HISTORY_CONTENT')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.noi_dung +"</div>";
+        htmlStr += "<div>" + CONST_STR.get('DAY_TRANSFER') + " : " + objtemp.ngay_chuyen + "</div>";
+    } else if (gEdit == 4) {
+        htmlStr = "<div class='hint-title'>"+CONST_STR.get('HEADER_TRANSFER_TO')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.ten_tai_khoan_dich +"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.tai_khoan_dich +" </div>";
+        htmlStr += "<div style='margin-left: 20px'>Chứng khoán FPTS tại Hà Nội</div>";
+        htmlStr += "<div class='hint-title'>"+CONST_STR.get('TRANS_FUND_MONEY_CURRENCY')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + formatNumberToCurrency(data.so_tien) +"</div>";
+        htmlStr += "<div class='hint-title'>"+CONST_STR.get('VISA_HISTORY_CONTENT')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.noi_dung +"</div>";
+        htmlStr += "<div>" + CONST_STR.get('DAY_TRANSFER') + " : " + objtemp.ngay_chuyen +"</div>";
+    } else if (gEdit == 5) {
+        htmlStr = "<div class='hint-title'>"+CONST_STR.get('HEADER_TRANSFER_TO')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.ten_tai_khoan_dich +"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.so_cmnd +" </div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.ngay_cap_cmnd +" </div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.noi_cap_cmnd +" </div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.ngan_hang_nhan + "</div>";
+        htmlStr += "<div class='hint-title'>"+CONST_STR.get('TRANS_FUND_MONEY_CURRENCY')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + formatNumberToCurrency(data.so_tien) +"</div>";
+        htmlStr += "<div class='hint-title'>"+CONST_STR.get('VISA_HISTORY_CONTENT')+"</div>";
+        htmlStr += "<div style='margin-left: 20px'>" + data.noi_dung +"</div>";
+        htmlStr += "<div>" + CONST_STR.get('DAY_TRANSFER') + " : " + objtemp.ngay_chuyen +"</div>";
+    } else {
+        /*htmlStr = "<div class='hint-title'>Tài khoản nguồn </div>";
+        htmlStr += "<div >" + data.name + "</div>";
+        htmlStr += "<div>" + data.tai_khoan_nguon +"</div>";
+        htmlStr += "<div class='hint-title'>Tài khoản đích</div>";
+        htmlStr += "<div>" + data.ten_tai_khoan_dich +"</div>";
+        htmlStr += "<div>" + data.tai_khoan_dich +" </div>";
+        htmlStr += "<div>" + data.ngan_hang_nhan +"</div>";
+        htmlStr += "<div class='hint-title'>Mã citad: " + data.ma_citad +"</div>";
+        htmlStr += "<div class='hint-title'>Loại chuyển tiền: " + data.loai_chuyen_tien +"</div>";
+        htmlStr += "<div>Bincode: " + data.bincode +"</div>";
+        htmlStr += "<div>" + formatNumberToCurrency(data.so_tien) +"</div>";
+        htmlStr += "<div>Nội dung</div>";
+        htmlStr += "<div>" + data.noi_dung +"</div>";*/
+    }
+    console.log(htmlStr);
+
+    showPopUpDetail(e, htmlStr, pBottomOffsetDocTranfer );
+}
+
+function showPopUpTranferDocDelete(idNo){
+
+    var str = CONST_STR.get('QUESTION_DELETE_TRANSFER');
+    deleteNameContactDoc = idNo;
+    document.addEventListener("alertConfirmOK", alertConfirmDocOK, false);
+    document.addEventListener("alertConfirmCancel", alertConfirmDocCancel, false);
+    document.getElementById('btnAlertConfirmCancel').value = CONST_STR.get('BENEFIC_LIST_NO');
+    document.getElementById('btnAlertConfirmOk').value = CONST_STR.get('BENEFIC_LIST_YES');
+    showAlertConfirmText(str, alertConfirmDocOK, alertConfirmDocCancel);
+}
+function genxml(e){
+    modalDialog.hideDialogFull();
+    var newDoc = createXMLDoc();
+    var tmpXmlRootNode = createXMLNode('info', '', newDoc);
+    var tmpXmlType = createXMLNode('type', '1', newDoc, tmpXmlRootNode);
+    var tmpXmlElement = createXMLNode('element', '', newDoc, tmpXmlRootNode);
+    var tmpXmlElementValue1 = createXMLNode('ten_mau', temptranfer[e].name, newDoc, tmpXmlElement);
+    var tmpXmlElementValue7 = createXMLNode('taikhoannguon', temptranfer[e].tai_khoan_nguon, newDoc, tmpXmlElement);
+    var tmpXmlElementValue2 = createXMLNode('sotien', temptranfer[e].so_tien, newDoc, tmpXmlElement);
+    var tmpXmlElementValue3 = createXMLNode('nganhangnhan', temptranfer[e].ngan_hang_nhan, newDoc, tmpXmlElement);
+    var tmpXmlElementValue4 = createXMLNode('taikhoandich', temptranfer[e].tai_khoan_dich, newDoc, tmpXmlElement);
+    var tmpXmlElementValue5 = createXMLNode('tentaikhoandich', temptranfer[e].ten_tai_khoan_dich, newDoc, tmpXmlElement);
+    var tmpXmlElementValue6 = createXMLNode('noidung', temptranfer[e].noi_dung, newDoc, tmpXmlElement);
+    var tmpXmlElementValue8 = createXMLNode('bank_code', temptranfer[e].ma_citad, newDoc, tmpXmlElement);
+    var tmpXmlElementValue9 = createXMLNode('so_dien_thoai', temptranfer[e].so_dien_thoai, newDoc, tmpXmlElement);
+    var tmpXmlElementValue9 = createXMLNode('noi_cap_cmnd', temptranfer[e].noi_cap_cmnd, newDoc, tmpXmlElement);
+    var tmpXmlElementValue10 = createXMLNode('so_cmnd', temptranfer[e].so_cmnd, newDoc, tmpXmlElement);
+    var tmpXmlElementValue11 = createXMLNode('ngay_cap_cmnd', temptranfer[e].ngay_cap_cmnd, newDoc, tmpXmlElement);
+    var tmpXmlElementValue12 = createXMLNode('ngan_hang_nhan', temptranfer[e].ngan_hang_nhan, newDoc, tmpXmlElement);
+    var tmpXmlElementValue12 = createXMLNode('bankcode', temptranfer[e].bank_code, newDoc, tmpXmlElement);
+
+    logInfo(newDoc);
+    setReviewXmlStore(newDoc);
+    navController.pushToView('transfer/template-transfer-doc-edit', true, 'xsl');
+}
+
+//add funciton common
+function gentemptran(idDivList,respArr){
+    temptranfer = respArr;
+    for(var i = respArr.length; i > 0 ; i--){
+        for(var j = 0; j < i - 1; j++){
+            var tempValue;
+            if(respArr[j].name.toUpperCase().charCodeAt(0) > respArr[j + 1].name.toUpperCase().charCodeAt(0)){
+                tempValue = respArr[j];
+                respArr[j] = respArr[j + 1];
+                respArr[j + 1] = tempValue;
+            }
+        }
+    }
+    var div = document.getElementById(idDivList);
+    div.innerHTML = "";
+    var firstLetter;
+    for(var i = 0; i < respArr.length; i++){
+        if(i == 0 ||respArr[i].name.toUpperCase().charCodeAt(0) > firstLetter.charCodeAt(0)){
+            firstLetter = respArr[i].name.charAt(0).toUpperCase();
+            var cardTitle = document.createElement('div');
+            cardTitle.innerHTML = firstLetter;
+            cardTitle.style.textAlign = "left";
+            cardTitle.style.padding = "10px";
+            cardTitle.style.color = "#5f2f85";
+            cardTitle.style.fontWeight = "bold";
+            div.appendChild(cardTitle);
+        }
+        var tempView = document.createElement('div');
+        tempView.setAttribute('class','my-acc-view')
+        tempView.setAttribute('id','cardAcc_' + i);
+        tempView.setAttribute('onclick',"viewtransfer(this," + i + ")");
+        tempView.innerHTML = respArr[i].name;
+        div.appendChild(tempView);
+        viewtransfer(document.getElementById('cardAcc_0'),0);
+//        var tempEdit = document.getElementById('tempEdit');
+//        tempEdit.setAttribute('onclick',"tempeditselection("+ i +")");
+
+    }
+}
+var username;
+var macitad;
+var bankcode;
+var sodienthoai;
+var loaichuyentien;
+function viewtransfer(e,index){
+    editobj['name'] = temptranfer[index].name;
+    editobj['ngan_hang_nhan'] = temptranfer[index].ngan_hang_nhan;
+    editobj['noi_dung'] = temptranfer[index].noi_dung;
+    editobj['so_tien'] = temptranfer[index].so_tien;
+    editobj['ten_tai_khoan_dich'] = temptranfer[index].ten_tai_khoan_dich;
+    editobj['tai_khoan_dich'] = temptranfer[index].tai_khoan_dich;
+    editobj['ngay_chuyen'] = temptranfer[index].ngay_chuyen;
+    editobj['tai_khoan_nguon'] = temptranfer[index].tai_khoan_nguon;
+    editobj['so_cmnd']=temptranfer[index].so_cmnd;
+    editobj['ngay_cap_cmnd']=temptranfer[index].ngay_cap_cmnd;
+    editobj['noi_cap_cmnd']=temptranfer[index].noi_cap_cmnd;
+
+    username = temptranfer[index].tai_khoan_nguon;
+    macitad = temptranfer[index].ma_citad;
+    bankcode =  temptranfer[index].bank_code;
+    sodienthoai = temptranfer[index].so_dien_thoai;
+    loaichuyentien = temptranfer[index].loai_chuyen_tien;
+
+    document.getElementById('nameuser').innerHTML = temptranfer[index].name;
+    if (gEdit == 1){
+        //trong tpbank
+        document.getElementById('nametranfer').innerHTML = temptranfer[index].ten_tai_khoan_dich;
+        document.getElementById('accNumbertransfer').innerHTML = temptranfer[index].tai_khoan_dich;
+        document.getElementById('ngan-hang-nhan').innerHTML = temptranfer[index].ngan_hang_nhan;
+        document.getElementById('noi-dung').innerHTML = temptranfer[index].noi_dung;
+        document.getElementById('so-tien').innerHTML = formatNumberToCurrency(temptranfer[index].so_tien) + " VND";
+        document.getElementById('ngay_chuyen').innerHTML = temptranfer[index].ngay_chuyen;
+    }else if(gEdit == 2){
+        //lien ngan hang
+        document.getElementById('nametranfer').innerHTML = temptranfer[index].ten_tai_khoan_dich;
+        document.getElementById('accNumbertransfer').innerHTML = temptranfer[index].tai_khoan_dich;
+        document.getElementById('ngan-hang-nhan').innerHTML = temptranfer[index].ngan_hang_nhan;
+        document.getElementById('noi-dung').innerHTML = temptranfer[index].noi_dung;
+        document.getElementById('so-tien').innerHTML = formatNumberToCurrency(temptranfer[index].so_tien) + " VND";
+        document.getElementById('ngay_chuyen').innerHTML = temptranfer[index].ngay_chuyen;
+        document.getElementById('bincode').innerHTML = temptranfer[index].bincode;        
+    } else if (gEdit == 3){
+        //qua the
+        document.getElementById('nametranfer').innerHTML = temptranfer[index].ten_tai_khoan_dich;
+        document.getElementById('accNumbertransfer').innerHTML = temptranfer[index].tai_khoan_dich;
+        if(temptranfer[index].ngan_hang_nhan != ""){
+            document.getElementById('ngan-hang-nhan').innerHTML = temptranfer[index].ngan_hang_nhan;
+        }
+        document.getElementById('noi-dung').innerHTML = temptranfer[index].noi_dung;
+        document.getElementById('so-tien').innerHTML = formatNumberToCurrency(temptranfer[index].so_tien) + " VND";
+        document.getElementById('ngay_chuyen').innerHTML = temptranfer[index].ngay_chuyen;
+    } else if (gEdit == 4){
+        //tk chung khoan
+        document.getElementById('tr-shareholder').style.display="";
+        document.getElementById('tr-bank').style.display="none";
+        document.getElementById('nametranfer').innerHTML = temptranfer[index].ten_tai_khoan_dich;
+        document.getElementById('accNumbertransfer').innerHTML = temptranfer[index].tai_khoan_dich;
+        document.getElementById('shareholder').innerHTML = "Chứng khoán FPTS tại Hà Nội";
+        document.getElementById('noi-dung').innerHTML = temptranfer[index].noi_dung;
+        document.getElementById('so-tien').innerHTML = formatNumberToCurrency(temptranfer[index].so_tien) + " VND";
+        document.getElementById('ngay_chuyen').innerHTML = temptranfer[index].ngay_chuyen;
+    } else if (gEdit == 5){
+        //qua CMTND
+        document.getElementById('tr-cmnd').style.display="";
+        document.getElementById('tr-ngaycap').style.display="";
+        document.getElementById('tr-noicap').style.display="";
+        document.getElementById('tr-phone').style.display="";
+        document.getElementById('tr-accnotitle').style.display="none";
+        document.getElementById('nametranfer').innerHTML = temptranfer[index].ten_tai_khoan_dich;
+        document.getElementById('identity-card').innerHTML = temptranfer[index].so_cmnd;
+        document.getElementById('card-date').innerHTML = temptranfer[index].ngay_cap_cmnd;
+        document.getElementById('card-place').innerHTML = temptranfer[index].noi_cap_cmnd;
+        document.getElementById('card-phone').innerHTML = temptranfer[index].so_dien_thoai;
+        document.getElementById('ngan-hang-nhan').innerHTML = temptranfer[index].ngan_hang_nhan;
+        document.getElementById('noi-dung').innerHTML = temptranfer[index].noi_dung;
+        document.getElementById('so-tien').innerHTML = formatNumberToCurrency(temptranfer[index].so_tien) + " VND";
+        document.getElementById('ngay_chuyen').innerHTML = temptranfer[index].ngay_chuyen;
+
+    }
+    var tempEdit = document.getElementById('tempEdit');
+    tempEdit.setAttribute('onclick',"tempeditselection("+ index +")");
+    document.getElementById('tempdelete').setAttribute("onclick","tempdeleteselection('"+temptranfer[index].name +"')");
+    resetActivetemp();
+    e.style.backgroundColor = '#FF8C29';
+    e.style.color = '#fff';
+    tempindextranfer = index;
+}
+function resetActivetemp(){
+
+    if(temptranfer != undefined){
+        for(var i = 0; i< temptranfer.length; i++){
+            if(document.getElementById('cardAcc_' + i)){
+                if(i%2 == 0){
+                    document.getElementById('cardAcc_' + i).style.backgroundColor = '#F7E9FA';
+                }else{
+                    document.getElementById('cardAcc_' + i).style.backgroundColor = '#FDF1FF';
+                }
+                document.getElementById('cardAcc_' + i).style.color = '#000';
+            }
+        }
+    }
+}
+function temptranferlocalbank(){
+    var objtemp = {};
+    objtemp['tai_khoan_nguon']=username;
+    objtemp['ngan_hang_nhan'] = document.getElementById('ngan-hang-nhan').innerHTML;
+    objtemp['noi_dung'] = document.getElementById('noi-dung').innerHTML;
+    objtemp['so_tien'] = document.getElementById('so-tien').innerHTML ;
+    objtemp['ten_tai_khoan_dich'] = document.getElementById('nametranfer').innerHTML ;
+    objtemp['tai_khoan_dich'] = document.getElementById('accNumbertransfer').innerHTML ;
+    objtemp['so_cmnd'] = document.getElementById('identity-card').innerHTML ;
+    objtemp['ngay_cap_cmnd'] = document.getElementById('card-date').innerHTML ;
+    objtemp['noi_cap_cmnd'] = document.getElementById('card-place').innerHTML ;
+    objtemp['so_dien_thoai'] = document.getElementById('card-phone').innerHTML;
+    objtemp['ma_citad'] = macitad;
+    objtemp['bank_code'] = bankcode;
+    objtemp['so_dien_thoai'] = sodienthoai;
+    objtemp['loai_chuyen_tien'] = loaichuyentien;
+    objtemp['ngay_chuyen'] = document.getElementById('ngay_chuyen').innerHTML ;
+    objtemp['bincode'] = document.getElementById('bincode').innerHTML ;
+    callbackDocTranfer(objtemp);
+}
+function tempeditselection(e){
+
+    genxml(e);
+}
+function tempdeleteselection(idNo){
+    showPopUpTranferDocDelete(idNo);
+}

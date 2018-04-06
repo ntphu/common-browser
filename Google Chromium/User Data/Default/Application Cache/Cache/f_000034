@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:template match="/">
+        <html>
+            <body>
+                <div id="mainViewContent" class="main-layout-subview non-ebank-layout">
+                    <div class="panelContent">
+                        <table>
+                            <tr style="border:none">
+                                <td colspan="4" valign="middle" width="35%">
+                                    <h5 class="Header" style="text-align:center;">
+                                        <span>VIEW_EMONEY_DETAIL</span>
+                                    </h5>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                    <!-- desktopmode -->
+                                    <table style="width:100%;">
+                                        <tr>
+                                            <td colspan="4" class="desktopmode" align="center">
+                                                <div class="content-detail">
+                                                    <span style="font-weight:bold">VISA_EMONEY_VN</span>
+                                                </div>
+                                             <!--   <br  />-->
+                                                <div class="content-detail">
+                                                    <span style="font-weight:bold;color:#E67F31;">VISA_EMONEY_EN</span>
+                                                </div>
+                                                <br  />
+                                                <img src="./pages/cardservicexsl/eMoney_Card_3.png" style="width:200px; height:155px;" />
+                                            </td>
+                                            <td class="desktopmode" colspan="4" style="padding-top:20px; padding-bottom:15px;">
+                                                <div class="content-detail">
+                                                    <span style="font-weight:bold">CARD_ISSUANCE_BENEFIT</span>
+                                                </div>
+                                                <br />
+                                                <div class="content-detail">
+                                                    <span>EMONEY_BENEFIT_DETAIL</span>
+                                                </div>
+                                                <div class="content-detail">
+                                                    <span style="font-weight:bold">CARD_ISSUANCE_CONDITION</span>
+                                                </div>
+                                                <br />
+                                                <div class="content-detail">
+                                                    <span>EMONEY_CONDITION_DETAIL</span>
+                                                </div>
+                                                <div class="content-detail">
+                                                    <span style="font-weight:bold">CARD_ISSUANCE_CV</span>
+                                                </div>
+                                                <br />
+                                                <div class="content-detail">
+                                                    <span>EMONEY_CV_DETAIL</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <table>
+                                        <tr>
+                                            <td class="mobile-page" colspan="4">
+                                                <div class="content-detail">
+                                                    <span style="font-weight:bold">CARD_ISSUANCE_BENEFIT</span>
+                                                </div>
+                                                <br />
+                                                <div class="content-detail">
+                                                    <span>EMONEY_BENEFIT_DETAIL</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr class="mobile-page">
+                                            <td colspan="4">
+                                                <div class="content-detail">
+                                                    <span style="font-weight:bold">CARD_ISSUANCE_CONDITION</span>
+                                                </div>
+                                             <br />
+                                                <div class="content-detail">
+                                                    <span>EMONEY_CONDITION_DETAIL</span>
+                                                </div>
+                                                <div class="content-detail">
+                                                    <span style="font-weight:bold">CARD_ISSUANCE_CV</span>
+                                                </div>
+                                               <br />
+                                                <div class="content-detail">
+                                                    <span>EMONEY_CV_DETAIL</span>
+                                                </div>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </table>
+                                    <table style="width:100%">
+                                    <table class="desktopmode_table" style="width:100%;background:rgba(255, 255, 255, 1);border-radius:10px;" cellspacing="0">
+                                        <tr style="height:33px;">
+                                            <td style="border-bottom:1px solid rgba(0,0,0,0.1); text-align:left;">
+                                                <div style="padding-left:10px;">
+                                                    <span>CARD_ISSUANCE_TITLE_EFFECT_TERM</span>
+                                                </div>
+                                            </td>
+                                            <td style="border-bottom:1px solid rgba(0,0,0,0.1); text-align:right;">
+                                                <div style="padding-right:10px;">
+                                                    <span>VISA_CREDIT_LIMIT</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr style="height:33px;">
+                                            <td style="border-bottom:1px solid rgba(0,0,0,0.1); text-align:left;">
+                                                <div style="padding-left:10px;">
+                                                    <span>CARD_ISSUANCE_TITLE_FEE</span>
+                                                </div>
+                                            </td>
+                                            <td style="border-bottom:1px solid rgba(0,0,0,0.1); text-align:right;">
+                                                <div style="padding-right:10px;">
+                                                    <a target="_blank" style="text-decoration:underline; white-space:pre-wrap" onclick="openLinkInWindows('./download/visa/Bieu_Phi_eMoney.pdf');">
+                                                        <span>OL_TB_WEBSITE_BUY_ONLINE_2</span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr style="height:33px;">
+                                            <td style="text-align:left;">
+                                                <div style="padding-left:10px;">
+                                                    <span>CARD_ISSUANCE_TITLE_TRANS_LIMIT</span>
+                                                </div>
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <div style="padding-right:10px;">
+                                                    <a target="_blank" onclick="openLinkInWindows('./download/visa/Han_Muc_eMoney.pdf');" style="text-decoration:underline; white-space:pre-wrap">
+                                                        <span>OL_TB_WEBSITE_BUY_ONLINE_2</span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                        <!-- desktop -->
+                                        <tr class="desktopmode" style="border:none;">
+                                            <td colspan="4" class="desktopmode">
+                                                <table style="width:100%;">
+                                                    <tr>
+                                                        <td colspan="4">
+                                                            <div class="fb-gg-in">
+                                                                <div style="width:33%;text-align:center;">
+                                                                    <a href="https://plus.google.com/share?url=https://tpb.vn/khach-hang-ca-nhan/the-tin-dung" onclick="javascript:openLinkInWindows(this.href);return false;" target="_blank" title="Share on Google+" style="margin-left:1px;margin-right:0px;"><img src="./assets/images/google-plus-icon.png" /></a>
+                                                                </div>
+                                                                <div style="width:33%;text-align:center;">
+                                                                    <a href="https://www.linkedin.com/shareArticle?url=https://tpb.vn/khach-hang-ca-nhan/the-tin-dung" onclick="javascript:openLinkInWindows(this.href);return false;" target="_blank" title="Share on LinkedIn" style="margin-left:1px;margin-right:1px;"><img src="./assets/images/ic_linkedin.png" />
+                                                                    </a>
+                                                                </div>
+                                                                <div style="width:33%;text-align:center;">
+                                                                    <a href="http://www.facebook.com/sharer/sharer.php?u=https://tpb.vn/khach-hang-ca-nhan/the-tin-dung" onclick="javascript:openLinkInWindows(this.href);return false;" target="_blank" title="Share on Facebook" style="margin-right:1px;"><img src="./assets/images/facebook-icon.png" />
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <table class="mobile-page" style="width:100%;background:rgba(255, 255, 255, 0.3);border-radius:10px;" cellspacing="0">
+                                        <tr class="mobile-page" style="height:33px;">
+                                            <td style="border-bottom:1px solid rgba(245, 245, 245, 0.41); text-align:left;">
+                                                <div style="padding-left:10px;">
+                                                    <span>CARD_ISSUANCE_TITLE_EFFECT_TERM</span>
+                                                </div>
+                                            </td>
+                                            <td style="border-bottom:1px solid rgba(245, 245, 245, 0.41); text-align:right;">
+                                                <div style="padding-right:10px;">
+                                                    <span>VISA_CREDIT_LIMIT</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr style="height:33px;">
+                                            <td style="border-bottom:1px solid rgba(245, 245, 245, 0.41); text-align:left;">
+                                                <div style="padding-left:10px;">
+                                                    <span>CARD_ISSUANCE_TITLE_FEE</span>
+                                                </div>
+                                            </td>
+                                            <td style="border-bottom:1px solid rgba(245, 245, 245, 0.41); text-align:right;">
+                                                <div style="padding-right:10px;">
+                                                    <a target="_blank" style="text-decoration:underline; white-space:pre-wrap" onclick="openLinkInWindows('./download/visa/Bieu phi the ATM- VN.pdf');">
+                                                        <span>OL_TB_WEBSITE_BUY_ONLINE_2</span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr style="height:33px;">
+                                            <td style="text-align:left;">
+                                                <div style="padding-left:10px;">
+                                                    <span>CARD_ISSUANCE_TITLE_TRANS_LIMIT</span>
+                                                </div>
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <div style="padding-right:10px;">
+                                                    <a target="_blank" onclick="openLinkInWindows('./download/visa/Han muc the thanh toan noi dia - ATM.pdf');" style="text-decoration:underline; white-space:pre-wrap">
+                                                        <span>OL_TB_WEBSITE_BUY_ONLINE_2</span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <!--<table style="width:100%">
+                                        <tr class="mobile-page" style="border:none;">
+                                            <td colspan="4" class="mobile-page">
+                                                <div class="fb-gg-in" style="width:100%">
+                                                    <div style="text-align:center;text-align: center;background: rgba(255, 255, 255,0.3);border-radius: 10px;">
+                                                        <a href="https://plus.google.com/share?url=https://tpb.vn/khach-hang-ca-nhan/the-tin-dung" onclick="javascript:openLinkInWindows(this.href);return false;" target="_blank" title="Share on Google+" style="float:left;margin-left:30px;"><img src="./assets/images/google-plus-icon.png" /></a>
+                                                        <a href="https://www.linkedin.com/shareArticle?url=https://tpb.vn/khach-hang-ca-nhan/the-tin-dung" onclick="javascript:openLinkInWindows(this.href);return false;" target="_blank" title="Share on LinkedIn" ><img src="./assets/images/ic_linkedin.png" />
+                                                        </a>
+                                                        <a href="http://www.facebook.com/sharer/sharer.php?u=https://tpb.vn/khach-hang-ca-nhan/the-tin-dung" onclick="javascript:openLinkInWindows(this.href);return false;" target="_blank" title="Share on Facebook" style="float:right;margin-right:30px;"><img src="./assets/images/facebook-icon.png" />
+                                                        </a>
+                                                    </div>
+                                                </div>                                                        
+                                            </td>
+                                        </tr>
+                                    </table>-->
+                                        <table style="width:100%;">
+                                        <tr class="trow-space"></tr>
+                                        <tr class="trow-space"></tr>
+                                        <tr>
+                                        <td colspan="2" align="center" valign="middle" class="td-text">
+                                    <div class="tdbtndesktop" style="width:50%">
+                                        <input  type='submit' style="float:left;margin-left:65px;margin-top:10px;" class='btnDesktopshadow btnDesktopBack' onClick= 'clickHomeOrBack()' value='INPUT_ACC_BTN_GOBACK'/>
+                                    </div>
+                                    <div style="width:50%">
+                                        <input  type="button" style="margin-right:40px;margin-top:10px;" class="btnshadow btn-second"
+                                       onclick="RegisterEmoney()" value="CARD_ISSUANCE_REGISTER"/>
+                                    </div>
+                                </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        <!--</div>-->
+                    </div>
+                    <div id="selection-dialog" class="dialog-blacktrans" align="center" style="display:none">
+                        <div class="dialog-backgroundtrans" align="center" onClick="closeDialog(this)">
+                        </div>
+                        <div id="divListGroup" class="list-group dialog-list">
+                        </div>
+                    </div>
+                </div>
+            </body>
+        </html>
+    </xsl:template>
+</xsl:stylesheet>

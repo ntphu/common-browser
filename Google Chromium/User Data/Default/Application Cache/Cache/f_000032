@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:template match="/">
+        <html>
+            <body>
+                <div id="mainViewContent" class="main-layout-subview">                   
+
+                    <div id="pg-card-register" class="panelContent bg-transfer">
+
+                        <!--<table width="100%">-->
+                        <!--<tr>-->
+                        <!--<td>-->
+                        <!--<div>-->
+                        <!--<h5 class="screen-title"><span style="white-space:pre-wrap;">MENU_CARD_ISSUANCE_IDX</span></h5>-->
+                        <!--</div>-->
+                        <!--<div class="line-separate"/>-->
+                        <!--</td>-->
+                        <!--<td><h5 class="btnback" style="margin-right:-20px;"><img onclick="gotoMenuList('cardservice');" src="./assets/images/back_button.png"/></h5></td>-->
+                        <!--</tr>-->
+                        <!--</table>-->
+                        <div align="center">
+                            <div id="infocard">
+                            </div>
+                            <div id="pageIndicatorNums"/>
+                            <br/>
+
+                            <table align="left" style="margin-top:-25px;">
+                                <tr style="border:none">
+                                    <td colspan="4" valign="middle" width="35%" >
+                                        <h5 class="pg-head Header"><span style="font-size: 16px;font-weight: bold">CARD_ISSUANCE_TITLE_TABLE_NEW</span></h5>
+                                    </td>
+                                </tr>
+                                <!--- Desktop mode-->
+                                <table class="desktopmode" id="desktopmode" style="background-color: #FDEADA; padding:10px; margin-left:10px;display: none;">
+                                    <tr>
+                                        <td class="td-proname" align="center">                                            
+                                            <div class="content-detail" style="font-weight: bold;"><span>VISA_EMONEY_VN</span> </div>
+                                        </td>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail" style="font-weight:bold;"><span>MASTER_CREDIT_VN</span> </div>
+                                        </td>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail" style="font-weight:bold;"><span>VISA_DEBIT_VN</span> </div>
+                                        </td>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail" style="font-weight:bold;"><span>VISA_ATM_VN</span> </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail" style="font-weight: bold; color: #F37021;"><span>VISA_EMONEY_EN</span> </div>                                        
+                                        </td>
+                                        <td class="td-proname" align="center">
+        									                <div class="content-detail" style="font-weight: bold; color: #F37021;"><span>MASTER_CREDIT_EN</span> </div>
+    								                    </td>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail" style="font-weight: bold; color: #F37021;"><span>VISA_DEBIT_EN</span> </div>
+                                        </td>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail" style="font-weight: bold; color: #F37021;"><span>VISA_ATM_EN</span> </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td class="td-proname" align="center">                                            
+                                            <div class="content-detail"><span>VISA_EMONEY_INFO</span> </div>
+                                        </td>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail"><span>VISA_CREDIT_INFO</span> </div>
+                                        </td>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail"><span>VISA_DEBIT_INFO</span> </div>
+                                        </td>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail"><span>VISA_ATM_INFO</span> </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td class="td-proname" align="center">
+                                          <img src="./pages/cardservicexsl/eMoney_Card_MB.png" />                                            
+                                        </td>
+                                         <td class="td-proname" align="center">
+        									                  <img src="./pages/cardservicexsl/mastercard.png" style="width:150px; height:80px;"/>
+      									                  </td>
+                                        <td class="td-proname" align="center">
+                                            <img src="./pages/cardservicexsl/cardvisa_debit.png" />
+                                        </td>
+                                        <td class="td-proname" align="center">
+                                            <img src="./pages/cardservicexsl/cardatm.png" />
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td align="center">
+                                          <div id="detailemoney">
+                                                <input type="button" style="width:60%" class="btnshadow btn-second" onclick="viewdetailemoney()" value="VIEW_DETAIL_BUTTON"/>
+                                            </div>                                            
+                                        </td>
+                                        <td align="center">
+                							                <div id="detailcredit">
+                								                <input type="button" style="width:75%" class="btnshadow btn-second" onclick="viewdetailmaster()" value="VIEW_DETAIL_BUTTON"/>
+                   							              </div>
+        						 		                </td>
+                                        <td align="center">
+                                            <div id="detaildebit">
+                                                <input type="button" style="width:60%" class="btnshadow btn-second" onclick="viewdetaildebit()" value="VIEW_DETAIL_BUTTON"/>
+                                            </div>
+                                        </td>
+                                        <td align="center">
+                                            <div id="detailatm">
+                                                <input type="button" style="width:60%" class="btnshadow btn-second" onclick="viewdetailatm()" value="VIEW_DETAIL_BUTTON"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail" style="font-weight:bold;"><span>VISA_CREDIT_VN</span> </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail" style="font-weight: bold; color: #F37021;"><span>VISA_CREDIT_EN</span> </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td class="td-proname" align="center">
+                                            <div class="content-detail"><span>VISA_CREDIT_INFO</span> </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td class="td-proname" align="center">
+                                            <img src="./pages/cardservicexsl/cardvisa_credit.png" />
+                                        </td>
+                                    </tr>
+                                    <tr class="trow-space"></tr>
+                                    <tr>
+                                        <td align="center">
+                                            <div id="detailcredit">
+                                                <input type="button" style="width:60%" class="btnshadow btn-second" onclick="viewdetailcredit()" value="VIEW_DETAIL_BUTTON"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <!--- Desktop mode-->
+
+                                <!--- Mobile mode-->
+                                <table class="mobilemode" id="mobilemode" style="display: none;">
+                                    <tr>
+                                        <td >
+                                            <table  class="p-tbl-item" width="100%" >
+                                                <tr>
+                                                    <td class="td-proname" align="center">
+                                                      <div  class=" content-detail"><span>VISA_EMONEY_VN</span> </div>                                                        
+                                                    </td>
+                                                    <td class="td-proname" align="center">
+                                                        <div class="p-title-td content-detail"><span>VISA_DEBIT_VN</span> </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="td-proname" align="center">
+                                                      <div class="p-title-strong content-detail">
+                                                        <span>VISA_EMONEY_EN</span>
+                                                        <div class="p-desc  p-desc content-detail"> <span>VISA_EMONEY_INFO</span></div>
+                                                        <div> <img src="./pages/cardservicexsl/eMoney_Card_MB.png" style="width:80%;border-radius:5px;" /></div>
+                                                      </div>                                                        
+                                                    </td>
+                                                    <td class="td-proname" align="center">
+                                                        <div class="p-title-strong content-detail">
+                                                            <span>VISA_DEBIT_EN</span>
+                                                            <div class="p-desc  p-desc content-detail"><span>VISA_DEBIT_INFO</span> </div>
+                                                            <div><img src="./pages/cardservicexsl/cardvisa_debit.png" style="width:80%;border-radius:5px" /></div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="center">
+                                                      <div id="detailemoney">
+                                                          <input type="button" style="width:80%" class="btnshadow btn-second" onclick="viewdetailemoney()" value="VIEW_DETAIL_BUTTON"/>
+                                                      </div>                                                        
+                                                    </td>
+                                                    <td align="center">
+                                                        <div id="detaildebit">
+                                                            <input type="button" style="width:80%" class="btnshadow btn-second" onclick="viewdetaildebit()" value="VIEW_DETAIL_BUTTON"/>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                        <table   class="p-tbl-item"  width="100%">
+                                            <tr>
+                                                <td class="p-title-td td-proname" align="center">
+                                                    <div  class="content-detail"><span>VISA_ATM_VN</span> </div>
+                                                </td>
+                                                <td class="p-title-td td-proname" align="center">
+                                                    <div class="p-title-td content-detail"><span>VISA_CREDIT_VN</span> </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="td-proname" align="center">
+                                                    <div class="p-title-strong content-detail">
+                                                        <span>VISA_ATM_EN</span>
+                                                         <div class="p-desc  p-desc content-detail"><span>VISA_ATM_INFO</span></div>
+                                                        <div> <img src="./pages/cardservicexsl/cardatm.png" style="width:80%;border-radius:5px" /></div>
+                                                    </div>
+                                                </td>
+                                                <td class="td-proname" align="center">
+                                                    <div class="p-title-strong content-detail">
+                                                        <span>VISA_CREDIT_EN</span>
+                                                        <div class="p-desc p-desc content-detail"><span>VISA_CREDIT_INFO</span> </div>
+                                                        <div id="cardvisa_credit_image">  <img src="./pages/cardservicexsl/cardvisa_credit.png" style="width:80%;border-radius:5px" /></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                     
+                                        <tr>
+                                            <td align="center">
+                                                <div id="detailatm">
+                                                    <input type="button" style="width:80%" class="btnshadow btn-second" onclick="viewdetailatm()" value="VIEW_DETAIL_BUTTON"/>
+                                                </div>
+                                            </td>
+                                            <td align="center">
+                                                <div id="detailcredit">
+                                                    <input type="button" style="width:80%" class="btnshadow btn-second" onclick="viewdetailcredit()" value="VIEW_DETAIL_BUTTON"/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table></td></tr>
+                                    <tr>
+                                        <td>
+                                        <table   class="p-tbl-item"  width="100%">
+                                            <tr>
+                                                <td class="p-title-td td-proname" align="center">
+                                                    <div  class="content-detail"><span>MASTER_CREDIT_VN</span> </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="td-proname" align="center">
+                                                    <div class="p-title-strong content-detail">
+                                                        <span>MASTER_CREDIT_EN</span>
+                                                         <div class="p-desc  p-desc content-detail"><span>VISA_CREDIT_INFO</span></div>
+                                                        <div><img src="./pages/cardservicexsl/mastercard.png" style="width:147px; height:83px;"/></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                     
+                                        <tr>
+        									<td align="center">
+                								<div id="detailatm">
+                									<input type="button" style="width:50%" class="btnshadow btn-second" onclick="viewdetailmaster()" value="VIEW_DETAIL_BUTTON"/>
+                   				 				</div>
+         									</td>
+        								</tr>
+                                    </table></td></tr>
+
+                                </table>
+                                <!--- Mobile mode-->
+                            </table>
+                            <table width="98%"  >
+                                <tr style="border:none">
+                                    <td class="p-padding"  valign="middle" width="35%">
+                                        <h5 class="pg-head Header"><span style="font-size: 16px;font-weight: bold">CARD_ISSUANCE_QUESTION</span></h5>
+                                    </td>
+                                    <tr>
+                                        <td>
+                                            <div id="tpbans"/>
+                                        </td>
+                                    </tr>
+                                </tr>
+                                <tr style="border:none">
+                                    <td class="fix-padding"  valign="middle" width="35%">
+                                        <h5 class="pg-head Header mblightheight" style="padding: 0 0 10px 0;"><span style="font-size: 16px;font-weight: bold">CARD_ISSUANCE_TITLE_SEND_QUEST</span></h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <!--text area-->
+                                    <td>
+                                        <!--<div class="bg-transfer">-->
+                                            <div class="tranfer-item">
+                                                <div id="blockquestion" class="text-area-content">
+                                                    <!--<textarea style="height:200px;width:99%;padding-left:10px; padding-top:10px" id="question.content" class="form-control form-control-textarea" placeholder="CARD_ISSUANCE_TITLE_TXT_QUEST"  maxlength="1000"></textarea>-->
+                                                </div>
+                                            </div>
+                                        <!--</div>-->
+                                    </td>
+                                    <!-- end  text area-->
+                                </tr>
+                                <tr id="inputemail">
+                                    <td align="left" valign="middle" class="td-text">
+
+                                        <div class="input-group" style="display: block; height: 40px;margin-top:-2px;margin-bottom:-2px;">
+                                            <div class="input-right" style="">
+                                                <div style="display:table;width: 100%;height:100%">
+                                                    <span style="display:table-cell;vertical-align: middle;text-align: center;font-size:20px" class="icon-emailunread"></span>
+                                                </div>
+                                            </div>
+                                            <div style="float: right; width: 80%; height: 40px;">
+                                                <input id="email" type="email" placeholder="CARD_ISSUANCE_EMAIL" style="margin:10px;outline:none;border-width:0px;background-color: transparent;width:100%;color:red" />
+                                            </div>
+                                        </div>
+
+                                        <!--<div class="input-group">-->
+                                            <!--<span class="input-group-addon" style="width:35%;">CARD_ISSUANCE_EMAIL</span>-->
+                                            <!--<input id="email" type="email" class="form-control form-control-righttext" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="width:100%;background-color:#FFFFFF;"/>-->
+                                        <!--</div>-->
+                                    </td>
+                                </tr>
+                                <tr id="inputmobile">
+                                    <td align="left" valign="middle" class="td-text">
+
+                                        <div class="input-group input-style" style="display: block; height: 40px;">
+                                            <div class="input-right" style="">
+                                                <div style="display:table;width: 100%;height:100%">
+                                                    <span style="display:table-cell;vertical-align: middle;text-align: center;font-size:20px" class="icon-contact-us"></span>
+                                                </div>
+                                            </div>
+                                            <div style="float: right; width: 80%; height: 40px;">
+                                                <input id="mobile"  type="tel" placeholder="CARD_ISSUANCE_PHONE" style="margin:10px;outline:none;border-width:0px;background-color: transparent;width:100%;color:red" />
+                                            </div>
+                                        </div>
+
+                                        <!--<div class="input-group">-->
+                                            <!--<span class="input-group-addon" style="width:35%;">CARD_ISSUANCE_PHONE</span>-->
+                                            <!--<input id="mobile" type="tel" class="form-control form-control-righttext" placeholder="COM_TXT_INPUT_PLACEHOLDER" style="width:100%;background-color:#FFFFFF;"/>-->
+                                        <!--</div>-->
+                                    </td>
+                                </tr>
+                            </table>
+
+
+                        </div>
+                    </div>
+                    <table width="100%">
+                        <tr>
+                            <td colspan="2" align="center" valign="middle" class="td-text" >
+                                <div class="tdbtndesktop" style="width:50%">
+                                    <input  type='submit' style="float:left;margin-left:65px;margin-top:5px" class='btnDesktopshadow btnDesktopBack' onClick= 'clickHomeOrBack()' value='INPUT_ACC_BTN_GOBACK'/>
+                                </div>
+                                <div id="blockbtnsend" style="width:50%">
+                                    <input  type="button" style="margin-right:40px;margin-top:5px" class="btnshadow btn-second" onclick="sendQuestRequest()" value="CARD_ISSUANCE_BTN_SEND_QUEST"/>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                  <div style="height: 100px;" >
+                  </div>
+                </div>
+            </body>
+        </html>
+
+    </xsl:template>
+</xsl:stylesheet>

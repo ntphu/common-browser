@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:template match="/">
+    <html>
+      <body>
+          <div id="mainViewContent" class="main-layout-subview acc-history">
+          <div class="infoaccount-content">
+            <!--<div class="panelContent">
+              <h5 align="left" class="screen-title">
+			     <span>ACC_HISTORY_SCR_TITLE</span>
+			  </h5>
+			  <div class='line-separate'></div>
+            </div>-->
+
+            <!--SO TAI KHOAN, BUTTON QUAY LAI  -->
+			<div id="accinfo-selection-btn" style="padding:5px;">
+                <!-- <div class='line-separate' style="opacity: 0.1"></div> -->
+				<table width="100%" align="center" style="padding-right: 11px;">
+					<tr>
+                    	<!--<td colspan="1" class="td-text">-->
+                        <td colspan="2" class="selectAcc">
+                          <h5 class="Header">
+                            <span>ACCOUNT_SELECT</span>
+                          </h5>
+                        </td>
+           </tr>
+           <tr>
+               <td class="accSelect" style="width: 35%">
+                   <h5 class="Header"><span>ACCOUNT_SELECT</span></h5>
+               </td>
+                          <td colspan="1" class="td-text" style="width:75%">
+                            <div style="width:100%" class="input-group accont-bg-selection" onClick="showAccountSelection()" id="holderCommboBox">
+                                  <!--<span class="input-group-addon">ACCOUNT_ACC_NO_TITLE</span>
+                                  <input id="acchis_accountno" type="button" class="form-control form-control-rightbutton" value="COM_TXT_SELECTION_PLACEHOLDER" />
+                                  <span class="icon-movenext input-group-addon input-group-symbol"></span>-->
+                                  <div id="cb-container1" class="acc-number" style="">
+                                        <div style="float:left;width:100%" id="data"><div id="divAccNo"><span>ACCOUNT_ACC_NO_TITLE</span></div>
+                                        </div>
+                                        <div style="float:right;width:5%" id="arrow">
+                                            <span id="spanAccNo" class="icon-movenext input-group-addon input-group-symbol"></span>
+                                        </div>
+                                  </div>
+                                  <input id="acchis_accountno" type="button" style="display:none" value="COM_TXT_SELECTION_PLACEHOLDER" />
+                            </div>
+						</td>
+           <!-- <td class="tdbtndesktop" width="30%">
+                          <div style="width: 95%;float: right;" id=" " class="btnDesktopshadow btnDesktopBack btncenter" onclick="clickHomeOrBack()"><span>CM_BTN_GOBACK</span>
+                          </div>
+                        </td>-->
+                        <!--<td class="td-btninside">-->
+                        	<!--<div>-->
+                            	<!--<input type="button" class="btnshadow btn-second" onclick="goBack()" value="ACC_HIS_LIST_BACK_ACC"/>-->
+                            <!--</div>-->
+                        <!--</td>-->
+                    </tr>
+				</table>
+                <!--<div class='line-separate' style="opacity: 0.1"></div>-->
+			</div>
+
+            <!-- ACCOUNT INFO -->
+			<div id="id.accInfo" class="infoaccount" style="padding-right: 18px;" align="center"></div>
+			<!--ngocdt3 bo sung cho tiet kiem tu dong 20160517 -->
+            <div id="esavinfo-back-btn" style="padding-right: 8px;">
+            	<table width="100%" align="center">
+                     <tr>
+                      <!--<td class="tdbtndesktop" width="32%">
+                          <input type='submit' style='width:100%;margin:0 auto' class='btnDesktopshadow btnDesktopBack' onClick= 'clickHomeOrBack()' value='INPUT_ACC_BTN_GOBACK'/>
+          </td>-->
+                          <td width="50%"><input style="" type="button" class="btnshadow btn-primary bt1" onclick="WithDraw()" value="ESAVING_WITHDRAW_BUTTON" /></td>
+                          <td width="50%"><input style="" type="button" class="btnshadow btn-primary bt" onclick="ChangeInfo()" value="ESAVING_CHANGE_INFO_BUTTON" /></td>
+                          </tr>
+                </table>
+            </div>
+            <!-- HuyNT2 20150415 bo sung cho tai khoan tiet kiem tu dong o module tiet kiem -->
+            <!--<div class='line-separate' style="opacity: 0.1"></div>-->
+            <!--<div id="esavinfo-back-btn" style="padding-left: 8px;padding-right: 8px;">-->
+            	<!--<table width="98%" align="center">-->
+                    <!--<tr >-->
+                      <!--<td colspan="2" align="center"><input type="button" class="btnshadow btn-second" onclick="goBack()" value="ESAVING_CHANGEINFO_BTN_BK"/></td>-->
+                    <!--</tr>-->
+                <!--</table>-->
+            <!--</div>-->
+
+            <!-- HuyNT2 20150415 bo sung cho tai khoan tiet kiem tu dong o module tiet kiem END
+            TIM KIEM TU NGAY DEN NGAY
+            -->
+			<div style="padding:5px;" id="parse_transaction">
+				<table width="100%" align="center" style="padding-right: 9px;">
+					<tr>
+						<td colspan="2" class="td-text">
+							<h5 class='Header'><span>ACC_PERIOD_HISTORY_TITLE</span></h5>
+						</td>
+					</tr>
+					<tr>
+                        <td colspan="2" align="center" valign="middle" class="td-text">
+							               <div class="input-group input-desktop">
+                              <!--<span class="input-group-addon" style="white-space:pre-wrap">ACC_PERIOD_START_DATE_TITLE</span>
+                              <input id="acchis.fromdate" type="tel" class="form-control form-control-righttext-datepicker" placeholder="COM_TXT_SELECTION_PLACEHOLDER_DATE" value="" onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;" />
+                              <span id="span.fromdate" class="icon-calendar input-group-addon-datepicker input-group-symbol-datepicker"></span>-->
+                                    <span class="input-group-addon input-left span-desktop">EVN_BILL_FROM_DATE</span>
+                                <input id="acchis.fromdate" type="tel" placeholder="COM_TXT_SELECTION_PLACEHOLDER_DATE" value=""
+                                               onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;"
+                                               class="form-control form-control-righttext-datepicker datepicker-desktop"/>
+
+                                        <span onclick="initDialogCal('acchis.fromdate')" id="begindate" class="icon-calendar input-group-addon-datepicker input-group-symbol-datepicker"></span>
+                                        <!--<div class='line-separate' style="opacity: 0.1"></div>-->
+                            </div>
+
+						</td>
+						
+
+					</tr>
+					<tr>
+                        <td colspan="2" align="center" valign="middle" class="td-text">
+							             <div class="input-group input-desktop">
+                        <!--<span class="input-group-addon" style="white-space:pre-wrap">ACC_PERIOD_END_DATE_TITLE</span>
+	                			<input id="acchis.todate" type="tel" class="form-control form-control-righttext-datepicker" placeholder="COM_TXT_SELECTION_PLACEHOLDER_DATE" value="" onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;"/>
+	                		  <span id="span.todate" class="icon-calendar input-group-addon-datepicker input-group-symbol-datepicker"></span>-->
+
+                                        <span class="input-group-addon input-left span-desktop">EVN_BILL_TO_DATE</span>
+                                        <input id="acchis.todate" type="tel" placeholder="COM_TXT_SELECTION_PLACEHOLDER_DATE" value=""
+                                               onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;"
+                                               class="form-control form-control-righttext-datepicker datepicker-desktop"/>
+
+                                        <span onclick="initDialogCal('acchis.todate')" id="begindate" class="icon-calendar input-group-addon-datepicker input-group-symbol-datepicker"></span>
+                                        <!--<div class='line-separate' style="opacity: 0.1"></div>-->
+
+							</div>
+						</td>
+						
+						<!-- <td id="advanceSearch" width="30%" style="text-align:right;">
+							<u>
+							<a style="color: #fb8c00" href="javascript:void(0);" onclick="showAdvandSearch()" id="acchis.btnAdvSearch"><span>ACC_HIS_ADV_SEARCH_BTN</span></a></u>
+						</td>	 -->				
+          </tr>
+        </table>
+					<!--<tr id="acchis.moneyflow" style="display:none">
+						<td class="td-text50">
+							<div class="input-group" onClick="showMoneyFlowSelection()">
+							  <span class="input-group-addon" style="white-space:pre-wrap">ACC_HIS_MONEY_FLOW_TITLE</span>
+							  <input id="id.hismoneyflow" type="button" class="form-control form-control-rightbutton" value="COM_TXT_SELECTION_PLACEHOLDER" />
+							  <span class="input-group-addon input-group-symbol"></span>
+							</div>
+						</td>
+						<td width="30%" style="text-align:right;">
+							
+						</td>
+					</tr>
+					<tr id="acchis.transtype" style="display:none">
+						<td class="td-text50">
+							<div class="input-group" onClick="showTransTypeSelection()">
+							  <span class="input-group-addon" style="white-space:pre-wrap">ACC_HIS_TRANS_TYPE_TITLE</span>
+							  <input id="id.histranstype" type="button" class="form-control form-control-rightbutton" value="COM_TXT_SELECTION_PLACEHOLDER" />
+							  <span class="input-group-addon input-group-symbol"></span>
+							</div>
+						</td>
+						<td width="30%" style="text-align:right;">
+							
+						</td>
+					</tr>-->
+
+                    <!--SHOW CONTENT THONG TIN CHI TIET-->
+                    
+                          <table width="100%" id="acchis.transtypeother" align="center" style="padding-left: 0px;padding-right: 9px;">
+                        	
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                      <div  class="input-group input-desktop-width" onclick="showMoneyFlowSelection();">
+                                            <span class="input-group-addon span-desktop-high">ACC_HIS_MONEY_FLOW_TITLE</span>
+                                            <input  type="button" id="id.hismoneyflow" class="form-control form-control-righttext form-input-desktop" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="COM_TXT_SELECTION_PLACEHOLDER" />
+                                            <span class="icon-movenext input-group-addon input-group-symbol symbol-desktop"></span>
+                                            <input type='hidden' id='divHisFlowMoney'/>
+                                        </div>
+
+                                        <div  class="input-group input-desktop-width" onclick="showTransTypeSelection();">
+                                            <span class="input-group-addon span-desktop-high"  >ACC_HIS_TRANS_TYPE_TITLE</span>
+                                            <input  type="button" id="id.histranstype" class="form-control form-control-righttext form-input-desktop" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="COM_TXT_SELECTION_PLACEHOLDER" />
+                                            <span class="icon-movenext input-group-addon input-group-symbol symbol-desktop"></span>
+                                            <input type='hidden' id='divHisTransType'/>
+                                        </div>
+                                        
+                                    </td>
+                                </tr>
+                                <tr>
+
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <!-- <div style="border-radius: 10px; background-color: rgba(255,255,255,0.2); padding: 5px; width: 105%"> -->
+                                        <!--<div class="input-group">
+                                          <span class="input-group-addon" style="white-space:pre-wrap">ACC_HIS_ACC_NO_TITLE</span>
+                                          <input id="id.histransaccno" type="tel" class="form-control form-control-rightbutton" value="" placeholder="COM_TXT_INPUT_PLACEHOLDER" />
+                                          <span class="input-group-addon input-group-symbol"></span>
+                                        </div>-->
+                                        <div class="input-group tranfer-item input-desktop-width">
+
+                                            <span class="input-group-addon span-desktop-high">ACC_HIS_ACC_NO_TITLE</span>
+                                            <input id="id.histransaccno" class="form-control form-control-righttext form-input-desktop" type="text" value="" placeholder="ESAVING_CHANGEINFO_VF_ARR1"/>
+
+                                        </div>
+
+
+                                        <!--<div class="input-group">
+                                          <span class="input-group-addon" style="white-space:pre-wrap">ACC_HIS_ACC_NAME_TITLE</span>
+                                          <input id="id.histransaccname" type="text" class="form-control form-control-rightbutton" value="" placeholder="COM_TXT_INPUT_PLACEHOLDER"/>
+                                          <span class="input-group-addon input-group-symbol"></span>
+                                        </div>-->
+                                        <div class="input-group tranfer-item input-desktop-width">
+                                            <span class="input-group-addon span-desktop-high">ACC_HIS_ACC_NAME_TITLE</span>
+                                            <input id="id.histransaccname" class="form-control form-control-righttext form-input-desktop" type="text" value="" placeholder="ESAVING_CHANGEINFO_VF_ARR1"/>
+
+                                        </div>
+                                        <!-- </div> -->
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" align="center" valign="middle" class="td-text">
+                                        <!-- <div style="border-radius: 10px; background-color: rgba(255,255,255,0.2); padding: 5px; width: 105%"> -->
+                                        <!--<div class="input-group">
+                                          <span class="input-group-addon" style="white-space:pre-wrap">ACC_HIS_ACC_AMOUNT_FROM</span>
+                                          <input id="id.histransamountfrom" type="tel" class="form-control form-control-rightbutton" value="" placeholder="COM_TXT_INPUT_PLACEHOLDER" />
+                                          <span class="input-group-addon input-group-symbol"></span>
+                                        </div>-->
+                                        <div class="input-group tranfer-item input-desktop-width">
+                                            <span class="input-group-addon span-desktop-high">ACC_HIS_ACC_AMOUNT_FROM</span>
+                                            <input id="id.histransamountfrom" onkeypress='return isNumberKeyNotDot(event)' onkeyup="handleInputAmount(event, this)"  class="form-control form-control-righttext form-input-desktop" type="tel" placeholder="INPUT_MONEY" value="" />
+
+                                        </div>
+
+
+                                        <!--<div class="input-group">-->
+                                        <!--<span class="input-group-addon" style="white-space:pre-wrap">ACC_HIS_ACC_AMOUNT_TO</span>-->
+                                        <!--<input id="id.histransamountto" type="tel" class="form-control form-control-rightbutton" value="" placeholder="COM_TXT_INPUT_PLACEHOLDER"/>-->
+                                        <!--<span class="input-group-addon input-group-symbol"></span>-->
+                                        <!--</div>-->
+                                        <div class="input-group tranfer-item input-desktop-width">
+                                            <span class="input-group-addon span-desktop-high">ACC_HIS_ACC_AMOUNT_TO</span>
+                                            <input id="id.histransamountto" onkeypress='return isNumberKeyNotDot(event)' onkeyup="handleInputAmount(event, this)" class="form-control form-control-righttext form-input-desktop" type="tel" value="" placeholder="INPUT_MONEY"/>
+
+                                        </div>
+                                        <!-- </div> -->
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <!-- <div style="border-radius: 10px; background-color: rgba(255,255,255,0.2); padding: 5px; width: 105%"> -->
+                                        <!--<div class="input-group">-->
+                                        <!--<span class="input-group-addon" style="white-space:pre-wrap">ACC_HIS_ACC_TRAN_REF</span>-->
+                                        <!--<input id="id.histransrefno" type="text" class="form-control form-control-rightbutton" value="" placeholder="COM_TXT_INPUT_PLACEHOLDER" />-->
+                                        <!--<span class="input-group-addon input-group-symbol"></span>-->
+                                        <!--</div>-->
+                                        <div class="input-group tranfer-item input-desktop-width">
+                                            <span class="input-group-addon span-desktop-high">ACC_HIS_ACC_TRAN_REF</span>
+                                            <input id="id.histransrefno" class="form-control form-control-righttext form-input-desktop" type="text" value="" placeholder="ESAVING_CHANGEINFO_VF_ARR1"/>
+
+                                        </div>
+
+
+                                        <!--<div class="input-group">
+                                          <span class="input-group-addon" style="white-space:pre-wrap">ACC_HIS_ACC_TRANS_DESC</span>
+                                          <input id="id.histransdesc" type="text" class="form-control form-control-rightbutton" value="" placeholder="COM_TXT_INPUT_PLACEHOLDER"/>
+                                          <span class="input-group-addon input-group-symbol"></span>
+                                        </div>-->
+                                        <div class="input-group tranfer-item input-desktop-width">
+                                          <span class="input-group-addon span-desktop-high">ACC_HIS_ACC_TRANS_DESC</span>
+                                            <input id="id.histransdesc" class="form-control form-control-righttext form-input-desktop" type="text" value="" placeholder="ESAVING_CHANGEINFO_VF_ARR1"/>
+
+                                        </div>
+                                        <!-- </div> -->
+                                    </td>
+                                </tr>
+                            </table>
+                        
+                    
+                    <table width="100%" align="center" style="padding-left: 0px;padding-right: 9px; padding-top:10px;">
+                        <tr>
+                                <!--td width="30%" class="td-btninside"-->
+                            <td class="tdbtndesktop" width="50%">
+                                <div style="width: 33%;float: right;" id=" " class="btnDesktopshadow btnDesktopBack btncenter" onclick="clickHomeOrBack()"><span>CM_BTN_GOBACK</span>
+                                </div>
+                            </td>
+                            <td id="advanceSearch" width="50%" style="text-align:right;" class="advSearchAcc">
+                                <a width="50%"  style=" margin:0; width:100%;padding: 8px" class="btnshadow btn-second btn-morefunc" href="javascript:void(0);" onclick="showAdvandSearch()" id="acchis.btnAdvSearch"><span>ACC_HIS_ADV_SEARCH_BTN</span></a>
+                            </td>
+                            <td width="50%">
+                                <input style="margin-top:2px;" type="button" class="btnshadow btn-second btn-morefunc bt" onclick="sendJSONRequest()" value="ACC_HIS_NOR_SEARCH_BTN"/>
+                            </td>
+
+                        </tr>
+                        <tr class = "advAccSearch">
+                             <td>
+                                  <a style="margin-left:93%;width:50%;text-align:center;color:#6a1b9a;float:left;margin-top:0px;text-decoration: underline;font-size: 13px;font-weight: bold;" href="javascript:void(0);" onclick="showAdvandSearch()" id="acchis.btnAdvSearchDesktop"><h5><span>ACC_HIS_ADV_SEARCH_BTN</span></h5></a>
+                             </td>
+                        </tr>
+				    </table>
+			    </div>
+			<div id="id.historyInfo" style="padding:5px;">
+				
+			</div>
+			<div class="desktopmode" id="acchis-exportFunc" align="right" style="padding-right: 5px; display: none">
+				<a href="javascript:void(0)" id="acchis.exportfile" onclick=""><img title="Xuất file" style="margin-right:5px;" src="css/img/exportfile.png"/></a>
+				<a href="javascript:void(0)" onclick="printAccHistory();"><img title="In trang này" style="margin-right:5px;" src="css/img/print.png"/></a>
+			</div>
+			<div align='right' id="acc.pagination" style="margin-right: 15px;">
+				
+			</div>
+			
+          </div>
+        </div>
+        <div id="selection-dialog" class="dialog-blacktrans" align="center" style="display:none">
+          <div class="dialog-backgroundtrans" onClick="closeDialog(this)"></div>
+          <div id="divListGroup" class="list-group dialog-list"></div>
+        </div>
+      </body>
+    </html>
+  </xsl:template>
+</xsl:stylesheet>

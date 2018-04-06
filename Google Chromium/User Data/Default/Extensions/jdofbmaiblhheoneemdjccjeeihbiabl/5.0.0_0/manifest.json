@@ -1,0 +1,17 @@
+{
+   "app": {
+      "launch": {
+         "web_url": "https://codeanywhere.com/editor/"
+      },
+      "urls": [ "https://codeanywhere.com/editor/" ]
+   },
+   "description": "The only multi-platform cloud editor. Your code, anywhere",
+   "icons": {
+      "128": "icon_@128.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7W5rD+FwYeB06oZIvkQs8NYdJmNIo8qeGgVPiQGI/egiNk8QsgPNlEehYX1FfflLIJT+9uRQWIEudWgYmjQcDVU6tpGsfOH0oX/wrbXPYxxEGjLeA+fD82ny5r06DizIEjmwH0h7UrEth8w/lN5+9mVu7ekGUQ36J3a3RW532pn/fSLrp1zUa0xsfv4/7iJ4b9wc4h9C7TKvKUfLeXpkPRAvVX5hnD0f2zgbKrjgbvrIQsE9iPXnKG/Q8omnQNNbHBqs8zej9KmTYqYNegCi0rSaWmtA9xzxrF5xHQvz9EQBOofvEftSbjmFec3A8KeAJm8jDwsf9aKp2Uyrg8uYLwIDAQAB",
+   "manifest_version": 2,
+   "name": "Codeanywhere",
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "5.0.0"
+}

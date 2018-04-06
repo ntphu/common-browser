@@ -1,0 +1,912 @@
+// JavaScript Document
+var tmpseobj = 1;
+var docXml;
+var tenorValue="";
+var flag;
+var tenorRateValue;
+var destinationAccNo = "";
+var amountOpen;
+var typeTrans = 1;
+var secAccNo1;
+var secAccNo2;
+var secAccNo;
+var tmpfrequency;
+var rateObj= [];
+var AmountPrdObj =[];
+var AomuntFlxObj =[];
+var RateLangObj =[];
+var tempKeyLang =[];
+var tempLangVN =[];
+var tempLangEN =[];
+var tmpArrayPrd =[];
+var tenorvalue;
+var tempTenor = [];
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+function loadInitXML(){	
+	
+}
+
+function viewDidLoadSuccess(){
+	initComboTextAccount();
+    function MenuContent(title, src) {
+        this.title = title;
+        this.src = src;
+        this.keyLang = title;
+    }
+    var arrBottom = [];
+    arrBottom.push(new MenuContent('FUTURE_SAVING_REGISTER', 'esaving/future-esaving-open-scr'));
+    arrBottom.push(new MenuContent('FUTURE_SAVING_TOPUP', 'esaving/future-esaving-topup-scr'));
+	
+    navController.initBottomBarOnlyText(arrBottom[0].src ,arrBottom, "esaving-dk-nop");
+	logInfo('Account change infomation load success');
+	esaving_tenor_open = 1;
+	getinfo();
+	genSequenceForm();
+	actionbar.addListSequence("esaving/future-esaving-open-scr");
+	
+	
+	if(gUserInfo.lang == 'EN'){
+			document.getElementById('FurSav_frequency').value = CONST_KEY_ESAVING_FREQUENCY_EN[0];
+		    }else{
+			document.getElementById('FurSav_frequency').value = CONST_KEY_ESAVING_FREQUENCY_VN[0];
+		    }
+	//Init calendar
+	var today = new Date();						
+	var dd = today.getDate();						
+	var mm = today.getMonth()+1; //January is 0!						
+	var yyyy = today.getFullYear();						
+							
+	if(dd<10) {						
+		dd='0'+dd;					
+	} 						
+							
+	if(mm<10) {						
+		mm='0'+mm;					
+	} 						
+							
+	today = yyyy+'-'+mm+'-'+dd;						
+							
+	var fromDate;						
+	var toDate;						
+							
+	if (gUserInfo.lang == 'VN') {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('FurSav_begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				dom_field    : document.getElementById('span.begindate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+							
+	}						
+	else {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('FurSav_begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',					
+				dom_field    : document.getElementById('span.begindate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);		
+						
+	}	
+	if(flag == undefined || !flag) {
+		tmpfrequency =CONST_VAL_ESAVING_FREQUENCY[0];
+		tenorvalue ='R06';
+		var tmpArr1 = [];
+		var tmpArr2 = [];
+		for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		
+		if(tmpAcc.accClass == 'D3A003' && tmpAcc.nodebit == 'Y'){
+		}
+		else{
+			tmpArr1.push(tmpAcc.accountNumber);
+			tmpArr2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));	
+		}
+		}
+	}
+	//end calendar
+
+}
+
+
+function calendarDateChange(param){
+  
+}
+
+
+function getinfo(){
+	var data = {};
+	var arrayArgs = [];
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_INFO_FUTURE_SAVING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	//requestBacgroundMBService('CMD_GET_INFO_FUTURE_SAVING',arrayArgs,requestFurSavingInfoSuccess,requestFurSavingInfoFail);	
+	requestMBService(data, true, 0, requestFurSavingInfoSuccess, requestFurSavingInfoFail);
+
+}
+
+function requestFurSavingInfoSuccess(oStr){
+	gprsResp = parserJSON(oStr);
+	
+	setRespObjStore(gprsResp); //store response
+	
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_INFO_FUTURE_SAVING")))) {
+		FutureSaving = [];
+		FutureSaving = gprsResp.arguments;
+		var indexEnd = FutureSaving.indexOf("RATE_END");
+		//var rateObj = new Array();
+		for(var i=1; i<indexEnd; i++){
+			rateObj.push(FutureSaving[i]);			
+		}
+		//var AmountPrdObj = new Array();
+		var PrdEnd = FutureSaving.indexOf("PRD_END");
+		for(var k =0; k< FutureSaving.length; k++){
+			if(FutureSaving[k] == 'RATE_END'){
+				for( var j=k; j < PrdEnd; j++){
+				AmountPrdObj.push(FutureSaving[j+1]);
+				}
+			}
+		}
+		//var AomuntFlxObj = new Array();
+		var FlxEnd = FutureSaving.indexOf("FLX_END");
+		for (var l=0; l< FutureSaving.length; l++){
+			if(FutureSaving[l] == 'PRD_END'){
+				for( var m=l; m<FlxEnd; m++){
+					AomuntFlxObj.push(FutureSaving[m+1]);
+				}
+			}
+		}
+		var LangEnd = FutureSaving.indexOf("RATE_LANG_END");
+		for(var n =0; n< FutureSaving.length; n++){
+			if(FutureSaving[n]== 'FLX_END'){
+				for(var u =n; u< LangEnd; u++ ){
+					RateLangObj.push(FutureSaving[u+1]);
+				}
+			}
+		}
+	}
+	document.getElementById('amount_min_fir').innerHTML =formatNumberToCurrency(AmountPrdObj[1]) + "VND";
+	document.getElementById('amount_min_sec').innerHTML =formatNumberToCurrency(AmountPrdObj[2]) + "VND";
+}
+
+function requestFurSavingInfoFail(oStr){
+}
+
+//gen sequence form
+function genSequenceForm() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpStepNo = 301;
+	setRespObjStore(301);
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+//=================SHOW DIALOG FOR SAVING TYPE(ngocdt3)=============================//
+function showInputSavingType(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_SAVING_TYPE_EN: CONST_KEY_SAVING_TYPE_VN;
+	var tmpArray2 = CONST_KEY_SAVING_TYPE_ID;
+	document.addEventListener("evtSelectionDialog", showInputSavingTypeOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showInputSavingTypeClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1,tmpArray2, false);
+}
+
+function showInputSavingTypeOpen(e) {
+	var selectionID = "";
+	if (currentPage == "esaving/future-esaving-open-scr") {
+		showInputSavingTypeClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagSelection = document.getElementById("esavingType");
+			if (tagSelection.nodeName == "INPUT") {
+				tagSelection.value = e.selectedValue1;
+			}
+			else {
+				tagSelection.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectionID = e.selectedValue2;
+		}
+		if(selectionID == '1'){
+			navController.pushToView('esaving/esaving-open-scr', true, 'xsl');
+		}else
+		if(selectionID == '2'){
+		}
+	}
+}
+
+function showInputSavingTypeClose() {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showInputSavingTypeOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showInputSavingTypeClose, false);
+	}
+}
+
+//=================SHOW DIALOG FOR MONEY TYPE=============================//
+function showInputMoneyType(){
+	var tmpArray1 = (gUserInfo.lang == 'VN')? [CONST_STR.get('INTEREST_RATE_VND')]:[CONST_STR.get('INTEREST_RATE_VND')];
+	document.addEventListener("evtSelectionDialog", showMoneySelectionOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showMoneySelectionClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, false);
+}
+
+function showMoneySelectionOpen(e) {
+	if (currentPage == "esaving/future-esaving-open-scr") {
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showMoneySelectionClose();
+		}			
+	}
+}
+
+function showMoneySelectionClose() {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showMoneySelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showMoneySelectionClose, false);
+	}
+}
+//CHON HINH THUC GUI GOP
+function showInputFutureSavingType(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_FUTURE_SAVING_TYPE_EN: CONST_KEY_FUTURE_SAVING_TYPE_VN;
+	var tmpArray2 = CONST_KEY_FUTURE_SAVING_TYPE_ID;
+	document.addEventListener("evtSelectionDialog", handleSelectionFutureSavingType, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionFutureSavingTypeClose, false);
+	showDialogList(CONST_STR.get('FUTURE_SAVING_CHOOSE_TYPE'), tmpArray1,tmpArray2, false);
+}
+
+function handleSelectionFutureSavingType(e) {
+	var selectionID = "";
+	if (currentPage == "esaving/future-esaving-open-scr") {
+		handleSelectionFutureSavingTypeClose();
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectionID = e.selectedValue2;
+		}
+		if(selectionID == 'A'){
+			navController.pushToView('esaving/future-esaving-auto', true, 'xsl');
+		}else
+		if(selectionID == 'P'){
+		}
+	}
+}
+
+function handleSelectionFutureSavingTypeClose() {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", handleSelectionFutureSavingType, false);
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionFutureSavingTypeClose, false);
+	}
+}
+//CHON TAN SUAT GUI GOP
+function showInputFrequency()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_ESAVING_FREQUENCY_EN: CONST_KEY_ESAVING_FREQUENCY_VN;
+	var tmpArray2 = CONST_VAL_ESAVING_FREQUENCY;
+	document.addEventListener("evtSelectionDialog", handleInputFrequency, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+	showDialogList(CONST_STR.get('FUTURE_SAVING_CHOOSE_FREQUENCY'), tmpArray1, tmpArray2, false);
+}
+
+
+function handleInputFrequency(e)
+{
+	if (currentPage == "esaving/future-esaving-open-scr") {
+		handleInputFrequencyClose();
+		var frequency = document.getElementById('FurSav_frequency');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			if (frequency.nodeName == "INPUT") {
+				frequency.value = e.selectedValue1;
+			}
+			else {
+				frequency.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+				tmpfrequency = e.selectedValue2;
+		}
+	}
+		
+}
+
+function handleInputFrequencyClose() {
+	if (currentPage == "esaving/future-esaving-open-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputFrequency, false);
+	}
+}
+
+function checkFreq(){
+	var freqTrans = document.getElementById("FurSav_frequency");
+	if(freqTrans.value == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('TRANS_PERIODIC_ERR_FREQ'));
+		return false;
+	}
+	return true;
+}
+
+//END
+//=================SHOW DIALOG FOR TENOR SELECTION=============================//
+function showInputTenorType(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	var tmpArrayPrd =[];
+	tempLangVN =[];
+	tempLangEN =[];
+	if(rateObj == undefined || rateObj.length < 1){
+		showAlertText(CONST_STR.get('COMMON_SYSDATA_EMPTY'));
+		return;
+	}
+	for (var i =0; i< rateObj.length; i++){
+			var tmpStr = rateObj[i];
+			var tmpArr = tmpStr.split('#');
+			tmpArrayPrd.push(tmpArr[0]);
+			tmpArray2.push(tmpArr[1]+"%");	
+	}
+	var RateLangEnd = RateLangObj.indexOf('RATE_LANG_END');
+	for(var j=1; j<RateLangObj.length; j++){
+		var tempStr = RateLangObj[j];
+		var tempArr = tempStr.split('#');
+		if(tempArr.length <3){
+		}
+		else{
+			tempKeyLang.push(tempArr[0]);
+			tempLangVN.push(tempArr[1]);
+			tempLangEN.push(tempArr[2]);	
+		}
+	}
+	if(gUserInfo.lang == 'EN'){
+		tmpArray1 = tempLangEN;	
+	}
+	if(gUserInfo.lang == 'VN'){
+		tmpArray1 = tempLangVN;
+	}
+	document.addEventListener("evtSelectionDialog", showTenorSelectionOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showTenorSelectionClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'),  tmpArray1, tmpArray2, true);
+}
+
+function showTenorSelectionOpen(e) {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			//destinationAccNo = e.selectedValue1;
+			document.getElementById("FurSav_tenor").value = e.selectedValue1;
+			/*for(var i = 0; i < tempTenor.length; i++){
+				var tenorchoice = e.selectedValue2;
+				if(tenorchoice ==tempTenor[i]){
+					tenorvalue = tmpArrayPrd[i];
+				}
+			}*/
+			for(var i =0; i< tempLangEN.length; i++){
+				if(e.selectedValue1 ==tempLangEN[i]||e.selectedValue1==tempLangVN[i]){
+					tenorvalue =tempKeyLang[i];
+				}
+			}
+		}
+		
+		showTenorSelectionClose();		
+	}
+}
+
+function showTenorSelectionClose() {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showTenorSelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showTenorSelectionClose, false);
+	}
+}
+//=================Chon tai khoan trich tien=============================//
+var comboEl;
+function initComboTextAccount(){
+
+    try{
+        var comboBox = document.getElementById('cb-container');
+        if(comboBox!==null){
+            return false;
+        }
+        document.getElementById("holder-account-info").innerHTML = "";
+    }catch(e){}
+
+
+    document.getElementById("holder-account-info").innerHTML = "";
+    var accountName = gUserInfo.accountName;
+    var accountNumber = gUserInfo.accountList[0].accountNumber;
+    var accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable)+'&nbsp'+gUserInfo.accountList[0].currency;
+    comboEl = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountName : accountName, //account name
+        accountNumber : accountNumber, //account number
+        accountBalance : accountBalance, //account balance
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboEl.show("holder-account-info");
+}
+function showAccountSelection() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        if(tmpAcc.accClass == 'D3A003' && tmpAcc.nodebit == 'Y'){
+        }
+        else {
+            tmpArray1.push(tmpAcc.accountNumber);
+            tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable) + " " + tmpAcc.currency);
+        }
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+    showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+
+}
+function handleSelectionAccountList(e) {
+    if (currentPage == "esaving/future-esaving-open-scr") {
+        handleSelectionAccountListClose();
+        var accountNumber = e.selectedValue1;
+        var accountBalance = e.selectedValue2;
+        comboEl.refresh({
+            accountNumber : accountNumber,
+            accountBalance : accountBalance
+        });
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("id.sourceAcc");
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+        }
+        var nodeAccBal = document.getElementById("esaving.sourceaccoutbalance");
+        if (e.selectedValue2 != undefined) {
+            nodeAccBal.innerHTML = "<div class='availblstyle' id='id.balance'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + "VND</div>";
+            //            var balance = document.getElementById("id.balance");
+            //            balance.value = removeSpecialChar(e.selectedValue2.replace("VND","").trim());
+        }
+    }
+}
+
+
+
+function handleSelectionAccountListClose(e) {
+    if (currentPage == "esaving/future-esaving-open-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    }
+}
+//=================Chon tai khoan dao han=============================//
+function showAccountSelection2(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+	}
+	
+	document.addEventListener("evtSelectionDialog", showAccountSelectionOpen2, false);
+	document.addEventListener("evtSelectionDialogClose", showAccountSelectionClose2, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'),  tmpArray1, false);
+	
+}
+
+function showAccountSelectionOpen2(e) {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showAccountSelectionClose2();
+			secAccNo = e.selectedValue1;
+			document.getElementById("FurSav_secAccNo").value = secAccNo;
+			
+		}		
+	}
+}
+function showAccountSelectionClose2() {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showAccountSelectionOpen2, false);
+		document.removeEventListener("evtSelectionDialogClose", showAccountSelectionClose2, false);
+	}
+}
+//=============================================================================================
+//NEXT TO REVIEW SCREEN
+function click_Next(){
+	var arrayArgs = [];
+	var tenor = document.getElementById('FurSav_tenor').value;
+	var amountfirst = document.getElementById('FurSav_amountfirst').value;
+	var frequency = document.getElementById('FurSav_frequency').value;
+	var amountprd = document.getElementById('FurSav_amountprd').value;
+	var productcode = document.getElementById('esavingType').value;
+	var startdate = document.getElementById('FurSav_begindate').value;
+	var content = document.getElementById('id.noren').innerHTML;
+	var destiacc = document.getElementById('FurSav_secAccNo').value;
+	var sourceacc = comboEl.accountNumber;
+	var amtfirst = AmountPrdObj[1];
+	var amtprd =AmountPrdObj[2];
+	arrayArgs.push('PRD');
+	arrayArgs.push(tenorvalue);
+	if(tenor == undefined ||tenor == "" || tenor == null || (tenor.length <1)){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_INPUT_TENOR'));
+		return;
+	}
+	if(frequency == undefined ||frequency == "" || frequency == null || (frequency.length <1)){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_INPUT_FREQUENCY'));
+		return;
+	}
+	if(amountfirst == undefined || amountfirst == null || amountfirst.length <1){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_INPUT_AMT_FIRST'));
+		return;
+	}
+	if(amountprd == undefined || amountprd == null || amountprd.length <1){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_INPUT_AMT_PRD'));
+		return;
+	}
+	
+	if(parseInt(removeSpecialChar(amountfirst)) <amtfirst){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_INPUT_AMT_MIN'));
+		return;
+	}
+	if(parseInt(removeSpecialChar(amountprd)) <amtprd){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_AMT_PRD_MIN'));
+		return;
+	}
+	if ((parseInt(removeSpecialChar(amountfirst)) <= 0)) {
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_INPUT_AMT_WRONG'));
+		return;
+	}
+	if ((parseInt(removeSpecialChar(amountprd)) <= 0)) {
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_AMT_PRD_WRONG'));
+		return;
+	}
+	
+	if(!startdate || startdate==undefined || startdate ==""){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_INPUT_DATE_OPEN_ERR'));
+		return;
+	}
+
+	var EsavingToday = new Date();
+	var dayn =EsavingToday.getDate();
+	var monthn =EsavingToday.getMonth();
+	var yearn =EsavingToday.getFullYear();
+	var daten = new Date(yearn,monthn,dayn);
+
+
+	var arrDate = startdate.split('/');
+	var day =arrDate[0];
+	var month =arrDate[1];
+	var year =arrDate[2];
+
+	var dateS = new Date(year,month-1,day);
+	var DateSelect = dateS.getTime();
+
+	// var DateNow = daten.getTime();
+	// if (DateSelect < DateNow) {
+	// 	showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_START_DATE'));
+	// 	return;
+	// }
+	
+	if(!destiacc || destiacc==undefined || destiacc ==CONST_STR.get('ESAVING_BGN_CHOICE')){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_INPUT_ACC_TT'));
+		return;
+	}
+	if(!sourceacc || sourceacc==undefined || sourceacc ==CONST_STR.get('ESAVING_BGN_CHOICE')){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_INPUT_ACC_BLANK'));
+		return;
+	}
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		if(gUserInfo.accountList[i].accountNumber == sourceacc)
+		{
+		balanceMoney = gUserInfo.accountList[i].balanceAvailable;
+		}
+	}
+	if(parseInt(removeSpecialChar(amountfirst)) > parseInt(removeSpecialChar(balanceMoney))){
+		showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_INPUT_AMT_LOW'));
+		return;
+		
+	}
+	arrayArgs.push(removeSpecialChar(amountfirst));
+	arrayArgs.push(removeSpecialChar(amountprd));
+	arrayArgs.push(tmpfrequency);
+	arrayArgs.push(startdate);
+	arrayArgs.push(content);
+	arrayArgs.push(destiacc);
+	arrayArgs.push(sourceacc);
+	arrayArgs.push(gFutureSaving.purpose);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_REGISTER_FUTURE_SAVING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceReviewSuccess, requestMBServiceReviewFail);	
+}
+
+function requestMBServiceReviewSuccess(e){
+	//Gen review screen
+	gprsResp = parserJSON(e);
+	if (((gprsResp.respCode == '1013') || (gprsResp.respCode == '0')) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_REGISTER_FUTURE_SAVING")))) {
+	//By Pass Token
+		setRespObjStore(gprsResp);
+		genReviewScreen();		
+	}else{
+		showAlertText(gprsResp.respContent);			
+	}
+}
+function requestMBServiceReviewFail(e){
+	showAlertText(CONST_STR.get('ESAVING_TRANS_FAILED'));	
+}
+//event alert
+function handleAlertEmpty(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "esaving/future-esaving-open-scr")) {
+		document.removeEventListener('closeAlertView', handleAlertEmpty, false);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+function rdSelected(inNode){
+	if(inNode.type =="radio"){
+		return;
+	}
+	var tmpArr = inNode.getElementsByTagName('input');
+	for (var i=0; i<tmpArr.length; i++) {
+		var tmpNode = tmpArr[i];
+		if(tmpNode.type=="radio") {
+			tmpNode.checked = true; break;
+		}
+	}
+	/*if(document.getElementById('rd3').checked == true){
+		typeTrans = 3;
+		document.getElementById('FurSav_secAccNo').disabled = false;//hien thi
+	}*/
+	
+}
+
+
+/*** GENARATE REVIEW SCREEN ***/
+function genReviewScreen(){	
+	var tenor = document.getElementById('FurSav_tenor').value;
+	var amountfirst = document.getElementById('FurSav_amountfirst').value;
+	var amountprd = document.getElementById('FurSav_amountprd').value;
+	var startdate = document.getElementById('FurSav_begindate').value;
+	var frequency = document.getElementById('FurSav_frequency').value;
+	var content = document.getElementById('id.noren').innerHTML;
+	var destiacc = document.getElementById('FurSav_secAccNo').value;
+	var sourceacc = comboEl.accountNumber;
+		
+	docXml = createXMLDoc();	
+	
+	
+	/*var tenorRateValueTmpl = tenorRateValue +((gUserInfo.lang == 'EN')? "%/year":"%/năm");
+	var arrayPeriodESaving = (gUserInfo.lang == 'EN')? CONST_KEY_PERIOD_ESAVING_EN: CONST_KEY_PERIOD_ESAVING_VN;
+	var arrayMaturityESaving = (gUserInfo.lang == 'EN')? CONST_KEY_MATURITY_ESAVING_EN: CONST_KEY_MATURITY_ESAVING_VN;*/
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	//tmpXmlNodeInfo = createXMLNode('conditioninfo', 'true', docXml, tmpXmlRootNode);
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	//review/reviewinfo/reviewtranstitle
+	
+	//loai tiet kiem
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('FUTURE_SAVING_TYPE_NAME_PFD'), docXml, tmpChildNodeAcc);
+	//Loại tiền
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('ACC_CURRENCY_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('INTEREST_RATE_VND'), docXml, tmpChildNodeAcc);
+
+	//Kỳ hạn gửi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CREATE_PERIOD_TITLE'), docXml, tmpChildNodeAcc);	
+	tmpChildNode = createXMLNode('transinfocontent',tenor, docXml, tmpChildNodeAcc);
+	//Ngày gửi
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', gprsResp.arguments[1], docXml, tmpChildNodeAcc);
+	//Ngày đáo hạn
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  gprsResp.arguments[2], docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc);
+	//lai suat
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_INTEREST'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  gprsResp.arguments[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc);
+	//số tiền gửi ban đầu
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_MONEY_FIRST'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  formatNumberToCurrency(amountfirst)+" VND", docXml, tmpChildNodeAcc);
+	//số tiền gửi góp định kỳ
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_MONEY_PRD'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  formatNumberToCurrency(amountprd)+" VND", docXml, tmpChildNodeAcc);
+	//tần suất gửi góp
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_FREQUENCY'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',frequency + CONST_STR.get('FUTURE_SAVING_FROM_DATE')+startdate , docXml, tmpChildNodeAcc);
+	//so tai khoan trich tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_SOURCE_ACC'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',sourceacc, docXml, tmpChildNodeAcc);
+	//khi den han
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_INPUT_INFO'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',content +" "+ destiacc, docXml, tmpChildNodeAcc);
+	//dieu khoan dieu kien
+	//var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('conditioncontent', CONST_STR.get('FUTURE_SAVING_CONDITION'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('conditioninfo', 'true', docXml, tmpChildNodeAcc);
+	/*//Điều khoản điều kiện
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_INPUT_INFO'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', getChiThiTaiTuc(), docXml, tmpChildNodeAcc);
+	logInfo(docXml);*/
+	//luu xml trong cache
+	logInfo(docXml);
+	setReviewXmlStore(docXml);
+
+	
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+
+function checkToShowButton(tenorValue){
+	if(parseInt(tenorValue)>2){
+		return 	 "<input type='button' class='btnshadow btn-second' onClick='checkAgree()' value='REVIEW_BTN_NEXT'/>";
+	}
+	return "";
+}
+//===============FUNCTION ALLOW INPUT NUMBER =============//
+function isNumberKeyNotDot(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+//==============FORMAT MONEY FOR THIS INPUT TAG=============//
+function handleInputAmount1(e, des){
+	var limitActivate1 = document.getElementById('FurSav_amountfirst');
+	formatCurrency(e, limitActivate1);		
+	
+	var tmpVale = des.value;
+	//formatCurrency(e, des);
+	//des.value = formatNumberToCurrency(des.value);
+	var numStr = convertNum2WordWithLang(removeSpecialChar(tmpVale), gUserInfo.lang); 
+	
+	var nodeNumTxt = document.getElementById("num_to_word_first");
+	/*bo in dam
+	nodeNumTxt.innerHTML = "<b>" + numStr + "</b>";*/
+	nodeNumTxt.innerHTML =numStr ;
+}
+function handleInputAmount2(e, des){
+	var limitActivate2 = document.getElementById('FurSav_amountprd');
+	formatCurrency(e, limitActivate2);		
+	var tmpVale = des.value;
+	var numStr = convertNum2WordWithLang(removeSpecialChar(tmpVale), gUserInfo.lang); 	
+	var nodeNumTxt = document.getElementById("num_to_word_prd");
+	nodeNumTxt.innerHTML =numStr ;
+}
+//GOTO RATE TABLE
+function gotoRateTable(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	var tmpArrayPrd =[];
+	tempLangVN =[];
+	tempLangEN =[];
+	if(rateObj == undefined || rateObj.length < 1){
+		showAlertText(CONST_STR.get('COMMON_SYSDATA_EMPTY'));
+		return;
+	}
+	for (var i =0; i< rateObj.length; i++){
+			var tmpStr = rateObj[i];
+			var tmpArr = tmpStr.split('#');
+			tmpArrayPrd.push(tmpArr[0]);
+			tmpArray2.push(tmpArr[1]);
+			
+	}
+	for(var j=1; j<RateLangObj.length; j++){
+		var tempStr = RateLangObj[j];
+		var tempArr = tempStr.split('#');
+		if(tempArr.length <3){
+		}
+		else{
+			tempKeyLang.push(tempArr[0]);
+			tempLangVN.push(tempArr[1]);
+			tempLangEN.push(tempArr[2]);	
+		}
+	}
+	if(gUserInfo.lang == 'EN'){
+		tmpArray1 = tempLangEN;	
+	}
+	if(gUserInfo.lang == 'VN'){
+		tmpArray1 = tempLangVN;
+	}
+	document.addEventListener("evtSelectionDialog", showRateSelectionOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showRateSelectionClose, false);
+	showDialogList(CONST_STR.get('MENU_BANK_INFO_INTEREST')+" "+CONST_STR.get('INTEREST_RATE_VND'),  tmpArray1, tmpArray2,  true);
+}
+
+function showRateSelectionOpen(e) {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showRateSelectionClose();
+									
+		}		
+	}
+}
+
+function showRateSelectionClose() {
+	if (currentPage == "esaving/future-esaving-open-scr") {		
+		document.removeEventListener("evtSelectionDialog", showRateSelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showRateSelectionClose, false);
+	}
+}

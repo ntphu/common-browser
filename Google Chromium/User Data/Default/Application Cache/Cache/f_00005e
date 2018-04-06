@@ -1,0 +1,1393 @@
+/**
+ * Created by HuyNT2.
+ * Update: HuyNT2
+ * Date: 11/4/13
+ * Time: 5:35 PM
+ */
+
+
+var tmpDestinationAcc;
+var tmpBankInfoSelected;
+var tmpCityInfoSelected;
+var tmpBranchInfoSelected;
+var tmpFeeType = 'Y';//Mặc định người c
+var tmpFeeAmount;
+var tmpEffectDate;
+var mng;
+var tmpDestinationAccName;
+var tmpPayeeType;
+var tmpBankName;
+var flag;
+var dialog;
+setInputOnlyASCII('trans.destaccountnointer', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"))
+setInputOnlyASCIILNH('trans.destaccountname', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"))
+/*** INIT VIEW ***/
+
+function initTextAreaMessage(){
+    try{
+        var txtArea = document.getElementById('trans.content');
+        if(txtArea!==null){
+            return false;
+        }
+        document.getElementById("holder-transfer-message").innerHTML = "";
+    }catch(e){}
+
+
+    var textAreaEl = new TextArea({
+        containerMargin : "0px",
+        idTextArea : "trans.content",
+        placeholder : CONST_STR.get("PLACEHOLDER_TRANSFER_CONTENT"),
+        iconClass : "icon-content-note",
+        lengthmax : "100",
+
+        //borderColor : "rgba(255, 255, 255, 0.2)",
+        //showBorderBottom : false,
+       // showBorderTop : false,
+        fontSizeIcon : "24px!important",
+        validateInput : function(){
+            console.log("validate function");
+        }
+    });
+    textAreaEl.show("holder-transfer-message");
+}
+function loadInitXML() {
+	return '';
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+//Được gọi từ sample tamplate
+function excuteInterSampleSelected(obj){		
+	if(obj != null && obj != undefined){
+		//Everything initialized	
+		statusInputAcc = true;
+		flag = true;
+		document.getElementById('id.accountno').value = obj.tai_khoan_nguon;
+		document.getElementById('trans.destaccountnointer').value = obj.tai_khoan_dich;
+		document.getElementById('trans.destaccountname').value = obj.ten_tai_khoan_dich;
+		document.getElementById('trans.bankname').value = obj.ngan_hang_nhan;
+		//document.getElementById('trans.amount').value = obj.so_tien;
+		document.getElementById('trans.content').value = obj.noi_dung;	
+		tmpBranchInfoSelected = obj.ma_citad +  "#" +  obj.ngan_hang_nhan;
+		//Số tiền e.payeeObject.citadCode + "#" +  e.payeeObject.partnerName;
+		//mng = CONST_VAL_PAYEE[0];
+		mng = CONST_VAL_PAYEE[1];
+		var tmpVale = obj.so_tien;		
+		
+		document.getElementById('trans.amount').value= formatNumberToCurrency(tmpVale);	
+			
+		var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang); 
+	
+		var nodeNumTxt = document.getElementById("trans.amounttotext");
+		
+		//nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": " + numStr + "</div>";
+		nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+		
+		//HIEN THI SO DU CUA TAI KHOAN NGUON	
+		var newBalance = getBalanceByAccNo(	obj.tai_khoan_nguon);
+		if(newBalance !=null && newBalance !=undefined){
+			var balanceAcct = document.getElementById("trans.sourceaccoutbalance");	
+			balanceAcct.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(newBalance) + " VND" + "</div>";	
+		}			
+	}
+	       /* var payeelist = document.getElementById('id.payee');
+			payeelist.disabled = 'true';*/
+}
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	document.getElementById("ds_id").innerHTML = CONST_STR.get('TRANSFER_DS_THUHUONG');
+    document.getElementById("mau_id").innerHTML = CONST_STR.get('TRANSFER_MAU_THUHUONG');
+	logInfo('transfer load success');
+	if(flag == undefined || !flag) {
+		initTextAreaMessage();
+		var accNo = document.getElementById("id.accountno");
+		var balanceAcct = document.getElementById("trans.sourceaccoutbalance");
+		accNo.value = gUserInfo.accountList[0].accountNumber;
+		balanceAcct.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + 	formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + " " + gUserInfo.accountList[0].currency + "</div>"//" VND" + "</div>";
+		if(gUserInfo.lang == 'EN'){
+			//document.getElementById('id.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_EN[0];
+			document.getElementById('id.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_EN[1];
+			document.getElementById('trans.frequency').value = CONST_KEY_PERIODIC_FREQUENCY_EN[2];
+			gFreq = CONST_VAL_PERIODIC_FREQUENCY[2];
+		} else {
+			//document.getElementById('id.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_VN[0];
+			document.getElementById('id.payee').value = CONST_VAL_PAYEE_NOT_TEMPLATE_VN[1];
+			document.getElementById('trans.frequency').value = CONST_KEY_PERIODIC_FREQUENCY_VN[2];
+			gFreq = CONST_VAL_PERIODIC_FREQUENCY[2];
+		}
+		//mng = CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+		mng = CONST_VAL_PAYEE_NOT_TEMPLATE[1];
+	}
+	genSequenceFormInterBank();
+    actionbar.addListSequence("transfer/transfer-periodic-interbank-create-scr");
+	
+	if ((statusInputAcc) && (currentPage == "transfer/transfer-periodic-interbank-create-scr")) {
+		
+		
+		//mng = CONST_VAL_PAYEE[0];
+		///alert("Transfer local create load success: " + tmpDestinationAcc);
+		logInfo('input account done');
+		var tmpNodeDestAcc = document.getElementById('trans.destaccountnointer');
+		if (tmpDestinationAcc != undefined && tmpDestinationAcc != '')
+		{
+			tmpNodeDestAcc.value = tmpDestinationAcc;
+		}
+		
+		var destinationAccName = document.getElementById("trans.destaccountname");
+		if (tmpDestinationAccName != undefined && tmpDestinationAccName != '')
+		{
+			destinationAccName.value = tmpDestinationAccName;
+		}
+		
+		var bankName = document.getElementById("trans.bankname");
+		if (tmpBankName != undefined && tmpBankName != '' && tmpBankName.length > 1)
+		{
+			for (var i=0; i<branchInterbanks.data.length; i++) {
+				if (branchInterbanks.data[i].citadCode == evtInputPayeeAccount.payeeObject.citadCode) {
+					if (gUserInfo.lang == "VN") {
+						bankName.value = tmpBankName + '\n' + branchInterbanks.data[i].brachNameVn;
+					}
+					else {
+						bankName.value = tmpBankName + '\n' + branchInterbanks.data[i].branchNameEn;
+					}
+					break;
+				}
+			}
+
+			//bankName.setAttribute('disabled', 'disabled');
+			bankName.setAttribute('onclick', 'showBankSelection');
+		}
+		else
+		{
+			bankName.setAttribute('disabled', '');
+			bankName.removeAttribute('disabled');
+			bankName.setAttribute('onclick', 'showBankSelection()');
+		}
+		
+		
+		var payeeDesc = document.getElementById("id.payee");
+		var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_PAYEE_EN: CONST_KEY_PAYEE_VN;
+		var tmpArray2 = CONST_VAL_PAYEE;
+		if (tmpPayeeType != ''&& tmpPayeeType!=undefined)
+		{
+			//mng = tmpPayeeType;
+			var check = false;
+			for (var i = 0; i < tmpArray2.length; i++)
+			{
+				if (tmpArray2[i] == mng)
+				{
+					payeeDesc.value = tmpArray1[i];
+					check = true;
+				}
+			}
+			if (mng == CONST_VAL_PAYEE[0])
+			{
+				//payeeDesc.setAttribute('disabled', 'disabled');
+				payeeDesc.setAttribute('onclick', '');
+			}
+			else{
+				//payeeDesc.setAttribute('disabled', '');
+				//payeeDesc.removeAttribute('disabled');
+				//payeeDesc.setAttribute('onclick', 'showInputMNG()');
+				/*fix ko cho drop box*/
+				//payeeDesc.setAttribute('disabled', 'disabled');
+				payeeDesc.setAttribute('onclick', '');;
+			}
+		}
+		else
+		{
+				/*mng = CONST_VAL_PAYEE[0] ;
+				payeeDesc.value = tmpArray1[0];*/
+				mng = CONST_VAL_PAYEE[1] ;
+				payeeDesc.value = tmpArray1[1];
+				payeeDesc.setAttribute('disabled', '');
+				payeeDesc.removeAttribute('disabled');
+				payeeDesc.setAttribute('onclick', 'showInputMNG()');
+		}
+		
+		setTimeout(function(e) { statusInputAcc = false; }, 1000); //fix double click
+		
+	}
+	else if ((statusInputBank) && (currentPage == "transfer/transfer-periodic-interbank-create-scr")) {
+		setTimeout(function(e) { statusInputBank = false; }, 1000); //fix double click
+		logInfo('selected bank done');
+		var tmpNodeBank = document.getElementById('trans.bankname');
+		tmpNodeBank.value = tmpBankInfoSelected.split('#')[1] + '\n' + tmpBranchInfoSelected.split('#')[1];
+	}
+	
+	//Init calendar
+	var today = new Date();						
+	var dd = today.getDate();						
+	var mm = today.getMonth()+1; //January is 0!						
+	var yyyy = today.getFullYear();						
+							
+	if(dd<10) {						
+		dd='0'+dd;					
+	} 						
+							
+	if(mm<10) {						
+		mm='0'+mm;					
+	} 						
+							
+	today = yyyy+'-'+mm+'-'+dd;						
+							
+	var fromDate;						
+	var toDate;						
+							
+	if (gUserInfo.lang == 'VN') {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('trans.begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.begindate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('trans.enddate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',
+				dom_field    : document.getElementById('span.enddate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+							
+	}						
+	else {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('trans.begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',		
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',			
+				dom_field    : document.getElementById('span.begindate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);		
+		toDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('trans.enddate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					toDate.hide();
+				}			
+			},				
+			{				
+
+
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				//range_min    : '01/05/2008',			
+				//range_max    : '31/12/2050',			
+				
+				//dom_id       : 'trans.begindate',			
+				dom_field    : document.getElementById('span.enddate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);				
+	}
+}
+
+/*** VIEW LOAD SUCCESS END ***/
+
+function showAccountSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));// + " " + tmpAcc.currency);
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+}
+
+function showBankSelection() {
+	navController.pushToView("transfer/trans-input-bank", true);
+	document.addEventListener("evtSelectedBranch", handleInputBankBranch, false);
+}
+
+var statusInputBank; //using check input bank ready
+function handleInputBankBranch(e) {
+	document.removeEventListener("evtSelectedBranch", handleInputBankBranch, false);
+	tmpBankInfoSelected = e.bankInfo;
+	tmpCityInfoSelected = e.bankCityInfo;
+	tmpBranchInfoSelected = e.bankBranchInfo;
+	statusInputBank = true;
+	
+}
+
+
+function showInputAccScreen() {
+	navController.pushToView('com-input-account', true);
+	gHistoryCode = CONST_HISTORY_CODE[3]; // get history code
+	document.addEventListener("evtInputAccount", handleInputAcc, false);
+}
+
+//event listener: input account
+var statusInputAcc; //using check input account ready
+function handleInputAcc(e) {
+	document.removeEventListener("evtInputAccount", handleInputAcc, false);
+	tmpDestinationAcc = e.inputValue;
+	statusInputAcc = true;
+}
+
+//handle input account name
+//setInputOnlyASCII('trans.destaccountname', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+//handle input transfer content
+//setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+setInputOnlyASCIILNH('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+
+//Format currency and pronounce to Vietnamese
+
+function handleInputAmount (e, des) {
+	formatCurrency(e, des);
+	var numStr = convertNum2WordWithLang(keepOnlyNumber(des.value), gUserInfo.lang); 
+	
+	var nodeNumTxt = document.getElementById("trans.amounttotext");
+	
+	//nodeNumTxt.innerHTML = "<h6 class='h6style'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";
+	//nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": " + numStr + "</div>";
+	nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+}
+
+//show fee type selection
+
+function showFeeTypeSelection() {
+	
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_TRANS_FEE_TYPE_EN: CONST_KEY_TRANS_FEE_TYPE_VN;
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionFeeTypeList, false);
+	showDialogList(CONST_STR.get('TRANS_FEE_TYPE_DIALOG_TITLE'), tmpArray1, '', true);
+}
+
+//event: selection dialog list
+function handleSelectionFeeTypeList(e) {
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleSelectionFeeTypeList, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagFeeType = document.getElementById("trans.fee");
+			if (tagFeeType.nodeName == "INPUT") {
+				tagFeeType.value = e.selectedValue1;
+			}
+			else {
+				tagFeeType.innerHTML = e.selectedValue1;
+			}
+			
+			if((e.selectedValue1 == CONST_KEY_TRANS_FEE_TYPE_VN[1]) || (e.selectedValue1 == CONST_KEY_TRANS_FEE_TYPE_EN[1])) {
+				tmpFeeType = 'N';
+			}
+			else {
+				tmpFeeType = 'Y';
+			}
+		}
+		
+	}
+}
+
+//Send request
+var gprsResp = new GprsRespObj("","","","");
+
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	var sourceAcc = document.getElementById("id.accountno");
+	var destinationAcc = document.getElementById("trans.destaccountnointer");
+	var destinationAccName = document.getElementById("trans.destaccountname");
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	var sampleName =  document.getElementById("id.sample.name");
+	var tmpStr = sourceAcc.value;
+	if (tmpStr.length != 11) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_ACC'));
+		return;
+	}
+	arrayArgs.push(sourceAcc.value);
+	
+	tmpStr = destinationAcc.value;
+	if ((tmpStr.length < 1)||(tmpStr == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_ACC_NUMBER'));
+		return;
+	}
+	if(!checkAvailableChar(destinationAcc.value)) {
+		showAlertText(CONST_STR.get('ERR_INCORRECT_DESTINATION_ACC'));
+		return;
+	}
+	
+	if ((tmpBranchInfoSelected == undefined) || (tmpBranchInfoSelected == null)) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_BANKCODE'));
+		return;
+	}
+	var tmpArr = tmpBranchInfoSelected.split('#');
+	if ((tmpArr == undefined) || (tmpArr == null) || (tmpArr.length < 0)) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_BANKCODE'));
+		return;
+	}
+	arrayArgs.push(tmpArr[0]);
+	
+	arrayArgs.push(destinationAcc.value);
+	
+	tmpStr = destinationAccName.value;
+	if (tmpStr.length < 1) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_DESTACC_NAME'));
+		return;
+	}
+	if(!checkAvailableCharLNH(destinationAccName.value)) {
+		showAlertText(CONST_STR.get('ERR_INCORRECT_ACC_NAME'));
+		return;
+	}
+	arrayArgs.push(encodeURIComponent(destinationAccName.value));
+	//arrayArgs.push(destinationAccName.value);
+	
+	tmpStr = amountTrans.value;
+	var amount = removeSpecialChar(amountTrans.value);
+	if ((parseInt(amount) <= 0) || (tmpStr.length < 1)) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_AMOUNT'));
+		return;
+	}
+	arrayArgs.push(amount);
+	
+	if((tmpFeeType != 'Y') && tmpFeeType != 'N') {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_FEE_TYPE'));
+		return;
+	}
+	arrayArgs.push(tmpFeeType);
+	
+	tmpStr = contentTrans.value;
+	if (tmpStr.length < 1) {
+		showAlertText(CONST_STR.get('ERR_INPUT_NO_CONTENT'));
+		return;
+	}
+	if(!checkAvailableChar(contentTrans.value)) {
+		showAlertText(CONST_STR.get('ERR_INCORRECT_TRANS_CONTENT'));
+		return;
+	}
+	//contentTrans.value = maskCardNumber(tmpStr); //check and mask visa card
+	//arrayArgs.push(contentTrans.value);
+	arrayArgs.push(encodeURIComponent(contentTrans.value));
+	if(mng == CONST_VAL_PAYEE[2]){
+		arrayArgs.push(mng+"#"+sampleName.value);	
+	}else{
+		arrayArgs.push(mng);	
+	}	
+	
+	if(mng == CONST_VAL_PAYEE[2]){
+		if(sampleName.value.length <1){
+			showAlertText(CONST_STR.get('ERR_INPUT_NO_SAMPLE'));
+			return;
+		}
+	}
+	
+	//validate input
+	var freqTrans = document.getElementById("trans.frequency");
+	var sdateTrans = document.getElementById("trans.begindate");
+	var edateTrans = document.getElementById("trans.enddate");
+	
+	var tmpsdate = sdateTrans.value;
+	var sDate = new Date(Date.parse(tmpsdate));
+	if(tmpsdate == '' || tmpsdate == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER_DATE')) {
+		showAlertText(CONST_STR.get('ERR_INPUT_START_DATE'));
+		return;
+	}
+	
+	var tmpedate = edateTrans.value;
+	var eDate = new Date(Date.parse(tmpedate));
+	
+	if(tmpedate == '' || tmpedate == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER_DATE')) {
+		showAlertText(CONST_STR.get('ERR_INPUT_END_DATE'));
+		return;
+	}
+	
+	
+	var sDateVal = tmpsdate.split('/');
+	var eDateVal = tmpedate.split('/');
+	/*var sDateformat = new Date(sDateVal[2] + "-" + sDateVal[1] + "-" + sDateVal[0]);
+	var eDateformat = new Date(eDateVal[2] + "-" + eDateVal[1] + "-" + eDateVal[0]);
+	if(eDateformat > sDateformat){
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+		return;
+	}*/
+
+	if(sDateVal[2] > eDateVal[2]){
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+		return;
+	} else
+	if(sDateVal[2] == eDateVal[2]){
+		if(sDateVal[1] > eDateVal[1]){
+			showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+			return;
+		}else if(sDateVal[1] == eDateVal[1]){
+			if(sDateVal[0] > eDateVal[0]){
+				showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+				return;
+			}
+		}
+	}
+	
+	/*if(sDate > eDate){
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_NOT_VALID_DATE'));
+		return;
+	}*/
+	arrayArgs.push(sDateVal[2] + sDateVal[1] + sDateVal[0]);
+	arrayArgs.push(eDateVal[2] + eDateVal[1] + eDateVal[0]);
+	if(checkFreq() == true){
+		arrayArgs.push(gFreq);
+	}else{
+		return;
+	}
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_PRD_INTER_NOR_TRANS_ACC"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((checkResponseCodeSuccess(gprsResp.respCode) || gprsResp.respCode == CONSTANTS.get("COM_FINGERPRINT_OVER_LIMIT") || gprsResp.respCode == CONSTANTS.get("COM_FINGERPRINT_OVER_DATE_LIMIT")) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_PRD_INTER_NOR_TRANS_ACC")))) {
+		parserLocalTrans();
+		genReviewScreen();
+		
+	} else if (gprsResp.respCode == '2003' && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_PRD_INTER_NOR_TRANS_ACC")))) {
+		parserLocalTrans();
+		genCacheReviewScreen();
+		navController.pushToView("com-verify-password", true);
+	}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(e){
+	/*if ((e.type == "evtHttpFail") && (currentPage == "transfer/transfer-periodic-interbank-create-scr")) {
+
+		document.removeEventListener("evtHttpFail", requestMBServiceFail, false);
+		//alert("Http request fail!");
+	}*/
+};
+
+//event: selection dialog list
+function handleSelectionAccountList(e) {
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+		flag = true;
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("id.accountno");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			//nodeAccBal.innerHTML = "<h6 class='blstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": <b>" + e.selectedValue2 + "</b></h6>";
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND</div>";
+			
+			
+		}
+	}
+}
+
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+
+function parserLocalTrans() {
+	//parser info
+	tmpFeeAmount = gprsResp.arguments[1];
+	tmpEffectDate = gprsResp.arguments[2];
+}
+
+function genReviewScreen() {
+	//var nodeReviewInfo = document.getElementById("panelContent");
+	var htmlReviewInfo = "";
+	logInfo('tmpBankInfoSelected :' + tmpBankInfoSelected);
+	var bankName = document.getElementById("trans.bankname");
+	var sourceAcc = document.getElementById("id.accountno");
+	var destinationAcc = document.getElementById("trans.destaccountnointer");
+	var destinationAccName = document.getElementById("trans.destaccountname");
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	var tagFeeType = document.getElementById("trans.fee");
+	var sampleName = document.getElementById("id.sample.name");
+	var freqTrans = document.getElementById("trans.frequency");
+	var sdateTrans = document.getElementById("trans.begindate");
+	var edateTrans = document.getElementById("trans.enddate");
+	
+	htmlReviewInfo = "<table width='98%' align='center'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_INFO_TITLE') + 
+				"</h5>" + "<div class='line-separate' style='display:none'></div></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='97%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('TRANS_TYPE') + 
+					"</td>" + "<td class='td-right'>" + 
+						CONST_STR.get('MENU_TRANS_PRD_INTER') + 
+					"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				//"<tr><table width='97%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('TRANS_LOCAL_ACC_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						sourceAcc.value + 
+					"</td></tr>";
+	
+	var balance = 0;
+	for (var idx=0; idx<gUserInfo.accountList.length; idx++) {
+		var tmpAcc = new AccountObj();
+		tmpAcc = gUserInfo.accountList[idx];
+		if(tmpAcc.accountNumber == sourceAcc.value) {
+			htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default' scrinfo='review'>" + 
+					"<td class='td-left'>" + 
+						CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(tmpAcc.balanceAvailable) + " " + tmpAcc.currency +
+					"</td></tr></table></tr>";
+			balance = tmpAcc.balanceAvailable;					
+		}
+	}
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE') + 
+				"</h5><div class='line-separate' style='display:none'></div></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='97%' align='center' class='background-blacktrans'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION') + 
+				"</td>" + "<td class='td-right'>" + 
+					destinationAcc.value + 
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_DEST_ACCOUNT_NAME_TITLE') + 
+				"</td>" + "<td class='td-right'>" + 
+					destinationAccName.value + 
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_BANK_TITLE') + 
+				"</td>" + "<td class='td-right form-control-right2linetext'>" + 
+					bankName.value + 
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_AMOUNT_TITLE') + 
+				"</td>" + "<td class='td-right'>" + 
+					amountTrans.value + " " + tmpAcc.currency + 
+				"</td></tr>";
+	var amount = removeSpecialChar(amountTrans.value);
+	logInfo('amountTrans.value: ' + amountTrans.value + ' amount: ' + amount);
+	var fee = removeSpecialChar(tmpFeeAmount);
+	if(tmpFeeType== 'N'){
+	var balanceCont = balance - amount ;
+	}
+	else 
+	{
+	var balanceCont = balance - amount - fee;}
+	logInfo('balance: ' + balance + ' balanceCont: ' + balanceCont);
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_FEE_TITLE') + //phi
+				"</td>" + "<td class='td-right form-control-right2linetext'>" + 
+					formatNumberToCurrencyWithSymbol(tmpFeeAmount,' ' + tmpAcc.currency) + '\n' + tagFeeType.value + 
+				"</td></tr>";
+	/*htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default' scrinfo='review'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_BALANCE_CONT') + 
+				"</td>" + "<td class='td-right'>" + 
+					formatNumberToCurrencyWithSymbol(balanceCont,' VND')
+				"</td></tr>";	*/	
+				
+	//tan suat
+		htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_PERIODIC_FREQUENCY') + //ngay hieu luc
+				"</td>" + "<td class='td-right'>" + 
+					freqTrans.value + 
+				"</td></tr>";	
+				
+	//ngay bat dau
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE') + //ngay hieu luc
+				"</td>" + "<td class='td-right'>" + 
+					sdateTrans.value + 
+				"</td></tr>";	
+	
+	//ngay ket thuc	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_PERIODIC_END_DATE') + //ngay hieu luc
+				"</td>" + "<td class='td-right'>" + 
+					edateTrans.value + 
+				"</td></tr>";			
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_PERIODIC_CONTENT') + 
+				"</td>" + "<td class='td-right'><span style='word-break:break-all;'>" + 
+					contentTrans.value + 
+				"</span></td></tr>";
+	if(mng == CONST_VAL_PAYEE[2]){			
+		htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default'>" + 
+					"<td class='td-left'>" + 
+						CONST_STR.get('TRANSFER_REMITTANCE_NAME_REVIEW') + //Mẫu chuyển tiền
+					"</td>" + "<td class='td-right'>" + 
+						sampleName.value + 
+					"</td></tr>";
+	}
+	/*htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_EFFECTIVE_DATE') + //ngay hieu luc
+				"</td>" + "<td class='td-right'>" + 
+					tmpEffectDate + 
+				"</td></tr>";*/
+htmlReviewInfo = htmlReviewInfo + 					
+            "<tr class='desktopmode' id='result-export-print' style='display:none;'>" +
+            	"<td colspan='2'>" +
+                	"<div align='right' style='padding-right: 5px;'>" +
+                        "<a href='javascript:void(0)' onclick='printResultHistory();'><img title='In trang này' style='margin-right:5px;' src='css/img/print.png'/></a>" +
+                    "</div></td></tr>";
+	/*htmlReviewInfo = htmlReviewInfo + 
+				"<tr><td width='50%'>" +
+					"<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK'/>" +
+				"</td><td width='50%'>" +
+					"<input type='button' class='btnshadow btn-second' onClick='sendJSONRequest()' onclick='' value='REVIEW_BTN_CONFIRM' />" +
+				"</td></tr>";*/
+	htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	htmlReviewInfo = htmlReviewInfo + "<span style='margin-left:5%'>";
+	htmlReviewInfo = htmlReviewInfo + "<table width='96%'>";
+	htmlReviewInfo = htmlReviewInfo + "<tr>" +
+                /*"<td width='10%' align='right' id='trCancel'>" +
+                    "<a style='font-weight:bold' onclick='btnCancelClick()' href='JavaScript:void(0)'><span>REVIEW_BTN_CANCEL</span></a>" +
+                "</td>" +*/
+				"<td width='32%' id='trCancel'><input type='submit' class='btnshadow btn-primary' onClick='btnCancelClick()' value='REVIEW_BTN_CANCEL'/></td>" +
+              "<td width='32%' id='trgoBack'><input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK'/></td>" +
+              "<td width='32%' id='trNext'><input type='button' class='btnshadow btn-second' onClick='sendJSONRequest()' value='REVIEW_BTN_CONFIRM'/></td>" +
+            "</tr>";
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	
+	//gReviewHtml = htmlReviewInfo;
+	setReviewHtmlStore(htmlReviewInfo);
+	
+	navController.pushToView("com-review-scr", true);
+}
+
+function genCacheReviewScreen() {
+	var htmlReviewInfo = "";
+	logInfo('tmpBankInfoSelected :' + tmpBankInfoSelected);
+	var bankName = document.getElementById("trans.bankname");
+	var sourceAcc = document.getElementById("id.accountno");
+	var destinationAcc = document.getElementById("trans.destaccountnointer");
+	var destinationAccName = document.getElementById("trans.destaccountname");
+	var amountTrans = document.getElementById("trans.amount");
+	var contentTrans = document.getElementById("trans.content");
+	var tagFeeType = document.getElementById("trans.fee");
+	var sampleName = document.getElementById("id.sample.name");
+	var freqTrans = document.getElementById("trans.frequency");
+	var sdateTrans = document.getElementById("trans.begindate");
+	var edateTrans = document.getElementById("trans.enddate");
+	
+	htmlReviewInfo = "<table width='98%' align='center'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_INFO_TITLE') + 
+				"</h5>" + "<div class='line-separate' style='display:none'></div></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='97%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('TRANS_TYPE') + 
+					"</td>" + "<td class='td-right'>" + 
+						CONST_STR.get('MENU_TRANS_PRD_INTER') + 
+					"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				//"<tr><table width='97%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						CONST_STR.get('TRANS_LOCAL_ACC_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						sourceAcc.value + 
+					"</td></tr>";
+	
+	var balance = 0;
+	for (var idx=0; idx<gUserInfo.accountList.length; idx++) {
+		var tmpAcc = new AccountObj();
+		tmpAcc = gUserInfo.accountList[idx];
+		if(tmpAcc.accountNumber == sourceAcc.value) {
+			htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default' scrinfo='review'>" + 
+					"<td class='td-left'>" + 
+						CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + 
+					"</td>" + "<td class='td-right'>" + 
+						formatNumberToCurrency(tmpAcc.balanceAvailable) + " " + tmpAcc.currency +
+					"</td></tr></table></tr>";
+			balance = tmpAcc.balanceAvailable;					
+		}
+	}
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE') + 
+				"</h5><div class='line-separate' style='display:none'></div></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='97%' align='center' class='background-blacktrans'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION') + 
+				"</td>" + "<td class='td-right'>" + 
+					destinationAcc.value + 
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_DEST_ACCOUNT_NAME_TITLE') + 
+				"</td>" + "<td class='td-right'>" + 
+					destinationAccName.value + 
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_BANK_TITLE') + 
+				"</td>" + "<td class='td-right form-control-right2linetext'>" + 
+					bankName.value + 
+				"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_AMOUNT_TITLE') + 
+				"</td>" + "<td class='td-right'>" + 
+					amountTrans.value + " " + tmpAcc.currency + 
+				"</td></tr>";
+	var amount = removeSpecialChar(amountTrans.value);
+	logInfo('amountTrans.value: ' + amountTrans.value + ' amount: ' + amount);
+	var fee = removeSpecialChar(tmpFeeAmount);
+	if(tmpFeeType== 'N'){
+	var balanceCont = balance - amount ;
+	}
+	else 
+	{
+	var balanceCont = balance - amount - fee;}
+	logInfo('balance: ' + balance + ' balanceCont: ' + balanceCont);
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_FEE_TITLE') + //phi
+				"</td>" + "<td class='td-right form-control-right2linetext'>" + 
+					formatNumberToCurrencyWithSymbol(tmpFeeAmount,' ' + tmpAcc.currency) + '\n' + tagFeeType.value + 
+				"</td></tr>";
+	/*htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default' scrinfo='review'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_LOCAL_BALANCE_CONT') + 
+				"</td>" + "<td class='td-right'>" + 
+					formatNumberToCurrencyWithSymbol(balanceCont,' VND')
+				"</td></tr>";	*/	
+				
+	//tan suat
+		htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_PERIODIC_FREQUENCY') + //ngay hieu luc
+				"</td>" + "<td class='td-right'>" + 
+					freqTrans.value + 
+				"</td></tr>";	
+				
+	//ngay bat dau
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_PERIODIC_BEGIN_DATE') + //ngay hieu luc
+				"</td>" + "<td class='td-right'>" + 
+					sdateTrans.value + 
+				"</td></tr>";	
+	
+	//ngay ket thuc	
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_PERIODIC_END_DATE') + //ngay hieu luc
+				"</td>" + "<td class='td-right'>" + 
+					edateTrans.value + 
+				"</td></tr>";			
+				
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_PERIODIC_CONTENT') + 
+				"</td>" + "<td class='td-right'><span style='word-break:break-all;'>" + 
+					contentTrans.value + 
+				"</span></td></tr>";
+	if(mng == CONST_VAL_PAYEE[2]){			
+		htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default'>" + 
+					"<td class='td-left'>" + 
+						CONST_STR.get('TRANSFER_REMITTANCE_NAME_REVIEW') + //Mẫu chuyển tiền
+					"</td>" + "<td class='td-right'>" + 
+						sampleName.value + 
+					"</td></tr>";
+	}
+	/*htmlReviewInfo = htmlReviewInfo + 
+				"<tr class='trow-default'>" + 
+                "<td class='td-left'>" + 
+					CONST_STR.get('TRANS_EFFECTIVE_DATE') + //ngay hieu luc
+				"</td>" + "<td class='td-right'>" + 
+					tmpEffectDate + 
+				"</td></tr>";*/
+htmlReviewInfo = htmlReviewInfo + 					
+            "<tr class='desktopmode' id='result-export-print' style='display:none;'>" +
+            	"<td colspan='2'>" +
+                	"<div align='right' style='padding-right: 5px;'>" +
+                        "<a href='javascript:void(0)' onclick='printResultHistory();'><img title='In trang này' style='margin-right:5px;' src='css/img/print.png'/></a>" +
+                    "</div></td></tr>";
+	/*htmlReviewInfo = htmlReviewInfo + 
+				"<tr><td width='50%'>" +
+					"<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK'/>" +
+				"</td><td width='50%'>" +
+					"<input type='button' class='btnshadow btn-second' onClick='sendJSONRequest()' onclick='' value='REVIEW_BTN_CONFIRM' />" +
+				"</td></tr>";*/
+	htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	htmlReviewInfo = htmlReviewInfo + "<span style='margin-left:5%'>";
+	htmlReviewInfo = htmlReviewInfo + "<table width='96%'>";
+	htmlReviewInfo = htmlReviewInfo + "<tr>" +
+                /*"<td width='10%' align='right' id='trCancel'>" +
+                    "<a style='font-weight:bold' onclick='btnCancelClick()' href='JavaScript:void(0)'><span>REVIEW_BTN_CANCEL</span></a>" +
+                "</td>" +*/
+				"<td width='32%' id='trCancel'><input type='submit' class='btnshadow btn-primary' onClick='btnCancelClick()' value='REVIEW_BTN_CANCEL'/></td>" +
+              "<td width='32%' id='trgoBack'><input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK'/></td>" +
+              "<td width='32%' id='trNext'><input type='button' class='btnshadow btn-second' onClick='sendJSONRequest()' value='REVIEW_BTN_CONFIRM'/></td>" +
+            "</tr>";
+	htmlReviewInfo = htmlReviewInfo + "</table>";
+	
+	//gReviewHtml = htmlReviewInfo;
+	setReviewHtmlStore(htmlReviewInfo);
+}
+
+function showInputMNG()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+	var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+	document.addEventListener("evtSelectionDialog", handleInputMNG, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_MGN_PAYEE_SELCT'), tmpArray1, tmpArray2, false);
+}
+function handleInputMNG(e)
+{
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var mnglist = document.getElementById('id.payee');
+			if (mnglist.nodeName == "INPUT") {
+				mnglist.value = e.selectedValue1;
+			}
+			else {
+				mnglist.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			mng = e.selectedValue2;
+			//Kiểm tra, nếu người dùng chọn mẫu thì show và lưu mẫu
+			if(mng == CONST_VAL_PAYEE[2]){
+				//Hiển thị cột cho người dùng nhập tên mẫu
+				document.getElementById('id.sample').style.display = "";
+			}else{
+				document.getElementById('id.sample').style.display = "none";
+			}
+		}
+		
+	}
+}
+
+function handleInputMNGClose() {
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+	}
+}
+
+function showPayeePage()
+{
+
+	document.addEventListener("evtSelectionDialogInput", handleInputPayeeAccOpen, false);
+	document.addEventListener("evtSelectionDialogCloseInput", handleInputPayeeAccClose, false);
+	document.addEventListener("tabChange", tabChanged, false);
+	document.addEventListener("onInputSelected", okSelected, false);	
+	//Tao dialog
+	dialog = new DialogListInput(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), 'TH',CONST_PAYEE_INTER_TRANSFER);
+	
+	dialog.showDialog(callbackShowDialogSuccessed, '');
+}
+function callbackShowDialogSuccessed(node){
+	
+}
+//event: selection dialog list
+function handleInputPayeeAccOpen(e) {
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		handleInputPayeeAccClose();
+		if(e.tabSelected == 'tab1'){
+			var destinationAcc = document.getElementById("trans.destaccountnointer");
+			var nameReceived = document.getElementById("trans.destaccountname");
+			var bankName = document.getElementById('trans.bankname');
+			var obj = e.dataObject;	
+			/*var payeelist = document.getElementById('id.payee');
+			payeelist.disabled = 'true';	*/		
+			tmpBranchInfoSelected = obj.citadCode +  "#" +  obj.partnerName;
+			destinationAcc.value = obj.transValue;
+			nameReceived.value =obj.peopleName;		
+			bankName.value = obj.partnerName;	
+		}else{
+			var obj = e.dataObject;
+			excuteInterSampleSelected(obj);
+		}				
+	}
+}
+
+function handleInputPayeeAccClose(e) {
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputPayeeAccClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputPayeeAccOpen, false);
+		document.removeEventListener("tabChange", tabChanged, false);
+		document.removeEventListener("onInputSelected", okSelected, false);	}
+}
+function tabChanged(e){	
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {		
+		var node = e.selectedValueTab;
+		if(node.id == 'tab1'){
+			if(dialog !=null && dialog!= undefined){
+				dialog.activeDataOnTab('tab1');
+				dialog.transType = "TH";
+				dialog.gPayeeCode = CONST_PAYEE_INTER_TRANSFER;
+				dialog.requestData(node.id);
+			}
+		}
+		else{			
+			if(dialog !=null && dialog!= undefined){
+				dialog.activeDataOnTab('tab2');
+				dialog.transType = "1";
+				dialog.gPayeeCode = "";
+				dialog.requestData(node.id);
+			}
+		}
+		
+	}
+}
+
+
+function handleInputPayeeAcc(e) {
+	document.removeEventListener("evtInputPayeeAccount", handleInputPayeeAcc, false);
+	//alert('input value: ' + e.inputValue);
+	tmpDestinationAcc = e.inputValue;
+	if (e.payeeObject != undefined && e.payeeObject != null)
+	{
+		tmpDestinationAccName = e.payeeObject.peopleName;
+		tmpPayeeType = e.payeeObject.payeeType;
+		tmpBankName = e.payeeObject.partnerName;
+		if (e.payeeObject.citadCode != undefined && e.payeeObject.citadCode != '')
+		{	
+			tmpBankInfoSelected = 	e.payeeObject.citadCode + "#" +  e.payeeObject.partnerName;
+			tmpBranchInfoSelected =  e.payeeObject.citadCode + "#" +  e.payeeObject.partnerName;
+		}
+	}
+	else
+	{
+		tmpDestinationAccName = '';
+		tmpPayeeType = '';
+		tmpBranchInfoSelected = '';
+		tmpBankName = '';
+	}
+	statusInputAcc = true
+}
+function okSelected(e){
+
+	tmpDestinationAcc = "";
+	tmpDestinationAccName = "";
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {		
+		handleInputPayeeAccClose();
+		var destinationAcc = document.getElementById("trans.destaccountnointer");
+		if ((e.selectedValue != undefined) &&(e.selectedValue != null) && (e.selectedValue.length>0)){
+			destinationAcc.value = e.selectedValue;			
+			statusInputAcc = true;
+			//loadLocalTransSuccess();
+		}
+	}
+}
+
+
+//gen sequence form
+function genSequenceFormInterBank() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	//var tmpStepNo = 401;
+	var tmpStepNo = 301;
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqFormInterBank');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+function getBalanceByAccNo(accNo){
+
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+			var tmpAcc = gUserInfo.accountList[i];			
+			if(accNo == tmpAcc.accountNumber){
+				return gUserInfo.accountList[i].balanceAvailable;			
+			}
+	}
+	return '0';
+}
+
+/*** SELECT TRANSFER TYPE ***/
+
+function showPrdTransTypeSelection(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_PRD_TRANS_TYPE_EN: CONST_PRD_TRANS_TYPE_VN;
+	var tmpArray2 = CONST_PRD_TRANS_TYPE_KEY;
+	document.addEventListener("evtSelectionDialog", handleSelectionPrdTransType, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionPrdTransTypeClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_BTN_SELECT_FUNC'), tmpArray1, tmpArray2, false);
+}
+function handleSelectionPrdTransType(e){
+	var selectionID = "";
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		handleSelectionPrdTransTypeClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagSelection = document.getElementById("id.selprdfuncs");
+			if (tagSelection.nodeName == "INPUT") {
+				tagSelection.value = e.selectedValue1;
+			}
+			else {
+				tagSelection.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectionID = e.selectedValue2;
+		}
+		if (selectionID == 'LOCAL') {
+			navController.initWithRootView("transfer/transfer-periodic-create-scr", true, 'xsl');
+			
+		}
+		else if (selectionID == 'FASTACC') {
+			navController.initWithRootView("transfer/transfer-periodic-fast-interbank-create-scr", true, 'xsl');
+			
+		}
+		else if (selectionID == 'FASTCARD') {
+			navController.initWithRootView("transfer/transfer-periodic-card-create-scr", true, 'xsl');
+			
+		}
+		else if (selectionID == 'INTERBANK') {
+			navController.initWithRootView("transfer/transfer-periodic-interbank-create-scr", true);
+			
+		}
+	}
+}
+
+function handleSelectionPrdTransTypeClose(){
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionPrdTransTypeClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionPrdTransType, false);
+	}
+}
+
+//Chon tan suat
+function showInputFrequency()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_PERIODIC_FREQUENCY_EN: CONST_KEY_PERIODIC_FREQUENCY_VN;
+	var tmpArray2 = CONST_VAL_PERIODIC_FREQUENCY;
+	document.addEventListener("evtSelectionDialog", handleInputFrequency, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+	showDialogList(CONST_STR.get('TRANS_PERIODIC_DIALOG_TITLE_FREQUENCY'), tmpArray1, tmpArray2, false);
+}
+
+
+function handleInputFrequency(e)
+{
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		handleInputFrequencyClose();
+		//document.removeEventListener("evtSelectionDialog", handleInputFrequency, false);
+		var frequency = document.getElementById('trans.frequency');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			if (frequency.nodeName == "INPUT") {
+				frequency.value = e.selectedValue1;
+			}
+			else {
+				frequency.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+				gFreq = e.selectedValue2;
+		}
+	}
+		
+}
+
+function handleInputFrequencyClose() {
+	if (currentPage == "transfer/transfer-periodic-interbank-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputFrequency, false);
+	}
+}
+
+function checkFreq(){
+	var freqTrans = document.getElementById("trans.frequency");
+	if(freqTrans.value == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('TRANS_PERIODIC_ERR_FREQ'));
+		return false;
+	}
+	return true;
+}

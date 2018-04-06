@@ -1,0 +1,1589 @@
+/**
+ * Created by CongNT1.Fsoft
+ * User: 
+ * Date: 07/07/14
+ * Time: 5:35 PM
+ */
+
+/*** HEADER ***/
+var tmpDestinationAcc;
+var gprsResp = new GprsRespObj("","","","");
+var arrResultService = null;
+var arrFullList = null;
+var arrTrustList = null;
+var arrNormalList = null;
+
+var arrSearchTmp = null;
+var arrSearchCallTmp = null;
+
+var docXml;
+
+var typeSearch = "ALL";
+
+
+var gTransId = "";
+var gFavoriteName = "";
+var gTypeList = "";
+var gAcctNo = "";
+
+var numberRecords = 5;
+var pageIndex = 1;
+var requestType = "";
+
+var flag = false;
+
+var selectedType = "";
+var selectedName = "";
+
+var globalScreenMobile= 810;
+
+var idDeleteBenefic = null;
+var tempRespArr;
+var tempIndex;
+var objectVal = {};
+
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+	
+	return '';
+}
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	navController.getBottomBar().hide();
+	logInfo('transfer load success');
+    document.getElementById('mainViewContent').style.overflow = 'hidden';
+    document.addEventListener('evtChangeWidthMobile',sendRequestJSON,false);
+    document.addEventListener('evtChangeWidthDesktop',sendRequestJSON,false);
+    if(!flag) {
+		sendRequestJSON();
+	} else {
+			arrFullList = JSON.parse(localStorage['arrFullList']);
+			arrTrustList =	JSON.parse(localStorage['arrTrustList']);
+			arrNormalList=	JSON.parse(localStorage['arrNormalList']);
+			pageIndex = localStorage['pageIndex'];
+			typeSearch = localStorage['typeSearch'];
+			handleDataFromBack(typeSearch, pageIndex);
+	
+	}
+	
+	//handle input transfer content
+	//setInputCharNumberAndUpcase('trans.content', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+	var isIPad = navigator.userAgent.match(/iPad/i);
+	if(isIPad) keyboardEvent();
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('transfer will unload');
+    document.getElementById('mainViewContent').style.overflow = 'auto';
+    document.removeEventListener('evtChangeWidthMobile',sendRequestJSON,false);
+    document.removeEventListener('evtChangeWidthDesktop',sendRequestJSON,false);
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+/*** FUNCTIONS ***/
+
+
+function showTypeListSelection() {
+	var arrValues = [];
+	var arrKeys = [];
+	arrValues.push(CONST_STR.get('BENEFIC_LIST_NORMAL'));
+	arrValues.push(CONST_STR.get('BENEFIC_LIST_TRUST'));
+	arrKeys.push("TH");
+	arrKeys.push("TC");
+	document.addEventListener("evtSelectionDialog", handleSelectionTypeList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionTypeListClose, false);
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), arrValues, arrKeys, false);
+}
+
+//event: selection dialog list
+function handleSelectionTypeList(e) {
+	if (currentPage == "transfer/transfer-list-benefic") {
+		handleSelectionTypeListClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("selTypeList");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+        console.log(e.selectedValue2);
+		gTypeList = e.selectedValue2;
+	}
+}
+
+function handleSelectionTypeListClose(e) {
+	if (currentPage == "transfer/transfer-list-benefic") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionTypeListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionTypeList, false);
+	}
+}
+
+function cancelEdit() {
+	var objDiv = document.getElementById("divEdit");
+	var acctObj = document.getElementById("txtSrcAcct");
+	var acctNameObj = document.getElementById("txtNameAcct");
+	//var typeListObj = document.getElementById("selTypeList");
+	var favNameObj = document.getElementById("txtNameFavorite");
+	acctObj.value = '';
+	acctNameObj.value = '';
+	//typeListObj.value = '';
+	favNameObj.value = '';
+	objDiv.style.display = 'none';
+	gTransId = "";
+	gFavoriteName = "";
+	gTypeList = "";
+}
+
+function update(acct, acctname, typelist, favname, transid) {
+	var objDiv = document.getElementById("divEdit");
+	var acctObj = document.getElementById("txtSrcAcct");
+	var acctNameObj = document.getElementById("txtNameAcct");
+	//var typeListObj = document.getElementById("selTypeList");
+	var favNameObj = document.getElementById("txtNameFavorite");
+	   
+	var lblAcctNoObj = document.getElementById("lblAcctNo");
+	var lblAcctNameObj = document.getElementById("lblAcctName");
+	
+	//var transId = parseInt(transType);
+	var v1 = "";
+	var v2 = "";
+	for(var i in arrFullList) {
+		if(acct == arrFullList[i].acctno && typelist == arrFullList[i].payee && transid == arrFullList[i].transid) {
+			lblAcctNoObj.innerHTML= arrFullList[i].stracctext;
+			lblAcctNameObj.innerHTML = arrFullList[i].straccnametext;
+			
+			acctObj.value = acct;
+			acctNameObj.value = arrFullList[i].accname;
+			//typeListObj.value = typelist == "TH" ? CONST_STR.get('BENEFIC_LIST_NORMAL') : CONST_STR.get('BENEFIC_LIST_TRUST');
+			favNameObj.value = arrFullList[i].favoritename;
+			
+			selectedType = typelist;
+			selectedName = favname;
+			
+			break;
+		}
+	}
+	gTransId = transid;
+    console.log("transt id cua sang la :  " + gTransId);
+	gFavoriteName = favname;
+	gTypeList = typelist;
+	objDiv.style.display = '';
+}
+
+
+var conditions = gConditions; 
+/*** VALIDATE INPUT ***/
+
+
+function sendRequestJSON() {
+	logInfo('sendJSON');
+	// collect the form data while iterating over the inputs	
+	var data = {};
+	var arrayArgs = new Array();
+	//CIF
+	//arrayArgs.push(gCustomerNo);
+	//Tran type
+	arrayArgs.push("TRANSFER");
+	//payee
+	arrayArgs.push("ALL");
+	var gprsCmd = new GprsCmdObj("234", "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//request service success
+function requestMBServiceSuccess(e) {
+	logInfo("benefic management: " + e);
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp);
+	if(gprsResp.respCode == '0') {
+		arrResultService = new Array();
+		arrResultService = gprsResp.arguments;
+        //console.log("sang can check : " + arrResultService[0]);
+		if(arrResultService != null && arrResultService.length >0) {
+//            if(gModeScreenView == CONST_MODE_SCR_SMALL){
+                // tra ve thong
+                var docXsl = getCachePageXsl("benefic-manage/benefic-manage-result-search-new");
+                //logInfo("->>>>>>>>>>");
+                //console.log(arrResultService);
+                //logInfo("->>>>>>>>>>");
+                //genHTMLStringWithXML(docXml, docXsl, successGenHtmlCallback, failGenHtmlCallback);
+			    genHTMLStringWithXML(genXMLDoc(arrResultService), docXsl, successCallback, failCallback);
+//            }else{
+//                document.getElementById('desktop-list-benefic').style.display = '';
+//                document.getElementById('mobile-list-benefic').style.display = 'none';
+//            }
+            //console.log('SANGNGNGNNSDN  ' +( new XMLSerializer()).serializeToString(docXsl));
+
+		} else {
+            document.getElementById('divSearchResult').style.display="none";
+            document.getElementById('btn-nodata').style.display = "";
+			document.getElementById("lblNoDataFound").innerHTML = CONST_STR.get('BENEFIC_LIST_NO_DATA_FOUND');
+		}
+	} else {
+		//navController.initWithRootView("accountxsl/account-scr", true, 'xsl');
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+//request service failed
+function requestMBServiceFail() {
+	//navController.initWithRootView("accountxsl/account-scr", true, 'xsl');
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+////////////////////////////////////////////
+function handleDataFromBack(typeSearch, pageIndex) {
+	var arrMedial = new Array();
+	
+	switch (typeSearch) {
+		case "ALL":
+			arrMedial = arrFullList;
+			break;
+		/*case "TC":
+			arrMedial = arrTrustList;
+			break;*/
+		case "TH":
+			arrMedial = arrNormalList;
+			break;
+		default:
+			break;
+	}
+	
+	setColor(typeSearch);
+	
+	genHtmlSearchResult(getItemsPerPage(arrMedial, pageIndex));
+	
+	genPagging(arrMedial, pageIndex);
+}
+/////////////////gen html result search////////////////////
+function successCallback(strHtml) {
+    //var dataInput= arrResultService;
+    // Fix
+    console.log(arrResultService);
+//
+//    var list = new ListView({
+//        data :  arrResultService,
+//        parserService : true,
+//        fieldsRow : [4,3,11],
+//        fieldsHidden : [1,2,3],
+//        avatar : {status: true},
+//        option : "default",
+//        numberRecords :10,
+//        maxWidthButton : 50,
+//        button : [
+//          //  { name : 'func', icon : 'icon-help', action: function(id){ console.log('func' + id); }, type: 'func'},
+//          //  { name : 'link', icon : 'icon-help', action: 'google.com', type: 'link'},
+//            { name : 'delete', icon : 'icon-help', action: function(id){
+//
+//                console.log('delete' + id);
+//                var pValue = document.getElementById(id).getElementsByClassName("p-value")[0];
+//                console.log(pValue);
+//                var accNo = pValue.childNodes[0].innerHTML;
+//                var typeList = pValue.childNodes[1].innerHTML;
+//                var transId = pValue.childNodes[2].innerHTML;
+//                showConfirmDelete(accNo, typeList, transId);
+//                console.log('delete' + id);
+//
+//            }, type: 'delete', idPopup :  'btnAlertConfirmOk'}
+//        ]
+//    });
+
+    var list = new ListView({
+        data :  arrFullList,
+        idParent : "list-view-search",
+        parserService : false,
+        fieldsRow : ["accname","acctno","category"],
+        fieldsHidden : ["acctno","payee","transid"],
+        avatar : {status: true},
+        option : "group",
+        fieldGroup: "category",
+        maxWidthButton : 50,
+        button : [
+          //  { name : 'func', icon : 'icon-help', action: function(id){ console.log('func' + id); }, type: 'func'},
+          //  { name : 'link', icon : 'icon-help', action: 'google.com', type: 'link'},
+            { name : 'delete', icon : 'icon-delete', action: function(id){
+
+                console.log('delete' + id);
+                var pValue = document.getElementById(id).getElementsByClassName("p-value")[0];
+                console.log(pValue);
+                var accNo = pValue.childNodes[0].innerHTML;
+                var typeList = pValue.childNodes[1].innerHTML;
+                var transId = pValue.childNodes[2].innerHTML;
+                showConfirmDelete(accNo, typeList, transId);
+                console.log('delete' + id);
+                idDeleteBenefic = id;
+
+            }, type: 'delete', idPopup :  'btnAlertConfirmOk'}
+        ]
+    });
+
+	var div = document.getElementById("divSearchResult");
+
+   // if (checkDeskTopModeOrMobileMode(globalScreenMobile))
+    if (isMobileMode)
+    {
+        // mobile
+
+        var html = list.showList(div);
+        div.style.top = document.getElementById('search').clientHeight + "px";
+        div.style.position = 'absolute';
+        //div.appendChild(html);
+        console.log("->>>>>>>>>>>>>>>>>>");
+    }
+    else{
+        // desktop
+        div.style.position = 'static';
+        div.innerHTML = strHtml ;
+        genScreenDesktop(arrFullList);
+    }
+}
+function genScreenDesktop(respArr){
+    tempRespArr = respArr;
+    for(var i = respArr.length; i > 0 ; i--){
+        for(var j = 0; j < i - 1; j++){
+            var tempValue;
+            if(respArr[j].transcode > respArr[j + 1].transcode){
+                tempValue = respArr[j];
+                respArr[j] = respArr[j + 1];
+                respArr[j + 1] = tempValue;
+            }
+        }
+    }
+    var div = document.getElementById("divListContact");
+    div.innerHTML = "";
+    var firstLetter;
+    for(var i = 0; i < respArr.length; i++){
+        if(i==0 || respArr[i].transcode != respArr[i - 1].transcode){
+            if(respArr[i].transcode == 'LOCALTRAN'){
+                firstLetter = CONST_STR.get('MENU_LOCAL_TRANS');
+            }else if(respArr[i].transcode == 'INTERFASTTRAN'){
+                firstLetter = CONST_STR.get('MENU_INTER_TRANS');
+            }else if(respArr[i].transcode == 'CARDTRANQ'){
+                firstLetter = CONST_STR.get('MENU_CARD_TRANS');
+            }else if(respArr[i].transcode == 'FPTSTRAN'){
+                firstLetter = CONST_STR.get('MENU_FPTS_TRANS');
+            }else if(respArr[i].transcode == 'CMND'){
+                firstLetter = CONST_STR.get('MENU_CMND_TRANS');
+            }
+            var localTitle = document.createElement('div');
+            localTitle.innerHTML = firstLetter;
+            localTitle.style.textAlign = "left";
+            localTitle.style.padding = "10px";
+            localTitle.style.color = "#5f2f85";
+            localTitle.style.fontWeight = "bold";
+            div.appendChild(localTitle);
+        }
+
+        var tempView = document.createElement('div');
+        tempView.setAttribute('class','my-acc-view');
+        tempView.setAttribute('id','localAcc_' + i);
+        tempView.setAttribute('onclick',"viewAcc(this," + i + ")");
+        tempView.innerHTML = respArr[i].accname;
+        div.appendChild(tempView);
+    }
+    if(document.getElementById('localAcc_0')){
+        viewAcc(document.getElementById('localAcc_0'),0);
+    }else if(document.getElementById('localAcc_1')){
+        viewAcc(document.getElementById('localAcc_1'),1);
+    }
+}
+function viewAcc(e,index){
+
+    if(tempRespArr[index].transcode == 'LOCALTRAN'){
+        document.getElementById('option_0').setAttribute('onclick','transMode("' + tempRespArr[index].transcode + '")');
+        document.getElementById('accNameContact').innerHTML =  tempRespArr[index].accname;
+
+        document.getElementById('info_1').innerHTML =  CONST_STR.get('ACCOUNT_ACC_NO_TITLE');
+        document.getElementById('info_2').innerHTML =  tempRespArr[index].acctno;
+        document.getElementById('info_3').innerHTML =  CONST_STR.get('TRANSFER_BANK');
+        document.getElementById('info_4').innerHTML =  CONST_STR.get('TPBANK_TITLE');
+        document.getElementById('info_1').style.display = '';
+        document.getElementById('info_2').style.display = '';
+        document.getElementById('info_3').style.display = '';
+        document.getElementById('info_4').style.display = '';
+        document.getElementById('info_5').style.display = 'none';
+        document.getElementById('info_6').style.display = 'none';
+        document.getElementById('info_7').style.display = 'none';
+        document.getElementById('info_8').style.display = 'none';
+    }else if(tempRespArr[index].transcode == 'INTERFASTTRAN'){
+        document.getElementById('option_0').setAttribute('onclick','transMode("' + tempRespArr[index].transcode + '")');
+        document.getElementById('accNameContact').innerHTML =  tempRespArr[index].accname;
+        document.getElementById('info_1').innerHTML =  CONST_STR.get('ACCOUNT_ACC_NO_TITLE');
+        document.getElementById('info_2').innerHTML =  tempRespArr[index].acctno;
+        document.getElementById('info_3').innerHTML =  CONST_STR.get('TRANSFER_BANK');
+        document.getElementById('info_4').innerHTML =  tempRespArr[index].interbankname;
+
+        document.getElementById('info_1').style.display = '';
+        document.getElementById('info_2').style.display = '';
+        document.getElementById('info_3').style.display = '';
+        document.getElementById('info_4').style.display = '';
+        document.getElementById('info_5').style.display = 'none';
+        document.getElementById('info_6').style.display = 'none';
+        document.getElementById('info_7').style.display = 'none';
+        document.getElementById('info_8').style.display = 'none';
+    }else if(tempRespArr[index].transcode == 'CARDTRANQ'){
+        document.getElementById('option_0').setAttribute('onclick','transMode("' + tempRespArr[index].transcode + '")');
+        document.getElementById('accNameContact').innerHTML =  tempRespArr[index].accname;
+        document.getElementById('info_1').innerHTML =  CONST_STR.get('TRANS_CARD_NO_TITLE');
+        document.getElementById('info_2').innerHTML =  tempRespArr[index].acctno;
+
+        document.getElementById('info_1').style.display = '';
+        document.getElementById('info_2').style.display = '';
+        document.getElementById('info_3').style.display = 'none';
+        document.getElementById('info_4').style.display = 'none';
+        document.getElementById('info_5').style.display = 'none';
+        document.getElementById('info_6').style.display = 'none';
+        document.getElementById('info_7').style.display = 'none';
+        document.getElementById('info_8').style.display = 'none';
+    }else if(tempRespArr[index].transcode == 'FPTSTRAN'){
+        document.getElementById('option_0').setAttribute('onclick','transMode("' + tempRespArr[index].transcode + '")');
+        document.getElementById('accNameContact').innerHTML =  tempRespArr[index].accname;
+        document.getElementById('info_1').innerHTML =  CONST_STR.get('TRANS_FUND_FPTS_RECEIVE_ACC');
+        document.getElementById('info_2').innerHTML =  tempRespArr[index].acctno;
+
+        document.getElementById('info_1').style.display = '';
+        document.getElementById('info_2').style.display = '';
+        document.getElementById('info_3').style.display = 'none';
+        document.getElementById('info_4').style.display = 'none';
+        document.getElementById('info_5').style.display = 'none';
+        document.getElementById('info_6').style.display = 'none';
+        document.getElementById('info_7').style.display = 'none';
+        document.getElementById('info_8').style.display = 'none';
+    }else if(tempRespArr[index].transcode == 'CMND'){
+        document.getElementById('option_0').setAttribute('onclick','transMode("' + tempRespArr[index].transcode + '")');
+        document.getElementById('accNameContact').innerHTML =  tempRespArr[index].accname;
+
+        document.getElementById('info_1').innerHTML =  CONST_STR.get('TRANS_NUM_ID_PP');
+        document.getElementById('info_2').innerHTML =  tempRespArr[index].acctno;
+
+        document.getElementById('info_3').innerHTML =  CONST_STR.get('DATEOFISSUE_TITLE_BGN');
+        document.getElementById('info_4').innerHTML =  tempRespArr[index].ngay_cap_cmnd;
+
+        document.getElementById('info_5').innerHTML =  CONST_STR.get('PLACEOFISSUE_TITLE_BGN');
+        document.getElementById('info_6').innerHTML =  tempRespArr[index].noi_cap_cmnd;
+
+        document.getElementById('info_7').innerHTML =  CONST_STR.get('TRANSFER_BANK');
+        document.getElementById('info_8').innerHTML =  tempRespArr[index].interbankname;
+
+        document.getElementById('info_1').style.display = '';
+        document.getElementById('info_2').style.display = '';
+        document.getElementById('info_3').style.display = '';
+        document.getElementById('info_4').style.display = '';
+        document.getElementById('info_5').style.display = '';
+        document.getElementById('info_6').style.display = '';
+        document.getElementById('info_7').style.display = '';
+        document.getElementById('info_8').style.display = '';
+    }
+    resetActive();
+    e.style.backgroundColor = '#FF8C29';
+    e.style.color = '#fff';
+    tempIndex = index;
+}
+function resetActive(){
+    if(tempRespArr != undefined){
+        for(var i = 0; i< tempRespArr.length; i++){
+            if(document.getElementById('localAcc_' + i)){
+                if(i%2 == 0){
+                    document.getElementById('localAcc_' + i).style.backgroundColor = '#F7E9FA';
+                }else{
+                    document.getElementById('localAcc_' + i).style.backgroundColor = '#FDF1FF';
+                }
+                document.getElementById('localAcc_' + i).style.color = '#000';
+            }
+        }
+    }
+}
+
+function deleteSelection(){
+    var transValue = document.getElementById('info_2').innerHTML;
+    var peopleName = document.getElementById('accNameContact').innerHTML;
+    for(i = 0; i < tempRespArr.length; i++){
+        if(transValue == tempRespArr[i].acctno && peopleName == tempRespArr[i].accname){
+            showConfirmDelete(tempRespArr[i].acctno, tempRespArr[i].payee, tempRespArr[i].transid);
+        }
+    }
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/numberRecords);
+	}
+	return 0;
+}
+
+
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	pageIndex = selectedIdx;
+	
+	var arrMedial = new Array();
+	
+	
+	switch (typeSearch) {
+		case "ALL":
+			arrMedial = arrFullList;
+			break;
+		/*case "TC":
+			arrMedial = arrTrustList;
+			break;*/
+		case "TH":
+			arrMedial = arrNormalList;
+			break;
+		default:
+			break;
+	}
+	
+	cancelEdit();
+	
+	
+	genHtmlSearchResult(getItemsPerPage(arrMedial, selectedIdx));
+	
+	genPagging(arrMedial, selectedIdx);
+	
+}
+
+
+function getFirstPageData(selectedIdx) {
+	var arrMedial = new Array();
+	
+	
+	switch (typeSearch) {
+		case "ALL":
+			arrMedial = arrFullList;
+			break;
+		/*case "TC":
+			arrMedial = arrTrustList;
+			break;*/
+		case "TH":
+			arrMedial = arrNormalList;
+			break;
+		default:
+			break;
+	}
+	
+	
+	genHtmlSearchResult(getItemsPerPage(arrMedial, selectedIdx));
+	
+	genPagging(arrMedial, selectedIdx);
+}
+
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * numberRecords;
+		to = from + numberRecords;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}
+		
+	}
+	
+	return arrTmp;
+}
+
+function genPagging(arr, pageIndex) {
+	var totalPage = calTotalPage(arr);
+	var nodePager = document.getElementById('pageIndicatorNums');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodePager.innerHTML = tmpStr;
+	
+}
+
+function failCallback(e) {
+	logInfo('loi: ' + e);
+	
+}
+
+function isBlank(str) {
+    return (!str || /^\s*$/.test(str));
+}
+//////////////////////////////////////////
+
+function genXMLDoc(arrResultService) {
+	var docXml = createXMLDoc();
+	var rootNode = createXMLNode('beneficlist', '', docXml);
+	var tmpXmlNodeInfo;
+	var childNodeInfo;
+	
+	var lengthArr = arrResultService.length;
+	var arrTmp = null;
+	
+	var tenThuHuong = "";
+	var tenUaThich  = "";
+	
+	
+	arrFullList = new Array();
+	arrTrustList = new Array();
+	arrNormalList = new Array();
+	for(var i =0; i < lengthArr; i++) {
+		
+		arrTmp = new Array();
+		arrTmp = arrResultService[i].split("#");
+		
+		tenThuHuong = arrTmp[4] == "null" || isBlank(arrTmp[4])? "" : arrTmp[4];
+		tenUaThich = arrTmp[9] == "null" || isBlank(arrTmp[9])? "" : arrTmp[9];
+		
+		arrFullList.push({
+			acctno: arrTmp[3],
+            transcode: arrTmp[2],
+            interbankname: arrTmp[8],
+			//ngocdt bo sung them nen next 1 phan tu
+			//category : arrTmp[10],
+			category : arrTmp[11],
+			accname : tenThuHuong,
+			payee : arrTmp[1],
+			/*transid : arrTmp[11],
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[12] + '',
+			straccnametext: '' + arrTmp[13] + ''*/
+			transid : arrTmp[12],
+            noi_cap_cmnd: arrTmp[6],
+            ngay_cap_cmnd: arrTmp[5],
+
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[13] + '',
+			straccnametext: '' + arrTmp[14] + ''
+			});
+		
+		if(arrTmp[1] == "TC") {
+			arrTrustList.push({
+			acctno: arrTmp[3],
+			/*category : arrTmp[10],
+			accname : tenThuHuong,
+			payee : arrTmp[1],
+			transid : arrTmp[11],
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[12] + '',
+			straccnametext: '' + arrTmp[13] + ''*/
+			category : arrTmp[11],
+			accname : tenThuHuong,
+			payee : arrTmp[1],
+			transid : arrTmp[12],
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[13] + '',
+			straccnametext: '' + arrTmp[14] + ''
+			});
+		}
+		
+		if(arrTmp[1] == "TH") {
+			arrNormalList.push({
+			acctno: arrTmp[3],
+			/*category : arrTmp[10],
+			accname : tenThuHuong,
+			payee : arrTmp[1],
+			transid : arrTmp[11],
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[12] + '',
+			straccnametext: '' + arrTmp[13] + ''*/
+			category : arrTmp[11],
+			accname : tenThuHuong,
+			payee : arrTmp[1],
+			transid : arrTmp[12],
+			favoritename : tenUaThich,
+			stracctext: '' + arrTmp[13] + '',
+			straccnametext: '' + arrTmp[14] + ''
+			});
+		}		
+	}//end for
+	
+		logInfo(docXml);
+	return docXml;
+}
+
+
+
+function genXMLDocSearch(arr) {
+	var docXml = createXMLDoc();
+	var rootNode = createXMLNode('beneficlist', '', docXml);
+	var tmpXmlNodeInfo;
+	var childNodeInfo;
+	
+	var lengthArr = arr.length;
+	
+	for(var i =0; i < lengthArr; i++) {
+		
+		tmpXmlNodeInfo = createXMLNode('benefic', '', docXml, rootNode);
+
+		//tai khoan thu huong
+		childNodeInfo = createXMLNode('sourceacctitle', CONST_STR.get('BENEFIC_DES_ACC_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('sourceacccontent', arr[i].acctno, docXml, tmpXmlNodeInfo);
+		
+		//phan loai
+		childNodeInfo = createXMLNode('typetitle', CONST_STR.get('BENEFIC_TYPE_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('typecontent',  arr[i].category, docXml, tmpXmlNodeInfo);
+		
+		//ten nguoi thu huong
+		childNodeInfo = createXMLNode('nametitle', CONST_STR.get('BENEFIC_DES_NAME_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('namecontent', arr[i].favoritename == "" ? arr[i].accname : arr[i].favoritename, docXml, tmpXmlNodeInfo);
+		
+		//loai danh sach
+		childNodeInfo = createXMLNode('typelisttitle', CONST_STR.get('BENEFIC_TYPE_LIST_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('typelistcontent',  arr[i].payee, docXml, tmpXmlNodeInfo);
+		
+		//loai giao dich
+		childNodeInfo = createXMLNode('transtypetitle', '', docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('transtypecontent', arr[i].transid, docXml, tmpXmlNodeInfo);
+
+		//ten ua thich
+		childNodeInfo = createXMLNode('favnametitle', CONST_STR.get('BENEFIC_NAME_FAV_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('favnamecontent', arr[i].favoritename, docXml, tmpXmlNodeInfo);
+		
+		//lua chon
+		childNodeInfo = createXMLNode('choicetitle', CONST_STR.get('INPUT_ACC_BTN_SELECT'), docXml, tmpXmlNodeInfo);
+		
+	}
+	
+		//view detail to edit
+		tmpXmlNodeInfo = createXMLNode('beneficdetail', '', docXml, rootNode);
+		childNodeInfo = createXMLNode('sourceacctitle', CONST_STR.get('ESAVING_ACCOUNT_NO_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('nametitle', CONST_STR.get('BENEFIC_NAME_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('typelisttitle', CONST_STR.get('BENEFIC_TYPE_LIST_TITLE'), docXml, tmpXmlNodeInfo);
+		childNodeInfo = createXMLNode('namefavoritetitle', CONST_STR.get('BENEFIC_NAME_FAV_TITLE'), docXml, tmpXmlNodeInfo);
+		logInfo(docXml);
+	return docXml;
+}
+
+//check array is blank or not blank
+function isBlankArr(arrFullList) {
+	if(arrFullList == null || arrFullList.length == 0) {
+		return true;
+	}
+	return false;
+}
+
+function fillBenefic(type, me)
+{
+	pageIndex = 1;
+	typeSearch = type;
+	if (typeSearch == "ALL")
+	{
+		if(!isBlankArr(arrFullList)) {
+			
+			
+			genHtmlSearchResult(arrFullList);
+			getFirstPageData(1);
+		} else {
+			genHtmlSearchResult(arrFullList);
+				
+		}
+	}
+	else if (typeSearch == "TH")
+	{
+		if(!isBlankArr(arrNormalList)) {
+		
+		genHtmlSearchResult(arrNormalList);
+		getFirstPageData(1);
+		} else {
+			genHtmlSearchResult(arrNormalList);
+			
+		}
+	}
+	/*else if (typeSearch == "TC")
+	{
+		if(!isBlankArr(arrTrustList)) {
+		
+		genHtmlSearchResult(arrTrustList);
+		getFirstPageData(1);
+		} else {
+			genHtmlSearchResult(arrTrustList);
+			
+		}
+	}*/
+	var listTab = document.getElementById("tabs");
+	var tabs = listTab.getElementsByClassName("item");
+	for (var i = 0; i < tabs.length; i++) {
+		var tab = tabs[i];
+		if (tab == me)
+		{
+			tab.setAttribute("class","item selected");
+		}else{
+			tab.setAttribute("class","item");
+		}
+
+	}
+}
+/*
+function searchNormal(type, me) {
+	pageIndex = 1;
+	setColor(type);
+	typeSearch = "TH";
+	if(!isBlankArr(arrNormalList)) {
+		
+		genHtmlSearchResult(arrNormalList);
+		getFirstPageData(1);
+	} else {
+		genHtmlSearchResult(arrNormalList);
+		
+	}
+	
+	var listTab = document.getElementById("tabs");
+	var tabs = listTab.getElementsByClassName("item");
+	for (var i = 0; i < tabs.length; i++) {
+		var tab = tabs[i];
+		if (tab == me)
+		{
+			tab.setAttribute("class","item selected");
+		}else{
+			tab.setAttribute("class","item");
+		}
+
+	}
+}
+function searchAll(type){
+	pageIndex = 1;
+	setColor(type);
+	typeSearch = "ALL";
+	if(!isBlankArr(arrFullList)) {
+		
+		
+		genHtmlSearchResult(arrFullList);
+		getFirstPageData(1);
+	} else {
+		genHtmlSearchResult(arrFullList);
+			
+	}
+}
+
+function searchTrust(type) {
+	pageIndex = 1;
+	setColor(type);
+	typeSearch = "TC";
+	if(!isBlankArr(arrTrustList)) {
+		
+		genHtmlSearchResult(arrTrustList);
+		getFirstPageData(1);
+	} else {
+		genHtmlSearchResult(arrTrustList);
+		
+	}
+}
+*/
+function setColor(type) {
+	var btnNormal = document.getElementById("btnNormal");
+	var btnTrust = document.getElementById("btnTrust");
+	var btnFull = document.getElementById("btnFull");
+	switch (type) {
+		case "ALL":
+			btnFull.style.backgroundColor = "#FAA60D";
+			btnNormal.style.backgroundColor = "#AFAFB8";
+			btnTrust.style.backgroundColor = "#AFAFB8";
+			break;
+		/*case "TC":
+			btnTrust.style.backgroundColor = "#FAA60D";
+			btnNormal.style.backgroundColor = "#AFAFB8";
+			btnFull.style.backgroundColor = "#AFAFB8";
+			break;*/
+		case "TH":
+			btnNormal.style.backgroundColor = "#FAA60D";
+			btnTrust.style.backgroundColor = "#AFAFB8";
+			btnFull.style.backgroundColor = "#AFAFB8";
+			break;
+		default:
+			break;
+	}
+}
+
+
+
+function genHtmlSearchResult(arr) {
+	var docXsl = getCachePageXsl("benefic-manage/benefic-manage-result-search-new");
+
+	logInfo(docXsl);
+    arrSearchCallTmp = arr;
+    console.log("->>>arrSearchCallTmp arr");
+
+    console.log("arrSearchCallTmp " + arrSearchCallTmp);
+    console.log("->>>end arrSearchCallTmp arr");
+	genHTMLStringWithXML(genXMLDocSearch(arr), docXsl, successPaggingCallback, failPaggingCallback);
+}
+
+
+function successPaggingCallback(strHtml) {
+    //var dataInput= arr;
+
+
+    var div = document.getElementById("divSearchResult");
+    var tmpArr = new Array();
+    var strKeyword = document.getElementById("txtKeyword").value;
+
+    //if (checkDeskTopModeOrMobileMode(globalScreenMobile))
+    if (Environment.isMobile())
+    {
+        // mobile
+
+        div.innerHTML = "";
+        tmpArr = "";
+
+        if(isBlank(strKeyword)) {
+            switch (typeSearch) {
+                case "ALL":
+                    tmpArr = arrFullList;
+                    break;
+                /*case "TC":
+                 tmpArr = arrTrustList;
+                 break;*/
+                case "TH":
+                    tmpArr = arrNormalList;
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            tmpArr = arrSearchTmp;
+        }
+
+        var list = new ListView({
+            data :  tmpArr,
+            idParent : "list-view-search",
+            parserService : false,
+            fieldsRow : ["accname","acctno","category"],
+            fieldsHidden : ["acctno","payee","transid"],
+            avatar : {status: true},
+            option : "group",
+            fieldGroup : "category",
+            maxWidthButton : 50,
+            button : [
+               // { name : 'func', icon : 'icon-help', action: function(id){ console.log('func' + id); }, type: 'func'},
+               // { name : 'link', icon : 'icon-help', action: 'google.com', type: 'link'},
+                { name : 'delete', icon : 'icon-delete', action: function(id){
+                    var pValue = document.getElementById(id).getElementsByClassName("p-value");
+                    console.log(pValue);
+                    var accNo = pValue.childNodes[0].innerHTML;
+                    var typeList = pValue.childNodes[1].innerHTML;
+                    var transId = pValue.childNodes[2].innerHTML;
+
+                    showConfirmDelete(accNo, typeList, transId);
+                    console.log('delete' + id);
+                    idDeleteBenefic =id;
+                }
+                    , type: 'delete' , idPopup :  'btnAlertConfirmOk'}
+            ]
+        });
+
+        var html = list.showList(div);
+        div.style.top = document.getElementById('search').clientHeight + "px";
+    }
+    else{
+        // desktop
+        div.innerHTML = strHtml;
+        if(isBlank(strKeyword)) {
+            switch (typeSearch) {
+                case "ALL":
+                    tmpArr = arrFullList;
+                    break;
+                /*case "TC":
+                 tmpArr = arrTrustList;
+                 break;*/
+                case "TH":
+                    tmpArr = arrNormalList;
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            tmpArr = arrSearchTmp;
+        }
+    }
+
+
+}
+
+function failPaggingCallback() {
+	
+}
+
+
+//search by ky word
+function searchByKeyword(objKeyword) {
+	var strKeyword = objKeyword.value;
+
+	switch (typeSearch) {
+		case "ALL":
+			searchInArr(arrFullList, strKeyword);
+			break;
+		/*case "TC":
+			searchInArr(arrTrustList, strKeyword);
+			break;*/
+		case "TH":
+			searchInArr(arrNormalList, strKeyword);
+			break;
+		default:
+			break;
+	}
+
+}
+
+function searchInArr(arr, keyword) {
+	keyword = keyword.toLowerCase();
+	arrSearchTmp = new Array();
+	for(var i in arr) {
+		if(arr[i].acctno.toLowerCase().indexOf(keyword) != -1 
+			|| arr[i].category.toLowerCase().indexOf(keyword)  != -1 
+			|| arr[i].accname.toLowerCase().indexOf(keyword) != -1
+			|| arr[i].favoritename.toLowerCase().indexOf(keyword) != -1) {
+					arrSearchTmp.push(arr[i]);
+			}
+	}
+    if(isMobileMode){
+	    genHtmlSearchResult(arrSearchTmp);
+    }else{
+        genScreenDesktop(arrSearchTmp);
+    }
+
+}
+//gen sequence form
+function genSequenceForm() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpStepNo = 301;
+	setRespObjStore(301);
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+//call service update
+function requestUpdate() {
+	genSequenceForm() ;
+    actionbar.addListSequence("transfer/transfer-list-benefic");
+	//origin value	
+	logInfo("origin type: " + selectedType);
+	logInfo("origin name: " + selectedName);
+	
+	//new value
+	logInfo("new type: " + gTypeList);
+	logInfo("new name: " + document.getElementById("txtNameFavorite").value);	
+	
+	if (selectedType == gTypeList && selectedName == document.getElementById("txtNameFavorite").value)
+	{
+		showAlertText(CONST_STR.get("BENEFIC_ERR_NOT_CHANGE"));
+		return;	
+	}
+	
+	
+	requestType = "UPDATE";
+	requestService(requestType);
+}
+
+function genReviewScreen() {
+	if(gTypeList != "") {//? localStorage['gTypeList'] : gTypeList
+		gTypeList = gTypeList;
+	} else if(gTypeList == "") {
+		if(localStorage['gTypeList'] != undefined) {
+			gTypeList = localStorage['gTypeList'];
+		}
+	}
+	var accNo 			= document.getElementById("txtSrcAcct").value;
+	var accName 		= document.getElementById("txtNameAcct").value;
+	var typeList 		= gTypeList == "TC" ? CONST_STR.get('BENEFIC_LIST_TRUST') : CONST_STR.get('BENEFIC_LIST_NORMAL');
+	var transId 		= gTransId == "" ? localStorage['gTransId'] : gTransId;
+	var favoriteName 	= document.getElementById("txtNameFavorite").value;
+	
+	var lblAcctNo		= document.getElementById("lblAcctNo").innerHTML;
+	var lblAcctName		= document.getElementById("lblAcctName").innerHTML;
+	//var lblTypeList		= document.getElementById("lblTypeList").innerHTML;
+	var lblFavoriteName		= document.getElementById("lblFavoriteName").innerHTML;
+	
+	
+	/*var docXml 			= createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle',CONST_STR.get('MENU_BENEFIC_MANAGE') + ", "+ CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	//review/reviewinfo/transinfo
+	//so tai khoan
+	var tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', lblAcctNo, docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', accNo, docXml, tmpChildNodeTrans);
+
+	//ten tai khoan
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', lblAcctName, docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', accName, docXml, tmpChildNodeTrans);
+
+	//loai danh sach
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	//tmpChildNode = createXMLNode('transinfotitle', lblTypeList, docXml, tmpChildNodeTrans);
+	//tmpChildNode = createXMLNode('transinfocontent', typeList, docXml, tmpChildNodeTrans);
+	
+	//ten ua thich
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', lblFavoriteName, docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', favoriteName, docXml, tmpChildNodeTrans);
+	
+	//loai giao dich
+
+	tmpChildNodeTrans = createXMLNode('typelistcode', gTypeList, docXml, tmpXmlRootNode);
+	tmpChildNodeTrans = createXMLNode('transid', transId, docXml, tmpXmlRootNode);
+	//var xmlAsString = new XMLSerializer().serializeToString( docXml );
+	//logInfo(xmlAsString);
+	setReviewXmlStore(docXml);*///THUANTM COMMENT
+	
+	//THUAN TM GEN_REVIEW TO BY PASS AUTHENTICATION
+	var htmlReviewInfo = "";
+	htmlReviewInfo = "<table width='98%' align='center'>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><h5 class='Header'>" + 
+					CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE') + 
+				"</h5>" + "</tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+				"<tr><table width='98%' align='center' class='background-blacktrans'>" + 
+					"<tr class='trow-default' infoview='review'>" + "<td class='td-left'>" + 
+						lblAcctNo + 
+					"</td>" + "<td class='td-right'>" + 
+						accNo + 
+					"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						lblAcctName + 
+					"</td>" + "<td class='td-right'>" + 
+						accName + 
+					"</td></tr>";
+	htmlReviewInfo = htmlReviewInfo + 
+					"<tr class='trow-default'>" + "<td class='td-left'>" + 
+						lblFavoriteName + 
+					"</td>" + "<td class='td-right'>" + 
+						favoriteName + 
+					"</td></tr>";
+					
+	htmlReviewInfo = htmlReviewInfo + 					
+            "<tr class='desktopmode' id='result-export-print' style='display:none;'>" +
+            	"<td colspan='2'>" +
+                	"<div align='right' style='padding-right: 5px;'>" +
+                        "<a href='javascript:void(0)' onclick='printResultHistory();'><img title='In trang này' style='margin-right:5px;' src='css/img/print.png'/></a>" +
+                    "</div></td></tr>";
+	 htmlReviewInfo = htmlReviewInfo + "<tr>"+
+            "<td colspan='2'>"+
+            "<table width='96%' class = ''>"+
+            "<tbody>"+
+            "<tr>"+
+            "<td width='32%'>"+
+             "<input id='goEsavingOpenLnk' type='submit' class='btnshadow btn-primary' onClick='CancelbtnClick()' value='REVIEW_BTN_CANCEL' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'/>"+
+            "</td>" + 
+              "<td width='32%'>"+
+			  "<input type='submit' class='btnshadow btn-primary' onClick='goBack()' value='INPUT_ACC_BTN_GOBACK' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'/>"+
+			  "</td>"+
+              "<td width='32%'>"+
+			   "<input type='button' onClick='sendRequestForUpdateBenefit()' value='REVIEW_BTN_CONFIRM' class='btnshadow btn-second' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'/>"+
+			   "</td>"+
+              "</tr>"+
+              "</tbody>"+
+              "</table>"+
+              "</td>"+
+            "</tr>";
+					
+	htmlReviewInfo = htmlReviewInfo + "</table></tr>";
+	
+	htmlReviewInfo = htmlReviewInfo + "</table>";	
+	
+	setReviewHtmlStore(htmlReviewInfo);
+	
+	
+	localStorage['gTypeList'] = gTypeList;
+	localStorage['gTransId'] = gTransId;
+	localStorage['arrFullList'] = JSON.stringify(arrFullList);
+	localStorage['arrTrustList'] = JSON.stringify(arrTrustList);
+	localStorage['arrNormalList'] = JSON.stringify(arrNormalList);
+	localStorage['pageIndex'] = pageIndex;
+	localStorage['typeSearch'] = typeSearch;
+	//navController.pushToView("com-review-xsl-scr", true, 'xsl');//THUANTM COMMENT
+	navController.pushToView("com-review-scr", true);
+}
+
+
+
+//show confirm delete dialog
+function showConfirmDelete(accNo, typeList, transId) {
+	
+	
+	 gTransId = transId;
+
+    gTypeList = typeList;
+
+    gAcctNo = accNo;
+
+	var arrTmp1 = [];
+	var arrTmp2 = [];
+	
+	var str = CONST_STR.get('BENEFIC_CONFIRM_DELETE');
+	
+	/*arrTmp1.push(CONST_STR.get('BENEFIC_LIST_YES'));
+	arrTmp1.push(CONST_STR.get('BENEFIC_LIST_NO'));
+	arrTmp2.push("1");
+	arrTmp2.push("0");
+	document.addEventListener("evtSelectionDialog", handleSelectionConfirm, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionConfirmClose, false);*/
+	document.addEventListener("alertConfirmOK", alertConfirmOK, false);
+	document.addEventListener("alertConfirmCancel", alertConfirmCancel, false);
+	document.getElementById('btnAlertConfirmCancel').value = CONST_STR.get('BENEFIC_LIST_NO');
+	document.getElementById('btnAlertConfirmOk').value = CONST_STR.get('BENEFIC_LIST_YES');
+	showAlertConfirmText(str, alertConfirmOK, alertConfirmCancel);
+	
+}
+
+
+
+function alertConfirmOK() {
+	if (currentPage == "transfer/transfer-list-benefic") {
+		alertConfirmCancel();
+		requestType = "DELETE";
+		requestService(requestType);
+        //
+        console.log("idDeleteBenefic");
+        if(gModeScreenView == CONST_MODE_SCR_SMALL){
+            var parentNode = document.getElementById(idDeleteBenefic).parentNode;
+            if(parentNode.childNodes.length == 1)
+            {
+                var idCate = parentNode.id.split("-")[2];
+
+                var nodeDelete = document.getElementById("p-category-" + idCate);
+                nodeDelete.parentNode.removeChild(nodeDelete);
+            }
+        }else{
+            if(tempRespArr != undefined){
+                for(var i = 0; i< tempRespArr.length; i++){
+                    document.getElementById('localAcc_' + tempIndex).style.display = 'none';
+                }
+            }
+        }
+	}
+}
+
+
+function alertConfirmCancel() {
+	if (currentPage == "transfer/transfer-list-benefic") {
+		document.removeEventListener("alertConfirmCancel", alertConfirmCancel, false);
+		document.removeEventListener("alertConfirmOK", alertConfirmOK, false);
+	}
+}
+/*function handleSelectionConfirm(e) {
+	if (currentPage == "benefic-manage/benefic-manage-create-scr") {
+		handleSelectionConfirmClose();
+		
+		
+		if(e.selectedValue2 != null && e.selectedValue2 != undefined) {
+			if("1" == e.selectedValue2) {
+				requestType = "DELETE";
+				requestService(requestType);
+			}
+		}
+	}
+}
+
+function handleSelectionConfirmClose() {
+	if (currentPage == "benefic-manage/benefic-manage-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionConfirmClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionConfirm, false);
+	}
+}
+*//*call service delete
+ @param type = "UPDATE" | DELETE
+*/
+function requestService(type) {
+	var data = {};
+	var arrayArgs = new Array();
+	//gTransId
+	arrayArgs.push(gTransId);
+	//delete/update
+	arrayArgs.push(type);
+	//mau thu huong
+	arrayArgs.push(gTypeList);
+	//ten ua thich
+	gFavoriteName = document.getElementById("txtNameFavorite").value;
+	arrayArgs.push(gFavoriteName);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_UPDATE_BOOK_BENEFICIARY"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	if(type == 'UPDATE'){		
+		setGprsCmdStore(gprsCmd);
+		genReviewScreen();
+	}else{
+		if(type == 'DELETE'){
+			data = getDataFromGprsCmd(gprsCmd);	
+			requestMBService(data, true, 0, requestMBServiceDeleteSuccess, requestMBServiceDeleteFail);
+		}
+	}
+
+}
+
+function requestMBServiceDeleteSuccess(e) {
+		logInfo("em day: " + e);
+		gprsResp = parserJSON(e);
+		setRespObjStore(gprsResp); //store response
+		if("0" == gprsResp.respCode) {
+			var arrTmp = new Array();
+			arrTmp = gprsResp.arguments;
+			
+			if(requestType == "DELETE") {
+				if(arrTmp != null && arrTmp.length > 0) {
+					genXmlDeleteSuccess(arrTmp[0], gprsResp.respContent);
+				}
+			} else if(requestType == "UPDATE") {
+				genReviewScreen();
+			}
+		}
+}
+				
+function requestMBServiceDeleteFail() {
+	
+}
+
+
+function genXmlDeleteSuccess(transCode, strcontent) {
+	
+	
+	var accNo 			= "";
+	var accName 		= "";
+	var typeList 		= "";
+	var favoriteName 	= "";
+	
+	var lblAcctNo		= "";
+	var lblAcctName		= "";
+	//var lblTypeList		= document.getElementById("lblTypeList").innerHTML;
+	var lblFavoriteName		= document.getElementById("lblFavoriteName").innerHTML;
+	
+	for(var i in arrFullList) {
+		if(gAcctNo == arrFullList[i].acctno && gTransId == arrFullList[i].transid && gTypeList == arrFullList[i].payee) {
+			accNo 			= arrFullList[i].acctno;
+			accName 		= arrFullList[i].accname;
+			typeList 		= gTypeList == "TC" ? CONST_STR.get('BENEFIC_LIST_TRUST') : CONST_STR.get('BENEFIC_LIST_NORMAL');;
+			favoriteName 	= arrFullList[i].favoritename;
+			
+			lblAcctNo 		= arrFullList[i].stracctext;
+			lblAcctName		= arrFullList[i].straccnametext;
+			break;
+		}
+	}
+	
+	
+	
+	var docXml 			= createXMLDoc();
+
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	//thong bao ket qua giao dich
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', strcontent, docXml, tmpXmlNodeInfo);
+	
+	//review/reviewinfo/transinfo
+	//ma giao dich
+	var tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	//tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('SCHEDULE_BANK_TRANS_CODE'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transcode', transCode, docXml, tmpXmlNodeInfo);
+	
+	//so tai khoan
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('accttext', lblAcctNo, docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('accno', accNo, docXml, tmpXmlNodeInfo);
+
+	//ten tai khoan
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('accnametext', lblAcctName, docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('accname', accName, docXml, tmpXmlNodeInfo);
+
+	//loai danh sach
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	//tmpChildNode = createXMLNode('typelist', lblTypeList, docXml, tmpXmlNodeInfo);
+	//tmpChildNode = createXMLNode('typelistcontent', typeList, docXml, tmpXmlNodeInfo);
+	
+	//ten ua thich
+	//tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('favavoritename', lblFavoriteName, docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('favavoritenamecontent', favoriteName, docXml, tmpXmlNodeInfo);
+
+
+
+	//var xmlAsString = new XMLSerializer().serializeToString( docXml );
+	//logInfo(xmlAsString);
+	//setReviewXmlStore(docXml);
+	
+	//navController.pushToView("benefic-manage/benefic-manage-delete-finish", true, 'xsl');
+}
+/*** FUNCTIONS END ***/
+
+/** checkDeskTopModeOrMobileMode **/
+function checkDeskTopModeOrMobileMode(screen){
+    // check srceen
+    var width = window.innerWidth
+        || document.documentElement.clientWidth
+        || document.body.clientWidth;
+
+    if (screen >= width){
+        // using mobile-mode
+        return true;
+    }
+    // using desktop-mode
+    return false;
+}
+
+function SearchContactRow(objKeyword){
+    var strKeyword = objKeyword.value;
+    switch (typeSearch) {
+        case "ALL":
+            searchInArr(arrFullList, strKeyword);
+            break;
+        /*case "TC":
+            searchInArr(arrTrustList, strKeyword);
+            break;*/
+        case "TH":
+            searchInArr(arrNormalList, strKeyword);
+            break;
+        default:
+            break;
+    }
+}
+
+ function transMode(transmode){
+     if(transmode == 'LOCALTRAN'){
+         transLocalBank();
+     }else if(transmode == 'INTERFASTTRAN'){
+        transInterBank();
+     }else if(transmode == 'CARDTRANQ'){
+        transViaCard();
+     }else if(transmode == 'FPTSTRAN'){
+        transFPT();
+     }else if(transmode == 'CMND'){
+        transViaID();
+     }
+ }
+
+function transLocalBank(){
+    objectVal = {};
+    objectVal["transValue"] = document.getElementById('info_2').innerHTML;
+    objectVal['peopleName'] = document.getElementById('accNameContact').innerHTML;
+    if (navArrayScr[2] == navController.getCurrentPage()) {
+        navRemovePageAtIndex(2);
+    }
+    navController.pushToView('transfer/transfer-local-create-scr', true, 'xsl', successCallbackLocalBank);
+    if (gUserInfo.lang == 'EN'){
+        setTitleBar("TPBank's account");
+    }else{
+        setTitleBar('Trong TPBank');
+    }
+}
+
+function successCallbackLocalBank(){
+    document.getElementById("trans.targetaccount").value = objectVal.transValue;
+    document.getElementById("trans.accountName").value = objectVal.peopleName;
+
+}
+
+function transInterBank(){
+    objectVal = {};
+    objectVal["transValue"] = document.getElementById('info_2').innerHTML;
+    objectVal['peopleName'] = document.getElementById('accNameContact').innerHTML;
+    objectVal['partnerName'] = document.getElementById('info_4').innerHTML;
+    if (navArrayScr[2] == navController.getCurrentPage()) {
+        navRemovePageAtIndex(2);
+    }
+    navController.pushToView('transfer/transfer-inter-bank', true, 'xsl', successCallbackInterBank);
+    if (gUserInfo.lang == 'EN'){
+        setTitleBar("Another Bank's account");
+    }else{
+        setTitleBar('Liên ngân hàng');
+    }
+}
+function successCallbackInterBank(){
+    setTimeout(function(){
+        window['callbackContactTranfer'](objectVal);
+    },50);
+}
+
+function transViaID(){
+    objectVal = {};
+    objectVal["peopleName"] = document.getElementById('accNameContact').innerHTML;
+    objectVal["transValue"] = document.getElementById('info_2').innerHTML;
+    objectVal["ngay_cap_cmnd"] = document.getElementById('info_4').innerHTML;
+    objectVal["noi_cap_cmnd"] = document.getElementById('info_6').innerHTML;
+    objectVal["partnerName"] = document.getElementById('info_8').innerHTML;
+    if (navArrayScr[2] == navController.getCurrentPage()) {
+        navRemovePageAtIndex(2);
+    }
+    navController.pushToView('transfer/transfer-id-create-scr', true, 'xsl', successCallbackViaID);
+    if (gUserInfo.lang == 'EN'){
+        setTitleBar("Via ID number");
+    }else{
+        setTitleBar('Qua CMTND');
+    }
+}
+function successCallbackViaID(){
+    setTimeout(function(){
+        window['callbackContactTranfer'](objectVal);
+    },50);
+}
+
+function transFPT(){
+    objectVal = {};
+    objectVal["transValue"] = document.getElementById('info_2').innerHTML;
+    objectVal['peopleName'] = document.getElementById('accNameContact').innerHTML;
+    if (navArrayScr[2] == navController.getCurrentPage()) {
+        navRemovePageAtIndex(2);
+    }
+    navController.pushToView('transfer/transfer-fpts-create-scr', true, 'xsl', successCallbackFPT);
+    if (gUserInfo.lang == 'EN'){
+        setTitleBar("Securities account");
+    }else{
+        setTitleBar('TK chứng khoán');
+    }
+}
+function successCallbackFPT(){
+    setTimeout(function(){
+        window['callbackContactTranfer'](objectVal);
+    },50);
+}
+function transViaCard(){
+    objectVal = {};
+    objectVal["transValue"] = document.getElementById('info_2').innerHTML;
+    if (navArrayScr[2] == navController.getCurrentPage()) {
+        navRemovePageAtIndex(2);
+    }
+    navController.pushToView('transfer/transfer-card-create-scr', true, 'xsl', successCallbackViaCard);
+    if (gUserInfo.lang == 'EN'){
+        setTitleBar("Via Card number");
+    }else{
+        setTitleBar('Qua thẻ');
+    }
+}
+function successCallbackViaCard(){
+    setTimeout(function(){
+        window['callbackContactTranfer'](objectVal);
+    },50);
+}

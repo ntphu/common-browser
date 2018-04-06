@@ -1,0 +1,752 @@
+// JavaScript Document
+
+var parameterAll = "AUSV";//lay tiet kiem dien tu va tiet kiem gui gop
+var destinationACC = "";
+var docXml;
+var pageIndex = 1;
+var ResultControl;
+var lstCurr;
+var docXslCurr;
+var itemsPerPage = 10;
+var FurSavObj;
+var gFurSaving =[];
+var status_closed = false;
+var check_des;
+var destacc;
+var accountSav;
+
+function loadInitXML(){
+	
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	status_closed = true;
+	
+}
+
+function viewDidLoadSuccess(){
+	if(status_closed) {
+		status_closed = false;	
+	}
+	else {	
+		//genSequenceForm();
+
+		sendJSONRequest();
+		
+	}
+	
+	genSequenceForm();
+    actionbar.addListSequence('jumbo/jumbo-close-auto-saving');
+	if (gUserInfo.lang == 'VN') {
+		document.getElementById('trans_type').value = CONST_KEY_ASV_TRANS_TYPE_VN[1];
+	} else {
+		document.getElementById('trans_type').value = CONST_KEY_ASV_TRANS_TYPE_EN[1];
+	}
+	for (var i = 0; i < gRegisterdAutoSavingAccs.length; i++) {
+		var obj = gRegisterdAutoSavingAccs[0].split('#');
+		var account=obj[1];
+	}
+	
+	getAccountDest(account);
+	
+}
+function getAccountDest(account){
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(account);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_GET_ACCOUNT_DESC"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestBacgroundMBService("CMD_TYPE_GET_ACCOUNT_DESC", arrayArgs,requestMBServiceSavSuccesss, requestMBServiceSavFail);
+	}
+function requestMBServiceSavSuccesss(e){
+	gprsResp = parserJSON(e);
+	if (checkResponseCodeSuccess(gprsResp.respCode) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_GET_ACCOUNT_DESC")))) {
+		if(gprsResp.arguments[0] != 'N'){
+			check_des = 'Y';
+			destacc=gprsResp.arguments[0];
+		}
+		else{
+			check_des=gprsResp.arguments[0];
+		}
+		
+	}
+}
+function requestMBServiceSavFail(){
+}
+function genSequenceForm() {
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	var tmpStepNo = 301;
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+        if(oStr != undefined && oStr != null && oStr == "")
+        {
+            tmpNode.innerHTML = oStr;
+        }
+
+	});
+}
+function sendJSONRequest(){
+	var data = {};
+	var arrayArgs = new Array();
+	
+	arrayArgs.push(parameterAll);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+}
+
+function requestMBServiceSuccesss(e){   
+	gprsResp = parserJSON(e);
+	gRespObj = gprsResp; 
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING")))) {
+		document.getElementById("mainViewContent").style.display = '';
+		FurSavObj = new Array();
+		FurSavObj = gprsResp.arguments;
+		showAll();
+		parserViewESaving();	
+		
+		if(ResultControl.length>0){
+			showLst(1);
+			document.getElementById('div-datainfo').style.display = 'none';
+			genHtmlSearchResult(getItemsPerPage(ResultControl, pageIndex),1)
+			
+		}else{
+			hiddenLst(1);
+		}
+	}
+	else if ((gprsResp.respCode != '0') && ((parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_VIEW_eSAVING"))  || (gprsResp.responseType == '-1')))) {
+		navController.initWithRootView('account/account-scr', true);
+	}
+}
+function showAll(){
+	document.getElementById("mainViewContent").style.display='block';
+}
+
+function hiddenLst(section){
+	if(section == 1){
+		var node = document.getElementById("parent");
+		if(node !=null){
+			node.style.display = 'none';		
+		}	
+	}
+}
+function showLst(section){
+	if(section == 1){
+		var node = document.getElementById("parent");
+		if(node !=null){
+			node.style.display = 'block';		
+		}
+	}
+}
+function requestMBServiceFail(e){
+	showAlertText(gprsResp.respContent);
+	navController.initWithRootView('account/account-scr', true);
+}
+//event alert
+function handleAlertEmptyESaving(e) {
+	if ((e.type == "closeAlertView") && (currentPage == "jumbo/jumbo-close-auto-saving")) {
+		document.removeEventListener('closeAlertView', handleAlertEmptyESaving, false);
+		//navController.initWithRootView('account/account-scr', true);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+//parser info
+function parserViewESaving() {
+	lstCurr = new Array();
+	ResultControl = new Array();
+	var objCurr;
+	
+	var tempArrStr;
+	var objtemp = null;
+	//LIST 3
+	for(var k=0;k<FurSavObj.length;k++){		
+		tempArrStr = FurSavObj[k].split("#");
+		objtemp = new Object();			
+		objtemp.brn_code = tempArrStr[0];
+		objtemp.prod_code = tempArrStr[1];
+		objtemp.savingtype = tempArrStr[2];
+		objtemp.accnocont = tempArrStr[3];
+		objtemp.prod_des = tempArrStr[4];
+		objtemp.currcont = tempArrStr[5];
+		objtemp.amountcont = tempArrStr[6];
+					
+		objtemp.sodu = tempArrStr[7];
+		objtemp.sodu_hientai = tempArrStr[8];			
+		objtemp.sodu_bandau = tempArrStr[9];
+		objtemp.so_tien_da_rut = tempArrStr[10];
+		objtemp.valdatecont = tempArrStr[11];
+		objtemp.matdatecont = tempArrStr[12];
+		objtemp.interestcont = tempArrStr[13];			
+		objtemp.tenor_day = tempArrStr[14];
+		objtemp.tenor_month = tempArrStr[15];
+		objtemp.tenor_year = tempArrStr[16];
+		objtemp.is_type = tempArrStr[17];
+		objtemp.estimatedcont = tempArrStr[18];
+		objtemp.so_phong_toa = tempArrStr[19];
+		objtemp.lydo_phong_toa = tempArrStr[20];
+		objtemp.account_name = tempArrStr[21];
+		objtemp.type = 0;
+		
+		//Show total currency 
+		objCurr = new Object();
+		objCurr.type = objtemp.currcont;
+		objCurr.value = parseFloat(removeSpecialChar(objtemp.sodu_hientai));	
+		if(k==0) {		
+			lstCurr.push(objCurr);		
+		}else{
+			 var idx = checkKeyInArray(objCurr.type, lstCurr);
+			 if(idx==-1){				
+			 	lstCurr.push(objCurr);
+			 }else{
+				lstCurr[idx].value = parseFloat(lstCurr[idx].value)+parseFloat(objCurr.value);
+			 }
+		}				
+		ResultControl.push(objtemp);
+		
+	}	
+}
+function genPagging(arr, pageIndex, nodepage) {
+	var totalPage = calTotalPage(arr);
+	//var nodepage = document.getElementById('pageIndicatorNums1');
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+	
+	//chan nhap ky tu dac biet
+	var tmpArrInputName = document.getElementById('parent').getElementsByTagName('input');
+	for (var i=0; i<tmpArrInputName.length; i++) {
+		var tmpInputID = tmpArrInputName[i].getAttribute('id');
+		setInputOnlyASCII(tmpInputID);
+	}
+}
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+
+	var arrMedial = new Array();
+	
+	if(selectedPage.id == 'pageIndicatorNums1') {
+		pageIndex = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 1);
+	}
+}
+function genHtmlSearchResult(arr, section) {
+	if(section==1)
+	{
+		var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+		genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback, failPaggingCallback);
+	}
+}
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("divSection");
+
+	div.innerHTML = strHtml;
+
+	genPagging(ResultControl, pageIndex,document.getElementById('pageIndicatorNums'));
+}
+function failPaggingCallback() {
+	
+}
+Number.prototype.formatMoney = function(c, d, t){
+var n = this, 
+    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+    d = d == undefined ? "." : d, 
+    t = t == undefined ? "," : t, 
+    s = n < 0 ? "-" : "", 
+    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+    j = (j = i.length) > 3 ? j % 3 : 0;
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+ };
+function genXmlDataPagging(arr) {
+	docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('esavingChangeInfo','',docXml);
+	var childlistsavingNode = createXMLNode('listaccsaving','',docXml,rootNode);
+    var childlistsavingNode1 = createXMLNode('type','1',docXml,rootNode);
+	var childlistaccvisNode2 = createXMLNode('listacccanchange','',docXml,rootNode);
+	var childlistaccnovisNode = createXMLNode('listaccnotchange','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('esavingTitleTable','',docXml,childlistsavingNode);
+	var childNodeTit = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,titleTable);
+	childNodeTit = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,titleTable);
+	var tmpSavings;
+	if (arr && arr.length > 0) {
+		tmpSavings = arr[0];
+	}
+	if(tmpSavings && tmpSavings.prod_code == 'T5A005'){
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,titleTable);
+	}
+	else{
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+	}
+	childNodeTit = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,titleTable);
+	childNodeTit = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,titleTable);
+	if(tmpSavings && tmpSavings.prod_code == 'T6A001'){
+		childNodeTit = createXMLNode('valdatetit',CONST_STR.get('OPEN_DATE_OF_ACC'),docXml,titleTable);
+	}
+	else{
+		childNodeTit = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,titleTable);
+	}
+	childNodeTit = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'),docXml,titleTable);
+//	for(var k=0;k<arr.length;k++){
+//
+//		var valTable = createXMLNode('accinfo','',docXml,childlistsavingNode);
+//		var nodeVal = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,valTable);
+//		//so tai khoan
+//		nodeVal = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,valTable);
+//		nodeVal = createXMLNode('accnocont',arr[k].accnocont,docXml,valTable);
+//		//loại tk/muc dich
+//		if(tmpSavings && tmpSavings.prod_code == 'T5A005'){
+//		nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,valTable);
+//		nodeVal = createXMLNode('savingtype',CONST_STR.get(arr[k].purpose),docXml,valTable);
+//		}
+//		else{
+//		nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,valTable);
+//		nodeVal = createXMLNode('savingtype',arr[k].savingtype,docXml,valTable);
+//		}
+//		// so du hien tai
+//		nodeVal = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,valTable);
+//		nodeVal = createXMLNode('amountcont',arr[k].sodu_hientai + " VND",docXml,valTable);
+//		//Lãi suất
+//		nodeVal = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,valTable);
+//		nodeVal = createXMLNode('interestcont',arr[k].interestcont + "%",docXml,valTable);
+//		//ngay gui
+//		if(tmpSavings && tmpSavings.prod_code == 'T6A001'){
+//			nodeVal = createXMLNode('valdatetit',CONST_STR.get('OPEN_DATE_OF_ACC'),docXml,valTable);
+//			nodeVal = createXMLNode('valdatecont',arr[k].valdatecont,docXml,valTable);
+//		}
+//		else{
+//			nodeVal = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,valTable);
+//			nodeVal = createXMLNode('valdatecont',arr[k].valdatecont,docXml,valTable);
+//		}
+//		//ngay het han
+//		nodeVal = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'),docXml,valTable);
+//		nodeVal = createXMLNode('matdatecont',arr[k].matdatecont,docXml,valTable);
+//	}
+
+
+
+
+    for(var k=0;k<arr.length;k++){
+        var dataTable = [];
+
+        //so tai khoan
+        dataTable.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'), arr[k].accnocont]);
+
+        //loại tk/muc dich
+        if(tmpSavings && tmpSavings.prod_code == 'T5A005'){
+            dataTable.push([CONST_STR.get('FUTURE_SAVING_PURPOSE'), CONST_STR.get(arr[k].purpose)]);
+        }
+        else{
+            dataTable.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'), arr[k].savingtype]);
+        }
+
+        // so du hien tai
+        dataTable.push([CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'), arr[k].sodu_hientai + " VND"]);
+
+        //Lãi suất
+        dataTable.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'), arr[k].interestcont + "%"]);
+
+        //ngay gui
+        if(tmpSavings && tmpSavings.prod_code == 'T6A001'){
+            dataTable.push([CONST_STR.get('OPEN_DATE_OF_ACC'), arr[k].valdatecont]);
+        }
+        else{
+            dataTable.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), arr[k].valdatecont]);
+        }
+        //ngay het han
+        dataTable.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'), arr[k].matdatecont]);
+
+        var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),
+            titleAlign:"LEFT",
+            opacity:true
+        });
+
+        recycler.setData(dataTable);
+        contentHTML = recycler.init();
+
+        var valTable = createXMLNode('data','',docXml,childlistsavingNode);
+        var nodeVal = createXMLNode('content',contentHTML,docXml,valTable);
+
+    }
+
+   // var data = [row1, row2, row3, row4, row5, row6, row7, row8, row9, row10];
+   // console.log(docXml);
+	return docXml;
+	
+}
+function checkKeyInArray(key, lstArr){	
+	for(var i=0; i<lstArr.length; i++){
+		if(lstArr[i].type == key){
+			return i;
+		}
+	}
+	return -1;
+}
+function selectChange(accid){
+	AutoSavAcc =accid;
+	if(hasMainContentScrollEvent){
+		hasMainContentScrollEvent= false;
+		return;
+	}
+		var element = document.getElementById("div-fix");
+		if(element !=null){
+			element.style.webkitTransform = 'none';
+			element.style.MozTransform = 'none';
+			element.style.msTransform = 'none';
+			element.style.OTransform = 'none';
+			element.style.transform = 'none';
+		}
+		
+		var currIndex = 1;
+		var obj = new Object();
+		var arrObj = new Array();
+		obj = getObjWithKey(accid, ResultControl);
+		if(obj!=null){	
+				arrObj.push(obj);
+				gFurSaving.push(obj);
+				//genHtmlSearchResult(arrObj, 1);	
+		
+				docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('esavingChangeInfo','',docXml);
+	var childlistsavingNode = createXMLNode('listaccsaving','',docXml,rootNode);
+	var childlistaccvisNode = createXMLNode('listacccanchange','',docXml,rootNode);
+	var childlistaccnovisNode = createXMLNode('listaccnotchange','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('esavingTitleTable','',docXml,childlistsavingNode);
+	var childNodeTit = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,titleTable);
+	childNodeTit = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,titleTable);
+	var tmpSavings;
+	if (arrObj && arrObj.length > 0) {
+		tmpSavings = arrObj[0];
+	}
+	childNodeTit = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,titleTable);
+	childNodeTit = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,titleTable);
+	childNodeTit = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,titleTable);
+	childNodeTit = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,titleTable);
+	for(var k=0;k<arrObj.length;k++){
+		
+		var valTable = createXMLNode('accinfo','',docXml,childlistsavingNode);
+		var nodeVal = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,valTable);
+		//so tai khoan
+		nodeVal = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,valTable);
+		nodeVal = createXMLNode('accnocont',arrObj[k].accnocont,docXml,valTable);
+		// so tien
+		nodeVal = createXMLNode('amounttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCBAL'),docXml,valTable);
+		nodeVal = createXMLNode('amountcont',arrObj[k].sodu + " VND",docXml,valTable);
+		//Lãi suất
+		nodeVal = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,valTable);
+		nodeVal = createXMLNode('interestcont',arrObj[k].interestcont + "%",docXml,valTable);
+		//ngay gui
+		nodeVal = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,valTable);
+		nodeVal = createXMLNode('valdatecont',arrObj[k].valdatecont,docXml,valTable);
+		//loai tien
+		nodeVal = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,valTable);
+		nodeVal = createXMLNode('matdatecont',arrObj[k].currcont,docXml,valTable);
+	}
+			logInfo(docXml);
+			setReviewXmlStore(docXml);
+			
+				navController.pushToView("esaving/auto-saving-close-detail", true, 'xsl');
+			
+		}	
+}
+function makeAccountNumberList(){
+	var lstAccNumber = new Array();
+	for(var i = 0; i<gESavingObjs.length; i++){
+		lstAccNumber.push(gESavingObjs[i].account);
+	}
+	return lstAccNumber;
+}
+
+//show infomation
+function updateAccDetail(inAccObj) {
+	//Loại tiết kiệm
+	document.getElementById("esavingType").value = CONST_STR.get('ESAVING_REVIEW_SAVINGTYPE');
+	//Account nguồn
+	document.getElementById("sourceAcc").value = inAccObj.account;
+	document.getElementById("balancing").innerHTML = inAccObj.amount +" VND";
+	
+	document.getElementById("actionDeb").value = CONST_STR.get('ESAVING_RUT_VA_TAT_TOAN');
+	//Số lượng tiền tất toán
+	document.getElementById("amount").value =inAccObj.amount;
+	
+	var numStr = convertNum2WordWithLang(removeSpecialChar(inAccObj.amount), gUserInfo.lang); 
+	document.getElementById("amountByText").innerHTML = "<h6>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";
+	//Account đích
+	if(inAccObj.destinationAcc!='NOTFOUND'){
+		document.getElementById("destinationAcc").value = inAccObj.destinationAcc;
+		document.getElementById("destinationAcc").disabled = false;
+	}else{
+		var lstAcc = getLstDestinationAcc();
+		document.getElementById("destinationAcc").value = lstAcc[0];//Display acc destinatuon default
+	}
+}
+
+function getLstDestinationAcc(){
+	var lstDesAcc = new Array();
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+			var tmpAcc = gUserInfo.accountList[i];
+			lstDesAcc.push(tmpAcc.accountNumber);			
+	}
+	return lstDesAcc;
+}
+
+function getObjWithKey(acc, arr){
+ 	var obj = new Object();		
+	for(var i in arr){
+		if(arr[i].accnocont==acc){
+			return arr[i];
+		}
+	}
+	return null;
+}
+function getTenor(obj){
+	try{
+		if(parseInt(obj.tenor_day)>0){
+			return obj.tenor_day +" "+ CONST_STR.get('TRANS_PERIODIC_DATE1')
+		}
+		if(parseInt(obj.tenor_month)>0){
+			return obj.tenor_month + " "+ CONST_STR.get('TRANS_PERIODIC_MONTH')
+		}
+		if(parseInt(obj.tenor_year)>0){
+			return obj.tenor_year+ " "+ CONST_STR.get('TRANS_PERIODIC_YEAR')
+		}
+	}
+	catch(e){}
+}
+function genPagging(arr, pageIndex, nodepage) {
+	var totalPage = calTotalPage(arr);
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+}
+
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}		
+	}	
+	return arrTmp;
+}
+
+function pageIndicatorSelected(selectedIdx, selectedPage) {
+	var arrMedial = new Array();
+	if(selectedPage.id == 'pageIndicatorNums') {
+		pageIndex = selectedIdx;
+		arrMedial = getItemsPerPage(ResultControl, selectedIdx);		
+		genHtmlSearchResult(arrMedial, 3);
+	}
+}
+//Callback failed
+function failPaggingCallback() {
+	navController.initWithRootView('account/account-scr', true);	
+}
+function showTransTypeSelection(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	if (gUserInfo.lang == 'VN') {
+			for (var i=0; i<CONST_KEY_ASV_TRANS_TYPE_VN.length; i++) {
+				tmpArray1.push(CONST_KEY_ASV_TRANS_TYPE_VN [i]);
+			}
+		} else {
+			for (var i=0; i<CONST_KEY_ASV_TRANS_TYPE_EN.length; i++) {
+				tmpArray1.push(CONST_KEY_ASV_TRANS_TYPE_EN[i]);
+			}
+		}
+	document.addEventListener("evtSelectionDialog", showTransTypeSelectionOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showTransTypeSelectionClose, false);
+	showDialogList(CONST_STR.get('TRANS_TYPE'),  tmpArray1, tmpArray2, false);
+	
+}
+
+function showTransTypeSelectionOpen(e) {
+	if (currentPage == "jumbo/jumbo-close-auto-saving") {
+		showTransTypeSelectionClose();	
+		if ((e.selectedValue1 == CONST_KEY_ASV_TRANS_TYPE_VN[0]) ||(e.selectedValue1 == CONST_KEY_ASV_TRANS_TYPE_EN[0])) {
+			navController.pushToView("jumbo/jumbo_change_auto_saving", true, 'xsl');
+			
+		} else {
+		document.getElementById('trans_type').value = e.selectedValue1;
+		}
+	}
+}
+function showTransTypeSelectionClose() {
+	if (currentPage == "jumbo/jumbo-close-auto-saving") {		
+		document.removeEventListener("evtSelectionDialog", showTransTypeSelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showTransTypeSelectionClose, false);
+	}
+}
+function showDestinationAccSelection(){
+	
+	var tmpArray1 = [];
+	if (destacc != null && destacc != "" && destacc != undefined && check_des =='Y'){
+		tmpArray1.push(destacc);
+	}
+	else{
+		for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		if(tmpAcc.accClass=='D3A000' ||tmpAcc.accClass=='D3A001'||tmpAcc.accClass=='FSLIBD'||tmpAcc.accClass=='D3A002'||tmpAcc.accClass=='SAUTTL'||tmpAcc.accClass=='SAVKHV'||tmpAcc.accClass=='SAVLAT'||tmpAcc.accClass=='SAVLBD'||tmpAcc.accClass=='SAVLBH'||tmpAcc.accClass=='SAVLBQ'||tmpAcc.accClass=='SAVLBY'||tmpAcc.accClass=='SAVOBD'||tmpAcc.accClass=='SAVVIP'||tmpAcc.accClass=='SBVIBM'||tmpAcc.accClass=='SEVIBM'||tmpAcc.accClass=='SFVLBD'||tmpAcc.accClass=='SLVIBM'||tmpAcc.accClass=='SASXKD'||tmpAcc.accClass=='SAVBDS'||tmpAcc.accClass=='SAVSTK'||tmpAcc.accClass=='D3A003'){
+			tmpArray1.push(tmpAcc.accountNumber);
+			}
+		}
+	}
+	/*if (gRegisterdAutoSavingAccs.length > 0) {
+			for (var j = 0; j < gRegisterdAutoSavingAccs.length; j++) {
+				var tempStr = gRegisterdAutoSavingAccs[j];
+				var tempArr = tempStr.split('#');
+				for(var p=0; p<tempArr.length; p++){
+					if(tempArr[1]==AutoSavAcc){
+						var tmpAccConnect =tempArr[0]
+					}
+				}
+			}
+	}	
+	var tmpArray1 = [];
+	for(var k=0; k<gUserInfo.accountList.length; k++){
+		if(gUserInfo.accountList[k].accountNumber ==tmpAccConnect){
+			var checkEasyLink = gUserInfo.accountList[k].udfFieldVal;
+		}
+	}
+	if(checkEasyLink =='6'){
+		tmpArray1.push(tmpAccConnect);
+	}
+	else{
+		for (var m=0; m<gUserInfo.accountList.length; m++) {
+		var tmpAcc = gUserInfo.accountList[m];
+		if(tmpAcc.accClass != 'T6A001'){
+			tmpArray1.push(tmpAcc.accountNumber);
+		}
+	}
+	}	*/
+		document.addEventListener("evtSelectionDialog", showDestinationAccSelectionOpen, false);
+		document.addEventListener("evtSelectionDialogClose", showDestinationAccSelectionClose, false);
+		showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'),  tmpArray1, false);
+}
+function showDestinationAccSelectionOpen(e) {
+
+	if (currentPage == "jumbo/jumbo-close-auto-saving") {		
+		//Lấy thông tin tài khoản đích			
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showDestinationAccSelectionClose();						
+			document.getElementById("destinationAcc").value = e.selectedValue1;			
+		}
+	}
+}
+function showDestinationAccSelectionClose() {
+	if (currentPage == "jumbo/jumbo-close-auto-saving") {		
+		document.removeEventListener("evtSelectionDialog", showDestinationAccSelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showDestinationAccSelectionClose, false);
+	}
+}
+function click_Next(){
+	var data = {};
+	var arrayArgs = new Array();
+	
+	
+	var destinationAcc = document.getElementById("destinationAcc");
+	if(!destinationAcc.value || destinationAcc.value == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') || destinationAcc.value==null){
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_DES_ACC'));
+		return;
+	}
+	for (var i = 0; i < gRegisterdAutoSavingAccs.length; i++) {
+		var obj = gRegisterdAutoSavingAccs[0].split('#');
+		AutoSavAcc=obj[1];
+	}
+	arrayArgs.push(AutoSavAcc);
+	arrayArgs.push(destinationAcc.value);	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_AUTO_SAVING_CLOSE"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+		data = getDataFromGprsCmd(gprsCmd);	
+		requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);	
+}
+function requestMBServiceSuccess(e){
+	//Gen review screen
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_AUTO_SAVING_CLOSE")))) {	
+		genReviewScreen();	
+	}
+};
+
+function requestMBServiceFail(e){
+	showAlertText(gprsResp.respContent);
+}
+function genReviewScreen(){
+	var destinationAcc = document.getElementById("destinationAcc").value;		
+	docXml = createXMLDoc();		
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+		tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	//toan khoan nhan
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('LOAN_AD_TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('AUTOSAV_CLOSE_MENU'), docXml, tmpChildNodeAcc);
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',CONST_STR.get('JUMBO_AUTO_SAVINGS_TITLE'), docXml, tmpChildNodeAcc);
+	//	Loại tiền
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  gprsResp.arguments[3], docXml, tmpChildNodeAcc);
+	//so tai khoan tiet kiem
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_ACCOUNT_NO_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', AutoSavAcc, docXml, tmpChildNodeAcc);
+	//to tien goc rut
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('AUTO_SAVING_AMT_BALANCE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(gprsResp.arguments[2]), docXml, tmpChildNodeAcc);
+	/*//so tien lai duoc huong
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',CONST_STR.get('AUTOSAV_AMT_LAI') , docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(gprsResp.arguments[4]), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'result', docXml, tmpChildNodeAcc);*/
+	//Tổng số tiền nhận
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',CONST_STR.get('AUTO_SAVING_AMT_BALANCE_TOTAL') , docXml, tmpChildNodeAcc);
+	var amount_balance = removeSpecialChar(gprsResp.arguments[2])
+	var lai =removeSpecialChar(gprsResp.arguments[4]);
+	var total = parseInt(amount_balance)+ parseInt(lai);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(total), docXml, tmpChildNodeAcc);
+	//Số tài khoản nhận tiền
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',CONST_STR.get('ESAVING_BENEFICIARY_ACC') , docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', destinationAcc, docXml, tmpChildNodeAcc);
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+	
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+	
+}

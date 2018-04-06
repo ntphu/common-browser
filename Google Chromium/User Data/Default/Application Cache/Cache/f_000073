@@ -1,0 +1,1108 @@
+/**
+ * Created by TuanNQ1.FSoft
+ * User: 
+ * Date: 2/7/2014
+ * Time: 8:45 PM
+ */
+ 
+var serviceFee = 0;
+var cardArr;
+var flagBack = false;
+var holder;
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	//set default selection
+	//tra no the tin dung cua toi
+	trans_type="";
+    bottomBar.hide();
+	genSequenceForm();
+    actionbar.addListSequence("visa/payment-credit-card-create-scr");
+    initComboTextAccount();
+    initTextAreaMessage();
+	//Chi cho phep nhap tieng viet khong dau vao phan mo ta
+	setInputOnlyASCII('description', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+    document.getElementById('arrow').style.marginRight = '1px';
+	
+	if(!flagBack) {
+		document.getElementById("debtchoice").value = CONST_STR.get('CREDIT_CARD_REPAY_FOR_MY_CREDIT_CARD');
+		document.getElementById("debtchoice.value").value = 95;
+		
+		//so tai khoan thanh toan dau tien
+		document.getElementById("accountno").value = gUserInfo.accountList[0].accountNumber;
+		
+		//so du kha dung dau tien
+		document.getElementById("balance.value").value = gUserInfo.accountList[0].balanceAvailable;
+		document.getElementById("balance").innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>"
+		"<div class='availblstyle'><span>"+ CONST_STR.get('CREDIT_CARD_AVAIL_FUNDS') + 
+		": " + //<b>" +
+		formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + " " + CONST_DEFAULT_CURRENCY + 
+		//"</b></span></h6>"
+		"</span></div>";
+	
+		
+		//phuong thuc thanh toan: toan bo du no trong sao ke
+		document.getElementById("repaymentoption").value = gUserInfo.lang == "VN" ? CONST_KEY_REPAYMENT_OPTIONS_VN[2] : CONST_KEY_REPAYMENT_OPTIONS_EN[2];
+		document.getElementById("repaymentoption.value").value = 3;
+		//disable input amount
+		document.getElementById("amount").disabled = true;
+		document.getElementById("amount").placeholder = "";
+		
+		
+		//first time querry in background
+		if (cardArr!=undefined && cardArr.length > 0) {
+			var data = {};	
+			var arrayArgs = new Array();	
+			arrayArgs.push(gCustomerNo); // CIF	number
+			//requestBacgroundMBService("CMD_TYPE_LOOKUP_CREDIT_CARD_NO", arrayArgs, setCardList, setCardListFail);
+			//requestBacgroundMBService("CMD_LOOKUP_VISA_CARD", arrayArgs, setCardList, setCardListFail);
+			var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOOKUP_VISA_CARD"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+			data = getDataFromGprsCmd(gprsCmd);	
+			requestMBService(data, true, 0, setCardList, setCardListFail);
+		}
+	}
+	else {
+		
+		flagBack = false;
+	}
+}
+
+function genSequenceForm() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xmlNAME_CARD_TITLE_C
+	//var tmpStepNo = 401;
+	var tmpStepNo = 301;
+	setSequenceFormIdx(tmpStepNo);
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flagBack = true;
+    description();
+
+}
+function description(ab){
+    document.getElementById('description').innerHTML=document.getElementById('description').value;
+}
+
+/*** VIEW BACK FROM OTHER ***/
+
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	//flag = false;
+	logInfo('payment will unload');
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+/*
+function VisaCardObj() {
+	this.cardNumber = ""; //so the da ma hoa
+	this.creditCard = "";
+	this.curLimit = ""; //han muc con lai
+	this.currencyCode = ""; //loai tien
+	this.currentStatus = ""; // trang thai
+	this.fullName = ""; // ten chu the
+	this.cardNumberPlain = ""; //so the khong ma hoa
+	
+	this.cardGrantedLimit = ""; //han muc duoc cap
+	this.cardMinRepay = ""; //so tien thanh toan toi thieu
+	this.curDebt = ""; //du no hien tai
+	this.payDate = ""; // thanh toan truoc ngay
+	this.cardStateDebt = ""; //du no trong ky sao ke
+	this.cardType = ""; //loai the
+	this.waitingAmount = ""; //so tien da tieu cho quyet toan
+	this.description = "";
+	this.ownerType = ""; //0: chinh, 1: phu
+	this
+}
+*/
+
+/*
+tmpVisaObj.cardNumber = tmpArr[0];
+tmpVisaObj.fullName = tmpArr[1];  // ten chu the
+tmpVisaObj.curLimit = tmpArr[2]; //han muc con lai
+tmpVisaObj.cardGrantedLimit = tmpArr[3]; //han muc duoc cap
+tmpVisaObj.cardMinRepay = tmpArr[4]; //so tien thanh toan toi thieu
+tmpVisaObj.curDebt = tmpArr[5]; //du no hien tai
+tmpVisaObj.payDate = tmpArr[6]; // thanh toan truoc ngay
+tmpVisaObj.cardStateDebt = tmpArr[17]; //du no trong ky sao ke con lai --> cuoi ky saoke
+tmpVisaObj.cardType = tmpArr[8]; //loai the C, D, A
+tmpVisaObj.waitingAmount = tmpArr[9]; //so tien da tieu cho quyet toan
+tmpVisaObj.currencyCode = tmpArr[10]; //loai tien
+tmpVisaObj.currentStatus = tmpArr[11]; // trang thai 0: active
+tmpVisaObj.description = tmpArr[12]; // mo ta the
+tmpVisaObj.ownerType = tmpArr[13]; //0: chinh, 1: phu
+tmpVisaObj.waitingPaidAmount = tmpArr[14]; //Số tiền đã trả nợ<br>(đang chờ duyệt) //14
+tmpVisaObj.payCurBal = tmpArr[15]; //TT du no hien tai
+-	Thanh toan Dư nợ hiện tại //15
+-	Dư nợ trong kỳ sao kê //7
+-	Số tiền đã trả nợ (đang chờ duyệt) //14
+-	Số tiền đã chi tiêu (đang chờ quyết toán) //9
+- 	Số tiền thanh toán tối thiểu //4
+
+*/
+/*
+//Hạn mức được cấp //3
+	var node = document.getElementById("grantedCardLimit");
+	node.innerHTML = formatNumberToCurrency(cardArr[i].grantedCreLim) + " " + CONST_DEFAULT_CURRENCY;
+	//Dư nợ hiện tại //5 --> khac voi #15
+	node = document.getElementById("currentCardDebt");
+	node.innerHTML = formatNumberToCurrency(cardArr[i].currCreDebt) + " " + CONST_DEFAULT_CURRENCY;
+	//Dư nợ trong kỳ sao kê //7
+	node = document.getElementById("onStmtCardDebt");
+	node.innerHTML = formatNumberToCurrency(cardArr[i].onStmtCreDebt) + " " + CONST_DEFAULT_CURRENCY;
+	//Dư nợ trong kỳ sao kê còn lại //17 --> he thong the moi dung
+	node = document.getElementById("onStmtCardDebt");
+	node.innerHTML = formatNumberToCurrency(cardArr[i].onStmtCreDebt) + " " + CONST_DEFAULT_CURRENCY;
+	//Hạn mức còn lại //2
+	node = document.getElementById("availCreditLimit");
+	node.innerHTML = formatNumberToCurrency(cardArr[i].availCreLim) + " " + CONST_DEFAULT_CURRENCY;
+	//Số tiền đã trả nợ<br>(đang chờ duyệt) //14
+	node = document.getElementById("paidAmount");
+	node.innerHTML = formatNumberToCurrency(cardArr[i].paidAmt) + " " + CONST_DEFAULT_CURRENCY;
+	//Số tiền đã chi tiêu<br>(chờ quyết toán) //9
+	node = document.getElementById("spentAmount");
+	node.innerHTML = formatNumberToCurrency(cardArr[i].spentAmt) + " " + CONST_DEFAULT_CURRENCY;
+	
+*/
+
+function setCardList(e){
+	//first time querry in background
+	//if (cardArr.length == 0) {
+		gprsResp = parserJSON(e);//CMD_LOOKUP_VISA_CARD
+		//if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LOOKUP_CREDIT_CARD_NO")))) {
+		if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_LOOKUP_VISA_CARD")))) {
+			cardArr = [];
+			if(gprsResp.arguments != undefined) {
+				var tmpArray1 = new Array();
+				for(var i=0; i<gprsResp.arguments.length; i++) {
+					var tmpArr = gprsResp.arguments[i].split('#');
+					var statusActive = 0; // the dang active
+					var statusOwnerType = 0; // the chinh
+					if((tmpArr[8] == CONST_CARD_LOCK_TYPE_ID[0])||(tmpArr[8] == CONST_CARD_LOCK_TYPE_ID[3]) && (parseInt(tmpArr[13]) == statusOwnerType) && (parseInt(tmpArr[11]) == statusActive)) {
+						var cardObj = {"cardNo": tmpArr[0], "grantedCreLim": tmpArr[3], "currCreDebt": tmpArr[5], 
+										"onStmtCreDebt": tmpArr[17], "minDebt": tmpArr[4], "availCreLim": tmpArr[2], 
+										"paidAmt": tmpArr[14], "spentAmt": tmpArr[9], "cardType": tmpArr[12], 
+										"holderName": tmpArr[1]};
+						cardArr.push(cardObj);
+						tmpArray1.push(cardObj.cardNo);
+					}
+				}
+				if(cardArr.length < 1) {
+					showAlertText(CONST_STR.get('CREDIT_HIS_NO_CARD_MSG'));
+					//showAlertText(CONST_STR.get('CREDIT_CARD_NO_CARD_AVAILABLE_MSG'));
+					var tmpPageName = navController.getDefaultPage();
+					var tmpPageType = navController.getDefaultPageType();
+					navController.initWithRootView(tmpPageName, true, tmpPageType);
+					return;
+				}
+				var tmpArray2 = tmpArray1;
+				document.addEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+				document.addEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+				//showDialogList(CONST_STR.get('CREDIT_CARD_DEBT_CHOICE_TITLE'), tmpArray1, tmpArray2, false);
+			}
+			else {
+				showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+				var tmpPageName = navController.getDefaultPage();
+				var tmpPageType = navController.getDefaultPageType();
+				navController.initWithRootView(tmpPageName, true, tmpPageType);
+			}
+			/*var tmpArr = gprsResp.arguments;
+			
+			if (tmpArr != undefined) {
+				var cardNum = Math.floor(tmpArr.length/11);
+			
+				for (var i = 0; i < cardNum; i++){
+					var cardObj = {"cardNo": tmpArr[i*11], "grantedCreLim": tmpArr[i*11 + 1], "currCreDebt": tmpArr[i*11 + 2], 
+									"onStmtCreDebt": tmpArr[i*11 + 3], "minDebt": tmpArr[i*11 + 4], "availCreLim": tmpArr[i*11 + 5], 
+									"paidAmt": tmpArr[i*11 + 6], "spentAmt": tmpArr[i*11 + 7], "cardType": tmpArr[i*11 + 9], 
+									"holderName": tmpArr[i*11 + 10]};
+					cardArr.push(cardObj);
+				}
+			}*/// else {
+			//	showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+			//}
+		}
+		else {
+			showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+			var tmpPageName = navController.getDefaultPage();
+			var tmpPageType = navController.getDefaultPageType();
+			navController.initWithRootView(tmpPageName, true, tmpPageType);
+		}
+	//}
+}
+
+function setCardListFail() {
+	logInfo("Background service fail: cannot retrieve credit card list");
+	showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+	bottomBar.hide();
+}
+
+function showDebtChoiceSelection(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	tmpArray1.push(CONST_STR.get('CREDIT_CARD_REPAY_FOR_MY_CREDIT_CARD'));
+	tmpArray2.push(95);
+	
+	document.addEventListener("evtSelectionDialog", handleDebtChoiceSelection, false);
+	document.addEventListener("evtSelectionDialogClose", handleDebtChoiceSelectionClose, false);
+	showDialogList(CONST_STR.get('CREDIT_CARD_DEBT_CHOICE_TITLE'), tmpArray1, tmpArray2, false);
+}
+
+//event: selection dialog list
+function handleDebtChoiceSelection(e) {
+	bottomBar.hide();
+	if (currentPage == "visa/payment-credit-card-create-scr") {
+		handleDebtChoiceSelectionClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var debtName = document.getElementById("debtchoice");
+			if (debtName.nodeName == "INPUT") {
+				debtName.value = e.selectedValue1;
+			}
+			else {
+				debtName.innerHTML = e.selectedValue1;
+			}
+		}
+		var debtVal = document.getElementById("debtchoice.value");
+		if (e.selectedValue2 != undefined) {
+			if (debtVal.nodeName == "INPUT") {
+				debtVal.value = e.selectedValue2;
+			}
+			else {
+				debtVal.innerHTML = e.selectedValue2;
+			}
+		}
+	}
+}
+
+function handleDebtChoiceSelectionClose(e) {
+	if (currentPage == "visa/payment-credit-card-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleDebtChoiceSelectionClose, false);
+		document.removeEventListener("evtSelectionDialog", handleDebtChoiceSelection, false);
+	}
+}
+
+function showInputCardNoScreen(){
+
+	//first time querry - if background service did not completed or returned data
+	if (!cardArr ||cardArr.length == 0) {
+		var data = {};	
+		var arrayArgs = new Array();	
+		arrayArgs.push(gCustomerNo); // CIF	number
+		//var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_LOOKUP_CREDIT_CARD_NO"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);//CMD_LOOKUP_VISA_CARD
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOOKUP_VISA_CARD"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+		data = getDataFromGprsCmd(gprsCmd);	
+		requestMBService(data, true, 0, requestCardNoSuccess, setCardListFail);
+	//from second time querry
+	} else {
+		showCardNoChoiceSelection(null);
+	}
+}
+
+function requestCardNoSuccess(e) {
+	showCardNoChoiceSelection(e);
+	bottomBar.hide();
+}
+
+
+
+function showCardNoChoiceSelection(e){
+	//first time querry
+	if (!cardArr || cardArr.length == 0) {
+		gprsResp = parserJSON(e);
+		//if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LOOKUP_CREDIT_CARD_NO")))) {
+		if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_LOOKUP_VISA_CARD")))) {
+			cardArr = [];
+			if(gprsResp.arguments != undefined) {
+				var tmpArray1 = new Array();
+				for(var i=0; i<gprsResp.arguments.length; i++) {
+					var tmpArr = gprsResp.arguments[i].split('#');
+					var statusActive = 0; // the dang active
+					var statusOwnerType = 0; // the chinh
+					//HuyNT2: chinh sua theo yeu cau he thong the moi
+					//if((tmpArr[8] == CONST_CARD_LOCK_TYPE_ID[0]) && (parseInt(tmpArr[13]) == statusOwnerType) && (parseInt(tmpArr[11]) == statusActive)) {
+					if((tmpArr[8] == CONST_CARD_LOCK_TYPE_ID[0])||(tmpArr[8] == CONST_CARD_LOCK_TYPE_ID[3]) && parseInt(tmpArr[13]) == statusOwnerType) {
+							var cardObj = {"cardNo": tmpArr[0], "grantedCreLim": tmpArr[3], "currCreDebt": tmpArr[5], 
+										"onStmtCreDebt": tmpArr[17], "minDebt": tmpArr[4], "availCreLim": tmpArr[2], 
+										"paidAmt": tmpArr[14], "spentAmt": tmpArr[9], "cardType": tmpArr[12], 
+										"holderName": tmpArr[1]};
+						cardArr.push(cardObj);
+						tmpArray1.push(cardObj.cardNo);
+					}
+				}
+				if(cardArr.length < 1) {
+					showAlertText(CONST_STR.get('CREDIT_HIS_NO_CARD_MSG'));
+					//showAlertText(CONST_STR.get('CREDIT_CARD_NO_CARD_AVAILABLE_MSG'));
+					var tmpPageName = navController.getDefaultPage();
+					var tmpPageType = navController.getDefaultPageType();
+					navController.initWithRootView(tmpPageName, true, tmpPageType);
+					return;
+				}
+				var tmpArray2 = tmpArray1;
+				document.addEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+				document.addEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+				//showDialogList(CONST_STR.get('CREDIT_CARD_DEBT_CHOICE_TITLE'), tmpArray1, tmpArray2, false);
+				showDialogList(CONST_STR.get('CARD_LOCK_CARD_NO_TITLE'), tmpArray1, tmpArray2, false);
+			}
+			else {
+				showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+				//var tmpPageName = navController.getDefaultPage();
+				//var tmpPageType = navController.getDefaultPageType();
+				//navController.initWithRootView(tmpPageName, true, tmpPageType);
+			}
+			
+			/*var tmpArr = gprsResp.arguments;
+			var numArgs = 14;
+			if (tmpArr != undefined) {
+				//var cardNum = Math.floor(tmpArr.length/numArgs);
+	
+				var tmpArray1 = [];
+				//for (var i = 0; i < cardNum; i++){
+				for (var i = 0; i < tmpArr.length; i++){
+					var cardObj = {"cardNo": tmpArr[i*11], "grantedCreLim": tmpArr[i*11 + 1], "currCreDebt": tmpArr[i*11 + 2], 
+									"onStmtCreDebt": tmpArr[i*11 + 3], "minDebt": tmpArr[i*11 + 4], "availCreLim": tmpArr[i*11 + 5], 
+									"paidAmt": tmpArr[i*11 + 6], "spentAmt": tmpArr[i*11 + 7], "cardType": tmpArr[i*11 + 9], 
+									"holderName": tmpArr[i*11 + 10]};
+					
+					cardArr.push(cardObj);
+					tmpArray1.push(cardObj.cardNo);
+					
+				}
+				
+				var tmpArray2 = tmpArray1;
+				document.addEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+				document.addEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+				showDialogList(CONST_STR.get('CREDIT_CARD_DEBT_CHOICE_TITLE'), tmpArray1, tmpArray2, false);
+			} else {
+				showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+			}*/
+		}
+	//from second time querry
+	} else {
+		var tmpArray1 = [];
+		for (var i = 0; i < cardArr.length; i++){
+			tmpArray1.push(cardArr[i].cardNo);
+		}
+		
+		var tmpArray2 = tmpArray1;
+		document.addEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+		document.addEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+		//showDialogList(CONST_STR.get('CREDIT_CARD_DEBT_CHOICE_TITLE'), tmpArray1, tmpArray2, false);
+		showDialogList(CONST_STR.get('CARD_LOCK_CARD_NO_TITLE'), tmpArray1, tmpArray2, false);
+	}
+}
+
+//event: selection dialog list
+function handleCardNoChoiceSelection(e) {
+	bottomBar.hide();
+	if (currentPage == "visa/payment-credit-card-create-scr") {
+		handleCardNoChoiceSelectionClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var cardNo = document.getElementById("paymentcardno");
+			//if(cardNo.value != CONST_STR.get("COM_TXT_SELECTION_PLACEHOLDER"))
+			//{
+			if (cardNo.nodeName == "INPUT") {
+				cardNo.value = e.selectedValue1;
+			}
+			else {
+				cardNo.innerHTML = e.selectedValue1;
+			}
+			
+			var found = false;
+			
+			for (var i = 0; i < cardArr.length; i++) {
+				if (cardArr[i].cardNo == e.selectedValue1) {
+					
+					//Hạn mức được cấp
+					var node = document.getElementById("grantedCardLimit");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].grantedCreLim) + " " + CONST_DEFAULT_CURRENCY;
+					//Dư nợ hiện tại
+					node = document.getElementById("currentCardDebt");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].currCreDebt) + " " + CONST_DEFAULT_CURRENCY;
+					//Dư nợ trong kỳ sao kê
+					node = document.getElementById("onStmtCardDebt");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].onStmtCreDebt) + " " + CONST_DEFAULT_CURRENCY;
+					//Hạn mức còn lại
+					node = document.getElementById("availCreditLimit");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].availCreLim) + " " + CONST_DEFAULT_CURRENCY;
+					//Số tiền đã trả nợ<br>(đang chờ duyệt)
+					// node = document.getElementById("paidAmount");
+					// node.innerHTML = formatNumberToCurrency(cardArr[i].paidAmt) + " " + CONST_DEFAULT_CURRENCY;
+					//Số tiền đã chi tiêu<br>(chờ quyết toán)
+					node = document.getElementById("spentAmount");
+					node.innerHTML = formatNumberToCurrency(cardArr[i].spentAmt) + " " + CONST_DEFAULT_CURRENCY;
+					
+					
+					var repaymentOpt = document.getElementById("repaymentoption.value").value;
+					
+					//thanh toan toi thieu
+					if (repaymentOpt == 1) {
+						var amount = document.getElementById("amount");
+						amount.value = formatNumberToCurrency(cardArr[i].minDebt);
+						//disable input amount
+						document.getElementById("amount").disabled = true;
+						document.getElementById("amount").placeholder = "";
+						document.getElementById("amountVal").value = cardArr[i].minDebt;
+						
+						var numStr = convertNum2WordWithLang(cardArr[i].minDebt, gUserInfo.lang); 
+						var nodeNumTxt = document.getElementById("ccrepayment.amounttotext");
+						nodeNumTxt.innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>" 
+						/*"<div class='txtmoneystyle'><span>"+ CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') +
+						": " + //<b>" +
+						numStr + //"</b></span></h6>"
+						"<div>";*/
+						"<div class='txtmoneystyle'><span>"+//<b>" +
+						numStr + //"</b></span></h6>"
+						"<div>";
+						
+					//toan bo du no toi thoi diem hien tai
+					} else if (repaymentOpt == 2) {
+						var amount = document.getElementById("amount");
+						amount.value = formatNumberToCurrency(cardArr[i].currCreDebt);
+						//disable input amount
+						document.getElementById("amount").disabled = true;
+						document.getElementById("amount").placeholder = "";
+						document.getElementById("amountVal").value = cardArr[i].currCreDebt;
+						
+						var numStr = convertNum2WordWithLang(cardArr[i].currCreDebt, gUserInfo.lang); 
+						var nodeNumTxt = document.getElementById("ccrepayment.amounttotext");
+						nodeNumTxt.innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>" 
+						"<div class='txtmoneystyle'><span>"+
+						/*CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') +
+						": " + */
+						numStr + 
+						"</span></div>";
+			
+						
+					//toan bo du no trong sao ke
+					} else if (repaymentOpt == 3) {
+						var amount = document.getElementById("amount");
+						amount.value = formatNumberToCurrency(cardArr[i].onStmtCreDebt);
+						//disable input amount
+						document.getElementById("amount").disabled = true;
+						document.getElementById("amount").placeholder = "";
+						document.getElementById("amountVal").value = cardArr[i].onStmtCreDebt;
+						
+						var numStr = convertNum2WordWithLang(cardArr[i].onStmtCreDebt, gUserInfo.lang); 
+						var nodeNumTxt = document.getElementById("ccrepayment.amounttotext");
+						nodeNumTxt.innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>" 
+						"<div class='txtmoneystyle'><span>" + 
+						/*CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') + 
+						": " + */
+						numStr +
+						"</span></div>";
+					} else {
+						//enable input amount
+						document.getElementById("amount").disabled = false;
+						document.getElementById("amount").placeholder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+					}
+					
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found) {
+				var node = document.getElementById("grantedCardLimit");
+				node.innerHTML = "0 " + CONST_DEFAULT_CURRENCY;
+				
+				node = document.getElementById("currentCardDebt");
+				node.innerHTML = "0 " + CONST_DEFAULT_CURRENCY;
+				
+				node = document.getElementById("onStmtCardDebt");
+				node.innerHTML = "0 " + CONST_DEFAULT_CURRENCY;
+				
+				node = document.getElementById("availCreditLimit");
+				node.innerHTML = "0 " + CONST_DEFAULT_CURRENCY;
+				
+				node = document.getElementById("paidAmount");
+				node.innerHTML = "0 " + CONST_DEFAULT_CURRENCY;
+				
+				node = document.getElementById("spentAmount");
+				node.innerHTML = "0 " + CONST_DEFAULT_CURRENCY;
+				
+				//thanh toan toi thieu | toan bo du no toi thoi diem hien tai | toan bo du no trong sao ke
+				var repaymentOpt = document.getElementById("repaymentoption.value").value;
+				if (repaymentOpt == 1 || repaymentOpt == 2 || repaymentOpt == 3) {
+					document.getElementById("amount").value = "";
+					//disable input amount
+					document.getElementById("amount").disabled = true;
+					document.getElementById("amount").placeholder = "";
+					document.getElementById("amountVal").value = "";
+					
+					var nodeNumTxt = document.getElementById("ccrepayment.amounttotext");
+					nodeNumTxt.innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>" 
+					"<div class='txtmoneystyle'><span>" + 
+					//CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') +
+					//"</span></h6>"
+					"</span></div>";
+				} else {
+					//enable input amount
+					document.getElementById("amount").disabled = false;
+					document.getElementById("amount").placeholder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+				}
+			}
+			
+			//display table
+			document.getElementById('showbodercard').className = 'border-bottom-utilities';
+			document.getElementById('ccDetalsTable').style.display = '';
+		}
+	}
+}
+
+function handleCardNoChoiceSelectionClose(e) {
+	if (currentPage == "visa/payment-credit-card-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleCardNoChoiceSelectionClose, false);
+		document.removeEventListener("evtSelectionDialog", handleCardNoChoiceSelection, false);
+	}
+}
+
+
+
+function isASCIIOnlyStr(str){
+    if(typeof(str)!=='string'){
+        return false;
+    }
+    for(var i=0;i<str.length;i++){
+        if(str.charCodeAt(i)>127){
+            return false;
+        }
+    }
+    return true;
+}
+
+function isASCII(str) {
+    return /^[\x00-\x7F]*$/.test(str);
+}
+
+function sendJSONRequest() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var debtchoice = document.getElementById("debtchoice.value").value;
+	
+	if (debtchoice == undefined || debtchoice == "" || debtchoice == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') + ' "' + CONST_STR.get('CREDIT_CARD_DEBT_CHOICE_TITLE') + '"');
+		return;
+	}
+    var balance = comboEl.accountBalance;
+    if (balance == undefined || balance == "" || balance == "0")
+    {
+        showAlertText(CONST_STR.get('TOPUP_EXCEED_AVAIL_BALANCE'));
+        return;
+    }
+	var cardNo = document.getElementById("paymentcardno").value;
+	
+	if (cardNo == undefined || cardNo == "" || cardNo == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') + ' "' + CONST_STR.get('CREDIT_CARD_NO_TITLE') + '"');
+		return;
+	}
+	
+	var accountNo = document.getElementById("accountno").value;
+	
+	if (accountNo == undefined || accountNo == "" || accountNo == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') + ' "' + CONST_STR.get('CREDIT_CARD_REPAYMENT_ACC_NUMBER_TITLE') + '"');
+		return;
+	}
+	
+	var repaymentOption = document.getElementById("repaymentoption.value").value;
+	
+	if (repaymentOption == undefined || repaymentOption == "" || repaymentOption == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') + ' "' + CONST_STR.get('CREDIT_CARD_REPAYMENT_OPTION') + '"');
+		return;
+	}
+	
+	var amount = document.getElementById("amountVal").value;
+	
+	if (amount == undefined || amount == "" || amount == CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('CREDIT_CARD_AMOUNT_TITLE') + '"');
+		return;
+	}
+	var tmpCurAvaiBal;
+	for(var i=0; i < gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		if(tmpAcc.accountNumber == accountNo) {
+			tmpCurAvaiBal = tmpAcc.balanceAvailable;
+			break;
+		}
+	}
+	if(parseInt(amount) >= parseInt(tmpCurAvaiBal)) {
+		showAlertText(CONST_STR.get('CREDIT_CARD_AVAIL_BALANCE_ACC'));
+		return;
+	}
+	
+	var currentCardDebt = removeSpecialChar(document.getElementById("currentCardDebt").innerHTML.replace("VND","").trim());
+	if ((parseInt(currentCardDebt) < parseInt(amount)) || (parseInt(amount) < 0))
+	{
+		showAlertText(CONST_STR.get('CREDIT_CARD_EXCEED_AVAIL_BALANCE'));
+		return;
+	}
+	
+	//var availBal = document.getElementById("balance.value").value;
+	
+	if (parseInt(tmpCurAvaiBal) < parseInt(amount) + serviceFee)
+	{
+		showAlertText(CONST_STR.get('CREDIT_CARD_EXCEED_AVAIL_BALANCE'));
+		return;
+	}
+	
+	var description = document.getElementById("description").value;
+	
+	if (description == undefined || description == "" || description == CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER'))
+	{
+		showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('CREDIT_CARD_TRANS_DESCRIPTION_TITLE') + '"');
+		return;
+	}
+	//check tieng viet khong dau
+	else if (!isASCIIOnlyStr(description))
+	{
+		showAlertText(CONST_STR.get('ERR_INPUT_ONLY_ASCII_CHAR'));
+		return;
+	}
+	
+	
+	//push into arrayArgs
+	arrayArgs.push(cardNo);
+	arrayArgs.push(gCustomerNanme);
+	arrayArgs.push(accountNo);
+	arrayArgs.push(parseInt(amount));
+	//arrayArgs.push(gCustomerNo); // cif
+	arrayArgs.push(description);
+	//arrayArgs.push(2); //
+	arrayArgs.push(parseInt(repaymentOption));
+	//arrayArgs.push(parseInt(debtchoice));
+	arrayArgs.push(2); //
+	arrayArgs.push(parseInt(debtchoice));//
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_CREDIT_CARD_REPAYMENT"), "", "", gUserInfo.lang , gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	//gRespObj = gprsResp; 
+	setRespObjStore(gprsResp);
+	
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_CREDIT_CARD_REPAYMENT")))) {
+		genReviewScreen();
+	}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(){
+	/*if ((e.type == "evtHttpFail") && (currentPage == "paymentxsl/payment-topup-create-scr")) {
+		document.removeEventListener("evtHttpFail", requestMBServiceFail, false);
+		//alert("Http request fail!");
+	}*/
+};
+
+function genReviewScreen() {
+	var cardNo = document.getElementById("paymentcardno").value;
+	var accountNo = document.getElementById("accountno").value;
+	//var balanceBef = document.getElementById("balance.value").value;
+	var balanceBef;
+	for(var i=0; i < gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		if(tmpAcc.accountNumber == accountNo) {
+			balanceBef = tmpAcc.balanceAvailable;
+			break;
+		}
+	}
+	var payAmount = document.getElementById("amountVal").value;
+	var today = new Date();
+	var dd = today.getDate();
+	var mm = today.getMonth()+1; //January is 0!
+	var yyyy = today.getFullYear();
+	
+	dd = dd < 10 ? '0'+dd : dd;
+	mm = mm < 10 ? '0'+mm : mm;
+	today = dd+'/'+mm+'/'+yyyy;
+	
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlNodeInfo;
+	var tmpChildNodeAcc;
+	var tmpChildNode;
+	
+	//root node 
+	tmpXmlRootNode = createXMLNode('review', '', docXml);
+	tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+		
+	
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	//Lua chon loai tra no
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('CREDIT_CARD_DEBT_CHOICE_TITLE2'), docXml, tmpXmlNodeInfo);
+	
+	//Loai giao dich
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('CREDIT_CARD_REPAYMENT_SCREEN_TITLE'), docXml, tmpChildNodeAcc);
+	
+	//So the
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_NO_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', cardNo, docXml, tmpChildNodeAcc);
+
+	//Ten chu the
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_HOLDER_NAME'), docXml, tmpChildNodeAcc);
+	//var holder = "";
+	for (var i = 0; i < cardArr.length; i++){
+		if(cardArr[i].cardNo == cardNo) {
+			holder = cardArr[i].holderName;
+		}
+	}
+	tmpChildNode = createXMLNode('transinfocontent', holder, docXml, tmpChildNodeAcc);
+	
+	
+	tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	//Thong tin tra no
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('CREDIT_CARD_TRANS_DETAIL_TITLE'), docXml, tmpXmlNodeInfo);
+	
+	
+	//So tai khoan thanh toan
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_REPAYMENT_ACC_NUMBER_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', accountNo, docXml, tmpChildNodeAcc);
+	
+	//So du truoc khi thanh toan
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_BAL_BEF_PAYMENT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(balanceBef) + " " + CONST_DEFAULT_CURRENCY, docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+	//So tien thanh toan
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_AMOUNT_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(payAmount) + " " + CONST_DEFAULT_CURRENCY, docXml, tmpChildNodeAcc);
+	
+	//Phi dich vu
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_PAYMENT_FEE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(serviceFee) + " " + CONST_DEFAULT_CURRENCY, docXml, tmpChildNodeAcc);
+	
+	//So du sau khi thanh toan
+	tmpChildNodeAcc = createXMLNode('transinfo','', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_BAL_AFT_PAYMENT'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(balanceBef - payAmount - serviceFee) + " " + CONST_DEFAULT_CURRENCY, docXml, tmpChildNodeAcc);
+	
+	//Thoi gian thuc hien
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_TRANSACTION_DATE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', today, docXml, tmpChildNodeAcc);
+	
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+
+
+function showAccountSelection() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        if(tmpAcc.accClass == 'D3A003' && tmpAcc.nodebit == 'Y'){
+        }
+        else {
+            tmpArray1.push(tmpAcc.accountNumber);
+            tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable) + " " + tmpAcc.currency);
+        }
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+    showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+
+}
+
+function handleSelectionAccountList(e) {
+	bottomBar.hide();
+    if (currentPage == "visa/payment-credit-card-create-scr") {
+        handleSelectionAccountListClose();
+        var accountNumber = e.selectedValue1;
+        var accountBalance = formatNumberToCurrency(e.selectedValue2);
+        comboEl.refresh({
+            accountNumber : accountNumber,
+            accountBalance : accountBalance
+        });
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("accountno");
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+        }
+        var nodeAccBal = document.getElementById("balance.value");
+        if (e.selectedValue2 != undefined) {
+            nodeAccBal.innerHTML = "<div class='availblstyle' id='id.balance'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + "VND</div>";
+            //            var balance = document.getElementById("id.balance");
+            //            balance.value = removeSpecialChar(e.selectedValue2.replace("VND","").trim());
+        }
+    }
+}
+
+function handleSelectionAccountListClose(e) {
+    if (currentPage == "visa/payment-credit-card-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    }
+}
+
+function showRepaymentOptions(){
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	if (gUserInfo.lang == "VN") {
+		for (var i=0; i< CONST_KEY_REPAYMENT_OPTIONS_VN.length; i++) {
+			var tmpAcc = CONST_KEY_REPAYMENT_OPTIONS_VN[i];
+			tmpArray1.push(CONST_KEY_REPAYMENT_OPTIONS_VN[i]);
+			tmpArray2.push(i + 1);
+		}
+	} else {
+		for (var i=0; i< CONST_KEY_REPAYMENT_OPTIONS_EN.length; i++) {
+			var tmpAcc = CONST_KEY_REPAYMENT_OPTIONS_EN[i];
+			tmpArray1.push(CONST_KEY_REPAYMENT_OPTIONS_EN[i]);
+			tmpArray2.push(i + 1);
+		}
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleRepaymentOptions, false);
+	document.addEventListener("evtSelectionDialogClose", handleRepaymentOptionsClose, false);
+	showDialogList(CONST_STR.get('CREDIT_CARD_REPAYMENT_OPTION'), tmpArray1, tmpArray2, false);
+}
+
+//event: select repayment option
+function handleRepaymentOptions(e) {
+	bottomBar.hide();
+	if (currentPage == "visa/payment-credit-card-create-scr") {
+		//document.removeEventListener("evtSelectionDialog", handleRepaymentOptions, false);
+		handleRepaymentOptionsClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var repayOption = document.getElementById("repaymentoption");
+			if (repayOption.nodeName == "INPUT") {
+				repayOption.value = e.selectedValue1;
+			}
+			else {
+				repayOption.innerHTML = e.selectedValue1;
+			}
+		}
+		var repayOptionVal = document.getElementById("repaymentoption.value");
+		if (e.selectedValue2 != undefined) {
+			if (repayOptionVal.nodeName == "INPUT") {
+				repayOptionVal.value = e.selectedValue2;
+			}
+			else {
+				repayOptionVal.innerHTML = e.selectedValue2;
+			}
+			
+			//thanh toan toi thieu
+			if (e.selectedValue2 == 1) {
+				var cardNo = document.getElementById("paymentcardno").value;
+				
+				for (var i = 0; i < cardArr.length; i++) {
+					if (cardArr[i].cardNo == cardNo) {
+						var amount = document.getElementById("amount");
+						amount.value = formatNumberToCurrency(cardArr[i].minDebt);
+						//disable input amount
+						document.getElementById("amount").disabled = true;
+						document.getElementById("amount").placeholder = "";
+						document.getElementById("amountVal").value = cardArr[i].minDebt;
+						
+						var numStr = convertNum2WordWithLang(cardArr[i].minDebt, gUserInfo.lang); 
+						var nodeNumTxt = document.getElementById("ccrepayment.amounttotext");
+						nodeNumTxt.innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>" 
+						"<div class='txtmoneystyle'><span>" + 
+						/*CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') + 
+						": " + */
+						numStr + //"</b></span></h6>"
+						"</span></div>";
+	
+						break;
+					}
+				}
+			//toan bo du no toi thoi diem hien tai
+			} else if (e.selectedValue2 == 2) {
+				var cardNo = document.getElementById("paymentcardno").value;
+				
+				for (var i = 0; i < cardArr.length; i++) {
+					if (cardArr[i].cardNo == cardNo) {
+						var amount = document.getElementById("amount");
+						amount.value = formatNumberToCurrency(cardArr[i].currCreDebt);
+						//disable input amount
+						document.getElementById("amount").disabled = true;
+						document.getElementById("amount").placeholder = "";
+						document.getElementById("amountVal").value = cardArr[i].currCreDebt;
+						
+						var numStr = convertNum2WordWithLang(cardArr[i].currCreDebt, gUserInfo.lang); 
+						var nodeNumTxt = document.getElementById("ccrepayment.amounttotext");
+						nodeNumTxt.innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>" 
+						"<div class='txtmoneystyle'><span>" + 
+						/*CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') + 
+						": " + */
+						numStr + //"</b></span></h6>"
+						"</span></div>";
+	
+						break;
+					}
+				}
+				
+			//toan bo du no trong sao ke
+			} else if (e.selectedValue2 == 3) {
+				var cardNo = document.getElementById("paymentcardno").value;
+				
+				for (var i = 0; i < cardArr.length; i++) {
+					if (cardArr[i].cardNo == cardNo) {
+						var amount = document.getElementById("amount");
+						amount.value = formatNumberToCurrency(cardArr[i].onStmtCreDebt);
+						//disable input amount
+						document.getElementById("amount").disabled = true;
+						document.getElementById("amount").placeholder = "";
+						document.getElementById("amountVal").value = cardArr[i].onStmtCreDebt;
+						
+						var numStr = convertNum2WordWithLang(cardArr[i].onStmtCreDebt, gUserInfo.lang); 
+						var nodeNumTxt = document.getElementById("ccrepayment.amounttotext");
+						nodeNumTxt.innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>" 
+						"<div class='txtmoneystyle'><span>" + 
+						/*CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') + 
+						": " +*/ 
+						numStr + //"</b></span></h6>"
+						"</span></div>";
+						
+						break;
+					}
+				}
+			//thanh toan toi thieu / thanh toan tuy chon
+			} else {
+				document.getElementById("amount").value = "";
+				//enable input amount
+				document.getElementById("amount").disabled = false;
+				document.getElementById("amount").placeholder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+
+				document.getElementById("amountVal").value = "";
+
+				document.getElementById("ccrepayment.amounttotext").innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>"
+				"<div class='txtmoneystyle'><span> " +
+				//CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') +
+				//"</span></h6>"
+				"</span></div>";
+			}
+		}
+	}
+}
+
+function handleRepaymentOptionsClose(e) {
+	if (currentPage == "visa/payment-credit-card-create-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleRepaymentOptionsClose, false);
+		document.removeEventListener("evtSelectionDialog", handleRepaymentOptions, false);
+	}
+}
+
+//Format currency and pronounce to Vietnamese
+function handleInputAmount (e, des) {
+	var tmpVale = des.value;
+	formatCurrency(e, des);
+	tmpVale = des.value; //get new value after formated
+	
+	var amountVal = document.getElementById("amountVal");
+	amountVal.value = removeSpecialChar(tmpVale);
+	
+	var numStr = convertNum2WordWithLang(removeSpecialChar(tmpVale), gUserInfo.lang); 
+	
+	var nodeNumTxt = document.getElementById("ccrepayment.amounttotext");
+	nodeNumTxt.innerHTML = //"<h6 class='blstyle2'><span style='font-style:italic;'>" 
+	"<div class='txtmoneystyle'><span>" + 
+	/*CONST_STR.get('CREDIT_CARD_REPAYMENT_NUM_TO_WORD') + 
+	": " +*/
+	numStr + //"</b></span></h6>"
+	"</span></div>";
+}
+var comboEl;
+function initComboTextAccount(){
+
+    try{
+        var comboBox = document.getElementById('cb-container');
+        if(comboBox!==null){
+            return false;
+        }
+        document.getElementById("holder-account-info").innerHTML = "";
+    }catch(e){}
+
+
+    document.getElementById("holder-account-info").innerHTML = "";
+    var accountName = gUserInfo.accountName;
+    var accountNumber = gUserInfo.accountList[0].accountNumber;
+    var accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable)+'&nbsp'+gUserInfo.accountList[0].currency;
+    comboEl = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountName : accountName, //account name
+        accountNumber : accountNumber, //account number
+        accountBalance : accountBalance, //account balance
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboEl.show("holder-account-info");
+}
+function initTextAreaMessage(){
+    try{
+        document.getElementById("holder-transfer-message");
+        var txtArea = document.getElementById('description');
+        if(txtArea!==null){
+            return false;
+        }
+    } catch(e){}
+
+    var textAreaEl = new TextArea({
+        containerMargin : "0px",
+        idTextArea : "description",
+        placeholder : CONST_STR.get("CARD_ISSUANCE_TITLE_TXT_QUEST"),
+        iconClass : "icon-content-note",
+        textColor : "white",
+        borderColor : "rgba(255, 255, 255, 0.3)",
+        showBorderBottom : true,
+        showBorderTop : true,
+        fontSizeIcon : "24px",
+        validateInput : function(){
+            console.log("validate function");
+        }
+    });
+    textAreaEl.show("holder-transfer-message");
+    document.getElementById('description').maxLength="100";
+}

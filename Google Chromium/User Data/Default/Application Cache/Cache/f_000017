@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js" xml:lang="en" xmlns:fb="http://www.facebook.com/2008/fbml">
+<head>
+	<meta charset="utf-8">
+	<title>Deezer</title>
+	<meta http-equiv="content-language" content="en">
+	<meta property="fb:app_id" content="241284008322">
+	<meta property="og:site_name" content="Deezer">
+
+	<link rel="shortcut icon" type="image/x-icon" href="http://as-cdn-files.deezer.com/images/common/favicon/favicon-v00344828.ico">
+<link rel="icon" type="image/png" href="http://as-cdn-files.deezer.com/images/common/favicon/favicon-16x16-v00344828.png" sizes="16x16">
+<link rel="icon" type="image/png" href="http://as-cdn-files.deezer.com/images/common/favicon/favicon-32x32-v00344828.png" sizes="32x32">
+<link rel="icon" type="image/png" href="http://as-cdn-files.deezer.com/images/common/favicon/favicon-96x96-v00344828.png" sizes="96x96">
+<link rel="icon" type="image/png" href="http://as-cdn-files.deezer.com/images/common/favicon/favicon-160x160-v00344828.png" sizes="160x160">
+<link rel="icon" type="image/png" href="http://as-cdn-files.deezer.com/images/common/favicon/favicon-196x196-v00344828.png" sizes="196x196">
+<link rel="apple-touch-icon" sizes="57x57" href="http://as-cdn-files.deezer.com/images/common/favicon/apple-touch-icon-57x57-v00344828.png">
+<link rel="apple-touch-icon" sizes="60x60" href="http://as-cdn-files.deezer.com/images/common/favicon/apple-touch-icon-60x60-v00344828.png">
+<link rel="apple-touch-icon" sizes="72x72" href="http://as-cdn-files.deezer.com/images/common/favicon/apple-touch-icon-72x72-v00344828.png">
+<link rel="apple-touch-icon" sizes="76x76" href="http://as-cdn-files.deezer.com/images/common/favicon/apple-touch-icon-76x76-v00344828.png">
+<link rel="apple-touch-icon" sizes="114x114" href="http://as-cdn-files.deezer.com/images/common/favicon/apple-touch-icon-114x114-v00344828.png">
+<link rel="apple-touch-icon" sizes="120x120" href="http://as-cdn-files.deezer.com/images/common/favicon/apple-touch-icon-120x120-v00344828.png">
+<link rel="apple-touch-icon" sizes="144x144" href="http://as-cdn-files.deezer.com/images/common/favicon/apple-touch-icon-144x144-v00344828.png">
+<link rel="apple-touch-icon" sizes="152x152" href="http://as-cdn-files.deezer.com/images/common/favicon/apple-touch-icon-152x152-v00344828.png">
+	
+	<link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/npfkoakaabdallkcdbpkkhfilkkngakh">
+	<link rel="search" type="application/opensearchdescription+xml" href="http://as-cdn-files.deezer.com/xml/opensearch.xml" title="Deezer.com">
+
+	<link rel="alternate" hreflang="en" href="http://www.deezer.com/en/offline/">
+<link rel="alternate" hreflang="fr" href="http://www.deezer.com/fr/offline/">
+<link rel="alternate" hreflang="de" href="http://www.deezer.com/de/offline/">
+<link rel="alternate" hreflang="es" href="http://www.deezer.com/es/offline/">
+<link rel="alternate" hreflang="it" href="http://www.deezer.com/it/offline/">
+<link rel="alternate" hreflang="nl" href="http://www.deezer.com/nl/offline/">
+<link rel="alternate" hreflang="pt" href="http://www.deezer.com/pt/offline/">
+<link rel="alternate" hreflang="ru" href="http://www.deezer.com/ru/offline/">
+<link rel="alternate" hreflang="ko" href="http://www.deezer.com/ko/offline/">
+<link rel="alternate" hreflang="pt-BR" href="http://www.deezer.com/br/offline/">
+<link rel="alternate" hreflang="id" href="http://www.deezer.com/id/offline/">
+<link rel="alternate" hreflang="pl" href="http://www.deezer.com/pl/offline/">
+<link rel="alternate" hreflang="tr" href="http://www.deezer.com/tr/offline/">
+<link rel="alternate" hreflang="ro" href="http://www.deezer.com/ro/offline/">
+<link rel="alternate" hreflang="ms" href="http://www.deezer.com/ms/offline/">
+<link rel="alternate" hreflang="hu" href="http://www.deezer.com/hu/offline/">
+<link rel="alternate" hreflang="sr" href="http://www.deezer.com/rs/offline/">
+<link rel="alternate" hreflang="th" href="http://www.deezer.com/th/offline/">
+<link rel="alternate" hreflang="zh" href="http://www.deezer.com/cn/offline/">
+<link rel="alternate" hreflang="sr" href="http://www.deezer.com/me/offline/">
+<link rel="alternate" hreflang="ar" href="http://www.deezer.com/ar/offline/">
+<link rel="alternate" hreflang="hr" href="http://www.deezer.com/hr/offline/">
+<link rel="alternate" hreflang="us" href="http://www.deezer.com/tl/offline/">
+<link rel="alternate" hreflang="es-MX" href="http://www.deezer.com/mx/offline/">
+<link rel="alternate" hreflang="cs" href="http://www.deezer.com/cs/offline/">
+<link rel="alternate" hreflang="sk" href="http://www.deezer.com/sk/offline/">
+<link rel="alternate" hreflang="sv" href="http://www.deezer.com/se/offline/">
+<link rel="alternate" hreflang="us" href="http://www.deezer.com/us/offline/">
+
+	<!--[if gte IE 9]>
+	<meta name="application-name" content="Deezer">
+	<meta name="msapplication-tooltip" content="Launch the Deezer application">
+	<meta name="msapplication-window" content="width=1600;height=1200">
+	<meta name="msapplication-starturl" content="http://www.deezer.com/en/">
+	<meta name="msapplication-navbutton-color" content="#202020">
+	<![endif]-->
+
+	<link href="http://as-cdn-files.deezer.com/cache/css/bootstrap-c166d37e3fd88aabad4559f3d946b59e.css" rel="stylesheet" type="text/css">
+<link href="http://as-cdn-files.deezer.com/cache/css/deezer-94c233dd717058207f4111273330390c.css" rel="stylesheet" type="text/css">
+<link href="http://as-cdn-files.deezer.com/cache/css/naboo-e801c0db18c83aa5b0e3769dd56edcd7.css" rel="stylesheet" type="text/css">
+	<script type="text/javascript" src="http://as-cdn-files.deezer.com/cache/js/external-0c45bea85b6e59a8f2b1901bd4d3d8d4.js"></script>
+
+<script type="text/javascript">
+document.domain = 'deezer.com';
+if (typeof(init_jquery_address) === 'function') {
+	init_jquery_address();
+}
+</script>
+
+<script type="text/javascript">
+!function(){var a=Handlebars.template,t=Handlebars.templates=Handlebars.templates||{};t.thumbnail=a(function(a,t,n,e,i){function l(a,t){var e,i="";return i+='data-type="',(e=n.type)?e=e.call(a,{hash:{},data:t}):(e=a.type,e=typeof e===ut?e.apply(a):e),i+=yt(e)+'"'}function r(){return" thumbnail-bordered"}function p(){return" thumbnail-rounded"}function o(){return" evt-out evt-over"}function s(){return" evt-click"}function c(a,t){var e,i="";return i+=' data-tooltip="1" data-tooltip-delay="700" data-tooltip-gravity="s" title="',(e=n.tooltip)?e=e.call(a,{hash:{},data:t}):(e=a.tooltip,e=typeof e===ut?e.apply(a):e),i+=yt(e)+'"'}function h(a,t,e){var i,l,r,p="";return p+='\n		<a class="stack-covers evt-click" href="/',(i=n.href_type)?i=i.call(a,{hash:{},data:t}):(i=a.href_type,i=typeof i===ut?i.apply(a):i),p+=yt(i)+"/",(i=n.href_id)?i=i.call(a,{hash:{},data:t}):(i=a.href_id,i=typeof i===ut?i.apply(a):i),p+=yt(i)+'" ',r={hash:{tracking:e.tracking,tracking_id:e.play_context_id,tag:e.tracking_tag},data:t},p+=yt((i=n.setTracking||e.setTracking,i?i.call(a,r):gt.call(a,"setTracking",r)))+">\n			",r={hash:{},inverse:vt.program(19,y,t),fn:vt.programWithDepth(14,d,t,a),data:t},i=n.drawStackCovers||a.drawStackCovers,l=i?i.call(a,a.pic_id,a.cover_type,r):gt.call(a,"drawStackCovers",a.pic_id,a.cover_type,r),(l||0===l)&&(p+=l),p+='\n			<div class="options-overlay"></div>\n		</a>\n	'}function d(a,t,e){var i,l,r,p="";return p+='\n			<div class="playlist-cover ',r={hash:{},inverse:vt.noop,fn:vt.program(15,f,t),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.cover_type,"playlist",r):gt.call(a,"ifEqual",e.cover_type,"playlist",r),(l||0===l)&&(p+=l),p+=" ",(l=n.last_cover)?l=l.call(a,{hash:{},data:t}):(l=a.last_cover,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" ',l=n["if"].call(a,a.last_cover,{hash:{},inverse:vt.noop,fn:vt.program(17,u,t),data:t}),(l||0===l)&&(p+=l),p+='>\n				<img src="',(l=n.img_url)?l=l.call(a,{hash:{},data:t}):(l=a.img_url,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" width="',(l=n.width)?l=l.call(a,{hash:{},data:t}):(l=a.width,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" height="',(l=n.height)?l=l.call(a,{hash:{},data:t}):(l=a.height,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'">\n			</div>\n			'}function f(){return"playlist-shadow"}function u(a,t){var e,i="";return i+='style="width:',(e=n.width)?e=e.call(a,{hash:{},data:t}):(e=a.width,e=typeof e===ut?e.apply(a):e),i+=yt(e)+'px;"'}function y(a,t){var e,i="";return i+='\n			<div class="playlist-cover-solo cell">\n				<img class="picture" src="',(e=n.img_url)?e=e.call(a,{hash:{},data:t}):(e=a.img_url,e=typeof e===ut?e.apply(a):e),i+=yt(e)+'" src="',(e=n.img_url)?e=e.call(a,{hash:{},data:t}):(e=a.img_url,e=typeof e===ut?e.apply(a):e),i+=yt(e)+'" width="',(e=n.width)?e=e.call(a,{hash:{},data:t}):(e=a.width,e=typeof e===ut?e.apply(a):e),i+=yt(e)+'" height="',(e=n.height)?e=e.call(a,{hash:{},data:t}):(e=a.height,e=typeof e===ut?e.apply(a):e),i+=yt(e)+'">\n			</div>\n			'}function v(a,t){var e,i="";return i+="\n		",e=n["if"].call(a,a.cover_play,{hash:{},inverse:vt.program(31,q,t),fn:vt.programWithDepth(22,g,t,a),data:t}),(e||0===e)&&(i+=e),i+="\n	"}function g(a,t,e){var i,l,r,p="";return p+='\n			<a href="/',(i=n.href_type)?i=i.call(a,{hash:{},data:t}):(i=a.href_type,i=typeof i===ut?i.apply(a):i),p+=yt(i)+"/",(i=n.href_id)?i=i.call(a,{hash:{},data:t}):(i=a.href_id,i=typeof i===ut?i.apply(a):i),p+=yt(i)+'" class="picture-link evt-click" data-link="1" data-play="1" data-id="',(i=n.id)?i=i.call(a,{hash:{},data:t}):(i=a.id,i=typeof i===ut?i.apply(a):i),p+=yt(i)+'" data-type="',(i=n.type)?i=i.call(a,{hash:{},data:t}):(i=a.type,i=typeof i===ut?i.apply(a):i),p+=yt(i)+'" ',r={hash:{tracking:e.tracking,tracking_id:e.play_context_id,tag:"play"},data:t},p+=yt((i=n.setTracking||e.setTracking,i?i.call(a,r):gt.call(a,"setTracking",r)))+" ",l=n["if"].call(a,a.preview,{hash:{},inverse:vt.noop,fn:vt.program(23,m,t),data:t}),(l||0===l)&&(p+=l),p+=' data-play-context="',(l=n.play_context)?l=l.call(a,{hash:{},data:t}):(l=a.play_context,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" ',l=n["if"].call(a,a.play_context_id,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(25,_,t,a),data:t}),(l||0===l)&&(p+=l),p+=" ",l=n["if"].call(a,a.radio,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(27,k,t,a),data:t}),(l||0===l)&&(p+=l),p+=" ",l=n["if"].call(a,a.sent_to_mobile_banner,{hash:{},inverse:vt.noop,fn:vt.program(29,b,t),data:t}),(l||0===l)&&(p+=l),p+='>\n				<img class="picture" src="',(l=n.img_url)?l=l.call(a,{hash:{},data:t}):(l=a.img_url,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" width="',(l=n.width)?l=l.call(a,{hash:{},data:t}):(l=a.width,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" height="',(l=n.height)?l=l.call(a,{hash:{},data:t}):(l=a.height,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'">\n				<div class="options-overlay"></div>\n			</a>\n		'}function m(a,t){var e,i="";return i+=' data-preview="',(e=n.preview)?e=e.call(a,{hash:{},data:t}):(e=a.preview,e=typeof e===ut?e.apply(a):e),i+=yt(e)+'" '}function _(a,t,n){var e,i="";return i+='data-play-context-id="'+yt((e=n.play_context_id,typeof e===ut?e.apply(a):e))+'"'}function k(a,t,n){var e,i="";return i+='data-radio="'+yt((e=n.radio,typeof e===ut?e.apply(a):e))+'"'}function b(){return'data-is-sent-to-mobile="true"'}function q(a,t){var e,i="";return i+="\n			",e=n["if"].call(a,a.href_type,{hash:{},inverse:vt.program(34,w,t),fn:vt.programWithDepth(32,E,t,a),data:t}),(e||0===e)&&(i+=e),i+="\n		"}function E(a,t,e){var i,l,r,p="";return p+='\n				<a href="/',(i=n.href_type)?i=i.call(a,{hash:{},data:t}):(i=a.href_type,i=typeof i===ut?i.apply(a):i),p+=yt(i)+"/",(i=n.href_id)?i=i.call(a,{hash:{},data:t}):(i=a.href_id,i=typeof i===ut?i.apply(a):i),p+=yt(i)+'" class="picture-link evt-click" data-link="1" ',r={hash:{tracking:e.tracking,tracking_id:e.play_context_id,tag:e.tracking_tag},data:t},p+=yt((i=n.setTracking||e.setTracking,i?i.call(a,r):gt.call(a,"setTracking",r)))+'>\n					<img class="picture" src="',(l=n.img_url)?l=l.call(a,{hash:{},data:t}):(l=a.img_url,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" width="',(l=n.width)?l=l.call(a,{hash:{},data:t}):(l=a.width,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" height="',(l=n.height)?l=l.call(a,{hash:{},data:t}):(l=a.height,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'">\n					<div class="options-overlay"></div>\n				</a>\n			'}function w(a,t){var e,i,l,r="";return r+='\n				<img class="picture',l={hash:{},inverse:vt.noop,fn:vt.program(35,W,t),data:t},e=n.ifEqual||a.ifEqual,i=e?e.call(a,a.cover_type,"empty",l):gt.call(a,"ifEqual",a.cover_type,"empty",l),(i||0===i)&&(r+=i),r+='" src="',l={hash:{},inverse:vt.programWithDepth(39,x,t,a),fn:vt.program(37,D,t),data:t},e=n.ifEqual||a.ifEqual,i=e?e.call(a,a.cover_type,"empty",l):gt.call(a,"ifEqual",a.cover_type,"empty",l),(i||0===i)&&(r+=i),r+='" width="',(i=n.width)?i=i.call(a,{hash:{},data:t}):(i=a.width,i=typeof i===ut?i.apply(a):i),r+=yt(i)+'" height="',(i=n.height)?i=i.call(a,{hash:{},data:t}):(i=a.height,i=typeof i===ut?i.apply(a):i),r+=yt(i)+'">\n				<div class="options-overlay"></div>\n			'}function W(){return" picture-empty"}function D(){return"http://cdn-files.deezer.com/images/common/blank-v00344586.gif"}function x(a,t,n){var e;return yt((e=n.img_url,typeof e===ut?e.apply(a):e))}function T(){return'\n		<span class="shadow"></span>\n	'}function z(){return'\n		<span class="sticker sticker-small sticker-red">NEW</span>\n	'}function N(a,t,e){var i,l,r,p="";return p+='\n		<a class="evt-click" data-link="1" data-tracking="'+yt((i=e.tracking,typeof i===ut?i.apply(a):i))+'" data-tracking-tag="'+yt((i=e.tracking_tag,typeof i===ut?i.apply(a):i))+'" data-tracking-id="'+yt((i=e.play_context_id,typeof i===ut?i.apply(a):i))+'" href="',r={hash:{},data:t},p+=yt((i=n.thumbnail_unavailable_link||a.thumbnail_unavailable_link,i?i.call(a,a.type,r):gt.call(a,"thumbnail_unavailable_link",a.type,r)))+'">\n			<span class="unavailable">\n				<span class="wrapper">\n					<span class="message">\n					',l=n["if"].call(a,a.unavailable_message,{hash:{},inverse:vt.program(48,A,t),fn:vt.program(46,C,t),data:t}),(l||0===l)&&(p+=l),p+='\n					</span>\n				</span>\n			</span>\n			<div class="options-overlay"></div>\n		</a>\n	'}function C(a,t){var e,i="";return i+="\n						",(e=n.unavailable_message)?e=e.call(a,{hash:{},data:t}):(e=a.unavailable_message,e=typeof e===ut?e.apply(a):e),i+=yt(e)+"\n					"}function A(a,t){var e,i,l,r="";return r+="\n						",l={hash:{},inverse:vt.programWithDepth(51,S,t,a),fn:vt.program(49,H,t),data:t},e=n.ifEqual||a.ifEqual,i=e?e.call(a,a.type,"album",l):gt.call(a,"ifEqual",a.type,"album",l),(i||0===i)&&(r+=i),r+="\n					"}function H(){return"\n							This album is not available. Why?						"}function S(a,t,e){var i,l,r,p="";return p+="\n							",r={hash:{},inverse:vt.program(54,F,t),fn:vt.program(52,j,t),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.type,"radio",r):gt.call(a,"ifEqual",e.type,"radio",r),(l||0===l)&&(p+=l),p+="\n						"}function j(){return"\n								This mix is not available.							"}function F(){return"\n								This track is not available in your country.							"}function I(){return'\n		<span class="thumbnail-overlay"></span>\n	'}function L(a,t,e){var i,l,r,p="";return p+='\n		<span class="play ',r={hash:{},inverse:vt.noop,fn:vt.program(59,M,t),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.edit,!1,r):gt.call(a,"ifEqual",e.edit,!1,r),(l||0===l)&&(p+=l),p+=" ",r={hash:{},inverse:vt.noop,fn:vt.programWithDepth(61,P,t,a),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.enable_preview,!0,r):gt.call(a,"ifEqual",e.enable_preview,!0,r),(l||0===l)&&(p+=l),p+=" ",r={hash:{},inverse:vt.noop,fn:vt.program(64,B,t),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.play_force,!0,r):gt.call(a,"ifEqual",e.play_force,!0,r),(l||0===l)&&(p+=l),p+='" ',r={hash:{},inverse:vt.noop,fn:vt.program(66,G,t),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.enable_preview,!0,r):gt.call(a,"ifEqual",e.enable_preview,!0,r),(l||0===l)&&(p+=l),p+=' data-play="1" data-id="',(l=n.id)?l=l.call(a,{hash:{},data:t}):(l=a.id,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" data-type="',(l=n.type)?l=l.call(a,{hash:{},data:t}):(l=a.type,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" ',r={hash:{tracking:e.tracking,tag:"play",tracking_id:e.play_context_id,params:e.tracking_params},data:t},p+=yt((i=n.setTracking||e.setTracking,i?i.call(a,r):gt.call(a,"setTracking",r)))+" ",l=n["if"].call(a,a.preview,{hash:{},inverse:vt.noop,fn:vt.program(23,m,t),data:t}),(l||0===l)&&(p+=l),p+=' data-play-context="',(l=n.play_context)?l=l.call(a,{hash:{},data:t}):(l=a.play_context,l=typeof l===ut?l.apply(a):l),p+=yt(l)+'" ',l=n["if"].call(a,a.play_context_id,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(25,_,t,a),data:t}),(l||0===l)&&(p+=l),p+=" ",l=n["if"].call(a,a.sent_to_mobile_banner,{hash:{},inverse:vt.noop,fn:vt.program(29,b,t),data:t}),(l||0===l)&&(p+=l),p+=" ",l=n["if"].call(a,a.radio,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(27,k,t,a),data:t}),(l||0===l)&&(p+=l),p+=">\n			",r={hash:{},inverse:vt.program(70,K,t),fn:vt.programWithDepth(68,J,t,e),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.edit,!0,r):gt.call(a,"ifEqual",e.edit,!0,r),(l||0===l)&&(p+=l),p+="\n		</span>\n	"}function M(){return"evt-click"}function P(a,t,e){var i,l,r;return r={hash:{},inverse:vt.noop,fn:vt.program(62,R,t),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.edit,!1,r):gt.call(a,"ifEqual",e.edit,!1,r),l||0===l?l:""}function R(){return"evt-out evt-over"}function B(){return"play-force"}function G(){return'data-enable-preview="true" data-tooltip="1" data-tooltip-delay="700" data-tooltip-gravity="s" title="Click and hold to preview track"'}function J(a,t,n){var e,i="";return i+='\n				<a class="evt-click" data-id="'+yt((e=n.id,typeof e===ut?e.apply(a):e))+'" data-type="'+yt((e=n.type,typeof e===ut?e.apply(a):e))+'" data-change-picture="1" data-link="0" href="javascript:void(0)"><span class="icon icon-camera"></span></a>\n			'}function K(){return'\n				<span class="icon-64 icon-stack icon-stack-hover icon-stack-circle">\n					<span class="play-icon play-default">\n						<span class="icon icon-play"></span>\n					</span>\n					<span class="play-icon play-hover">\n						<span class="icon icon-pause"></span>\n					</span>\n					<span class="play-icon play-active">\n						<span class="equalizer equalizer-inverse equalizer-24">\n							<span class="equalizer-bar equalizer-bar-1"></span>\n							<span class="equalizer-bar equalizer-bar-2"></span>\n							<span class="equalizer-bar equalizer-bar-3"></span>\n						</span>\n					</span>\n				</span>\n			'}function O(){return'\n		<span class="closed">\n			<a class="closed-toggle evt-click" data-close="1" href="javascript:void(0)">\n				<i class="icon icon-cancel"></i>\n			</a>\n		</span>\n	'}function Q(a,t,n){var e,i="";return i+='\n		<span class="sent-to-mobile evt-click" data-link="0" data-sent-to-mobile="1" data-modal="/lightbox/push_mobile?context=banner&type='+yt((e=n.cover_type,typeof e===ut?e.apply(a):e))+"&id="+yt((e=n.pic_id,typeof e===ut?e.apply(a):e))+'">\n			<span class="wrapper-icon">\n				<span class="icon icon-phone"></span>\n			</span>\n			<span class="wrapper-label">Listen on mobile</span>\n		</span>\n	'}function U(a,t,e){var i,l="";return l+="\n		",i=n.unless.call(a,e.context_menu_hide,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(77,V,t,e),data:t}),(i||0===i)&&(l+=i),l+="\n	"}function V(a,t,e){var i,l,r,p="";return p+='\n			<ul class="options" data-link="0" data-favorite="1" data-id="'+yt((i=e.id,typeof i===ut?i.apply(a):i))+'" data-type="'+yt((i=e.type,typeof i===ut?i.apply(a):i))+'" ',r={hash:{tracking:e.tracking,tracking_id:e.play_context_id,tag:e.tracking_tag},data:t},p+=yt((i=n.setTracking||e.setTracking,i?i.call(a,r):gt.call(a,"setTracking",r)))+">\n				",l=n.unless.call(a,e.favorite_hide,{hash:{},inverse:vt.noop,fn:vt.program(78,X,t),data:t}),(l||0===l)&&(p+=l),p+="\n				",r={hash:{},inverse:vt.noop,fn:vt.programWithDepth(95,ot,t,e),data:t},i=n.ifEqual||a.ifEqual,l=i?i.call(a,a.type,"song",r):gt.call(a,"ifEqual",a.type,"song",r),(l||0===l)&&(p+=l),p+='\n				<li class="options-item pull-right">\n					<span class="icon icon-options"\n						  data-action="options"\n						  data-excludes="'+yt((i=e.context_menu_excludes,typeof i===ut?i.apply(a):i))+'"\n						  data-zoom_on_cover="'+yt((i=e.zoom_on_cover,typeof i===ut?i.apply(a):i))+'"\n						  data-art_id="'+yt((i=e.art_id,typeof i===ut?i.apply(a):i))+'"\n						  data-alb_id="'+yt((i=e.alb_id,typeof i===ut?i.apply(a):i))+'"\n						  data-show_id="'+yt((i=e.show_id,typeof i===ut?i.apply(a):i))+'"\n						  data-lyrics_id="'+yt((i=e.lyrics_id,typeof i===ut?i.apply(a):i))+'"\n						  data-image="'+yt((i=e.pic_id,typeof i===ut?i.apply(a):i))+'"\n						  data-cover_type="'+yt((i=e.cover_type,typeof i===ut?i.apply(a):i))+'"\n						  data-blocked="'+yt((i=e.blocked,typeof i===ut?i.apply(a):i))+'"\n						  data-parent_user_id="'+yt((i=e.parent_user_id,typeof i===ut?i.apply(a):i))+'"\n						  data-private_status="'+yt((i=e.private_status,typeof i===ut?i.apply(a):i))+'"></span>\n				</li>\n			</ul>\n		'}function X(a,t){var e,i="";return i+="\n					",e=n["if"].call(a,a.type,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(79,Y,t,a),data:t}),(e||0===e)&&(i+=e),i+="\n				"}function Y(a,t,e){var i,l,r,p="";return p+="\n						",r={hash:{},inverse:vt.noop,fn:vt.programWithDepth(80,Z,t,e),data:t},i=n.ifNotEqual||e.ifNotEqual,l=i?i.call(a,e.type,"user",r):gt.call(a,"ifNotEqual",e.type,"user",r),(l||0===l)&&(p+=l),p+="\n					"}function Z(a,t,e){var i,l,r,p="";return p+="\n							",r={hash:{},inverse:vt.programWithDepth(89,it,t,e),fn:vt.programWithDepth(81,$,t,e),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.type,"playlist",r):gt.call(a,"ifEqual",e.type,"playlist",r),(l||0===l)&&(p+=l),p+="\n						"}function $(a,t,e){var i,l,r,p="";return p+="\n								",r={hash:{},inverse:vt.noop,fn:vt.programWithDepth(82,at,t,e),data:t},i=n.ifNotEqual||e.ifNotEqual,l=i?i.call(a,e.parent_user_id,e.user_id,r):gt.call(a,"ifNotEqual",e.parent_user_id,e.user_id,r),(l||0===l)&&(p+=l),p+="\n							"}function at(a,t,e){var i,l="";return l+='\n								<li class="options-item options-favorite">\n									<span class="evt-out evt-over icon icon-love',i=n["if"].call(a,e.is_favorite,{hash:{},inverse:vt.noop,fn:vt.program(83,tt,t),data:t}),(i||0===i)&&(l+=i),l+='" data-action="favorite" data-tooltip="1" data-tooltip-delay="700" data-tooltip-offset="2" data-tooltip-gravity="s" title="',i=n["if"].call(a,e.is_favorite,{hash:{},inverse:vt.program(87,et,t),fn:vt.program(85,nt,t),data:t}),(i||0===i)&&(l+=i),l+='"></span>\n								</li>\n								'}function tt(){return" active"}function nt(){return"Delete from my library"}function et(){return"Add to my library"}function it(a,t,e){var i,l,r,p="";return p+="\n								",r={hash:{},inverse:vt.programWithDepth(82,at,t,e),fn:vt.programWithDepth(90,lt,t,e),data:t},i=n.ifEqual||e.ifEqual,l=i?i.call(a,e.type,"song",r):gt.call(a,"ifEqual",e.type,"song",r),(l||0===l)&&(p+=l),p+="\n							"}function lt(a,t,e){var i,l="";return l+='\n								<li class="options-item options-favorite">\n									<span class="evt-out evt-over icon icon-love ',i=n["if"].call(a,e.is_favorite,{hash:{},inverse:vt.noop,fn:vt.program(83,tt,t),data:t}),(i||0===i)&&(l+=i),l+='" data-action="favorite" data-tooltip="1" data-tooltip-delay="700" data-tooltip-offset="2" data-tooltip-gravity="s" title="',i=n["if"].call(a,e.is_favorite,{hash:{},inverse:vt.program(93,pt,t),fn:vt.program(91,rt,t),data:t}),(i||0===i)&&(l+=i),l+='"></span>\n								</li>\n								'}function rt(){return"Remove from Favourite tracks"}function pt(){return"Add to favourite tracks"}function ot(a,t,e){var i,l="";return l+="\n					",i=n["if"].call(a,e.lyrics_id,{hash:{},inverse:vt.noop,fn:vt.program(96,st,t),data:t}),(i||0===i)&&(l+=i),l+='\n					<li class="options-item">\n						<span class="icon icon-playlist-add evt-out evt-over" data-action="playlist" data-tooltip="1" data-tooltip-delay="700" data-tooltip-offset="2" data-tooltip-gravity="s" title="Add to a playlist"></span>\n					</li>\n				'}function st(){return'\n					<li class="options-item">\n						<span class="icon icon-lyrics evt-out evt-over" data-action="lyrics" data-tooltip="1" data-tooltip-delay="700" data-tooltip-offset="2" data-tooltip-gravity="s" title="Play with lyrics"></span>\n					</li>\n					'}this.compilerInfo=[4,">= 1.0.0"],n=this.merge(n,a.helpers),i=i||{};var ct,ht,dt,ft="",ut="function",yt=this.escapeExpression,vt=this,gt=n.helperMissing;return ft+='<figure data-id="',(ct=n.id)?ct=ct.call(t,{hash:{},data:i}):(ct=t.id,ct=typeof ct===ut?ct.apply(t):ct),ft+=yt(ct)+'" ',ct=n["if"].call(t,t.type,{hash:{},inverse:vt.noop,fn:vt.program(1,l,i),data:i}),(ct||0===ct)&&(ft+=ct),ft+=' class="thumbnail',ct=n["if"].call(t,t.border,{hash:{},inverse:vt.noop,fn:vt.program(3,r,i),data:i}),(ct||0===ct)&&(ft+=ct),ct=n["if"].call(t,t.rounded,{hash:{},inverse:vt.noop,fn:vt.program(5,p,i),data:i}),(ct||0===ct)&&(ft+=ct),ct=n["if"].call(t,t.tooltip,{hash:{},inverse:vt.noop,fn:vt.program(7,o,i),data:i}),(ct||0===ct)&&(ft+=ct),ct=n["if"].call(t,t.eventClick,{hash:{},inverse:vt.noop,fn:vt.program(9,s,i),data:i}),(ct||0===ct)&&(ft+=ct),ft+='"',ct=n["if"].call(t,t.tooltip,{hash:{},inverse:vt.noop,fn:vt.program(11,c,i),data:i}),(ct||0===ct)&&(ft+=ct),ft+=">\n	",ct=n["if"].call(t,t.stack_covers,{hash:{},inverse:vt.program(21,v,i),fn:vt.programWithDepth(13,h,i,t),data:i}),(ct||0===ct)&&(ft+=ct),ft+="\n	",ct=n["if"].call(t,t.shadow,{hash:{},inverse:vt.noop,fn:vt.program(41,T,i),data:i}),(ct||0===ct)&&(ft+=ct),ft+="\n	",ct=n["if"].call(t,t.ribbon,{hash:{},inverse:vt.noop,fn:vt.program(43,z,i),data:i}),(ct||0===ct)&&(ft+=ct),ft+="\n	",ct=n["if"].call(t,t.unavailable,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(45,N,i,t),data:i}),(ct||0===ct)&&(ft+=ct),ft+="\n	",dt={hash:{},inverse:vt.noop,fn:vt.program(56,I,i),data:i},ct=n.ifEqual||t.ifEqual,ht=ct?ct.call(t,t.edit,!0,dt):gt.call(t,"ifEqual",t.edit,!0,dt),(ht||0===ht)&&(ft+=ht),ft+="\n	",ht=n["if"].call(t,t.play,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(58,L,i,t),data:i}),(ht||0===ht)&&(ft+=ht),ft+="\n	",ht=n["if"].call(t,t.closed,{hash:{},inverse:vt.noop,fn:vt.program(72,O,i),data:i}),(ht||0===ht)&&(ft+=ht),ft+="\n	",ht=n["if"].call(t,t.sent_to_mobile_banner,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(74,Q,i,t),data:i}),(ht||0===ht)&&(ft+=ht),ft+="\n	",ht=n.unless.call(t,t.unavailable,{hash:{},inverse:vt.noop,fn:vt.programWithDepth(76,U,i,t),data:i}),(ht||0===ht)&&(ft+=ht),ft+="\n</figure>\n"})}();
+!function(){var a=Handlebars.template,n=Handlebars.templates=Handlebars.templates||{};n.button_multi_state=a(function(a,n,l,i,t){function o(){return"btn-link"}function r(a,n,l){var i,t="";return t+="btn-"+F((i=l.color,typeof i===C?i.apply(a):i))}function e(a,n){var i,t="";return t+=" btn-",(i=l.size)?i=i.call(a,{hash:{},data:n}):(i=a.size,i=typeof i===C?i.apply(a):i),t+=F(i)}function c(a,n){var i,t="";return t+=" ",(i=l.status)?i=i.call(a,{hash:{},data:n}):(i=a.status,i=typeof i===C?i.apply(a):i),t+=F(i)}function p(){return" evt-out cancel-hover"}function s(){return" evt-click"}function f(){return'\n			data-favorite="1"\n		'}function u(){return'\n			data-play="1"\n		'}function h(a,n){var i,t="";return t+='\n			data-key="',(i=l.key)?i=i.call(a,{hash:{},data:n}):(i=a.key,i=typeof i===C?i.apply(a):i),t+=F(i)+'"\n		'}function d(a,n,l){var i,t="";return t+='\n			title="'+F((i=l.txtTooltip,typeof i===C?i.apply(a):i))+'"\n		'}function g(a,n){var i,t="";return t+='\n			data-display="',(i=l.display)?i=i.call(a,{hash:{},data:n}):(i=a.display,i=typeof i===C?i.apply(a):i),t+=F(i)+'"\n		'}function v(a,n){var i,t="";return t+='\n			data-size="',(i=l.size)?i=i.call(a,{hash:{},data:n}):(i=a.size,i=typeof i===C?i.apply(a):i),t+=F(i)+'"\n		'}function q(a,n){var i,t="";return t+='\n			data-play-context="',(i=l.play_context)?i=i.call(a,{hash:{},data:n}):(i=a.play_context,i=typeof i===C?i.apply(a):i),t+=F(i)+'"\n		'}function y(){return'\n			data-cancel-hover="true"\n		'}function E(a,n){var i,t="";return t+='\n			data-radio="',(i=l.radio)?i=i.call(a,{hash:{},data:n}):(i=a.radio,i=typeof i===C?i.apply(a):i),t+=F(i)+'"\n		'}function m(a,n){var i,t="";return t+='\n			data-color="',(i=l.color)?i=i.call(a,{hash:{},data:n}):(i=a.color,i=typeof i===C?i.apply(a):i),t+=F(i)+'"\n		'}function _(a,n){var i,t="";return t+='\n			data-context="',(i=l.context)?i=i.call(a,{hash:{},data:n}):(i=a.context,i=typeof i===C?i.apply(a):i),t+=F(i)+'"\n		'}function b(a,n){var i,t="";return t+='\n			id="',(i=l.elId)?i=i.call(a,{hash:{},data:n}):(i=a.elId,i=typeof i===C?i.apply(a):i),t+=F(i)+'"\n		'}function k(a,n,i){var t,o,r,e="";return e+='\n		<div class="action action-default">\n			',r={hash:{},inverse:G.noop,fn:G.programWithDepth(38,x,n,i),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"left",r):J.call(a,"ifEqual",i.icon_align,"left",r),(o||0===o)&&(e+=o),e+='\n			<span class="label">'+F((t=i.txtDefault,typeof t===C?t.apply(a):t))+"</span>\n			",r={hash:{},inverse:G.noop,fn:G.programWithDepth(38,x,n,i),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"right",r):J.call(a,"ifEqual",i.icon_align,"right",r),(o||0===o)&&(e+=o),e+='\n		</div>\n		<div class="action action-active">\n			',r={hash:{},inverse:G.noop,fn:G.programWithDepth(43,W,n,i),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"left",r):J.call(a,"ifEqual",i.icon_align,"left",r),(o||0===o)&&(e+=o),e+='\n			<span class="label">'+F((t=i.txtActive,typeof t===C?t.apply(a):t))+"</span>\n			",r={hash:{},inverse:G.noop,fn:G.programWithDepth(43,W,n,i),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"right",r):J.call(a,"ifEqual",i.icon_align,"right",r),(o||0===o)&&(e+=o),e+='\n		</div>\n		<div class="action action-hover">\n			',r={hash:{},inverse:G.noop,fn:G.program(46,H,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"left",r):J.call(a,"ifEqual",i.icon_align,"left",r),(o||0===o)&&(e+=o),e+='\n			<span class="label">'+F((t=i.txtHover,typeof t===C?t.apply(a):t))+"</span>\n			",r={hash:{},inverse:G.noop,fn:G.program(46,H,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"right",r):J.call(a,"ifEqual",i.icon_align,"right",r),(o||0===o)&&(e+=o),e+="\n		</div>\n	"}function x(a,n,i){var t,o,r,e="";return e+="\n				",r={hash:{},inverse:G.noop,fn:G.program(39,z,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon,"library",r):J.call(a,"ifEqual",i.icon,"library",r),(o||0===o)&&(e+=o),e+="\n				",r={hash:{},inverse:G.noop,fn:G.program(39,z,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon,"favorite",r):J.call(a,"ifEqual",i.icon,"favorite",r),(o||0===o)&&(e+=o),e+="\n				",r={hash:{},inverse:G.noop,fn:G.program(41,D,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon,"follow",r):J.call(a,"ifEqual",i.icon,"follow",r),(o||0===o)&&(e+=o),e+="\n			"}function z(){return'\n					<span class="icon icon-love"></span>\n				'}function D(){return'\n					<span class="icon icon-add"></span>\n				'}function W(a,n,i){var t,o,r,e="";return e+="\n				",r={hash:{},inverse:G.noop,fn:G.program(39,z,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon,"library",r):J.call(a,"ifEqual",i.icon,"library",r),(o||0===o)&&(e+=o),e+="\n				",r={hash:{},inverse:G.noop,fn:G.program(39,z,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon,"favorite",r):J.call(a,"ifEqual",i.icon,"favorite",r),(o||0===o)&&(e+=o),e+="\n				",r={hash:{},inverse:G.noop,fn:G.program(44,w,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon,"follow",r):J.call(a,"ifEqual",i.icon,"follow",r),(o||0===o)&&(e+=o),e+="\n			"}function w(){return'\n					<span class="icon icon-check"></span>\n				'}function H(){return'\n				<span class="icon icon-cancel"></span>\n			'}function I(a,n,i){var t,o,r,e="";return e+='\n		<div class="action action-default">\n			',r={hash:{},inverse:G.noop,fn:G.program(49,T,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"left",r):J.call(a,"ifEqual",i.icon_align,"left",r),(o||0===o)&&(e+=o),e+='\n			<span class="label">'+F((t=i.txtDefault,typeof t===C?t.apply(a):t))+"</span>\n			",r={hash:{},inverse:G.noop,fn:G.program(49,T,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"right",r):J.call(a,"ifEqual",i.icon_align,"right",r),(o||0===o)&&(e+=o),e+='\n		</div>\n		<div class="action action-active">\n			',r={hash:{},inverse:G.noop,fn:G.programWithDepth(51,O,n,i),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"left",r):J.call(a,"ifEqual",i.icon_align,"left",r),(o||0===o)&&(e+=o),e+='\n			<span class="label">'+F((t=i.txtActive,typeof t===C?t.apply(a):t))+"</span>\n			",r={hash:{},inverse:G.noop,fn:G.programWithDepth(51,O,n,i),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"right",r):J.call(a,"ifEqual",i.icon_align,"right",r),(o||0===o)&&(e+=o),e+='\n		</div>\n		<div class="action action-hover">\n			',r={hash:{},inverse:G.noop,fn:G.program(53,A,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"left",r):J.call(a,"ifEqual",i.icon_align,"left",r),(o||0===o)&&(e+=o),e+='\n			<span class="label">'+F((t=i.txtHover,typeof t===C?t.apply(a):t))+"</span>\n			",r={hash:{},inverse:G.noop,fn:G.program(53,A,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"right",r):J.call(a,"ifEqual",i.icon_align,"right",r),(o||0===o)&&(e+=o),e+='\n		</div>\n		<div class="action action-resume">\n			',r={hash:{},inverse:G.noop,fn:G.program(49,T,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"left",r):J.call(a,"ifEqual",i.icon_align,"left",r),(o||0===o)&&(e+=o),e+='\n			<span class="label">'+F((t=i.txtResume,typeof t===C?t.apply(a):t))+"</span>\n			",r={hash:{},inverse:G.noop,fn:G.program(49,T,n),data:n},t=l.ifEqual||i.ifEqual,o=t?t.call(a,i.icon_align,"right",r):J.call(a,"ifEqual",i.icon_align,"right",r),(o||0===o)&&(e+=o),e+="\n		</div>\n	"}function T(){return'\n				<span class="icon icon-play-circle"></span>\n			'}function O(a,n,l){var i,t="";return t+='\n				<span class="equalizer equalizer-'+F((i=l.color_equalizer,typeof i===C?i.apply(a):i))+' equalizer-16">\n					<span class="equalizer-bar equalizer-bar-1"></span>\n					<span class="equalizer-bar equalizer-bar-2"></span>\n					<span class="equalizer-bar equalizer-bar-3"></span>\n				</span>\n			'}function A(){return'\n				<span class="icon icon-pause-circle"></span>\n			'}this.compilerInfo=[4,">= 1.0.0"],l=this.merge(l,a.helpers),t=t||{};var M,R,j,B="",C="function",F=this.escapeExpression,G=this,J=l.helperMissing;return B+='<button class="btn btn-action btn-',(M=l.icon)?M=M.call(n,{hash:{},data:t}):(M=n.icon,M=typeof M===C?M.apply(n):M),B+=F(M)+" ",j={hash:{},inverse:G.programWithDepth(3,r,t,n),fn:G.program(1,o,t),data:t},M=l.ifEqual||n.ifEqual,R=M?M.call(n,n.display,"link",j):J.call(n,"ifEqual",n.display,"link",j),(R||0===R)&&(B+=R),R=l["if"].call(n,n.size,{hash:{},inverse:G.noop,fn:G.program(5,e,t),data:t}),(R||0===R)&&(B+=R),R=l["if"].call(n,n.status,{hash:{},inverse:G.noop,fn:G.program(7,c,t),data:t}),(R||0===R)&&(B+=R),R=l["if"].call(n,n.cancel_hover,{hash:{},inverse:G.noop,fn:G.program(9,p,t),data:t}),(R||0===R)&&(B+=R),R=l["if"].call(n,n.enable_delegation,{hash:{},inverse:G.noop,fn:G.program(11,s,t),data:t}),(R||0===R)&&(B+=R),B+='"\n		type="button"\n		data-wording="',(R=l.wording)?R=R.call(n,{hash:{},data:t}):(R=n.wording,R=typeof R===C?R.apply(n):R),B+=F(R)+'"\n		',j={hash:{},inverse:G.noop,fn:G.program(13,f,t),data:t},M=l.ifEqual||n.ifEqual,R=M?M.call(n,n.action,"favorite",j):J.call(n,"ifEqual",n.action,"favorite",j),(R||0===R)&&(B+=R),B+="\n		",j={hash:{},inverse:G.noop,fn:G.program(15,u,t),data:t},M=l.ifOrEqual||n.ifOrEqual,R=M?M.call(n,n.action,"play","flow",j):J.call(n,"ifOrEqual",n.action,"play","flow",j),(R||0===R)&&(B+=R),B+='\n		data-type="',(R=l.type)?R=R.call(n,{hash:{},data:t}):(R=n.type,R=typeof R===C?R.apply(n):R),B+=F(R)+'"\n		data-id="',(R=l.id)?R=R.call(n,{hash:{},data:t}):(R=n.id,R=typeof R===C?R.apply(n):R),B+=F(R)+'"\n		data-action="',(R=l.action)?R=R.call(n,{hash:{},data:t}):(R=n.action,R=typeof R===C?R.apply(n):R),B+=F(R)+'"\n		',R=l["if"].call(n,n.key,{hash:{},inverse:G.noop,fn:G.program(17,h,t),data:t}),(R||0===R)&&(B+=R),B+="\n		",R=l["if"].call(n,n.tooltip,{hash:{},inverse:G.noop,fn:G.programWithDepth(19,d,t,n),data:t}),(R||0===R)&&(B+=R),B+="\n		",R=l["if"].call(n,n.display,{hash:{},inverse:G.noop,fn:G.program(21,g,t),data:t}),(R||0===R)&&(B+=R),B+="\n		",R=l["if"].call(n,n.size,{hash:{},inverse:G.noop,fn:G.program(23,v,t),data:t}),(R||0===R)&&(B+=R),B+="\n		",R=l["if"].call(n,n.play_context,{hash:{},inverse:G.noop,fn:G.program(25,q,t),data:t}),(R||0===R)&&(B+=R),B+="\n		",j={hash:{tracking:n.tracking,tracking_id:n.tracking_id,tag:n.tracking_tag,params:n.tracking_params},data:t},B+=F((M=l.setTracking||n.setTracking,M?M.call(n,j):J.call(n,"setTracking",j)))+"\n		",R=l["if"].call(n,n.cancel_hover,{hash:{},inverse:G.noop,fn:G.program(27,y,t),data:t}),(R||0===R)&&(B+=R),B+="\n		",R=l["if"].call(n,n.radio,{hash:{},inverse:G.noop,fn:G.program(29,E,t),data:t}),(R||0===R)&&(B+=R),B+="\n		",R=l["if"].call(n,n.color,{hash:{},inverse:G.noop,fn:G.program(31,m,t),data:t}),(R||0===R)&&(B+=R),B+="\n		",R=l["if"].call(n,n.context,{hash:{},inverse:G.noop,fn:G.program(33,_,t),data:t}),(R||0===R)&&(B+=R),B+="\n		",R=l["if"].call(n,n.elId,{hash:{},inverse:G.noop,fn:G.program(35,b,t),data:t}),(R||0===R)&&(B+=R),B+="\n		>\n\n	",j={hash:{},inverse:G.noop,fn:G.programWithDepth(37,k,t,n),data:t},M=l.ifEqual||n.ifEqual,R=M?M.call(n,n.action,"favorite",j):J.call(n,"ifEqual",n.action,"favorite",j),(R||0===R)&&(B+=R),B+="\n\n	",j={hash:{},inverse:G.noop,fn:G.programWithDepth(48,I,t,n),data:t},M=l.ifEqual||n.ifEqual,R=M?M.call(n,n.action,"play",j):J.call(n,"ifEqual",n.action,"play",j),(R||0===R)&&(B+=R),B+="\n\n</button>"})}();
+!function(){var a=Handlebars.template,e=Handlebars.templates=Handlebars.templates||{};e.hotkeys=a(function(a,e,t,n,l){function s(a,e){var n,l="";return l+='\n	<div class="hotkey">\n		',n=t.each.call(a,a.icon,{hash:{},inverse:i.noop,fn:i.program(2,o,e),data:e}),(n||0===n)&&(l+=n),l+='\n		<div class="hotkey-label">',(n=t.label)?n=n.call(a,{hash:{},data:e}):(n=a.label,n=typeof n===c?n.apply(a):n),l+=h(n)+"</div>\n	</div>\n"}function o(a,e){var n,l="";return l+='\n			<div class="hotkey-icon ',(n=t.className)?n=n.call(a,{hash:{},data:e}):(n=a.className,n=typeof n===c?n.apply(a):n),l+=h(n)+'">',(n=t.text)?n=n.call(a,{hash:{},data:e}):(n=a.text,n=typeof n===c?n.apply(a):n),l+=h(n)+"</div>\n		"}this.compilerInfo=[4,">= 1.0.0"],t=this.merge(t,a.helpers),l=l||{};var r,c="function",h=this.escapeExpression,i=this;return r=t.each.call(e,e,{hash:{},inverse:i.noop,fn:i.program(1,s,l),data:l}),r||0===r?r:""})}();
+!function(){var a=Handlebars.template,e=Handlebars.templates=Handlebars.templates||{};e.selectbox=a(function(a,e,t,n,l){function o(a,e){var n,l,o,r="";return r+='\n		<li>\n			<a href="javascript:void(0)" data-index="'+i((n=e,n=null==n||n===!1?n:n.index,typeof n===p?n.apply(a):n))+'" data-id="',o={hash:{},inverse:d.noop,fn:d.program(2,s,e),data:e},n=t.getSelectboxData||a.getSelectboxData,l=n?n.call(a,a,"id",o):b.call(a,"getSelectboxData",a,"id",o),(l||0===l)&&(r+=l),r+='">\n				',o={hash:{},inverse:d.noop,fn:d.program(2,s,e),data:e},n=t.getSelectboxData||a.getSelectboxData,l=n?n.call(a,a,"label",o):b.call(a,"getSelectboxData",a,"label",o),(l||0===l)&&(r+=l),r+="\n			</a>\n		</li>\n	"}function s(){var a="";return a}this.compilerInfo=[4,">= 1.0.0"],t=this.merge(t,a.helpers),l=l||{};var r,c="",p="function",i=this.escapeExpression,d=this,b=t.helperMissing;return c+='<button class="btn btn-default dropdown-toggle" type="button">\n	<span class="label">',(r=t.defaultLabel)?r=r.call(e,{hash:{},data:l}):(r=e.defaultLabel,r=typeof r===p?r.apply(e):r),c+=i(r)+'</span>\n	<span class="icon icon-chevron-down color-primary"></span>\n</button>\n<ul class="dropdown-menu">\n	',r=t.each.call(e,e.data,{hash:{},inverse:d.noop,fn:d.program(1,o,l),data:l}),(r||0===r)&&(c+=r),c+="\n</ul>"})}();
+!function(){var a=Handlebars.template,l=Handlebars.templates=Handlebars.templates||{};l.suggest=a(function(a,l,s,t,e){function n(a,l){var t;return(t=s.suggest_id)?t=t.call(a,{hash:{},data:l}):(t=a.suggest_id,t=typeof t===D?t.apply(a):t),b(t)}function h(){return"search_result"}function r(a,l,t){var e,n="";return n+='\n	<dd class="search_result_container artist">\n		<span class="icn20_artists absolute"></span>\n		<ul class="artist">\n			',e=s.each.call(a,a.artist,{hash:{},inverse:q.noop,fn:q.programWithDepth(6,i,l,a,t),data:l}),(e||0===e)&&(n+=e),n+="\n		</ul>\n	</dd>\n	"}function i(a,l,t,e){var n,h,r,i="";return i+='\n			<li class="suggestion relative" data-i="',r={hash:{},data:l},i+=b((n=s.add||a.add,n?n.call(a,(n=l,null==n||n===!1?n:n.index),1,r):E.call(a,"add",(n=l,null==n||n===!1?n:n.index),1,r)))+'" data-query="',r={hash:{},data:l},i+=b((n=s.addslashes||t.addslashes,n?n.call(a,t.query,r):E.call(a,"addslashes",t.query,r)))+'" data-id="',(h=s.ART_ID)?h=h.call(a,{hash:{},data:l}):(h=a.ART_ID,h=typeof h===D?h.apply(a):h),i+=b(h)+'" type="ARTIST" label="',r={hash:{},data:l},i+=b((n=s.addslashes||a.addslashes,n?n.call(a,a.ART_NAME,r):E.call(a,"addslashes",a.ART_NAME,r)))+'">\n				<a class="result_link evt-click" href="',h=s["if"].call(a,t.href_enabled,{hash:{},inverse:q.program(9,c,l),fn:q.program(7,d,l),data:l}),(h||0===h)&&(i+=h),i+='" ',h=s["if"].call(a,t.add_to_favorite,{hash:{},inverse:q.noop,fn:q.programWithDepth(11,o,l,a),data:l}),(h||0===h)&&(i+=h),h=s["if"].call(a,t.add_to_favorite_delegate,{hash:{},inverse:q.noop,fn:q.programWithDepth(13,p,l,t),data:l}),(h||0===h)&&(i+=h),i+=" ",h=s["if"].call(a,t.context,{hash:{},inverse:q.noop,fn:q.programWithDepth(15,u,l,t),data:l}),(h||0===h)&&(i+=h),i+='>\n					<img class="absolute artist_picture" src="http://cdn-images.deezer.com/images/artist/',(h=s.ART_PICTURE)?h=h.call(a,{hash:{},data:l}):(h=a.ART_PICTURE,h=typeof h===D?h.apply(a):h),i+=b(h)+'/30x30-000000-80-0-0.jpg" />\n					<span class="artist_name">',r={hash:{},data:l},i+=b((n=s.highlight||a.highlight,n?n.call(a,a.ART_NAME,e.query,r):E.call(a,"highlight",a.ART_NAME,e.query,r)))+"</span>\n				</a>\n			</li>\n			"}function d(a,l){var t,e="";return e+="/artist/",(t=s.ART_ID)?t=t.call(a,{hash:{},data:l}):(t=a.ART_ID,t=typeof t===D?t.apply(a):t),e+=b(t)}function c(){return"javascript:void(0);"}function o(a,l,s){var t,e="";return e+=' data-type="artist" data-favorite="1" data-id="'+b((t=s.ART_ID,typeof t===D?t.apply(a):t))+'" data-favorite="1" data-pic-id="'+b((t=s.ART_PICTURE,typeof t===D?t.apply(a):t))+'" data-link="0"'}function p(a,l,s){var t,e="";return e+=' data-favorite-delegate="'+b((t=s.add_to_favorite_delegate,typeof t===D?t.apply(a):t))+"\" data-favorite-context='search'"}function u(a,l,s){var t,e="";return e+=' data-context="'+b((t=s.context,typeof t===D?t.apply(a):t))+'"'}function _(a,l,t){var e,n="";return n+='\n	<dd class="search_result_container album">\n		<span class="icn20_albums absolute"></span>\n		<ul class="album">\n			',e=s.each.call(a,a.album,{hash:{},inverse:q.noop,fn:q.programWithDepth(18,g,l,a,t),data:l}),(e||0===e)&&(n+=e),n+="\n		</ul>\n	</dd>\n	"}function g(a,l,t,e){var n,h,r,i="";return i+='\n			<li class="suggestion relative" data-i="',r={hash:{},data:l},i+=b((n=s.add||a.add,n?n.call(a,(n=l,null==n||n===!1?n:n.index),5,r):E.call(a,"add",(n=l,null==n||n===!1?n:n.index),5,r)))+'" data-query="',r={hash:{},data:l},i+=b((n=s.addslashes||t.addslashes,n?n.call(a,t.query,r):E.call(a,"addslashes",t.query,r)))+'" data-id="',(h=s.ALB_ID)?h=h.call(a,{hash:{},data:l}):(h=a.ALB_ID,h=typeof h===D?h.apply(a):h),i+=b(h)+'" type="ALBUM" label="',r={hash:{},data:l},i+=b((n=s.addslashes||a.addslashes,n?n.call(a,a.ALB_TITLE,r):E.call(a,"addslashes",a.ALB_TITLE,r)))+'">\n				<a class="result_link evt-click" href="/album/',(h=s.ALB_ID)?h=h.call(a,{hash:{},data:l}):(h=a.ALB_ID,h=typeof h===D?h.apply(a):h),i+=b(h)+'">\n					<img class="absolute album_picture" src="http://cdn-images.deezer.com/images/cover/',(h=s.ALB_PICTURE)?h=h.call(a,{hash:{},data:l}):(h=a.ALB_PICTURE,h=typeof h===D?h.apply(a):h),i+=b(h)+'/30x30-000000-80-0-0.jpg" />\n					<span class="album_title">',r={hash:{},data:l},i+=b((n=s.highlight||a.highlight,n?n.call(a,a.ALB_TITLE,e.query,r):E.call(a,"highlight",a.ALB_TITLE,e.query,r)))+'</span> - <span class="artist_name">',r={hash:{},data:l},i+=b((n=s.highlight||a.highlight,n?n.call(a,a.ART_NAME,e.query,r):E.call(a,"highlight",a.ART_NAME,e.query,r)))+"</span>\n				</a>\n			</li>\n			"}function f(a,l){var t,e="";return e+='\n	<dd class="search_result_container track">\n		<span class="icn20_tracks absolute"></span>\n		<ul class="track">\n			',t=s.each.call(a,a.track,{hash:{},inverse:q.noop,fn:q.programWithDepth(21,y,l,a),data:l}),(t||0===t)&&(e+=t),e+="\n		</ul>\n	</dd>\n	"}function y(a,l,t){var e,n,h,r="";return r+='\n			<li class="suggestion relative" data-i="',h={hash:{},data:l},r+=b((e=s.add||a.add,e?e.call(a,(e=l,null==e||e===!1?e:e.index),9,h):E.call(a,"add",(e=l,null==e||e===!1?e:e.index),9,h)))+'" data-query="',h={hash:{},data:l},r+=b((e=s.addslashes||t.addslashes,e?e.call(a,t.query,h):E.call(a,"addslashes",t.query,h)))+'" data-id="',(n=s.SNG_ID)?n=n.call(a,{hash:{},data:l}):(n=a.SNG_ID,n=typeof n===D?n.apply(a):n),r+=b(n)+'" type="TRACK" label="',h={hash:{},data:l},r+=b((e=s.addslashes||a.addslashes,e?e.call(a,a.SNG_TITLE,h):E.call(a,"addslashes",a.SNG_TITLE,h)))+'">\n				',h={hash:{},inverse:q.programWithDepth(24,A,l,a,t),fn:q.programWithDepth(22,T,l,a,t),data:l},e=s.ifDateFuture||a.ifDateFuture,n=e?e.call(a,(e=a.RIGHTS,null==e||e===!1?e:e.STREAM_ADS),h):E.call(a,"ifDateFuture",(e=a.RIGHTS,null==e||e===!1?e:e.STREAM_ADS),h),(n||0===n)&&(r+=n),r+="\n			</li>\n			"}function T(a,l,t,e){var n,h,r="";return r+='\n				<a class="result_link soon" href="javascript:void(0);" onclick="return false;">\n					<div class="icn_suggest-soon naboo_line_soon area_soon" style="margin: 3px 0 0 9px;">\n						<div class="naboo_line_soon_month">',h={hash:{},data:l},r+=b((n=s.getMonthLabel||t.getMonthLabel,n?n.call(a,(n=t.RIGHTS,null==n||n===!1?n:n.STREAM_ADS),h):E.call(a,"getMonthLabel",(n=t.RIGHTS,null==n||n===!1?n:n.STREAM_ADS),h)))+'</div>\n						<div class="naboo_line_soon_num">',h={hash:{},data:l},r+=b((n=s.getDay||t.getDay,n?n.call(a,(n=t.RIGHTS,null==n||n===!1?n:n.STREAM_ADS),h):E.call(a,"getDay",(n=t.RIGHTS,null==n||n===!1?n:n.STREAM_ADS),h)))+'</div>\n					</div>\n					<span class="track_title soon">',h={hash:{},data:l},r+=b((n=s.highlight||a.highlight,n?n.call(a,a.SNG_TITLE,e.query,h):E.call(a,"highlight",a.SNG_TITLE,e.query,h)))+'</span>&nbsp;<span class="duration soon">(',h={hash:{},data:l},r+=b((n=s.formatTime||a.formatTime,n?n.call(a,a.DURATION,h):E.call(a,"formatTime",a.DURATION,h)))+')</span> - <span class="artist_name soon">',h={hash:{},data:l},r+=b((n=s.highlight||a.highlight,n?n.call(a,a.ART_NAME,e.query,h):E.call(a,"highlight",a.ART_NAME,e.query,h)))+"</span>\n				</a>\n				"}function A(a,l,t,e){var n,h,r="";return r+='\n				<a class="result_link evt-click" href="/album/'+b((n=t.ALB_ID,typeof n===D?n.apply(a):n))+"\" onclick=\"dzPlayer.play({type : 'track', id : "+b((n=t.SNG_ID,typeof n===D?n.apply(a):n))+", context : {TYPE : 'suggest_track', ID : '",h={hash:{},data:l},r+=b((n=s.addslashes||e.addslashes,n?n.call(a,e.query,h):E.call(a,"addslashes",e.query,h)))+'\' }});">\n					<span class="icn_suggest-play sprite_icn_all absolute"></span>\n					<span class="track_title">',h={hash:{},data:l},r+=b((n=s.highlight||a.highlight,n?n.call(a,a.SNG_TITLE,e.query,h):E.call(a,"highlight",a.SNG_TITLE,e.query,h)))+'</span>&nbsp;<span class="duration">(',h={hash:{},data:l},r+=b((n=s.formatTime||a.formatTime,n?n.call(a,a.DURATION,h):E.call(a,"formatTime",a.DURATION,h)))+')</span> - <span class="artist_name">',h={hash:{},data:l},r+=b((n=s.highlight||a.highlight,n?n.call(a,a.ART_NAME,e.query,h):E.call(a,"highlight",a.ART_NAME,e.query,h)))+"</span>\n				</a>\n				"}this.compilerInfo=[4,">= 1.0.0"],s=this.merge(s,a.helpers),e=e||{};var m,v,I,R="",D="function",b=this.escapeExpression,E=s.helperMissing,q=this;return R+='<dl id="',m=s["if"].call(l,l.suggest_id,{hash:{},inverse:q.program(3,h,e),fn:q.program(1,n,e),data:e}),(m||0===m)&&(R+=m),R+='" class="search-result absolute search_result">\n	<dt id="search_link" class="pt_5 pb_5 pr_5">\n		<a class="search_link fs_11" style="color:#3995cd;border" data-i="0" href="/search/',(m=s.query)?m=m.call(l,{hash:{},data:e}):(m=l.query,m=typeof m===D?m.apply(l):m),R+=b(m)+'" onclick="loadBox(\'/search/',I={hash:{},data:e},R+=b((m=s.addslashes||l.addslashes,m?m.call(l,l.query,I):E.call(l,"addslashes",l.query,I)))+"'); return false;\">See all results</a>\n	</dt>\n\n	",v=s["if"].call(l,l.artist,{hash:{},inverse:q.noop,fn:q.programWithDepth(5,r,e,l),data:e}),(v||0===v)&&(R+=v),R+="\n\n	",v=s["if"].call(l,l.album,{hash:{},inverse:q.noop,fn:q.programWithDepth(17,_,e,l),data:e}),(v||0===v)&&(R+=v),R+="\n\n	",v=s["if"].call(l,l.track,{hash:{},inverse:q.noop,fn:q.program(20,f,e),data:e}),(v||0===v)&&(R+=v),R+="\n</dl>\n"})}();
+!function(){var a=Handlebars.template,t=Handlebars.templates=Handlebars.templates||{};t.comment=a(function(a,t,n,l,e){function s(){return'style="display: none"'}function i(){var a="";return a}function o(){return"user-publish"}function p(a,t){var l,e="";return e+='\n				<a class="evt-out evt-over trash" data-id="',(l=n.COMMENT_ID)?l=l.call(a,{hash:{},data:t}):(l=a.COMMENT_ID,l=typeof l===u?l.apply(a):l),e+=v(l)+'" data-element-id="',(l=n.ELEMENT_ID)?l=l.call(a,{hash:{},data:t}):(l=a.ELEMENT_ID,l=typeof l===u?l.apply(a):l),e+=v(l)+'" data-type="',(l=n.TYPE)?l=l.call(a,{hash:{},data:t}):(l=a.TYPE,l=typeof l===u?l.apply(a):l),e+=v(l)+'" type="button" data-tooltip="1" data-tooltip-fallback="Delete" data-tooltip-gravity="s">\n					<span class="icon icon-trash"></span>\n				</a>\n			'}function r(a,t){var l,e="";return e+='\n			<a href="javascript:void(0)" class="evt-out evt-over abuse" data-id="',(l=n.COMMENT_ID)?l=l.call(a,{hash:{},data:t}):(l=a.COMMENT_ID,l=typeof l===u?l.apply(a):l),e+=v(l)+'" data-type="',(l=n.TYPE)?l=l.call(a,{hash:{},data:t}):(l=a.TYPE,l=typeof l===u?l.apply(a):l),e+=v(l)+'" data-tooltip="1" data-tooltip-fallback="Report an offensive post" data-tooltip-gravity="s">\n				<span class="icon icon-flag"></span>\n			</a>\n			'}this.compilerInfo=[4,">= 1.0.0"],n=this.merge(n,a.helpers),e=e||{};var c,d,h,f="",u="function",v=this.escapeExpression,E=this,m=n.helperMissing;return f+='<div class="user-comment" ',h={hash:{},inverse:E.noop,fn:E.program(1,s,e),data:e},c=n.ifEqual||t.ifEqual,d=c?c.call(t,t.DISPLAY,0,h):m.call(t,"ifEqual",t.DISPLAY,0,h),(d||0===d)&&(f+=d),f+=' data-target="comment-row">\n	<aside class="user-visual">\n		',h={hash:{card_id:t.CARD_ID,type:"user",id:t.USER_ID,width:"30",height:"30",width_img:"50",height_img:"50",pic_id:t.USER_PICTURE,rounded:"1",context_menu_hide:!0},inverse:E.noop,fn:E.program(3,i,e),data:e},c=n.thumbnail||t.thumbnail,d=c?c.call(t,h):m.call(t,"thumbnail",h),(d||0===d)&&(f+=d),f+='\n	</aside>\n	<div class="message ',h={hash:{},inverse:E.noop,fn:E.program(5,o,e),data:e},c=n.ifEqual||t.ifEqual,d=c?c.call(t,t.DISPLAY,0,h):m.call(t,"ifEqual",t.DISPLAY,0,h),(d||0===d)&&(f+=d),f+='">\n		<div class="action-icon">\n			',d=n["if"].call(t,t.ELEMENT_ID,{hash:{},inverse:E.program(9,r,e),fn:E.program(7,p,e),data:e}),(d||0===d)&&(f+=d),f+='\n		</div>\n		<div class="caption">\n			<span class="author"><a class="link-gray-dark evt-click" href="/profile/',(d=n.USER_ID)?d=d.call(t,{hash:{},data:e}):(d=t.USER_ID,d=typeof d===u?d.apply(t):d),f+=v(d)+'" data-link="1"><strong>',(d=n.BLOG_NAME)?d=d.call(t,{hash:{},data:e}):(d=t.BLOG_NAME,d=typeof d===u?d.apply(t):d),f+=v(d)+'</strong></a></span> - <span class="time timestamp" data-timestamp="',(d=n.DATE)?d=d.call(t,{hash:{},data:e}):(d=t.DATE,d=typeof d===u?d.apply(t):d),f+=v(d)+'"></span>\n		</div>\n		<div class="text">',h={hash:{},data:e},f+=v((c=n.convertURLToLink||t.convertURLToLink,c?c.call(t,t.COMMENT,h):m.call(t,"convertURLToLink",t.COMMENT,h)))+"</div>\n	</div>\n</div>"})}();
+!function(){var a=Handlebars.template,t=Handlebars.templates=Handlebars.templates||{};t.catalog_components_comment=a(function(a,t,n,e,s){function l(){return'style="display: none"'}function o(){var a="";return a}function i(a,t){var e,s="";return s+='\n				<button class="btn btn-mini btn-default evt-out evt-over trash" type="button" data-id="',(e=n.COMMENT_ID)?e=e.call(a,{hash:{},data:t}):(e=a.COMMENT_ID,e=typeof e===m?e.apply(a):e),s+=u(e)+'" data-element-id="',(e=n.ELEMENT_ID)?e=e.call(a,{hash:{},data:t}):(e=a.ELEMENT_ID,e=typeof e===m?e.apply(a):e),s+=u(e)+'" data-type="',(e=n.TYPE)?e=e.call(a,{hash:{},data:t}):(e=a.TYPE,e=typeof e===m?e.apply(a):e),s+=u(e)+'" type="button" data-tooltip="1" data-tooltip-fallback="Delete" data-tooltip-gravity="s">\n					<span class="icon icon-trash"></span>\n				</button>\n			'}function p(a,t){var e,s="";return s+='\n				<button class="btn btn-mini btn-default evt-out evt-over abuse" type="button" data-id="',(e=n.COMMENT_ID)?e=e.call(a,{hash:{},data:t}):(e=a.COMMENT_ID,e=typeof e===m?e.apply(a):e),s+=u(e)+'" data-type="',(e=n.TYPE)?e=e.call(a,{hash:{},data:t}):(e=a.TYPE,e=typeof e===m?e.apply(a):e),s+=u(e)+'" data-tooltip="1" data-tooltip-fallback="Report an offensive post" data-tooltip-gravity="s">\n					<span class="icon icon-flag"></span>\n				</button>\n			'}this.compilerInfo=[4,">= 1.0.0"],n=this.merge(n,a.helpers),s=s||{};var c,d,r,h="",m="function",u=this.escapeExpression,f=this,v=n.helperMissing;return h+='<div class="comment-row" ',r={hash:{},inverse:f.noop,fn:f.program(1,l,s),data:s},c=n.ifEqual||t.ifEqual,d=c?c.call(t,t.DISPLAY,0,r):v.call(t,"ifEqual",t.DISPLAY,0,r),(d||0===d)&&(h+=d),h+=' data-target="comment-row">\n	<div class="comment-thumbnail">\n		<a href="#">\n			',r={hash:{card_id:t.CARD_ID,type:"user",id:t.USER_ID,width:"30",height:"30",pic_id:t.USER_PICTURE,rounded:"1",context_menu_hide:!0},inverse:f.noop,fn:f.program(3,o,s),data:s},c=n.thumbnail||t.thumbnail,d=c?c.call(t,r):v.call(t,"thumbnail",r),(d||0===d)&&(h+=d),h+='\n		</a>\n	</div>\n	<div class="comment-message">\n		<div class="message-header">\n			<span class="message-author"><a class="link-gray-dark evt-click" href="/profile/',(d=n.USER_ID)?d=d.call(t,{hash:{},data:s}):(d=t.USER_ID,d=typeof d===m?d.apply(t):d),h+=u(d)+'" data-link="1">',(d=n.BLOG_NAME)?d=d.call(t,{hash:{},data:s}):(d=t.BLOG_NAME,d=typeof d===m?d.apply(t):d),h+=u(d)+'</a></span>\n			<span class="message-date time timestamp" data-timestamp="',(d=n.DATE)?d=d.call(t,{hash:{},data:s}):(d=t.DATE,d=typeof d===m?d.apply(t):d),h+=u(d)+'"></span>\n		</div>\n		<div class="message-body">\n			',r={hash:{},data:s},h+=u((c=n.convertURLToLink||t.convertURLToLink,c?c.call(t,t.COMMENT,r):v.call(t,"convertURLToLink",t.COMMENT,r)))+'\n		</div>\n		<div class="message-actions">\n			',d=n["if"].call(t,t.ELEMENT_ID,{hash:{},inverse:f.program(7,p,s),fn:f.program(5,i,s),data:s}),(d||0===d)&&(h+=d),h+="\n		</div>\n	</div>\n</div>"})}();
+!function(){var t=Handlebars.template,a=Handlebars.templates=Handlebars.templates||{};a.hovercardfav=t(function(t,a,n,s,e){function i(){var t="";return t}function l(t,a){var s,e,l,r="";return r+="\n				",l={hash:{id:t.ART_ID,type:"artist",width:"30",height:"30",width_img:"56",height_img:"56",cover_type:"artist",pic_id:t.ART_PICTURE},inverse:p.noop,fn:p.program(1,i,a),data:a},s=n.thumbnail||t.thumbnail,e=s?s.call(t,l):h.call(t,"thumbnail",l),(e||0===e)&&(r+=e),r+="\n			"}this.compilerInfo=[4,">= 1.0.0"],n=this.merge(n,t.helpers),e=e||{};var r,o,c,d="",p=this,h=n.helperMissing,v="function",_=this.escapeExpression;return d+='<div class="onboarding-hovercard__arrow"></div>\n<div class="content box-shadow">\n	<div class="onboarding-hovercard">\n		<div class="hovercard-close"><a href=""><span class="icon icon icon-cancel"></span></a></div>\n		<p class="title">All the music you\'ve just selected is right here, in your library.</p>\n		<hr class="line">\n		<div class="subtitle"><span>',(r=n.artist_nb)?r=r.call(a,{hash:{},data:e}):(r=a.artist_nb,r=typeof r===v?r.apply(a):r),d+=_(r)+"</span> ",c={hash:{},inverse:p.noop,fn:p.program(1,i,e),data:e},r=n.ngettext||a.ngettext,o=r?r.call(a,a.trad_artist_title,a.artist_nb,c):h.call(a,"ngettext",a.trad_artist_title,a.artist_nb,c),(o||0===o)&&(d+=o),d+='</div>\n		<div class="avatar">\n			',o=n.each.call(a,a.artist_data,{hash:{},inverse:p.noop,fn:p.program(3,l,e),data:e}),(o||0===o)&&(d+=o),d+='\n		</div>\n		<hr class="line">\n		<div class="subtitle"><span>',(o=n.playlist_nb)?o=o.call(a,{hash:{},data:e}):(o=a.playlist_nb,o=typeof o===v?o.apply(a):o),d+=_(o)+"</span> ",c={hash:{},inverse:p.noop,fn:p.program(1,i,e),data:e},r=n.ngettext||a.ngettext,o=r?r.call(a,a.trad_playlist_title,a.playlist_nb,c):h.call(a,"ngettext",a.trad_playlist_title,a.playlist_nb,c),(o||0===o)&&(d+=o),d+='</div>\n		<hr class="line">\n		<div class="subtitle"><span>',(o=n.song_nb)?o=o.call(a,{hash:{},data:e}):(o=a.song_nb,o=typeof o===v?o.apply(a):o),d+=_(o)+"</span> ",c={hash:{},inverse:p.noop,fn:p.program(1,i,e),data:e},r=n.ngettext||a.ngettext,o=r?r.call(a,a.trad_song_title,a.song_nb,c):h.call(a,"ngettext",a.trad_song_title,a.song_nb,c),(o||0===o)&&(d+=o),d+="</div>\n	</div>\n</div>"})}();
+</script>
+
+<script type="text/javascript">
+<!--
+var JS_INIT = ["_jqueryAddress","_onScroll","_onResize","_onFocus","_onBlur","_onBeforeUnload","platform","live","livebar","naboo","playercontrol","crontab","thumbnails","hotkeys","notificationBar","dzoffline","userData","tips","gigs","tracking","onair","favorite","notification","context_menu","loading_bar","ads","storage","bookmark"];
+var PROTOCOL_HTTP = 'http://';
+var PROTOCOL_WS = 'ws://';
+var SSL = false;
+var LAYOUT = {"mobile":false,"is_mobile":false,"is_standalone":false,"layout":true,"type":"naboo"};
+var PLATFORM = 'web';
+var PLATFORM_OBJ = {"name":false,"os_version":null,"family":"desktop","version":1,"ua":"Mozilla\/5.0 (Windows NT 6.1; WOW64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/45.0.2453.0 Safari\/537.36","model":"","app_version":"00344828","lang":""};
+var SETTING_DOMAIN_LIVE = 'deezer.com';
+var SETTING_DOMAIN_COOKIE = '.deezer.com';
+var ENV = 'PROD';
+var SETTING_HOST = 'www.deezer.com';
+var HOST_CONTENT = 'http://cdn-content.deezer.com';
+var SETTING_LANG = 'en';
+var SETTING_LOCALE = 'en_GB';
+var SETTING_STATIC = 'http://as-cdn-files.deezer.com';
+var SETTING_HOST_SITE = 'http://www.deezer.com';
+var SETTING_HOST_LIVE = 'live.deezer.com';
+var SETTING_DOMAIN_IMG = 'http://cdn-images.deezer.com/images';
+var SETTING_HOST_UPLOAD = 'http://upload.deezer.com';
+var SETTING_HOST_CONNECT = 'http://connect.deezer.com';
+var SETTING_HOST_API = 'http://api.deezer.com';
+var SETTING_HOST_DEVELOPERS = 'http://developers.deezer.com';
+var SETTING_REFERER_UPLOAD = 'SG';
+var SETTING_DOMAIN_PAYMENT = 'https://payment.deezer.com';
+var SOUND_PREVIEW_GATEWAY = 'http://cdn-preview-{0}.deezer.com/stream/{1}-{2}.mp3';
+var HOST_STREAM = 'http://proxy-{0}.deezer.com/mobile/1/';
+var HOST_STREAM_CDN = 'http://cdn-proxy-{0}.deezer.com/mobile/1/';
+var HOST_PREVIEW = 'http://preview-{0}.deezer.com/stream/{1}-{2}.mp3';
+var CDN_RATIO = '100';
+var RESSOURCES = {
+	coreplayer3 : 'cache/swf/coreplayer3_1-8f92534bafda936a72af943834aed952.swf',
+	appstudio : [['http://as-cdn-files.deezer.com/cache/css/appstudio-02cbbbdfe77c68147acee040ef17e154.css', 'css']],
+	dz : [["http:\/\/as-cdn-files.deezer.com\/cache\/js\/dzdeezer-e66d4f96c8f9dd580cfb9b0275ac1ccb.js","js"]],
+	cached : []
+};
+var STATIC_VERSION = '00344828';
+var IMAGE_VERSION = '0';
+var CONFIG_VERSION = '81';
+var SESSION_ID = 'sgd5679f2e83ca86f2bf8d7059b2db874109971a';
+var USER_TOKEN = 'tkf3f83805a06b7a61fd66470acfd91036';
+var PLAYLIST_WELCOME_ID = '65490458';
+var COOKIES_BANNER = '';
+var USER = {
+USER_ID : 632168011,
+USER_PICTURE : 0,
+INSCRIPTION_DATE : '2014-12-31',
+TRY_AND_BUY : {
+	ACTIVE: '0',
+	DATE_START: '2015-01-06 15:11:05',
+	DATE_END: '2015-01-21 15:11:05',
+	PLATEFORM: 'none'
+},
+BLOG_NAME : 'device82', FIRSTNAME : 'Mr.', LASTNAME : 'Device', USER_PICTURE : '', USER_GENDER : 'M', USER_AGE : 33, PARTNERS : '0',
+TOOLBAR : [],
+OPTIONS : {"mobile_preview":true,"mobile_radio":true,"mobile_streaming":false,"mobile_streaming_duration":0,"mobile_offline":false,"mobile_hq":false,"mobile_lossless":false,"mobile_sound_quality":{"low":false,"standard":true,"high":false,"lossless":false},"web_preview":true,"web_radio":true,"web_streaming":true,"web_streaming_duration":0,"web_offline":false,"web_hq":false,"web_lossless":false,"web_sound_quality":{"low":false,"standard":true,"high":false,"lossless":false},"ads_display":true,"ads_audio":true,"dj":false,"nb_devices":0,"radio_skips":6,"too_many_devices":false,"timestamp":1439005441,"web_streaming_used":0,"can_subscribe":true,"upgrade":{"type":"subscription","offer":{"id":1,"name":"Deezer Premium+","description":"All the music you love: anytime, anywhere.","duration":30,"price":{"amount":"5.99","currency":"USD","display":"$5.99"}},"cta":{"label":"Subscribe","label_extend":"Activate my 30 extra free days ","log_name":"trial_cb"}}},
+DEVICES_COUNT : 0,
+SETTING : {"newsletter":{"editor":false,"event":false,"game":false,"special_offer":false,"panel":false},"global":{"language":"en","social":true,"popup_unload":true,"filter_explicit_lyrics":false,"onboarding":false},"site":{"push_mobile":1420195324,"howto_step":0,"edito_tag":0,"display_confirm_discovery":0,"version":"5","player_fade":0,"player_hq":false,"nb_flowplayer_like_notification":3,"livebar_tab":"notifications","livebar_state":"close","player_repeat":1,"player_shuffle":true},"twitter":{"share_comment":true,"share_favourite":true,"share_loved":true,"share_share":true},"facebook":{"share_comment":true,"share_favourite":true,"share_loved":true,"share_listen":true,"share_share":true},"google":{"share_comment":true,"share_favourite":true,"share_loved":true,"share_listen":true,"share_share":true},"notification_mail":{"share":false,"friend_follow":false,"playlist_comment":false,"playlist_follow":false,"artist_new_release":false,"artist_status":false,"new_message":false},"notification_mobile":{"share":false,"friend_follow":false,"playlist_comment":false,"playlist_follow":false,"artist_new_release":false,"artist_status":false,"new_message":false},"location":{"city":"Kessel-lo","lat":50.879600524902,"lon":4.7009000778198,"source":"ip"},"tips":{"player":false,"flow":false,"add_to_library":false,"lyrics":false,"playlist_assistant":true,"playlist_assistant_suggest":true}},
+LASTFM : {},
+TWITTER : {},
+FACEBOOK : {
+	},
+GOOGLEPLUS : {
+	},
+FAVORITE_TAG : 132,
+ABTEST : {"first_click_mod":{"id":"first_click_mod","option":"default","behaviour":"No mod"},"abtest_sonos_offer_page":{"id":"abtest_sonos_offer_page","option":"default","behaviour":"header P+"},"themed_radio":{"id":"themed_radio","option":"default","behaviour":"Start algo radio A"},"hi_rank_mix":{"id":"hi_rank_mix","option":"hi_rank","behaviour":"mix formula with no plain source"},"onboarding_iter":{"id":"onboarding_iter","option":"default","behaviour":"default onboarding without like\/ban score"},"new_home":{"id":"new_home","option":"layoutc","behaviour":"layout \"C\" of the new home"}}};
+var OFFER_ID = '0';
+var COUNTRY = 'VN';
+var CURRENT_DATE = '2015-08-08';
+var MIN_LEGAL_AGE = 1;
+var SERVER_TIMESTAMP = 1439005441;
+var SESSION_DURATION = 0;
+var AD_RULES = {"audio":{"default":{"start":1,"interval":3,"unit":"track"}},"display":{"interstitial":{"start":900,"interval":900,"unit":"sec"}}};
+var PLAYER_TOKEN = '7a6b2fe07a585a779b09014bf2df820e504d06632656d5208ea5e7d2064962a4a6e85c885d91eaadcebe68565a89f2b775e63ab8c9cf17dffcbd50b8562592b68b48512c09f96a80fe4379a0e6ad0b6e3a61ae3750d40f6acc5df0461667307a9986dd2465b0695061201d3f2a07017a1ce7aa51594079443963742456a61e1cb91f5d802b1c57925f3d5b4550d409beb638feccc360c3653ff5e4fba63dd340c2f68792f9b18c274830246101dca63a0916828e1307ba3db2b49ab9b12017b4fc6428eeaae3f402d78259e53edbfd82d76ab5c3f9490c22faa589996e404a622d4d070b350d38048a59891450219ed82a689a047237588b91023f5e5cea32bc4abeeb561455d5caf9b0186353cd8b51474acd689f439a6991fd8acbd1e93ad1cc0cdc5a17dd2342ef39bd7cb37f0cb107d2ef55a55f02913b32cc2d180833495e3449261499e3b80ac1571dee055fc1';
+var DZPS = false;
+var LOG_TYPE = 'internal';
+var incr = 0;
+var incrsquare = 0;
+var checkForm = '1a82c476ded8e8015f34a450e015e539';
+var OFFLINE = !window.navigator.onLine;
+var ads_focus_value = true;
+var redirect_fb = '';
+var FROM_ONBOARDING = false;
+var YOUTUBE = {
+	URL: 'https://www.youtube.com/deezer',
+	PLAYLIST: 'PLELa7aiRjdR725uH2OW2Laz7XuA0iA2BE'
+};
+var DEEZER_DRIVE_DOWNLOAD = 'http://dzr.fm/download';
+var WIN8_APP_DOWNLOAD = 'http://apps.microsoft.com/windows/app/deezer/e48b595e-b20a-4eb3-968c-c20b2cadaa1e?';
+var CHROMECAST = {
+	ID: '28BE5D9A',
+	NAMESPACE: 'urn:x-cast:com.dz.player'
+};
+var DIRECTION = "ltr";
+
+var CUSTO = "";
+var COBRANDING = 'none';
+var DATE_FORMAT = 'd-m-Y';
+var LOG_CONTEXT = {"track_page":"track","album_page":"album","show_page":"show","playlist_page":"playlist","downloads_page":"downloads","personalsong_page":"personal_song","radio_page":"radio","smartradio_page":"artist","search_page":"search","collection_track":"track","collection_playlist":"playlist","collection_album":"album","collection_radio":"radio","profile_tracks":"track","profile_playlists":"playlist","profile_albums":"album","profile_shows":"show","profile_top_tracks":"track","profile_top_albums":"album","profile_top_shows":"shows","profile_radios":"radio","artist_top":"track","artist_discography":"album","artist_smartradio":"artist","album_discography":"album","tops_album":"album","tops_track":"track","ticker_track":"track","ticker_playlist":"playlist","ticker_album":"album","profile_top":"profile","profile_album":"album","profile_playlist":"playlist","player_default_playlist":"playlist","facebook_track":"track","facebook_artist":"track","artist_exclu":"track","loved_page":"loved","notification_track":"track","notification_playlist":"playlist","notification_album":"album","notification_artistradio":"artist","notification_genreradio":"radio","history_page":"history","purchase_page":"purchase","inapp_page":"inapp","feed_track":"track","feed_album":"album","feed_playlist":"playlist","feed_smartradio":"artist","feed_radio":"radio","explore_picks_album":"album","explore_releases_album":"album","explore_region_album":"album","explore_picks_show":"show","tops_playlist":"playlist","discovery_radio":"radio","discovery_smartradio":"artist","feature_smartradio":"artist","feed_user_radio":"user","playlist_radio":"playlist_radio","profile_user_radio":"user","suggest_track":"track","suggest_album":"album","suggest_playlist":"playlist","suggest_artist":"artist","suggest_show":"show","menu_panel_album":"album","menu_panel_playlist":"playlist","menu_panel_queue_list":"track","menu_player":"track","search_album":"album","search_show":"show","search_playlist":"playlist","artist_similar_playlist":"playlist","album_similar_playlist":"playlist","playlist_api":"playlist","track_api":"track","album_api":"album","artist_api":"artist","user_api":"user","radio_api":"radio","episode_api":"episode","episode_page":"episode","talk_show_page":"show","talk_suggest_show":"show","talk_search_show":"show","talk_profile_show":"show","talk_explore":"show","home_user_radio":"user","home_album":"album","home_playlist":"playlist","home_radio":"radio","home_artist_radio":"artist","home_track":"track","home_show":"show"};
+var PLAYER_INIT = {
+	type: 'player_default_playlist',
+	data: {"data":[{"SNG_ID":"45616841","UPLOAD_ID":0,"SNG_TITLE":"No Quen","ART_ID":"863447","PROVIDER_ID":"55","ART_NAME":"My Tam","ARTISTS":[{"ART_ID":"863447","ROLE_ID":"0","ART_NAME":"My Tam","ART_PICTURE":"8c5bef509c422888f87eec4ef4905bde","SMARTRADIO":"1","RANK":"235023","__TYPE__":"artist"}],"ALB_ID":"4505671","ALB_TITLE":"Cho Mot Tinh Yeu","TYPE":0,"MD5_ORIGIN":"16ccbe7607731fb8a0f06c0f579defe7","VIDEO":false,"DURATION":"182","ALB_PICTURE":"ce149de334ae192c253b30d83619b828","ART_PICTURE":"8c5bef509c422888f87eec4ef4905bde","RANK_SNG":"539618","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"2926967","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"7454720","FILESIZE":"2926967","MEDIA_VERSION":"1","DISK_NUMBER":"1","TRACK_NUMBER":"1","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01","DOWNLOAD_ALC":"2000-01-01","DOWNLOAD_ALC_AVAILABLE":true},"ISRC":"GBMA21231422","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":[],"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"15781390","UPLOAD_ID":0,"SNG_TITLE":"Right In","ART_ID":"525643","PROVIDER_ID":"3","ART_NAME":"Skrillex","ARTISTS":[{"ART_ID":"525643","ROLE_ID":"0","ART_NAME":"Skrillex","ART_PICTURE":"c617a454c2894718554f592fd944ff70","SMARTRADIO":"1","RANK":"842723","__TYPE__":"artist"}],"ALB_ID":"1457546","ALB_TITLE":"Bangarang EP","TYPE":0,"MD5_ORIGIN":"128fd93fbd87f0810cb5f5f5c9232153","VIDEO":false,"DURATION":"180","ALB_PICTURE":"3d5ef81b8e6c4b5c35ebe1dfa69a0463","ART_PICTURE":"c617a454c2894718554f592fd944ff70","RANK_SNG":"925170","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"1443630","FILESIZE_MP3_128":"2887261","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"7218154","FILESIZE":"2887261","MEDIA_VERSION":"3","DISK_NUMBER":"1","TRACK_NUMBER":"1","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01","DOWNLOAD_ALC":"2000-01-01","DOWNLOAD_ALC_AVAILABLE":true},"ISRC":"USAT21104242","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["Skrillex"],"masterer":["Skrillex"],"misc":["Skrillex"],"recording & mixing":["Skrillex"],"author":["Skrillex"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"37784011","UPLOAD_ID":0,"SNG_TITLE":"Phone Sex","ART_ID":"5865476","PROVIDER_ID":"11","ART_NAME":"Blood Diamonds feat. Grimes","ARTISTS":[{"ART_ID":"5865476","ROLE_ID":"0","ART_NAME":"Blood Diamonds feat. Grimes","ART_PICTURE":"","SMARTRADIO":"0","RANK":"264393","__TYPE__":"artist"},{"ART_ID":"807493","ROLE_ID":"1","ART_NAME":"Grimes","ART_PICTURE":"10792883dbc6ce6608524d97c0b1faed","SMARTRADIO":"1","RANK":"535834","__TYPE__":"artist"},{"ART_ID":"890455","ROLE_ID":"1","ART_NAME":"Blood Diamonds","ART_PICTURE":"5ff278f4e25bfd5cd1210b3dd6b4d98d","SMARTRADIO":"1","RANK":"430445","__TYPE__":"artist"}],"ALB_ID":"3673701","ALB_TITLE":"Phone Sex","TYPE":0,"MD5_ORIGIN":"3b5370bd342641f1a68ee0e250585c21","VIDEO":false,"DURATION":"257","ALB_PICTURE":"0bcae5d3b31d46f12a8f3119a8626499","ART_PICTURE":"","RANK_SNG":"617515","SMARTRADIO":"0","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"4128599","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"10321501","FILESIZE":"4128599","MEDIA_VERSION":"2","DISK_NUMBER":"1","TRACK_NUMBER":"1","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01","DOWNLOAD_ALC":"2000-01-01","DOWNLOAD_ALC_AVAILABLE":true},"ISRC":"GBAFL1200185","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["Blood Diamonds feat. Grimes"],"artist":["Blood Diamonds","Grimes"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"60810702","UPLOAD_ID":0,"SNG_TITLE":"Yet Again","ART_ID":"13760","PROVIDER_ID":"18","ART_NAME":"Grizzly Bear","ARTISTS":[{"ART_ID":"13760","ROLE_ID":"0","ART_NAME":"Grizzly Bear","ART_PICTURE":"b69f5a61f9cc721008360bee39e2d48d","SMARTRADIO":"1","RANK":"497128","__TYPE__":"artist"}],"ALB_ID":"5950719","ALB_TITLE":"Shields","TYPE":0,"MD5_ORIGIN":"f177e41bd5446e027d16972bcca1a147","VIDEO":false,"DURATION":"318","ALB_PICTURE":"e1ff609ba8df609edbfc4b3e70745e58","ART_PICTURE":"b69f5a61f9cc721008360bee39e2d48d","RANK_SNG":"759549","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"5095373","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"12738384","FILESIZE":"5095373","MEDIA_VERSION":"1","DISK_NUMBER":"1","TRACK_NUMBER":"4","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01"},"ISRC":"GBBPW1200144","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":[],"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"67814850","UPLOAD_ID":0,"SNG_TITLE":"good kid","ART_ID":"525046","PROVIDER_ID":"4","ART_NAME":"Kendrick Lamar","ARTISTS":[{"ART_ID":"525046","ROLE_ID":"0","ART_NAME":"Kendrick Lamar","ART_PICTURE":"9efd1d48a5328e2dd82779ca8de9ba8c","SMARTRADIO":"1","RANK":"801868","__TYPE__":"artist"}],"ALB_ID":"6639397","ALB_TITLE":"good kid, m.A.A.d city","TYPE":0,"MD5_ORIGIN":"8a9da140d53f1b4fbc8aedc37da1ccfc","VIDEO":false,"DURATION":"214","ALB_PICTURE":"beaffccb372735044f4b8252b0cd9c2b","ART_PICTURE":"9efd1d48a5328e2dd82779ca8de9ba8c","RANK_SNG":"643645","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"3427019","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"8567290","FILESIZE":"3427019","MEDIA_VERSION":"6","DISK_NUMBER":"1","TRACK_NUMBER":"7","VERSION":"","EXPLICIT_LYRICS":"1","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01"},"ISRC":"USUM71211006","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["Kendrick Lamar"],"author":["Kendrick Duckworth","Pharrell Williams"],"composer":["Kendrick Duckworth","Pharrell Williams"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"44300721","UPLOAD_ID":0,"SNG_TITLE":"Thinkin Bout You","ART_ID":"1350335","PROVIDER_ID":"4","ART_NAME":"Frank Ocean","ARTISTS":[{"ART_ID":"1350335","ROLE_ID":"0","ART_NAME":"Frank Ocean","ART_PICTURE":"179174b98dbdbf93ecf4c84afae2e94a","SMARTRADIO":"1","RANK":"690368","__TYPE__":"artist"}],"ALB_ID":"4367071","ALB_TITLE":"channel ORANGE","TYPE":0,"MD5_ORIGIN":"54e153fa51d53dd36d0b7c7c64aabff0","VIDEO":false,"DURATION":"201","ALB_PICTURE":"e93e5054e4780d6d9da33011a90303ef","ART_PICTURE":"179174b98dbdbf93ecf4c84afae2e94a","RANK_SNG":"946087","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"3213021","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"8032299","FILESIZE":"3213021","MEDIA_VERSION":"5","DISK_NUMBER":"1","TRACK_NUMBER":"2","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01"},"ISRC":"USUM71202995","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["Frank Ocean"],"composer":["Christopher Breaux","Shea Taylor"],"author":["Christopher Breaux","Shea Taylor"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"5817088","UPLOAD_ID":0,"SNG_TITLE":"Independent Women, Pt. I","ART_ID":"595","PROVIDER_ID":"2","ART_NAME":"Destiny's Child","ARTISTS":[{"ART_ID":"595","ROLE_ID":"0","ART_NAME":"Destiny's Child","ART_PICTURE":"98cd4291636d4a79b5338205bf722dd5","SMARTRADIO":"1","RANK":"738958","__TYPE__":"artist"},{"ART_ID":"595","ROLE_ID":"5","ART_NAME":"Destiny's Child","ART_PICTURE":"98cd4291636d4a79b5338205bf722dd5","SMARTRADIO":"1","RANK":"738958","__TYPE__":"artist"}],"ALB_ID":"78534","ALB_TITLE":"Survivor","TYPE":0,"MD5_ORIGIN":"389f323692b1a5fa1b1f9d3d4fda2510","VIDEO":false,"DURATION":"223","ALB_PICTURE":"6569bbc2ccd786c051555084ebc9b355","ART_PICTURE":"98cd4291636d4a79b5338205bf722dd5","RANK_SNG":"920834","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"1773608","FILESIZE_MP3_128":"3547218","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"8868048","FILESIZE":"3547218","MEDIA_VERSION":"5","DISK_NUMBER":"1","TRACK_NUMBER":"1","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01","DOWNLOAD_ALC":"2000-01-01","DOWNLOAD_ALC_AVAILABLE":true},"ISRC":"USSM10013276","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"featuring":["Destiny's Child"],"main_artist":["Destiny's Child"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"67385727","UPLOAD_ID":0,"SNG_TITLE":"Abilene","ART_ID":"2770","PROVIDER_ID":"3","ART_NAME":"Damien Jurado","ARTISTS":[{"ART_ID":"2770","ROLE_ID":"0","ART_NAME":"Damien Jurado","ART_PICTURE":"8e0c42932b004bdeefc705a900f8df24","SMARTRADIO":"1","RANK":"658843","__TYPE__":"artist"}],"ALB_ID":"6590069","ALB_TITLE":"Where Shall You Take Me [Deluxe Reissue]","TYPE":0,"MD5_ORIGIN":"eea85b3c6597151588cebaeeaed07a82","VIDEO":false,"DURATION":"146","ALB_PICTURE":"86d961dd2b0ce0b9c2eaf21c6b92b2f1","ART_PICTURE":"8e0c42932b004bdeefc705a900f8df24","RANK_SNG":"228799","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"2341858","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"5854596","FILESIZE":"2341858","MEDIA_VERSION":"2","DISK_NUMBER":"1","TRACK_NUMBER":"3","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{},"ISRC":"US38W0310003","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["Damien Jurado"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"24799081","UPLOAD_ID":0,"SNG_TITLE":"Bak \u00deitt Er Sem Rennibraut","ART_ID":"1672","PROVIDER_ID":"109","ART_NAME":"m\u00fam","ARTISTS":[{"ART_ID":"1672","ROLE_ID":"0","ART_NAME":"m\u00fam","ART_PICTURE":"6efcb086e25a88498d4265d232c325e5","SMARTRADIO":"1","RANK":"457235","__TYPE__":"artist"}],"ALB_ID":"2359301","ALB_TITLE":"Early Birds","TYPE":0,"MD5_ORIGIN":"2c711bdd8e990cb75778e8111508d7dd","VIDEO":false,"DURATION":"344","ALB_PICTURE":"66d934ba54289bdc53e32bb6e1d635f3","ART_PICTURE":"6efcb086e25a88498d4265d232c325e5","RANK_SNG":"416695","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"5504984","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"13776978","FILESIZE":"5504984","MEDIA_VERSION":"2","DISK_NUMBER":"1","TRACK_NUMBER":"1","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01","DOWNLOAD_ALC":"2000-01-01","DOWNLOAD_ALC_AVAILABLE":true},"ISRC":"DEX261211601","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["m\u00fam"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"55015251","UPLOAD_ID":0,"SNG_TITLE":"Ho Hey","ART_ID":"793825","PROVIDER_ID":"4","ART_NAME":"The Lumineers","ARTISTS":[{"ART_ID":"793825","ROLE_ID":"0","ART_NAME":"The Lumineers","ART_PICTURE":"07826e437f193d2abec2df6038597302","SMARTRADIO":"1","RANK":"765055","__TYPE__":"artist"}],"ALB_ID":"5362121","ALB_TITLE":"The Lumineers","TYPE":0,"MD5_ORIGIN":"cd4936235869f746b84572ae18dd5dfd","VIDEO":false,"DURATION":"161","ALB_PICTURE":"d9b9b40e8cc891c8c08a3f4e5062d297","ART_PICTURE":"07826e437f193d2abec2df6038597302","RANK_SNG":"988952","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"2580640","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"6451360","FILESIZE":"2580640","MEDIA_VERSION":"5","DISK_NUMBER":"1","TRACK_NUMBER":"5","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01"},"ISRC":"USDMG1260805","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["The Lumineers"],"composer":["Wesley Schultz","Jeremy Fraites"],"author":["Wesley Schultz","Jeremy Fraites"],"misc":["KOBALT MUSIC PUBLISHING LIMITED","The Lumineers BMI"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"62082981","UPLOAD_ID":0,"SNG_TITLE":"Girl On Fire","ART_ID":"228","PROVIDER_ID":"2","ART_NAME":"Alicia Keys","ARTISTS":[{"ART_ID":"228","ROLE_ID":"0","ART_NAME":"Alicia Keys","ART_PICTURE":"e476cd1dd2c6d2cd53ef296c9e309a64","SMARTRADIO":"1","RANK":"830161","__TYPE__":"artist"},{"ART_ID":"228","ROLE_ID":"5","ART_NAME":"Alicia Keys","ART_PICTURE":"e476cd1dd2c6d2cd53ef296c9e309a64","SMARTRADIO":"1","RANK":"830161","__TYPE__":"artist"},{"ART_ID":"382937","ROLE_ID":"5","ART_NAME":"Nicki Minaj","ART_PICTURE":"6c6208671fc0f6d536b7ed21a35c02a5","SMARTRADIO":"1","RANK":"917798","__TYPE__":"artist"}],"ALB_ID":"6088144","ALB_TITLE":"Girl On Fire","TYPE":0,"MD5_ORIGIN":"8b04b66f947e3b1d3506e32d807ea0ec","VIDEO":false,"DURATION":"270","ALB_PICTURE":"2f6745876deec1475fe340e7304036cc","ART_PICTURE":"e476cd1dd2c6d2cd53ef296c9e309a64","RANK_SNG":"939340","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"2166281","FILESIZE_MP3_128":"4332179","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"10830400","FILESIZE":"4332179","MEDIA_VERSION":"2","DISK_NUMBER":"1","TRACK_NUMBER":"6","VERSION":"(Inferno Version)","EXPLICIT_LYRICS":"0","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01","DOWNLOAD_ALC":"2000-01-01","DOWNLOAD_ALC_AVAILABLE":true},"ISRC":"USRC11200924","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"featuring":["Alicia Keys","Nicki Minaj"],"composer":["Alicia Keys"],"author":["Alicia Keys"],"main_artist":["Alicia Keys"],"misc":["Alicia Keys"]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"30405471","UPLOAD_ID":0,"SNG_TITLE":"Open","ART_ID":"2340111","PROVIDER_ID":"102","ART_NAME":"Rhye","ARTISTS":[{"ART_ID":"2340111","ROLE_ID":"0","ART_NAME":"Rhye","ART_PICTURE":"80e4697a7f5de39bd4d520c5d0652933","SMARTRADIO":"1","RANK":"569403","__TYPE__":"artist"}],"ALB_ID":"2900311","ALB_TITLE":"Open","TYPE":0,"MD5_ORIGIN":"3d44fac7a877aa88e44c91e519760492","VIDEO":false,"DURATION":"222","ALB_PICTURE":"400f7459531ff6213ab7f64c07e4b438","ART_PICTURE":"80e4697a7f5de39bd4d520c5d0652933","RANK_SNG":"159358","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"3552686","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"8881665","FILESIZE":"3552686","MEDIA_VERSION":"1","DISK_NUMBER":"1","TRACK_NUMBER":"1","VERSION":"","EXPLICIT_LYRICS":"0","RIGHTS":{},"ISRC":"USD8D1216001","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["Rhye"],"artist":[]},"LYRICS_ID":0,"__TYPE__":"song"},{"SNG_ID":"22097651","UPLOAD_ID":0,"SNG_TITLE":"Take Care","ART_ID":"246791","PROVIDER_ID":"4","ART_NAME":"Drake","ARTISTS":[{"ART_ID":"246791","ROLE_ID":"0","ART_NAME":"Drake","ART_PICTURE":"677d7412a1b0eb4c5fc175443dbf9191","SMARTRADIO":"1","RANK":"882230","__TYPE__":"artist"},{"ART_ID":"564","ROLE_ID":"5","ART_NAME":"Rihanna","ART_PICTURE":"924499224376d73c06d7690b974e1312","SMARTRADIO":"1","RANK":"958195","__TYPE__":"artist"}],"ALB_ID":"2122381","ALB_TITLE":"Power Hits 2012","TYPE":0,"MD5_ORIGIN":"901f866ce4203d979a8b9a135a6b932e","VIDEO":false,"DURATION":"277","ALB_PICTURE":"4f24dcabbd5b779202c24c14b14af789","ART_PICTURE":"677d7412a1b0eb4c5fc175443dbf9191","RANK_SNG":"427596","SMARTRADIO":"1","FILESIZE_AAC_64":0,"FILESIZE_MP3_64":"0","FILESIZE_MP3_128":"4439595","FILESIZE_MP3_256":"0","FILESIZE_MP3_320":"11099033","FILESIZE":"4439595","MEDIA_VERSION":"3","DISK_NUMBER":"1","TRACK_NUMBER":"10","VERSION":"","EXPLICIT_LYRICS":"1","RIGHTS":{"STREAM_ADS_AVAILABLE":true,"STREAM_ADS":"2000-01-01","STREAM_SUB_AVAILABLE":true,"STREAM_SUB":"2000-01-01"},"ISRC":"USCM51100547","DATE_ADD":0,"HIERARCHICAL_TITLE":"","SNG_CONTRIBUTORS":{"main_artist":["Drake"],"featuring":["Rihanna"],"composer":["A. Graham","N. Shebib","A. Palman","J. Smith"],"author":["A. Graham","N. Shebib","A. Palman","J. Smith"]},"LYRICS_ID":0,"__TYPE__":"song"}],"total":13,"count":13,"checksum":"0c355ff18e11d4cfaf069995810d5430"},
+	index: 0,
+	auto_play: false,
+	show_lyrics: false,
+	element_id: 65490458};
+// -->
+</script>
+<script type="text/javascript" src="http://as-cdn-files.deezer.com/cache/js/en_GB.UTF-8-eca25955f47122e228672b53dd49e978.js"></script>
+
+<script type="text/javascript" src="http://as-cdn-files.deezer.com/cache/js/core-3e0e8f7e2f4f2efcf278c7da09651080.js"></script>
+<script type="text/javascript" src="http://as-cdn-files.deezer.com/cache/js/naboo-1367ec8616b055ba5bb26669f74536dd.js"></script>
+<script type="text/javascript" src="http://as-cdn-files.deezer.com/cache/js/livebar-fd380c3797110c0f7b3dd6ee32e097b7.js"></script>
+<script type="text/javascript">
+var yscroll = 0;
+var client_height = getClientHeight();
+var client_width = getClientWidth();
+
+	Events.resolve(Events.user.loaded);
+</script>
+
+<script type="text/javascript">
+if (window.BrowserDetect && window.BrowserDetect.browser === 'Chrome') {
+	var cs = document.createElement('script');
+	cs.src = '//www.gstatic.com/cv/js/sender/v1/cast_sender.js';
+	(document.head || document.documentElement).appendChild(cs);
+}
+</script>
+
+</head><body class="page-wrapper dir-ltr">
+	<section id="loading_bar" class="page-loader">
+		<div class="page-loader-bar"></div>
+	</section>
+	<section class="page-sidebar" id="page_sidebar"></section>
+	<section class="page-panels" id="page_panels"></section>
+	<section class="page-main">
+		<div class="ads ads-bottom">
+			<div id="ads_banner_bottom"></div>
+			<div id="ads_banner_audio"></div>
+		</div>
+		<div class="page-scroll" id="page_content">
+			<div class="page-content">
+				<div id="ads_banner_top" class="ads ads-top">
+				</div>
+				<div id="naboo_content">
+					<div id="page_offline">
+	<div class="brand">
+		<a href="/">
+			<img src="http://as-cdn-files.deezer.com/images/naboo/pages/offline/logo_deezer.png">
+		</a>
+	</div>
+	<h1 class="heading-1">You're not connected to the internet</h1>
+	<div class="divider"></div>
+
+				<h3>Deezer for Windows is coming soon!</h3>
+			<p>With Deezer for Windows, you'll be able to enjoy your music directly from your desktop, even without an internet connection.</p>
+		
+</div>				</div>
+			</div>
+			<div id="ads_banner_left" class="page-ads"><img/></div>
+		</div>
+	</section>
+	<section id="ads_expand"></section>
+	<section class="page-livebar" id="naboo_livebar">
+		<div id="livebar">
+	<div id="live_warning" class="livebarmod live-warning" style="display:none;">
+		<div class="content">
+			<span class="icn_warning"></span>
+			<strong>Service unavailable</strong>
+		</div>
+	</div>
+	<div id="live_loader" class="livebarmod live-loader" style="display:none">
+		<div class="content">
+			<span class="icn_loader"></span>
+		</div>
+	</div>
+
+	<div id="livebar_content" class="livebar-content absolute ui-droppable" style="display:none;">
+		<div class="no_friends" style="display:none;">
+			<div class="icn-no-friends sprite_live"></div>
+			Find your friends!			<button type="button" id="fb_btn" class="btn btn-facebook btn-small mt_10" href="javascript:void(0);" onClick="facebook.login(); return false;" style="display:inline-block;">
+				<span class="label">Log in</span>
+			</button>
+			<div class="clearfix"></div>
+		</div>
+
+		<div class="search_filter" style="display:none;">
+            <a class="cross bt_clear absolute" href="javascript:void(0)" style="display: none;">
+                <span class="block sprite_naboo"></span>
+            </a>
+			<input type="text" name="filter" class="search-friends" id="filter_input" onkeyup="friends.filter()" placeholder="Search" autocomplete='off'/>
+		</div>
+
+		<div id="livebar_overflow" style="display:none;">
+			<div class="tinyscroll_scrollbar">
+				<div class="tinyscroll_track">
+					<div class="tinyscroll_thumb">
+						<div class="tinyscroll_end"></div>
+					</div>
+				</div>
+			</div>
+			<div class="tinyscroll_viewport">
+				<div class="tinyscroll_overview">
+					<div id="naboo_live_loading" class="template fc_666 fs_12" style="margin:10px 0 0 13px">
+						<img src="http://as-cdn-files.deezer.com/img/common/loading_site_top-v00344828.gif" style="width:16px;height:16px;margin:-3px 5px -3px 0">
+						Loading					</div>
+					<div id="friends" style="display:block;">
+						<div id="messagePane"></div>
+						<div id="onlinePane"></div>
+						<div id="offlinePane"></div>
+						<div id="searchPane" style="display:none;"></div>
+						<div class="sep_friend" style="margin: 0 0;"></div>
+						<div style="padding: 0 9px">
+							<a id="more" href='javascript:void(0);' onClick="friends.searchUser(); tracking.track('livebar_following_click', {type: 'search'}); return false;" style="display:none;" class="btn btn-default btn-block mt_5 mb_10">
+								<span class="label">Search throughout Deezer</span>
+							</a>
+						</div>
+						<div id="searchDeezerPane" style="display:none;"></div>
+						<div id="online_friend_default" class="online_friend" style="display:none;">
+							<a id="picture" class="picture" href="javascript:void(0);"></a>
+							<div class="user">
+								<a class="pseudo"></a>
+								<div class="status">
+									<span class="listen"></span>
+									<span class="online sprite_live"></span>
+									<span class="drag sprite_live"></span>
+									<span class="message sprite_live" style="display:none;"></span>
+								</div>
+						   </div>
+						   <div class="clearfix"></div>
+						</div>
+					</div>
+					<div id="ticker_modele" class="feed-live" style="display:none;">
+						<img height="30" width="30"/>
+						<div class="icn-feed">
+							<div class="icn-mail sprite_live" style="display:none;"></div>
+						</div>
+						<div class="floatl feed-text">
+							<span></span>
+						</div>
+						<div class="clearfix"></div>
+					</div>
+					<div id="ticker" style="display:none;"></div>
+					<div id="notifications" style="display:none;"></div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+	<div class="clearfix"></div>
+	<div id="livebar_gateway"></div>
+</div>
+	</section>
+	<section id="notification" class="page-notifications">
+		<div class="notification">
+			<a class="close" href="javascript:notification.hideNew()">
+				<span class="icon icon-delete-small-white"></span>
+			</a>
+			<h2></h2>
+			<p></p>
+		</div>
+	</section>
+	<section id="page_context_menu"></section>
+	<section class="page-shadow">
+		<script type="text/javascript">
+	function ie_placeholder() {
+		if (!Modernizr.input.placeholder) {
+			$('body :input[placeholder]:not([type="password"])').each(function() {
+				$(this).on({
+					'focus': function() {
+						if ($(this).val() == $(this).attr('placeholder')) {
+							$(this).val('');
+						}
+					},
+					'blur': function() {
+						if ($(this).val() == '' || $(this).val() == $(this).attr('placeholder')) {
+							$(this).val($(this).attr('placeholder'));
+						}
+					}
+				}).trigger('blur');
+			});
+		}
+	}
+			Events.subscribe(Events.navigation.page_loaded, ie_placeholder);
+	</script><div class="modal" id="modal" role="dialog" style="display: none;">
+	<div class="modal-backdrop"></div>
+	<div class="modal-wrapper"></div>
+</div><div id="interstitial" style="display: none;">
+	<div class="overlay"></div>
+	<div class="interstitial-container">
+		<span class="interstitial-wrapper">
+			<a class="close" href="javascript:void(0);" onclick="removeInterstitial(); return false;">
+				Close				<span class="icon icon-cancel"></span>
+			</a>
+			<a id="interstitial_ads"></a>
+		</span>
+	</div>
+</div><div id="notify">
+	<a class="close" href="javascript:void(0)" onclick="notificationBar.hide(); return false;"></a>
+	<a class="message" href="javascript:void(0)">
+		
+	</a>
+</div><div id="hotkeys">
+	<div class="topbar"></div>
+	<div class="mapping" id="hotkeys_mapping"></div>
+</div>
+<script type="text/javascript">
+	</script>
+
+<div class="hide">
+	<input id="checkForm" name="checkForm" type="hidden" value="1a82c476ded8e8015f34a450e015e539">
+</div>
+
+<div id="livemenu">
+	<div id="livebar_menu" style="display:none;">
+	<a id="btn_friends" href="javascript:void(0);" onClick="friends.show(); tracking.track('livebar_following_click', {type: 'main'}); return false;" original-title="You are following">
+		<span class="tabs tabs-friends sprite_live">
+			<span class="tabs-hover sprite_live"></span>
+		</span>
+		<span id="friends_new" class="alert_notif sprite_live" style="display:none;"></span>
+	</a>
+	<a id="btn_ticker" href="javascript:void(0);" onClick="ticker.show(); tracking.track('livebar_activity_click', {type: 'main'}); return false;" original-title="Activity">
+		<span class="tabs tabs-tick sprite_live">
+			<span class="tabs-hover sprite_live"></span>
+		</span>
+		<span id="ticker_new" class="alert_notif bubble_notif" style="display:none;"></span>
+	</a>
+	<a id="btn_notifications" href="javascript:void(0);" onClick="notifications.show(); tracking.track('livebar_notifications_click', {type: 'main'}); return false;" original-title="Notifications">
+		<span class="tabs tabs-notif sprite_live">
+			<span class="tabs-hover sprite_live"></span>
+		</span>
+		<span id="notifications_new" class="alert_notif bubble_notif" style="display:none;"></span>
+	</a>
+	<a id="minimize" href="javascript:void(0)" onclick="livebar.hide(); tracking.track('livebar_hide_click', {type: 'main'}); return false;" style="display: none;"  original-title="Hide">
+		<span class="tabs tabs-close sprite_live">
+			<span class="tabs-hover sprite_live"></span>
+		</span>
+	</a>
+	<div class="clearfix"></div>
+</div></div>
+
+<script type="text/javascript">
+var gatekeeper = {
+	
+	features : {"api_mob_ssl":false,"force_v5":true,"new_search":true,"search_label":false,"search_tag":false,"mobile_offline_expiration":false,"synchro_web_to_mobile":false,"desktop_client_windows":false,"console_log":false,"operator_test":false,"curator_feature":false,"employee_feature":false,"onboarding":true,"instant_auth":true,"native_reg_ios":true,"native_reg_android":true,"native_app_rating_ios":true,"native_app_rating_android":true,"native_reg_wp":true,"operator_v2":false,"operator_enable_instant_auth":false,"operator_web_v2":false,"deezer_pro":false,"talk":false,"playlist_assistant":false,"charts_playlist_curator_only":false,"new_hp_artwork":false,"newrelic":true,"new_home":false,"carplay":false,"cell_add_to_library":false,"campaign_landing_de":false,"facebook_sso_wp":false,"datagrid":false,"box_conversion_free":false,"talk_latest_playlist":false,"affiliate_program_v2":false},
+	isAllowed : function(feature) {
+		if (typeof(gatekeeper.features[feature]) == 'undefined') {
+			return false;
+		}
+		return gatekeeper.features[feature];
+	}
+};
+</script>
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-PPQNZ6"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-PPQNZ6');</script>
+<!-- End Google Tag Manager --><script type="text/javascript">
+
+	(function() {
+
+		'use strict';
+		
+		googleplus.setAppData(
+			{"client_id":"630457285321-d5nmkpnjktjoeh426nvdu40rch1b1qe0.apps.googleusercontent.com","client_key":"AIzaSyC27tg4VNAkkQ-9P4fY45vUEfeYGSbDz_o","name":"Deezer","scope":"https:\/\/www.googleapis.com\/auth\/plus.login https:\/\/www.googleapis.com\/auth\/userinfo.email","redirect_uri":"postmessage","access_type":"offline","cookie_policy":"single_host_origin","request_visible_actions":"http:\/\/schemas.google.com\/AddActivity http:\/\/schemas.google.com\/ListenActivity http:\/\/schemas.google.com\/CommentActivity","version":"v1"}		);
+
+		if (user.current()) {
+
+			googleplus.setGGUid(
+				''
+			).setAccessToken(
+				{}			);
+
+		}
+
+		var po = document.createElement('script');
+		po.type = 'text/javascript';
+		po.async = true;
+		po.src = '//apis.google.com/js/client:plusone.js?onload=__onGGPlusReady';
+		po.text = "{ parsetags : 'explicit' }";
+
+		var s = document.getElementsByTagName('script')[0];
+		s.parentNode.insertBefore(po, s);
+
+		window['__onGGPlusReady'] = function() {
+			Events.resolve(Events.googleplus.ready);
+			googleplus.renderGGPlus();
+		};
+
+	})();
+
+</script><div id="fb-root"></div>
+<script type="text/javascript">
+
+	(function() {
+
+		'use strict';
+
+		facebook.setAppData(
+			{"id":241284008322,"namespace":"deezer-app","scope":"email,user_birthday,user_likes,user_friends,publish_actions","version":"2.3","channel":"http:\/\/www.deezer.com\/fbgateway.html"}		);
+
+		if (user.current()) {
+
+			facebook.setFBUid(
+				''
+			).setAccessToken(
+				''
+			).allowExternalScope(
+							);
+
+		}
+
+		facebook.setAutoLogin(
+			true		);
+
+		window.fbAsyncInit = facebook.initFB.bind(facebook);
+
+		var lang = 'en_GB';
+		var e = document.createElement('script');
+		e.async = true;
+		e.src = document.location.protocol + '//connect.facebook.net/' + lang + '/sdk/vb.js';
+		document.getElementById('fb-root').appendChild(e);
+
+	})();
+
+</script><script type="text/javascript">
+if (!OFFLINE) {
+
+	// CARREFUL, deezer modification here !
+	(function(c,a){window.mixpanel=a;var b,d,h,e;b=c.createElement("script");b.type="text/javascript";b.async=!0;b.src=("https:"===c.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.1.min.js';d=c.getElementsByTagName("script")[0];d.parentNode.insertBefore(b,d);a._i=[];a.init=function(b,c,f){function d(a,b){var c=b.split(".");2==c.length&&(a=a[c[0]],b=c[1]);a[b]=function(){a.push([b].concat(Array.prototype.slice.call(arguments,0))); if (typeof arguments[2] === 'function') arguments[2](); return true;}}var g=a;"undefined"!==typeof f?g=a[f]=[]:f="mixpanel";g.people=g.people||[];h="disable track track_pageview track_links track_forms register register_once unregister identify name_tag set_config people.identify people.set people.increment".split(" ");for(e=0;e<h.length;e++)d(g,h[e]);a._i.push([b,c,f])};a.__SV=1.1})(document,window.mixpanel||[]);
+
+	mixpanel.init('1eeb74efa641147360b9550638faf774');
+	tracking.trackCampaign();
+}
+</script>
+<div class="h_icn_play"></div>
+		<div class="core" id="core_player"></div>
+	</section>
+</body>
+</html>

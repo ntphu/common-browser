@@ -1,0 +1,17 @@
+{
+   "app": {
+      "launch": {
+         "web_url": "http://fiddlesalad.com/coffeescript/"
+      },
+      "urls": [ "http://fiddlesalad.com/coffeescript/" ]
+   },
+   "description": "Online playground for CoffeeScript, CSS, and HTML",
+   "icons": {
+      "128": "appmator128.png"
+   },
+   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHhmanbe+pJ/X7DPhLZ7cYAyXLroknyVi8hxmVgHez5bwAbDzDLiFreFAFea4+VtptXAQUNpn90f/ETgkO02lAfPOj7m5LhgZ43WCi96w0ZeWnVbLJZbPbHYp3H+r8dA6aQtdVnw7p6xdHns8twKyFcTMIuy/YISID5miePPlzfQIDAQAB",
+   "manifest_version": 2,
+   "name": "CoffeeScript IDE",
+   "update_url": "http://clients2.google.com/service/update2/crx",
+   "version": "2.0.1.7"
+}

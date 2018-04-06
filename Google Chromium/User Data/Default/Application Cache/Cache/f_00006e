@@ -1,0 +1,547 @@
+/**
+ * Created by CongNT1.Fsoft
+ * User: 
+ * Date: 01/07/14
+ * Time: 5:35 PM
+ */
+
+/*** HEADER ***/
+var arrTransInfo = null;
+var arrListReceive = null;
+var tmpDestinationAcc;
+var gprsResp = new GprsRespObj("","","","");
+var arrTransInfo = null;
+var arrListReceive = null;
+var tmpFeeAmount;
+var tmpEffectDate;
+var transType = "";
+var strXml = "";
+
+var pageIndex = 1;//CURRENT PAGE
+var itemsPerPage = 5;//3 DÒNG/ TRANG
+var totalItems = 9;//TỔNG SỐ DÒNG
+var totalPages = 0;
+var NewBatch;
+var tempArrOld =new Array();
+var flag_check =false;//check xem co tien hanh chinh sua hay k
+var flag_back =true;//check xem trang thai quay lai hay ko
+
+
+/*** INIT VIEW ***/
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag_back = false;
+	
+}
+function loadInitXML() {
+	
+	var docXml = getReviewXmlStore();
+	strXml = XMLToString(docXml);
+	logInfo(docXml);
+	return docXml;
+
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+//ham nay tuong duong event onload cho body
+function viewDidLoadSuccess() {
+	logInfo('transfer load success');
+	var isIPad = navigator.userAgent.match(/iPad/i);
+	if(!flag_back){
+		document.getElementById("btnFile").value = CONST_STR.get('TRANSFER_LIST_CHOICE_FILE');
+	}
+	//document.getElementById("btnFile").value = CONST_STR.get('TRANSFER_LIST_CHOICE_FILE');
+	if(isIPad) keyboardEvent();		
+		genHtmlSearchResult(parseXMLPagging());
+		getOldData();
+	if(!flag_check){
+		document.getElementById('button_next').style.display='none';
+	}
+	
+}
+function getOldData(){
+	for(var k =0; k<arrOldListTrans.length; k++){
+		var tmpArray1 = new Array();
+		var tmpArray2 = new Array();
+		var tmpArray3 = new Array();
+		var tmpArray4 = new Array();
+		var tmpArray5 = new Array();
+		tmpArray1 = arrOldListTrans[k].tbcontent1.split("#");
+		tmpArray2 = arrOldListTrans[k].tbcontent2.split("#");
+		tmpArray3 = arrOldListTrans[k].tbcontent3.split("#");
+		tmpArray4 = arrOldListTrans[k].tbcontent4.split("#");
+		tmpArray5 = arrOldListTrans[k].tbcontent5.split("#");
+		tempArrOld.push(tmpArray1[0]+'#'+tmpArray2[1]+'#'+tmpArray3[1]+'#'+tmpArray4[1]+'#'+tmpArray5[1]);
+	}
+}
+function parseXMLPagging(){
+	
+	var docXml = stringtoXML(strXml);	
+	var valFrom = itemsPerPage*(pageIndex-1);
+		
+	var ppp = docXml.getElementsByTagName('reviewtabledetail');
+	var totalP = ppp.length;
+	totalItems = totalP;
+	totalPages = Math.ceil(totalItems/itemsPerPage);
+	for(var i = 0; i<valFrom; i++){		
+		var y = docXml.getElementsByTagName('reviewtabledetail')[0];		
+		docXml.getElementsByTagName('reviewtable')[0].removeChild(y);		
+	}
+	ppp = docXml.getElementsByTagName('reviewtabledetail');
+	totalP = ppp.length;
+	
+	for(var i =itemsPerPage; i<totalP; i++){		
+		var y = docXml.getElementsByTagName('reviewtabledetail')[itemsPerPage];		
+		docXml.getElementsByTagName('reviewtable')[0].removeChild(y);		
+	}
+	
+	logInfo('thuan doc New');
+	logInfo(docXml);
+	return docXml;	
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('transfer will unload');
+}
+
+function goBack() {
+	navController.popView(true);
+}
+
+/*** VALIDATE INPUT ***/
+var conditions = gConditions; 
+
+
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	pageIndex = selectedIdx;
+	genHtmlSearchResult(parseXMLPagging());
+}
+
+function genHtmlSearchResult(newDocx) {
+	var docXsl = getCachePageXsl("transfer-by-list/review-error-xsl-scr-table");
+	logInfo(newDocx);
+	genHTMLStringWithXML(newDocx, docXsl, successPaggingCallback, failPaggingCallback);	
+}
+
+//Callback successed
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("show-info");
+	div.innerHTML = strHtml;
+	genPagging(pageIndex);
+}
+
+//Callback failed
+function failPaggingCallback() {
+	//navController.initWithRootView('account/account-scr', true);	
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+function genPagging(pageIndex) {
+	var tmpStr = genPageIndicatorHtml(totalPages, Number(pageIndex));
+	document.getElementById('pageIndicatorNums').innerHTML = tmpStr;
+}
+/*** FUNCTIONS END ***/
+function showEdit(inID, stt) {
+	if(gModeScreenView == CONST_MODE_SCR_SMALL) return;
+	var tmpEditBtn = document.getElementById('divEdit'+ inID+stt);
+	var tmpOldBtn = document.getElementById('divOld'+ inID+stt);
+	if(tmpEditBtn) {
+		//tmpEditBtn.style.display = '';
+		//tmpOldBtn.style.display='none';
+		//tmpEditBtn.value=inID;
+	}
+	//document.getElementById('save').style.display ='';
+}
+function pushToDelete(inID,name){
+	var row = document.getElementById(inID+name);
+    row.parentNode.removeChild(row);
+	for(var n=0; n<tempArrOld.length; n++){
+		var tempArr = new Array();
+		tempArr =tempArrOld[n].split('#');
+		if(tempArr[0]==inID){
+			tempArrOld.splice(n,1);
+		}
+	}
+	document.getElementById('button_next').style.display='';
+}
+function pushToEdit(stt,name,account,amount,description){
+	var tempArr = new Array();
+	tempArr.push(stt);
+	tempArr.push(name);
+	tempArr.push(account);
+	tempArr.push(amount);
+	tempArr.push(description);
+	for(var i=1; i<tempArr.length; i++){
+		document.getElementById('divEdit'+ tempArr[i]+tempArr[0]).style.display='';
+		document.getElementById('divOld'+ tempArr[i]+tempArr[0]).style.display='none';
+		document.getElementById('divEdit'+ tempArr[i]+tempArr[0]).value =tempArr[i];
+	}
+	document.getElementById('Edit'+stt).style.display ='none'
+	document.getElementById('Save'+stt).style.display ='';
+}
+function pushToSave(stt,name,account,amount,description){
+	flag_check=true;
+	var NewName;
+	var NewAccount;
+	var NewAmount;
+	var NewDescription;
+	var EditName = document.getElementById('divEdit'+ name+stt);
+	var EditAccount = document.getElementById('divEdit'+ account+stt);
+	var EditAmount = document.getElementById('divEdit'+ amount+stt);
+	var EditDescription = document.getElementById('divEdit'+ description+stt);
+	if(EditName.value==""){
+		NewName =name;
+	}
+	else{
+		NewName =EditName.value;
+	}
+	if(EditAccount.value==""){
+		NewAccount =account;
+	}
+	else{
+		NewAccount=EditAccount.value;
+	}
+	if(EditAmount.value==""){
+		NewAmount =amount;
+	}
+	else{
+		NewAmount=EditAmount.value;
+	}
+	if(EditDescription.value==""){
+		NewDescription =description;
+	}
+	else{
+		NewDescription=EditDescription.value
+	}
+	document.getElementById('divOld'+ name+stt).style.display ='';
+	document.getElementById('divOld'+ account+stt).style.display ='';
+	document.getElementById('divOld'+ amount+stt).style.display ='';
+	document.getElementById('divOld'+ description+stt).style.display ='';
+	document.getElementById('divEdit'+ name+stt).style.display='none';
+	document.getElementById('divEdit'+ account+stt).style.display ='none';
+	document.getElementById('divEdit'+ amount+stt).style.display ='none';
+	document.getElementById('divEdit'+ description+stt).style.display ='none';
+	document.getElementById('divOld'+ name+stt).innerHTML =NewName;
+	document.getElementById('divOld'+ account+stt).innerHTML =NewAccount;
+	document.getElementById('divOld'+ amount+stt).innerHTML =NewAmount;
+	document.getElementById('divOld'+ description+stt).innerHTML =NewDescription;
+	NewBatch=stt+'#'+NewName+'#'+NewAccount+'#'+NewAmount+'#'+NewDescription;
+	for(var m=0; m<tempArrOld.length; m++){
+		var tmpArr = new Array();
+		tmpArr =tempArrOld[m].split('#');
+		if(tmpArr[0]==stt){
+			tempArrOld.splice(m,1,NewBatch);
+		}
+	}
+	document.getElementById('Save'+stt).style.display ='none'
+	document.getElementById('Edit'+stt).style.display ='';
+	document.getElementById('button_next').style.display='';
+}
+function sendJSONRequest(){
+	if(tempArrOld.length <1){
+		showAlertText(CONST_STR.get('TRANSFER_BY_LIST_DELETE_ERR'));
+		return;
+	}
+	var VXML ="";
+	VXML="<?xml version='1.0' encoding='UTF-8'?>";
+	VXML+="<root>";
+	for(var i =0; i<tempArrOld.length; i++){
+		tmpArray = new Array();
+		tmpArray=tempArrOld[i].split('#');
+		VXML+="<row><index>"+tmpArray[0]+"</index><name>"+tmpArray[1]+"</name><accno>"+tmpArray[2]+"</accno><amt>"+removeSpecialChar(tmpArray[3])+"</amt><desc>"+tmpArray[4]+"</desc></row>";
+	}
+	VXML+="</root>";
+	var data = {};
+	var arrayArgs = new Array();
+	//var sourceAcc = document.getElementById("id.accountno").value;
+	arrayArgs.push('TRANSFER_BATCH');
+	arrayArgs.push(sourcebatch);
+	//arrayArgs.push(VXML);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TRANSFER_LIST_EDIT"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs,encodeURIComponent(VXML));
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+function requestMBServiceSuccess(e){
+	logInfo("Upload file success");
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	var strXml = gprsResp.respRaw;
+	logInfo("strXml: " + strXml);
+	var docXml = stringtoXML(strXml);
+	if("0" == gprsResp.respCode) {
+		
+		var docXsl = getCachePageXsl("transfer-by-list/transfer-list-content");
+		logInfo(docXsl);
+		genHTMLStringWithXML(docXml, docXsl, successCallback, failCallback);
+	}
+}
+function requestMBServiceFail(){
+}
+function successCallback(strHtml) {
+	var div = document.getElementById("divContentUpload");
+	div.innerHTML = strHtml;
+	loadData();
+	genReviewScreenEdit(arrTransInfo, arrListReceive);
+}
+function loadData() {
+	arrTransInfo = new Array();
+	arrListReceive = new Array();
+	var tableInfo = document.getElementById("tblInfoTrans");
+	var tableList = document.getElementById("tblListReceive");
+	
+	for(var i = 0; i < tableInfo.rows.length; i++) {
+		arrTransInfo.push({
+			id: tableInfo.rows[i].cells[0].innerHTML
+		});
+	}
+	for(var i = 0; i < tableList.rows.length; i++) {
+		arrListReceive.push({
+			tbcontent1 : tableList.rows[i].cells[0].innerHTML,
+			tbcontent2 : tableList.rows[i].cells[1].innerHTML,
+			tbcontent3 : tableList.rows[i].cells[2].innerHTML,
+			tbcontent4 : tableList.rows[i].cells[3].innerHTML,
+			tbcontent5 : tableList.rows[i].cells[4].innerHTML,
+		});
+	}
+}
+function genReviewScreenEdit(arrTrans, arrList) {
+	
+	var errFlag = false;
+	var arrTbcontent2 = null;
+	var arrTbcontent3 = null;
+	var arrTbcontent4 = null;
+	var arrTbcontent5 = null;
+	
+	//var destinationAcc = document.getElementById("trans.targetaccount");
+	//var transtype = document.getElementById("id.transtype").value;
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+
+	//trans type
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('MENU_TRANS_LIST'), docXml, tmpChildNodeAcc);
+
+	//tai khoan chuyen tien
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sourcebatch, docXml, tmpChildNodeAcc);
+	
+	//source account balance
+	var tmpAcc = null;
+	for (var idx=0; idx<gUserInfo.accountList.length; idx++) {
+		
+		tmpAcc = gUserInfo.accountList[idx];
+		if(tmpAcc.accountNumber == sourcebatch) {
+			tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+			tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE'), docXml, tmpChildNodeAcc);
+			tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(tmpAcc.balanceAvailable) + " VND", docXml, tmpChildNodeAcc);
+			tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //no display in result success
+			break;
+		}
+	}
+
+	for(var i in arrList) {
+		arrTbcontent2 = new Array();
+		arrTbcontent3 = new Array();
+		arrTbcontent4 = new Array();
+		arrTbcontent5 = new Array();
+
+		arrTbcontent2 = arrList[i].tbcontent2.split("#");
+		arrTbcontent3 = arrList[i].tbcontent3.split("#");
+		arrTbcontent4 = arrList[i].tbcontent4.split("#");
+		arrTbcontent5 = arrList[i].tbcontent5.split("#");
+
+		if(arrTbcontent2[0] == "1") {
+			errFlag = true;
+			
+		}
+		
+		if(arrTbcontent3[0] == "1") {
+			errFlag = true;
+		}
+		
+		if(arrTbcontent4[0] == "1") {
+			errFlag = true;
+		}
+		
+		if(arrTbcontent5[0] == "1") {
+			errFlag = true;
+		}
+		
+		if(errFlag) {
+			break;
+		}
+	}
+
+		tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+					
+		tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	if(errFlag == false) {
+		//so luong nguoi nhan
+		tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANSFER_LIST_NUMBER_PEOPEL_RECIVE'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('transinfocontent',arrTransInfo[3].id, docXml, tmpChildNodeTrans);
+
+		//amount
+		tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANSFER_LIST_TOTAL_AMOUNT'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(arrTransInfo[4].id) + " VND", docXml, tmpChildNodeTrans);
+	
+		//fee
+		tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANSFER_LIST_TOTAL_FEE'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(arrTransInfo[5].id) + " VND", docXml, tmpChildNodeTrans);
+		
+		//tong gia tri giao dich
+		tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANSFER_LIST_TOTAL_VALUE'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(arrTransInfo[6].id) + " VND", docXml, tmpChildNodeTrans);
+	
+	var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd
+    } 
+    if(mm<10){
+        mm='0'+mm
+    } 
+    var today = dd+'/'+mm+'/'+yyyy;	
+	
+	//execute date
+	tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_DATE_TRANS'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('transinfocontent', 'Ngày ' + today, docXml, tmpChildNodeTrans);
+	}
+
+	//danh sach nguoi nhan
+	var tmpXmlNodeInfoList = createXMLNode('reviewtable', '', docXml, tmpXmlNodeInfo);
+
+	var hdnTransType = 'TRANSFER_BATCH';
+	var accCardTitle = "";
+	if(hdnTransType == "TRANSFER_BATCH") {
+		accCardTitle = CONST_STR.get('ACCOUNT_ACC_NO_TITLE');
+	} else if(hdnTransType == "TRANSFER_BATCH_CARD") {
+		accCardTitle = CONST_STR.get('TRANSFER_LIST_CARD');
+	}
+
+
+	//title
+	tmpChildNodeTrans = createXMLNode('reviewtabletitle', '', docXml, tmpXmlNodeInfoList);
+	tmpChildNode = createXMLNode('tbcol1', CONST_STR.get('TRANSFER_LIST_STT'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('tbcol2', CONST_STR.get('TRANSFER_LIST_FULLNAME'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('tbcol3', accCardTitle, docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('tbcol4', CONST_STR.get('TRANS_LOCAL_AMOUNT_TITLE'), docXml, tmpChildNodeTrans);
+	tmpChildNode = createXMLNode('tbcol5', CONST_STR.get('ACCOUNT_DESCRIPTION'), docXml, tmpChildNodeTrans);
+	if(errFlag ==true){
+		ItmpChildNode = createXMLNode('tbcol6', CONST_STR.get('INTRODUCE_INFO_CHOOSE'), docXml, tmpChildNodeTrans);
+	}
+	//data review table
+	
+	
+	for(var i in arrList) {
+		tmpChildNodeTrans = createXMLNode('reviewtabledetail', '', docXml, tmpXmlNodeInfoList);
+		tmpChildNode = createXMLNode('tbcol1', CONST_STR.get('TRANSFER_LIST_STT'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('tbcol2', CONST_STR.get('TRANSFER_LIST_FULLNAME'), docXml, tmpChildNodeTrans);
+		
+		tmpChildNode = createXMLNode('tbcol3', accCardTitle, docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('tbcol4', CONST_STR.get('TRANS_LOCAL_AMOUNT_TITLE'), docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('tbcol5', CONST_STR.get('ACCOUNT_DESCRIPTION'), docXml, tmpChildNodeTrans);
+		if(errFlag ==true){
+		ItmpChildNode = createXMLNode('tbcol6', CONST_STR.get('INTRODUCE_INFO_CHOOSE'), docXml, tmpChildNodeTrans);
+	}
+		tmpChildNode = createXMLNode('tbcontent1', arrList[i].tbcontent1, docXml, tmpChildNodeTrans);
+		
+		arrTbcontent2 = new Array();
+		arrTbcontent3 = new Array();
+		arrTbcontent4 = new Array();
+		arrTbcontent5 = new Array();
+
+		arrTbcontent2 = arrList[i].tbcontent2.split("#");
+		arrTbcontent3 = arrList[i].tbcontent3.split("#");
+		arrTbcontent4 = arrList[i].tbcontent4.split("#");
+		arrTbcontent5 = arrList[i].tbcontent5.split("#");
+		if(arrTbcontent2[0]=='1' ||arrTbcontent3[0]=='1'||arrTbcontent4[0]=='1'||arrTbcontent5[0]=='1'){
+			tmpChildNode = createXMLNode('tbcontent2', arrTbcontent2[1], docXml, tmpChildNodeTrans);
+			tmpChildNode = createXMLNode('tbcontent3', arrTbcontent3[1], docXml, tmpChildNodeTrans);
+			if(parseFloat(arrTbcontent4[1]) > 0) {
+				tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(arrTbcontent4[1]), docXml, tmpChildNodeTrans);
+			} else {
+				tmpChildNode = createXMLNode('tbcontent4', arrTbcontent4[1], docXml, tmpChildNodeTrans);
+			}
+			tmpChildNode = createXMLNode('tbcontent5', arrTbcontent5[1], docXml, tmpChildNodeTrans);
+		}
+		else{
+			tmpChildNode = createXMLNode('tbcontent2', arrTbcontent2[1], docXml, tmpChildNodeTrans);
+			tmpChildNode = createXMLNode('tbcontent3', arrTbcontent3[1], docXml, tmpChildNodeTrans);
+			if(parseFloat(arrTbcontent4[1]) > 0) {
+				tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(arrTbcontent4[1]), docXml, tmpChildNodeTrans);
+			} else {
+				tmpChildNode = createXMLNode('tbcontent4', arrTbcontent4[1], docXml, tmpChildNodeTrans);
+			}
+			tmpChildNode = createXMLNode('tbcontent5', arrTbcontent5[1], docXml, tmpChildNodeTrans);
+		}
+		/*tmpChildNode = createXMLNode('tbcontent2', arrTbcontent2[1], docXml, tmpChildNodeTrans);
+		tmpChildNode = createXMLNode('tbcontent3', arrTbcontent3[1], docXml, tmpChildNodeTrans);
+		if(parseFloat(arrTbcontent4[1]) > 0) {
+			tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(arrTbcontent4[1]), docXml, tmpChildNodeTrans);
+		} else {
+			tmpChildNode = createXMLNode('tbcontent4', arrTbcontent4[1], docXml, tmpChildNodeTrans);
+		}
+		tmpChildNode = createXMLNode('tbcontent5', arrTbcontent5[1], docXml, tmpChildNodeTrans);*/
+	}
+
+	logInfo(docXml);
+	setReviewXmlStore(docXml);
+	//luu xml trong cache
+	if(errFlag == false) {
+		navController.removePageAtIndex(navArrayScr.length-1);
+		navController.pushToView("com-review-xsl-scr", true, 'xsl');
+	} else {
+		var docXsl = getCachePageXsl("transfer-by-list/review-error-xsl-scr-table");
+		genHTMLStringWithXML(docXml, docXsl, function(e){
+			//success
+			var div = document.getElementById("show-info");
+			div.innerHTML = e;
+			pageIndex = 1;
+			genPagging(pageIndex);
+			}, function(e){
+				//fail
+			
+		});
+	}
+}
+function handleInputAmount (e, des) {
+	var tmpVale = des.value;
+	formatCurrency(e, des);
+	var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang); 
+}
+function btnCancelClick(){
+	//navController.resetBranchView();
+    //goBack();
+    navController.popViewInit(true);
+}

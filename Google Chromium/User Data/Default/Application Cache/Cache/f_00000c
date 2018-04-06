@@ -1,0 +1,539 @@
+// JavaScript Document
+var arrAllAccObj = gUserInfo.accountList.concat(gUserInfo.accountListOther);
+var xslAccHisTable ;
+var arrayArgs;
+var EasylinkAcc;
+var flag;
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+
+function viewDidLoadSuccess(){
+    bottomBar.hide();
+	logInfo('Jumbo account infomation load success');
+	sendJSONRequest();
+    document.addEventListener("evtChangeWidthDesktop",sendJSONRequest,false);
+    document.addEventListener("evtChangeWidthMobile",sendJSONRequest,false);
+		/*document.getElementById('sourceAcc').value = EasylinkAcc;
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		for(var k =0; k<gUserInfo.accountList.length; k++){
+			if(gUserInfo.accountList[k].accountNumber==EasylinkAcc){
+				var balanceAvai =gUserInfo.accountList[k].balanceAvailable;
+			}
+		}
+		
+		nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + formatNumberToCurrency(balanceAvai) +" VND"+"</div>";
+	*/
+}
+function viewWillUnload(){
+    document.removeEventListener("evtChangeWidthDesktop",sendJSONRequest,false);
+    document.removeEventListener("evtChangeWidthMobile",sendJSONRequest,false);
+}
+function sendJSONRequest(){
+	
+	var data = {};
+	arrayArgs = new Array();
+
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_GET_JUMBO_ACC_INFO"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+
+}
+
+function requestMBServiceSuccesss(e){
+	gprsResp = parserJSON(e);
+	if (gprsResp.respCode != '0' && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_JUMBO_ACC_INFO")))) {
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	if (checkResponseCodeSuccess(gprsResp.respCode) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_GET_JUMBO_ACC_INFO")))) {
+		arrayArgs = gprsResp.arguments;
+		genPageInfo();
+	}
+
+}
+
+function requestMBServiceFail(e){
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+function genPageInfo() {
+	var tmpXmlDoc = genXmlDoc(arrayArgs);
+	xslAccHisTable = getCachePageXsl("jumbo/jumbo_remove_regis");
+	var tmpXslDoc = xslAccHisTable;
+	
+	genHTMLStringWithXML(tmpXmlDoc, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('tabHost');
+		tmpNode.innerHTML = oStr;
+		var respArr = arrayArgs;
+		for (var i = 0; i < respArr.length; i++) {
+			var obj = respArr[i].split('#');
+			EasylinkAcc=obj[5];
+			if (obj[6] == '6') {
+				respArr.splice(i,1);
+			}
+		}
+		/*if (respArr.length == 0) {
+			document.getElementById('tblAutoSave').style.display = 'none';
+		}*/
+        if(gModeScreenView != CONST_MODE_SCR_SMALL){
+            resizeMainViewContent(currentPage);
+        }
+	});
+}
+
+	
+function genXmlDoc(inArrInfo) {
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlRootNode = createXMLNode('result', '', docXml);
+	var isHavingAutoSav = false;
+	var autoSavingBalance;
+	for (var i = 0; i < inArrInfo.length; i++) {
+		var items = inArrInfo[i];
+		var inInfoObj = items.split('#');
+		if (inInfoObj[6] == '0') {
+			isHavingAutoSav = true;
+			autoSavingBalance = inInfoObj[1];
+		}
+	}
+	
+	for (var i = 0; i < inArrInfo.length; i++) {
+		var items = inArrInfo[i];
+		var inInfoObj = items.split('#');
+		var tmpXmlNodeDetail;
+		var tmpChildNodeType;
+		var tmpChildNodeHeader;
+		var tmpChildNodeFooter;
+		var tmpGrandChildNode;
+		var tmpChildNodeTableDetailID;
+		var tmpChildNodeTableAnchorID;
+		var tmpChildNodeTableImgID;
+		var tmpChildNodeTableAnchorValue;
+		
+		switch (inInfoObj[6]) {
+			case "6": //tai khoan JUMBO
+                var data = new Array();
+                data.push([CONST_STR.get('JUMBO_ACC_NUM'), inInfoObj[5]]);
+                data.push([CONST_STR.get('JUMBO_SURPLUS'), formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT')]);
+                if (isHavingAutoSav == true) {
+                    data.push([CONST_STR.get('JUMBO_AUTO_SAVING_SURPLUS'), formatNumberToCurrency(autoSavingBalance) + CONST_STR.get('JUMBO_CURRENCY_UNIT')]);
+                }
+                data.push([CONST_STR.get('JUMBO_TOTAL_CREDIT_LIMIT'), formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT')]);
+                data.push([CONST_STR.get('JUMBO_TOTAL_AVAILABLE_LIMIT'), formatNumberToCurrency(inInfoObj[3]) + CONST_STR.get('JUMBO_CURRENCY_UNIT')]);
+                data.push([CONST_STR.get('JUMBO_AVAILABLE_SURPLUS'), formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT')]);
+
+                if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                    var recycler = new RecyclerView({
+                        type: "DESKTOP_GRID",
+                        typeTextAlign: "MIDLE",
+                        title: "Tai khoan jumbo",
+                        titleAlign:"LEFT",
+                        opacity:true
+                    });
+                }else{
+                var recycler = new RecyclerView({
+                    type: "NORMAL",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+                }
+                recycler.setData(data);
+                var contentHTML = recycler.init();
+
+                var tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+                var tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+                var tmpChildNodeType1 = createXMLNode('content', contentHTML                                                                                                                                                 , docXml, tmpXmlNodeDetail);
+
+				/*var tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				var tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);	
+				var tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_ACC_INFO'), docXml, tmpXmlNodeDetail);	
+				
+				var tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				var tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_ACC_NUM'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', inInfoObj[5], docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_SURPLUS'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				if (isHavingAutoSav == true) {
+					tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_AUTO_SAVING_SURPLUS'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(autoSavingBalance) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				}
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_TOTAL_CREDIT_LIMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_TOTAL_AVAILABLE_LIMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[3]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_AVAILABLE_SURPLUS'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);*/
+				break;
+			case "0": // Tai khoan tiet kiem tu dong
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_AUTO_SAVINGS_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblAutoSaving', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorAutoSaving', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageAutoSaving', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);//
+				
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_AUTO_SAVING_ACC'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', inInfoObj[5], docXml, tmpChildNodeFooter);
+				
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_SAVING_SURPLUS'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				break;
+			case "2": //Han muc ung so tiet kiem
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_SAVING_APPLY_LITMIT_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblStkApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorStkApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageStkApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);//
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_SAVING_APPLY_LITMIT_TITLE'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_USED_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_REMAINS_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_ITEREST_RATE'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'), docXml, tmpChildNodeFooter);
+				break;
+			case "5": //Han muc ung the tin dung (ung jumbo)
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_CREDIT_APPLY_LITMIT_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblCreditApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorCreditApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageCreditApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);//
+
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_APPLY_LIMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_USED_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_REMAINS_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_ITEREST_RATE'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'), docXml, tmpChildNodeFooter);
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_CREDIT_LIMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[7]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_CREDIT_LIMIT_REMAINS'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[8]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				break;
+			case "4": //Ung tien thong minh
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_MONEY_SMART_APPLY_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblSmartCash', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorSmartCash', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageSmartCash', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);//
+
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_MONEY_SMART_APPLY_TITLE'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_USED_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_REMAINS_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_ITEREST_RATE'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'), docXml, tmpChildNodeFooter);
+				break;
+			case "3": //ung luong tien loi
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_SALARY_APPLY_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblConvenientSal', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorConvenientSal', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageConvenientSal', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);//
+				
+				//put for loop here	to create footer
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_SALARY_APPLY_TITLE'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_USED_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_REMAINS_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_ITEREST_RATE'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'), docXml, tmpChildNodeFooter);
+				break;
+			case "1": //Han muc thau chi
+				tmpXmlNodeDetail = createXMLNode('detail', '', docXml, tmpXmlRootNode);
+				tmpChildNodeType = createXMLNode('type', inInfoObj[6], docXml, tmpXmlNodeDetail);
+				tmpChildNodeHeader = createXMLNode('header', CONST_STR.get('JUMBO_OVERDRAFT_LITMIT_TITLE'), docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableDetailID = createXMLNode('tabledetailid', 'tblOverdraftApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorID = createXMLNode('anchorid', 'anchorOverdraftApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableImgID = createXMLNode('imgid', 'imageOverdraftApplyLimit', docXml, tmpXmlNodeDetail);
+				tmpChildNodeTableAnchorValue = createXMLNode('headervalue', ': ' + formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpXmlNodeDetail);//
+				
+				//put for loop here	to create footer
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_OVERDRAFT_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[0]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_USED_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[1]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_REMAINS_LITMIT'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', formatNumberToCurrency(inInfoObj[2]) + CONST_STR.get('JUMBO_CURRENCY_UNIT'), docXml, tmpChildNodeFooter);
+				
+				tmpChildNodeFooter = createXMLNode('footer', '', docXml, tmpXmlNodeDetail);
+				tmpGrandChildNode = createXMLNode('title', CONST_STR.get('JUMBO_OVERDRAFT_INTEREST_RATE'), docXml, tmpChildNodeFooter);
+				tmpGrandChildNode = createXMLNode('value', inInfoObj[3] + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'), docXml, tmpChildNodeFooter);
+				break;
+			default:
+				logInfo('Nothing to return!...');
+		}
+	}
+
+    logInfo(docXml);
+	return docXml;
+}
+
+
+/*function showHideDetailInfo() {
+	if (document.getElementsByClassName('hideClass').item(0).style.display == 'none') {
+		for (var i = 0; i < document.getElementsByClassName('hideClass').length; i++) {
+			var item = document.getElementsByClassName('hideClass').item(i);
+			item.style.display = 'table';
+		}
+		document.getElementById('anchorShowInfo').innerHTML = CONST_STR.get('JUMBO_MINIMIZE_INFO_LIST_TITLE')
+		//document.getElementById('i-last-updated-time').style.display = '';
+		document.getElementById('imgshowdetailinfo').src = './assets/images/Minus2.png';
+
+	} else {
+		for (var i = 0; i < document.getElementsByClassName('hideClass').length; i++) {
+			var item = document.getElementsByClassName('hideClass').item(i);
+			item.style.display = 'none';
+		}
+		document.getElementById('anchorShowInfo').innerHTML = CONST_STR.get('JUMBO_MAXIMIZE_INFO_LIST_TITLE')
+		//document.getElementById('i-last-updated-time').style.display = 'none';
+		document.getElementById('imgshowdetailinfo').src = './assets/images/Plus2.png';
+	}
+}
+
+function showHideItem(tblID, anchorID, imgID) {
+	if (document.getElementById(tblID).style.display == 'none') {
+		document.getElementById(tblID).style.display = 'table';
+		document.getElementById(anchorID).style.display = 'none';
+		document.getElementById(imgID).src = './assets/images/Minus2.png';
+		
+	} else {
+		document.getElementById(tblID).style.display = 'none';
+		document.getElementById(anchorID).style.display = '';
+		document.getElementById(imgID).src = './assets/images/Plus2.png';
+		
+	}
+}*/
+function showDestinationAccSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<arrAllAccObj.length; i++) {
+		var tmpAcc = arrAllAccObj[i];
+		if(tmpAcc.accClass == 'D3A000'||tmpAcc.accClass == 'D3A001'||tmpAcc.accClass == 'FSLIBD'||tmpAcc.accClass == 'D3A002'||tmpAcc.accClass == 'SAUTTL'||tmpAcc.accClass == 'SAVKHV'||tmpAcc.accClass == 'SAVLAT'||tmpAcc.accClass == 'SAVLBD'||tmpAcc.accClass == 'SAVLBH'||tmpAcc.accClass == 'SAVLBQ'||tmpAcc.accClass == 'SAVLBY'||tmpAcc.accClass == 'SAVOBD'||tmpAcc.accClass == 'SAVVIP'||tmpAcc.accClass == 'SBVIBM'||tmpAcc.accClass == 'SEVIBM'||tmpAcc.accClass == 'SFVLBD'||tmpAcc.accClass == 'SLVIBM'||tmpAcc.accClass == 'SASXKD'||tmpAcc.accClass == 'SAVBDS'||tmpAcc.accClass == 'SAVSTK'||tmpAcc.accClass == 'D3A003'){
+			tmpArray1.push(tmpAcc.accountNumber);
+			tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+		}
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);	
+	
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true,false);
+}
+function handleSelectionAccountList(e) {
+	if (currentPage == "jumbo/jumbo_remove_regis") {
+		handleSelectionAccountListClose();
+		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("sourceAcc");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND</div>";
+		}
+	}
+}function handleSelectionAccountListClose(e) {
+	if (currentPage == "jumbo/jumbo_remove_regis") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+function click_Next(){
+	var sourceacc = document.getElementById('sourceAcc');
+	if(!sourceacc.value ||sourceacc.value == undefined ||sourceacc.value==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER') ){
+		showAlertText(CONST_STR.get('JUMBO_ACC_UNREG_INPUT_ERR'));
+		return;
+	}
+	showAlertAppText1(CONST_STR.get('LOGIN_NOTIFICATION'),CONST_STR.get('JUMBO_ACC_UNREG_NOTE'), CONST_STR.get('BENEFIC_LIST_NO') ,CONST_STR.get('BENEFIC_LIST_YES'));
+    document.addEventListener('alertAppConfirmOK', showChoiceConfirmPre, false);
+    document.addEventListener('alertAppConfirmCancel', showChoiceConfirmPreClose, false);
+}
+function showChoiceConfirmPre(e) {
+	if (currentPage == "jumbo/jumbo_remove_regis") {
+		showChoiceConfirmPreClose();
+		sendRequestCloseEasylink();
+	}
+}
+
+function showChoiceConfirmPreClose() {
+	if (currentPage == "jumbo/jumbo_remove_regis") {
+		document.removeEventListener("alertAppConfirmCancel", showChoiceConfirmPreClose, false);
+		document.removeEventListener("alertAppConfirmOK", showChoiceConfirmPre, false);
+	}
+}
+
+function sendRequestCloseEasylink() {
+	var sourceacc = document.getElementById('sourceAcc');
+	var data = {};
+	arrayArgs = new Array();
+	arrayArgs.push(EasylinkAcc);
+	arrayArgs.push(sourceacc.value);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_EASY_LINK_CLOSE"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestCLoseEasyLinkSuccess, requestCLoseEasyLinkFail);
+}
+
+function requestCLoseEasyLinkSuccess(e) {
+	gprsResp = parserJSON(e);
+	var tmpAccountList = new Array();
+	var tmpAccountListOther = new Array();
+	var tmpAccountListLocalTrans = new Array();
+	if ((gprsResp.respCode == RESP.get('COM_SUCCESS')) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get('CMD_EASY_LINK_CLOSE')))) {
+		genResultScreen();
+		//gUserInfo.accountList=arrAllAccObj;
+		for (var i=0; i< arrAllAccObj.length; i++){
+			if(arrAllAccObj[i].currency == 'VND' && arrAllAccObj[i].accClass != 'T6A001' && arrAllAccObj[i].accClass != 'D7A000') {
+			tmpAccountList.push(arrAllAccObj[i]);
+			tmpAccountListLocalTrans.push(arrAllAccObj[i]);	
+		}
+		else {
+			tmpAccountListOther.push(arrAllAccObj[i]);
+			if(arrAllAccObj[i].accClass == 'D7A000') {
+				tmpAccountListLocalTrans.push(arrAllAccObj[i]);
+			}
+		}
+		gUserInfo.accountList=tmpAccountList;
+		gUserInfo.accountListLocalTrans=tmpAccountListLocalTrans;
+		gUserInfo.accountListOther=tmpAccountListOther;
+		}
+		
+	}
+}
+
+function requestCLoseEasyLinkFail() {
+	showAlertText(CONST_STR.get('ERR_COM_TRANS_FAILED'));
+}
+function genResultScreen() {
+	var htmlReviewInfo = "";
+	var sourceAcc = document.getElementById('sourceAcc').value;
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/result
+	var tmpXmlNodeResult = createXMLNode('result', '', docXml, tmpXmlRootNode);
+	var tmpXmlNodeResultCode = createXMLNode('resultcode', gprsResp.respCode, docXml, tmpXmlNodeResult);
+	var tmpXmlNodeResultContent = createXMLNode('resultcontent', gprsResp.respContent, docXml, tmpXmlNodeResult);
+
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_JUMBO_TITLE'), docXml, tmpXmlNodeInfo);
+	//loai giao dich
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_HIS_TRANS_TYPE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('JUMBO_ACC_UNREG_TITLE'), docXml, tmpChildNodeAcc);
+	//Thời gian thực hiện
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_TRANSACTION_DATE'), docXml, tmpChildNodeAcc);
+
+	tmpChildNode = createXMLNode('transinfocontent',gprsResp.arguments[0], docXml, tmpChildNodeAcc);
+	
+	//tai khoan easylink
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('JUMBO_ACC'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', EasylinkAcc, docXml, tmpChildNodeAcc);
+	//tai khoan nhan tien
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('JUMBO_ACC_UNREG_RECEIVE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sourceAcc, docXml, tmpChildNodeAcc);
+	
+	
+	logInfo(docXml);
+	gJumboAccExistedStat=false;  
+	setStoreResultXmlStore(docXml);
+	displaySubMenuForJumboAcc(gJumboAccExistedStat);
+	displaySubMenuForJumboAccV7(gJumboAccExistedStat);
+	checkJumbo(function () {
+		isJumbo = true;
+		navController.pushToView("com-result-scr", true, 'xsl');
+	},function () {
+		isJumbo = false;
+		navController.pushToView("com-result-scr", true, 'xsl');
+	});
+	
+	
+}

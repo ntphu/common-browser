@@ -1,0 +1,407 @@
+/**
+ * Created by Thuantm
+ * User: Thuantm
+ * Date: 7/1/14
+ * Time: 5:05 PM
+ */
+ 
+var xmlDetail = '';
+var ResultControl =[];
+var sourceacc;
+var destacc;
+var flag = false; 
+var check_des;
+function loadInitXML(){	
+
+}
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+function viewDidLoadSuccess(){
+	if(!flag){
+		var tmpXsl = getCachePageXsl("esaving/esaving-info-table");
+		xmlDetail = getReviewXmlStore();
+		var tmpHtmlStr = genHTMLStringWithXML(xmlDetail, tmpXsl, function(oStr){
+		var tmpNode = document.getElementById('div-datainfo');
+		if(tmpNode !=null) tmpNode.innerHTML = oStr;
+	});	
+	genSequenceForm();
+    //add actionbar.addListSequence
+    actionbar.addListSequence("esaving/future-esaving-close");
+	//if(gFurSaving.length > 0){
+			ResultControl =gFurSaving;
+			genHtmlSearchResult(ResultControl);
+        document.addEventListener('evtChangeWidthDesktop',regenhtml,false);
+        document.addEventListener('evtChangeWidthMobile',regenhtml,false);
+
+	//}
+	getAccountDest(ResultControl.accnocont);
+	}
+	
+}
+function regenhtml(){
+    ResultControl =gFurSaving;
+    genHtmlSearchResult(ResultControl);
+}
+function getAccountDest(account){
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(account);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_GET_ACCOUNT_DESC"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSavSuccesss, requestMBServiceSavFail);
+	}
+function requestMBServiceSavSuccesss(e){
+	gprsResp = parserJSON(e);
+	if (checkResponseCodeSuccess(gprsResp.respCode) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_GET_ACCOUNT_DESC")))) {
+		if(gprsResp.arguments[0] != 'N'){
+			check_des = 'Y';
+			destacc=gprsResp.arguments[0];
+		}
+		else{
+			check_des=gprsResp.arguments[0];
+		}
+		
+	}
+}
+function requestMBServiceSavFail(){
+}
+function genHtmlSearchResult(arr) {
+		var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+		genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback, failPaggingCallback);
+}
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("esaving-info");
+	div.innerHTML = strHtml;
+    var dataInfo = document.getElementById('div-datainfo');
+    if(dataInfo != undefined || dataInfo != ''){
+        dataInfo.style.display = '';
+    }
+	//genPagging(ResultControl, pageIndex ,document.getElementById('pageIndicatorNums'));
+}
+//Callback failed
+function failPaggingCallback() {
+	navController.pushToView('account/account-scr', true);
+}
+function genXmlDataPagging(arr) {
+	docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('esavingChangeInfo','',docXml);
+	var childlistsavingNode = createXMLNode('listaccsaving','',docXml,rootNode);
+    var childlistsavingNode1 = createXMLNode('type','1',docXml,rootNode);
+	var childlistaccvisNode = createXMLNode('listacccanchange','',docXml,rootNode);
+	var childlistaccnovisNode = createXMLNode('listaccnotchange','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('esavingTitleTable','',docXml,childlistsavingNode);
+	var childNodeTit = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,titleTable);
+	childNodeTit = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,titleTable);
+//	if(arr && arr.prod_code == 'T5A005'){
+//		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,titleTable);
+//	}
+//	else{
+//		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+//	}
+	
+	//childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+	//childNodeTit = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,titleTable);
+//	childNodeTit = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,titleTable);
+//	childNodeTit = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,titleTable);
+//	childNodeTit = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'),docXml,titleTable);
+	//childNodeTit = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,titleTable);
+
+		var data = new Array();
+        data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'), CONST_STR.get('ESAVING_BTN_CLOSE_TITLE')]);
+        data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'), arr.accnocont]);
+//        if(arr && arr.prod_code == 'T5A005'){
+//            data.push([CONST_STR.get('FUTURE_SAVING_PURPOSE'), CONST_STR.get(arr.purpose)]);
+//        }
+//        else{
+//            data.push([CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'), arr.savingtype]);
+//        }
+        //data.push([CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'), arr.sodu_hientai + " VND"]);
+//        data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'), arr.interestcont + "%"]);
+//        data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'), arr.valdatecont]);
+//		data.push([CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCEDATE'), arr.matdatecont]);
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var recycler = new RecyclerView({
+            type: "DESKTOP_GRID",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign:"LEFT",
+            opacity:true
+        });
+    }else{
+        var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Tai khoan jumbo",
+            titleAlign:"LEFT",
+            opacity:true
+        });
+    }
+        recycler.setData(data);
+        var contentHTML = recycler.init();
+
+        var valTable = createXMLNode('data','',docXml,childlistsavingNode);
+        var valTable1 = createXMLNode('content',contentHTML,docXml,valTable);
+
+		/*var valTable = createXMLNode('accinfo','',docXml,childlistsavingNode);
+		var nodeVal = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,valTable);
+		
+		//nodeVal = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,valTable);
+		//nodeVal = createXMLNode('selectcont',CONST_STR.get('ESAVING_BTN_CLOSE_TITLE'),docXml,valTable);
+		//so tai khoan
+		nodeVal = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,valTable);
+		nodeVal = createXMLNode('accnocont',arr.accnocont,docXml,valTable);
+		//loại tk/muc dich
+		if(arr && arr.prod_code == 'T5A005'){
+            nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,valTable);
+            nodeVal = createXMLNode('savingtype',CONST_STR.get(arr.purpose),docXml,valTable);
+		}
+		else{
+            nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,valTable);
+            nodeVal = createXMLNode('savingtype',arr.savingtype,docXml,valTable);
+		}
+		// so du hien tai
+		nodeVal = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,valTable);
+		nodeVal = createXMLNode('amountcont',arr.sodu_hientai + " VND",docXml,valTable);
+		//Lãi suất
+		nodeVal = createXMLNode('interesttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCRATE'),docXml,valTable);
+		nodeVal = createXMLNode('interestcont',arr.interestcont + "%",docXml,valTable);
+		//ngay gui
+		nodeVal = createXMLNode('valdatetit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCSDATE'),docXml,valTable);
+		nodeVal = createXMLNode('valdatecont',arr.valdatecont,docXml,valTable);
+		//ngay het han
+		nodeVal = createXMLNode('matdatetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_MATDATE'),docXml,valTable);
+		nodeVal = createXMLNode('matdatecont',arr.matdatecont,docXml,valTable);*/
+
+		/*nodeVal = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,valTable);
+		nodeVal = createXMLNode('currcont',arr[k].typeCurrency,docXml,valTable);			*/
+    logInfo(docXml);
+	return docXml;
+}
+function goBack() {
+	navController.popView(true);
+}
+
+function viewWillUnload(){
+    document.removeEventListener('evtChangeWidthDesktop',regenhtml,false);
+    document.removeEventListener('evtChangeWidthMobile',regenhtml,false);
+}
+//gen sequence form
+function genSequenceForm() {
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpStepNo = 401;
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNode = document.getElementById('seqForm');
+		tmpNode.innerHTML = oStr;
+	});
+}
+
+//=================SHOW DIALOG FOR ACCOUNT NUMBER=============================//
+function showDestinationAccSelection(){
+	var tmpArray1 = [];
+	//ngocdt3 check neu co tham gia ung stk
+	if (destacc != null && destacc != "" && destacc != undefined && check_des =='Y'){
+		tmpArray1.push(destacc);
+	}
+	else{
+		for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		tmpArray1.push(tmpAcc.accountNumber);
+		}
+	}
+				
+		document.addEventListener("evtSelectionDialog", showDestinationAccSelectionOpen, false);
+		document.addEventListener("evtSelectionDialogClose", showDestinationAccSelectionClose, false);
+		showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'),  tmpArray1, false);
+}
+
+function showDestinationAccSelectionOpen(e) {
+
+	if (currentPage == "esaving/future-esaving-close") {		
+		//Lấy thông tin tài khoản đích			
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			showDestinationAccSelectionClose();						
+			document.getElementById("destinationAcc").value = e.selectedValue1;			
+		}
+	}
+}
+
+function showDestinationAccSelectionClose() {
+    bottomBar.hide();
+	if (currentPage == "esaving/future-esaving-close") {		
+		document.removeEventListener("evtSelectionDialog", showDestinationAccSelectionOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showDestinationAccSelectionClose, false);
+	}
+}
+/*function ReloadPage(){
+	fadeOutMainContentScreen();
+	setTimeout(function () {
+		gESavingObjUsing = null;
+		document.getElementById('section2').style.display='none';
+		document.getElementById('pageIndicatorNums').style.display='block';
+		genHtmlSearchResuslt(getItemsPerPage(gESavingObjs, pageIndex));
+	},500);
+	fadeInMainContentScreen();
+}*/
+//NEXT TO REVIEW SCREEN
+function click_Next(){	
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	gFurSaving;
+	//for(var i=0; i<gFurSaving.length; i++){
+			 sourceacc = gFurSaving.accnocont;
+		var accountclass = gFurSaving.prod_code;
+		//}
+	
+	var destinationAcc = document.getElementById("destinationAcc");
+	if(destinationAcc.value ==null ||destinationAcc.value ==undefined ||destinationAcc.value ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('ERR_INPUT_EMPTY_DES_ACC'));
+		return;
+	}
+	
+	//var amount = removeSpecialChar(gFurSaving.amount);
+	
+	arrayArgs.push(sourceacc);
+	arrayArgs.push(destinationAcc.value);	
+	if(accountclass =='T5A005'){
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_CLOSE_FUTURE_SAVING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+		data = getDataFromGprsCmd(gprsCmd);	
+		requestMBService(data, true, 0, requestMBServiceFurSavSuccess, requestMBServiceFurSavFail);	
+		
+	}
+    else if (accountclass =='T5A004'){
+        var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_WITHDRAW_FORTUNE"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+        data = getDataFromGprsCmd(gprsCmd);
+        requestMBService(data, true, 0, requestMBServiceFortuneSavSuccess, requestMBServiceFurSavFail);
+    }
+	else {
+		var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_WITHDRAW_eSAVING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+		data = getDataFromGprsCmd(gprsCmd);	
+		requestMBService(data, true, 0, requestMBServiceReviewSuccess, requestMBServiceReviewFail);	
+	}	
+}
+//ngocdt3 them cho Fur-saving
+function requestMBServiceFurSavSuccess(e){
+	//Gen review screen
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_CLOSE_FUTURE_SAVING")))) {		
+		genReviewScreen();		
+	}
+};
+
+function requestMBServiceFurSavFail(e){
+	showAlertText(gprsResp.respContent);
+	//navController.pushToView('account/account-scr', true);
+}
+//END Fur-saving
+function requestMBServiceReviewSuccess(e){
+	//Gen review screen
+	gprsResp = parserJSON(e);
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_WITHDRAW_eSAVING")))) {		
+		setRespObjStore(gprsResp); //store response
+		genReviewScreen();		
+	}
+};
+
+// vanptt tat toan tiet kiem tai loc
+function requestMBServiceFortuneSavSuccess(e){
+    gprsResp = parserJSON(e);
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_WITHDRAW_FORTUNE")))) {
+        setRespObjStore(gprsResp); //store response
+        genReviewScreen();
+    }
+}
+
+function requestMBServiceReviewFail(e){
+	showAlertText(gprsResp.respContent);
+	//navController.pushToView('account/account-scr', true);
+}
+
+/*** GENARATE REVIEW SCREEN ***/
+function genReviewScreen(){
+	var destinationAcc = document.getElementById("destinationAcc").value;		
+	docXml = createXMLDoc();		
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+		tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	//review/reviewinfo/reviewtranstitle
+	//tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('LOAN_AD_CONFIRM_RULE'), docXml, tmpXmlNodeInfo);
+	//toan khoan nhan
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('LOAN_AD_TRANS_TYPE'), docXml, tmpChildNodeAcc);
+    if(gFurSaving.prod_code =='T5A007' || gFurSaving.prod_code =='T5A009'){
+        tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('LIVE_BANK_CLOSE_TITLE'), docXml, tmpChildNodeAcc);
+    }else if(gFurSaving.prod_code =='T5A004'){
+        tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('FORTUNE_CLOSE_TITLE'), docXml, tmpChildNodeAcc);
+    }
+    else{
+        tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('ESAVING_CLOSE_TITLE'), docXml, tmpChildNodeAcc);
+    }
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('ESAVING_CHANGEINFO_TXT_TYPE'), docXml, tmpChildNodeAcc);
+	//for(var k =0; k<gFurSaving.length; k++){
+		if(gFurSaving.prod_code =='T5A005'){
+		tmpChildNode = createXMLNode('transinfocontent',CONST_STR.get('MENU_FUTURE_SAVING'), docXml, tmpChildNodeAcc);
+	} else if (gFurSaving.prod_code =='T5A007' || gFurSaving.prod_code =='T5A009'){
+            tmpChildNode = createXMLNode('transinfocontent',CONST_STR.get('LIVE_BANK_REVIEW_SAVINGTYPE'), docXml, tmpChildNodeAcc);
+    }else if(gFurSaving.prod_code =='T5A004'){
+            tmpChildNode = createXMLNode('transinfocontent',CONST_STR.get('FORTUNE_REVIEW_SAVINGTYPE'), docXml, tmpChildNodeAcc);
+        }
+	else {
+		tmpChildNode = createXMLNode('transinfocontent',CONST_STR.get('ESAVING_REVIEW_SAVINGTYPE'), docXml, tmpChildNodeAcc);
+	}
+		
+	//}
+	//	Loại tiền
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'), docXml, tmpChildNodeAcc);
+	//for(var k =0; k<gFurSaving.length; k++){
+		if(gFurSaving.prod_code =='T5A005'){
+		tmpChildNode = createXMLNode('transinfocontent',  gprsResp.arguments[1], docXml, tmpChildNodeAcc);
+	}
+	else {
+		tmpChildNode = createXMLNode('transinfocontent',  gprsResp.arguments[3], docXml, tmpChildNodeAcc);
+	}
+		
+	//}
+	
+	//so tai khoan tiet kiem
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_ACCOUNT_NO_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', sourceacc, docXml, tmpChildNodeAcc);
+	//to tien goc rut
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_WITHDRAWAL_AMOUNT_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(gprsResp.arguments[2]), docXml, tmpChildNodeAcc);
+	//Số tài khoản nhận tiền
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',CONST_STR.get('ESAVING_BENEFICIARY_ACC') , docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', destinationAcc, docXml, tmpChildNodeAcc);
+	logInfo(docXml);
+	//luu xml trong cache
+	setReviewXmlStore(docXml);
+	
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+	
+}
+// function ReloadPage(){
+// 	navController.pushToView('esaving/esaving-close-scr-new', true,'xsl');
+// }

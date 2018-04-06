@@ -1,0 +1,2013 @@
+/**
+ * Created by TuanNQ1.FSoft
+ * User:
+ * Date: 14/7/14
+ */
+
+var mngPayeeVal;
+var payeeDesc;
+var payeeVal;
+var payeeType;
+var statusAcc;
+var tmpDestinationAcc;
+var tmpDestinationAccName;
+var statusAccNoSelect;
+var conditions = gConditions;
+var flag = false;
+var tempArrGenContact;
+
+
+/*** VIEW LOAD SUCCESS ***/
+var lastClickSwitch;
+function onChangeSwitch(e){
+    var clickTime = new Date().getTime();
+    if (lastClickSwitch && (clickTime - lastClickSwitch) < 100) {
+        return true;
+    }
+    lastClickSwitch = clickTime;
+
+    var inputNode = e.getElementsByTagName('input')[0];
+    if(inputNode) {
+        inputNode.checked = !inputNode.checked;
+    }
+    changeSwitchUI(e);
+
+    if(e.id =="clickChange" && inputNode.checked){
+//        document.getElementById("id.sample.name").value = "";
+        document.getElementById("id.sample").style.display = "";
+        mngPayeeVal=CONST_VAL_PAYEE_NOT_TEMPLATE[1];
+    }else if(e.id == "clickChange" && !inputNode.checked){
+        document.getElementById("id.sample").style.display = "none";
+        mngPayeeVal=CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+    }
+}
+
+function viewBackFromOther() {
+	logInfo('Back from other view');
+	flag = true;
+}
+function viewDidLoadSuccess() {
+    initBottomBar();
+    var transactionVal = document.getElementById('id.topup.srvId');
+    var payment = getURLParam('payment');
+    
+    if (!flag) {
+    	initComboTextAccount();
+    }
+
+    document.getElementById('arrow').style.paddingRight = '1.5px';
+    navController.getActionBar().hideNavHeaderBar();
+
+
+    //check gen form cho lan dau tien
+    if ((statusAccNoSelect == undefined || statusAccNoSelect == false) && transactionVal.value == "" || (transactionVal.value == undefined)) {
+        if(payment == 'pocket')
+        {
+            for (var i=0; i<paymentServices.data.length; i++) {
+                if (paymentServices.data[i].srvGroup == "1" && paymentServices.data[i].srvId == "888") {
+                    if (gUserInfo.lang == "VN") {
+                        document.getElementById("topup.input.transaction").value = paymentServices.data[i].srvName;
+                    }
+                    else {
+                        document.getElementById("topup.input.transaction").value = paymentServices.data[i].srvNameEn;
+                    }
+                    transactionVal.value = paymentServices.data[i].srvId;   
+                }
+            }
+        }
+        else
+        {
+            //set default selection
+            //loai giao dich
+            for (var i=0; i<paymentServices.data.length; i++) {
+                if (paymentServices.data[i].srvGroup == "1") {
+                    if (gUserInfo.lang == "VN") {
+                        document.getElementById("topup.input.transaction").value = paymentServices.data[i].srvName;
+                    }
+                    else {
+                        document.getElementById("topup.input.transaction").value = paymentServices.data[i].srvNameEn;
+                    }
+                    transactionVal.value = paymentServices.data[i].srvId;
+                    break;
+                }
+            }
+        }
+
+        //nha cung cap
+        var srvCode = document.getElementById("id.topup.srvCode");
+        if (transactionVal.value != "") {
+            for (var i=0; i<paymentProviders.data.length; i++) {
+                if (paymentProviders.data[i].srvId == transactionVal.value) {
+                    if (gUserInfo.lang == "VN") {
+                        document.getElementById("topup.input.provider").value = paymentProviders.data[i].prDesc;
+                    } else {
+                        document.getElementById("topup.input.provider").value = paymentProviders.data[i].prDescEn;
+                    }
+                    srvCode.value = paymentProviders.data[i].srvCode;
+//                    setPaymentConfig(srvCode.value);
+                    gpayment=srvCode.value;
+                    document.getElementById("id.topup.prId").value = paymentProviders.data[i].prId;
+                    if (paymentProviders.data[i].srvCode == 'TOPUP_MOBILE')
+                    {
+                        document.getElementById('tr.topup.provider').style.display = 'none';
+                    }
+                    else{
+                        document.getElementById('tr.topup.provider').style.display = '';
+                    }
+                    break;
+                }
+
+            }
+        }
+
+        //ve lai form
+        reDrawRequestField(srvCode.value);
+        if(payment == 'pocket')
+        {
+            var account = getURLParam('account');
+            var amount = getURLParam('amount');
+            var divTrans = document.getElementById('id.topup.trans');
+            var divProvider = document.getElementById('id.topup.provider');
+            var txtAccount = document.getElementById('topup.dynaInput.8001');
+            var txtAmount = document.getElementById('topup.dynaInput.8002');
+            var nodeNumTxt = document.getElementById("trans.amounttotext");
+            var numStr = convertNum2WordWithLang(removeSpecialChar(amount), gUserInfo.lang);
+            divTrans.setAttribute('onclick', '');
+            divProvider.setAttribute('onclick', '');
+            console.log(account);
+            txtAccount.value = account;
+            txtAccount.readOnly = true;
+            txtAmount.value = CurrencyFormatted(removeSpecialChar(amount));
+            txtAmount.readOnly = true;
+            nodeNumTxt.innerHTML = "<h6>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": <b>" + numStr + "</b></h6>";
+        }
+
+    } else if (statusAccNoSelect && currentPage == "paymentxsl/payment-topup-create-scr") {
+
+        if (tmpDestinationAcc != undefined && tmpDestinationAcc != '')
+        {
+            document.getElementById(tempDynaId).value = tmpDestinationAcc;
+        }
+
+        var serviceCode = document.getElementById("id.topup.srvCode").value;
+        //collect dynamic request field
+        for (var i= 0; i < paymentRequestFields.data.length; i++) {
+            if (paymentRequestFields.data[i].srvCode == serviceCode) {
+                var inputFieldId = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id);
+                var msgFieldId = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id + ".msgFieldId");
+                // TEN NGUOI THU HUONG ID = 0
+                if (paymentRequestFields.data[i].id == 0) {
+                    msgFieldId.value = tmpDestinationAccName;
+                    inputFieldId.value = tmpDestinationAccName;
+                }
+            }
+        }
+
+
+
+            // check
+////        var mngPayeeVal = document.getElementById("mng.payee.val");
+//        var payeeDesc = document.getElementById("mng.payee");
+//        var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+//        var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+//        if (payeeType != '')
+//        {
+//            mngPayeeVal.value = payeeType;
+//            var check = false;
+//            for (var i = 0; i < tmpArray2.length; i++)
+//            {
+//                if (tmpArray2[i] == payeeType)
+//                {
+//                    payeeDesc.value = tmpArray1[i];
+//                    check = true;
+//                }
+//            }
+////            if (payeeType == CONST_VAL_PAYEE_NOT_TEMPLATE[0])
+////            {
+////                payeeDesc.setAttribute('disabled', '');
+////                payeeDesc.setAttribute('onclick', '');
+////            }
+////            else{
+////                payeeDesc.setAttribute('disabled', '');
+////                payeeDesc.removeAttribute('disabled');
+////                payeeDesc.setAttribute('onclick', 'showInputMNG()');
+////            }
+//        }
+//        else
+//        {
+////            //mngPayeeVal = CONST_VAL_PAYEE_NOT_TEMPLATE[0] ;
+////            //payeeDesc.value = tmpArray1[0];
+////            mngPayeeVal = CONST_VAL_PAYEE_NOT_TEMPLATE[1] ;
+////            payeeDesc.value = tmpArray1[1];
+////            payeeDesc.setAttribute('disabled', '');
+////            payeeDesc.removeAttribute('disabled');
+////            payeeDesc.setAttribute('onclick', 'showInputMNG()');
+//        }
+
+        setTimeout(function(e) {
+            //reset
+            gPayeeCode = "";
+            tmpDestinationAcc = "";
+            statusAccNoSelect = false;
+        }, 1000); //fix double click
+
+    }
+    genSequenceForm();
+    actionbar.addListSequence("paymentxsl/payment-topup-create-scr");
+
+}
+
+
+
+
+var tempDynaId;
+var gpayment;
+var storePayee;
+//gen sequence form
+function genSequenceForm() {
+    //get sequence form xsl
+    var tmpXslDoc = getCachePageXsl("sequenceform");
+    //create xml
+    //var tmpStepNo = 401;
+    var tmpStepNo = 301;
+    setSequenceFormIdx(tmpStepNo);
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+    var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+    //gen html string
+    genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+        var tmpNode = document.getElementById('seqForm');
+        tmpNode.innerHTML = oStr;
+    });
+}
+function showAccountSelection() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    var srvId = document.getElementById("id.topup.srvId").value;
+    for (var i=0; i<gUserInfo.accountList.length; i++) {
+        var tmpAcc = gUserInfo.accountList[i];
+        if ((tmpAcc.nodebit == 'Y') || ((srvId=="107") && ((tmpAcc.accClass == 'T6A001') || (tmpAcc.accClass == 'T6A000')
+			|| (tmpAcc.accClass == 'T5A000') || (tmpAcc.accClass == 'T5A001')
+			|| (tmpAcc.accClass == 'SFGLOC') || (tmpAcc.accClass == 'SFGNDJ')
+			|| (tmpAcc.accClass == 'SFGPHC') || (tmpAcc.accClass == 'SFGPHT')
+			|| (tmpAcc.accClass == 'SFGSJC') || (tmpAcc.accClass == 'SFGTAI')
+			|| (tmpAcc.accClass == 'SKCSJC') || (tmpAcc.accClass == 'SKGLOC')
+			|| (tmpAcc.accClass == 'SKGNDJ') || (tmpAcc.accClass == 'SKGPHC')
+			|| (tmpAcc.accClass == 'SKGPHT') || (tmpAcc.accClass == 'SKGSJC')
+			|| (tmpAcc.accClass == 'SKGTAI') || (tmpAcc.accClass == 'STGSJC') || (tmpAcc.udfFieldVal != '' && tmpAcc.udfFieldVal != '6')))) {
+        }
+        else {
+            tmpArray1.push(tmpAcc.accountNumber);
+            tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable)+' '+tmpAcc.currency);
+        }
+    }
+
+    document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+    showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+
+}
+
+
+
+function showInputAccScreen() {
+    document.addEventListener("evtLoadPageSuccess", loadLocalTransSuccess, false); // event using when load page success
+
+    navController.pushToView('com-input-account', true);
+    gHistoryCode = CONST_HISTORY_CODE[1];
+    document.addEventListener("evtInputAccount", handleInputAcc, false);
+}
+
+function showProviders() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    var transactionVal = document.getElementById('id.topup.srvId');
+
+    if (transactionVal.value != "") {
+        for (var i=0; i<paymentProviders.data.length; i++) {
+            if (paymentProviders.data[i].srvId == transactionVal.value) {
+                if (gUserInfo.lang == "VN") {
+                    tmpArray1.push(paymentProviders.data[i].prDesc);
+                } else {
+                    tmpArray1.push(paymentProviders.data[i].prDescEn);
+                }
+                tmpArray2.push(paymentProviders.data[i].srvCode+ "#" +paymentProviders.data[i].prId);
+            }
+        }
+        document.addEventListener("evtSelectionDialog", handleProvider, false);
+        document.addEventListener("evtSelectionDialogClose", handleProviderClose, false);
+        showDialogList(CONST_STR.get('TOPUP_DIALOG_TITLE_PROVIDER'), tmpArray1, tmpArray2, false);
+    }
+}
+
+
+//event listener: input account
+var statusInputTopupNumber = false; //using check input account ready
+
+//event: selectec account number
+function handleProvider(e) {
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialog", handleProvider, false);
+
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var provider = document.getElementById('topup.input.provider');
+            if (provider.nodeName == "INPUT") {
+                provider.value = e.selectedValue1;
+            }
+            else {
+                provider.innerHTML = e.selectedValue1;
+            }
+
+            if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+                var providerID = document.getElementById('id.topup.prId');
+                var serviceCode = document.getElementById('id.topup.srvCode');
+                var selectedVal = e.selectedValue2.split('#');
+
+                providerID.value = selectedVal[1];
+                serviceCode.value = selectedVal[0];
+
+                reDrawRequestField(selectedVal[0]);
+            }
+        }
+
+    }
+}
+
+function handleProviderClose(e) {
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleProviderClose, false);
+        document.removeEventListener("evtSelectionDialog", handleProvider, false);
+    }
+}
+
+function showReqCombo(id, title) {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+    tempDynaId = id;
+
+    for (var i=0; i<paymentComboFields.data.length; i++) {
+        if (paymentComboFields.data[i].mapId == id) {
+            if (gUserInfo.lang == "VN") {
+                tmpArray1.push(paymentComboFields.data[i].fieldDesc);
+            } else {
+                tmpArray1.push(paymentComboFields.data[i].fieldDescEn);
+            }
+            tmpArray2.push(paymentComboFields.data[i].fieldVal);
+        }
+    }
+    document.addEventListener("evtSelectionDialog", handleReqCombo, false);
+    document.addEventListener("evtSelectionDialogClose", handleReqComboClose, false);
+    showDialogList(title, tmpArray1, tmpArray2, false);
+}
+
+function handleReqCombo(e)
+{
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialog", handleReqCombo, false);
+
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var reqCombo = document.getElementById('topup.dynaInput.' + tempDynaId);
+
+            if (reqCombo.nodeName == "INPUT") {
+                reqCombo.value = e.selectedValue1;
+            }
+            else {
+                reqCombo.innerHTML = e.selectedValue1;
+            }
+
+            var reqComboVal = document.getElementById('topup.dynaInput.' + tempDynaId + '.val');
+
+            if (reqComboVal.nodeName == "INPUT") {
+                reqComboVal.value = e.selectedValue2;
+            }
+            else {
+                reqComboVal.innerHTML = e.selectedValue2;
+            }
+        }
+
+    }
+
+    tempDynaId = null;
+}
+
+
+function handleReqComboClose(e) {
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleReqComboClose, false);
+        document.removeEventListener("evtSelectionDialog", handleReqCombo, false);
+        tempDynaId = null;
+    }
+}
+
+function showTransactions() {
+    var tmpArray1 = [];
+    var tmpArray2 = [];
+
+    for (var i=0; i<paymentServices.data.length; i++) {
+        if (paymentServices.data[i].srvGroup == "1") {
+            if (gUserInfo.lang == "VN") {
+                tmpArray1.push(paymentServices.data[i].srvName);
+            }
+            else {
+                tmpArray1.push(paymentServices.data[i].srvNameEn);
+            }
+            tmpArray2.push(paymentServices.data[i].srvId);
+        }
+    }
+    document.addEventListener("evtSelectionDialog", handleTransaction, false);
+    document.addEventListener("evtSelectionDialogClose", handleTransactionClose, false);
+    showDialogList(CONST_STR.get('TOPUP_DIALOG_TITLE_TRANSACTION'), tmpArray1, tmpArray2, false);
+}
+
+
+//Format currency and pronounce to Vietnamese
+
+function handleInputAmount (e, des) {
+    var trowConvert = document.getElementById('row_convert');
+    formatCurrency(e, des);
+    var numStr = convertNum2WordWithLang(removeSpecialChar(des.value), gUserInfo.lang);//Lay ra chuoi doc so tien
+    if(numStr){
+        //DocTienBangChu(removeSpecialChar(des.value)); //VIETNAMESE
+        //var numStr = convertNumToWord(removeSpecialChar(des.value)); //ENGLISH
+        var nodeNumTxt = document.getElementById("trans.amounttotext");
+        nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + numStr + "</div>";
+        trowConvert.style.display = "";
+    }else{
+        trowConvert.style.display = 'none';
+    }
+}
+
+//Send request
+var gprsResp = new GprsRespObj("","","","");
+
+function sendJSONRequest() {
+    //dadadasdas
+    // collect the form data while iterating over the inputs
+    var data = {};
+    var arrayArgs = new Array();
+    var arrayReqFields = new Array();
+
+//    mngPayeeVal = "N";
+    var same=document.getElementById("topup.dynaInput.0");
+    var checkpayee = document.getElementById('clickChange').getElementsByTagName('input')[0];
+    if(checkpayee.checked){
+        mngPayeeVal= CONST_VAL_PAYEE_NOT_TEMPLATE[1];
+    }else{
+        mngPayeeVal= CONST_VAL_PAYEE_NOT_TEMPLATE[0];
+    }
+    payeeDesc = "";
+    payeeVal = "";
+
+    var serviceId = document.getElementById("id.topup.srvId").value;
+
+    if (serviceId == undefined || serviceId == "" || serviceId == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_TRANS_TYPE_TITLE') + '"');
+        return;
+    }
+
+    var sourceAcc = document.getElementById("id.sourceAcc").value;
+
+    // Nap vi tieu vat
+    // CuongPV2
+    if (serviceId=="888")
+    {
+        var destinationAcc = document.getElementById("topup.dynaInput.8001").value;//tai khoan nhan
+        var amountTrans = document.getElementById("topup.dynaInput.8002").value;
+        
+        var contentTrans = "QPAY Nap tien tieu vat";//Noi dung
+        var amount = amountTrans.replace(/[^0-9]/g, '')//removeSpecialChar(amountTrans).value;
+
+        var tmpStatus = validate(sourceAcc, destinationAcc, removeSpecialChar(amountTrans), contentTrans, "");
+        if(!tmpStatus) return;
+
+        arrayArgs.push(sourceAcc);
+        arrayArgs.push(destinationAcc);
+        arrayArgs.push(amount);
+        arrayArgs.push(encodeURIComponent(contentTrans));
+        //if (payee == "N")
+        //  arrayArgs.push("N"); //
+        //else
+        //  arrayArgs.push("TH"+"#"+sampleName); //
+        var gprsCmd;
+        if (sourceAcc.substring(0, 8).indexOf(destinationAcc.substring(0, 8)) != -1) {
+            gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_LOCAL_TRANSFER_CUSTOMER"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+        }
+        else
+        {
+            arrayArgs.push("N");
+            gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_LOCAL_TRANSFER"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+        }
+
+        data = getDataFromGprsCmd(gprsCmd);
+
+        requestMBService(data, true, 0, requestMBServiceSuccess888, requestMBServiceFail888);
+
+        //update account change after success
+        updateAccountInfoIfNeed(sourceAcc, CONSTANTS.get("CMD_TYPE_LOCAL_TRANSFER"));
+
+        return;
+    }
+    var sourceAcc = document.getElementById("id.sourceAcc").value;
+    if (sourceAcc == undefined || sourceAcc == "" || sourceAcc == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_ACC_TITLE') + '"');
+        return;
+    }
+
+    var balance = comboEl.accountBalance.split(',').join('');
+    if (balance == undefined || balance == "" || balance == "0")
+    {
+        showAlertText(CONST_STR.get('TOPUP_EXCEED_AVAIL_BALANCE'));
+        return;
+    }
+
+    if (sourceAcc == undefined || sourceAcc == "" || sourceAcc == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_ACC_TITLE') + '"');
+        return;
+    }
+
+    var providerId = document.getElementById("id.topup.prId").value;
+
+    if (providerId == undefined || providerId == "" || providerId == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_PROVIDER_TITLE') + '"');
+        return;
+    }
+
+    var serviceCode = document.getElementById("id.topup.srvCode").value;
+
+    if (serviceCode == undefined || serviceCode == "" || serviceCode == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_PROVIDER_TITLE') + '"');
+        return;
+    }
+
+    //collect dynamic request field
+    for (var i= 0; i < paymentRequestFields.data.length; i++) {
+        if (paymentRequestFields.data[i].srvCode == serviceCode && paymentRequestFields.data[i].inputType != 'LABEL') {
+
+            var msgFieldId = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id + ".msgFieldId").value;
+
+            var value = "";
+            if (paymentRequestFields.data[i].inputType == "COMBO") {
+                value = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id + ".val").value;
+
+                if (value == undefined || value == "" || value == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')) {
+                    if (gUserInfo.lang == "VN") {
+                        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDesc + '"');
+                    } else {
+                        showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDescEn + '"');
+                    }
+                    return;
+                }
+            } else  if(paymentRequestFields.data[i].inputType != "LABEL"){
+                value = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id).value;
+                var same2=document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id); //anhntt lay id
+                 if(same!=same2){
+                     if (value == undefined || value == "" || value == CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER')) {
+                         if (gUserInfo.lang == "VN") {
+                             showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDesc + '"');
+                         } else {
+                             showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDescEn + '"');
+                         }
+                         return;
+                     }
+                 }else if(same=same2&&checkpayee.checked&&(same.value==""||same.value==undefined)){
+
+                     if (gUserInfo.lang == "VN") {
+                         showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDesc + '"');
+                     } else {
+                         showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + paymentRequestFields.data[i].fieldDescEn + '"');
+                     }
+                     return;
+                 }
+
+                if (paymentRequestFields.data[i].inputFormat =="PHONE") {
+                    if(!validatePhoneNumber(value)){
+                        return;
+                    }
+                }
+            }
+
+
+
+            var isAmount = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id + ".isAmount").value;
+
+            if (isAmount == "1"){
+                value = value.replace(/,/g, "");
+                if (isNaN(value)) {
+                    showAlertText(CONST_STR.get('TOPUP_INVALID_AMOUNT'));
+                    return;
+                } else {
+                    if (parseInt(balance) < parseInt(value))
+                    {
+                        showAlertText(CONST_STR.get('TOPUP_EXCEED_AVAIL_BALANCE'));
+                        return;
+                    }
+                }
+            }
+
+            var dfltVal = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id + ".dfltVal").value;
+
+            //field input binh thuong
+            if (paymentRequestFields.data[i].id != 0) {
+                var isPayee = document.getElementById("topup.dynaInput." + paymentRequestFields.data[i].id + ".isPayee").value;
+
+                if (isPayee == "1" ) {
+                    payeeVal = value;
+                }
+
+                arrayReqFields.push(msgFieldId + "#" + value + "#" + isAmount + "#" + dfltVal);
+
+                //field nhap ten nguoi thu huong
+            } else {
+                if(checkpayee.checked){
+                   payeeDesc = value;
+                }else if(!checkpayee.checked){
+                    payeeDesc=="";
+                }
+            }
+        }
+    }
+
+    if (storePayee == 1) {
+
+            if (mngPayeeVal == undefined || mngPayeeVal == "" || mngPayeeVal == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER'))
+            {
+                showAlertText(CONST_STR.get('COM_TXT_INPUT_NOT_EMPTY') + ' "' + CONST_STR.get('TOPUP_MGN_PAYEE') + '"');
+                return;
+            }
+    }
+
+	//CuongPV2 
+	// Them validate email 
+    if (serviceCode == "401-MM")
+    {
+    	var email = document.getElementById('topup.dynaInput.4121').value;
+    	if (email == '' || email == null || email == undefined) {
+    		showAlertText(CONST_STR.get('CARD_ISSUANCE_EMAIL_ERR_BLANK'));
+    		return;
+    	}
+
+    	var MAIL = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    	if (!MAIL.test(email)) {
+    		showAlertText(CONST_STR.get('CARD_ISSUANCE_EMAIL_FORM'));
+    		return;
+    	}
+    }
+
+    //push into arrayArgs
+    arrayArgs.push(7 + arrayReqFields.length);
+    arrayArgs.push(encodeContentData(mngPayeeVal));
+    arrayArgs.push(encodeContentData(payeeVal));
+    arrayArgs.push(encodeContentData(payeeDesc));
+    arrayArgs.push(serviceCode);
+    arrayArgs.push(sourceAcc);
+    arrayArgs.push(encodeContentData("1#" + serviceId + "#" + providerId));
+
+    for (var i= 0; i < arrayReqFields.length; i++) {
+        var temp = arrayReqFields[i];
+        if(temp!=undefined){
+              
+              arrayArgs.push(encodeContentData(arrayReqFields[i]));
+        }
+        else{
+          arrayArgs.push(arrayReqFields[i]);  
+        }
+        
+    }
+
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_PAYMENT"), "", "", gUserInfo.lang , gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+
+    requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+}
+
+//CuongPV2
+function validate(inVal1, inVal2, inVal3, inVal4, inVal5) {
+    if (!validateFunc(inVal1, conditions["account"])) {
+        showAlertText(CONST_STR.get('ERR_INPUT_NO_ACC'));
+        return false;
+    }
+
+    if(inVal2 == CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER'))
+    {
+        showAlertText(CONST_STR.get('ERR_EMPTY_DES_ACC_INPUT'));
+        return false;
+    }
+    else if (!validateFunc(inVal2, conditions["account"])) {
+        //showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_ACC'));
+        showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_DES_ACC'));
+        return false;
+    }
+    else if(tmpDestinationAccName == '')
+    {
+        showAlertText(CONST_STR.get('ERR_INPUT_FORMAT_DES_ACC'));
+        return false;
+    }
+    // Check số tiền nạp tối thiểu không được nhỏ hơn 100 VND
+    var isAmount = document.getElementById("topup.dynaInput.8002").value.replace(/,/g, "");
+    if (parseFloat(isAmount) < 100000) {
+        showAlertText(CONST_STR.get('QPAY_TRANS_AMOUNT_ERR'));
+        return false;
+    }
+
+    if (!validateFunc(inVal3, conditions["amount"])) {
+        showAlertText(CONST_STR.get('ERR_INPUT_NO_AMOUNT'));
+        return false;
+    }
+    if (!validateFunc(inVal4, conditions["content"])) {
+        showAlertText(CONST_STR.get('ERR_INPUT_NO_CONTENT'));
+        return false;
+    }
+    return true;
+}
+
+//event listener: http request success
+function requestMBServiceSuccess888(e){
+    gprsResp = parserJSON(e);
+
+    //BYPASS
+    //gprsResp.respCode = RESP.get('COM_OVER_LIMIT');
+    //BYPASS END
+    //setRespObjStore(gprsResp); //store response
+    if ((checkResponseCodeSuccess(gprsResp.respCode) || gprsResp.respCode == "1013" || gprsResp.respCode == CONSTANTS.get("COM_FINGERPRINT_OVER_LIMIT")) && ((parseInt(gprsResp.responseType) == parseInt("70")) ||(parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LOCAL_TRANSFER"))))) {
+        setRespObjStore(gprsResp); //store response     
+        genReviewScreen888();
+    } else if (gprsResp.respCode == '2003' && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_LOCAL_TRANSFER")))) {
+        setRespObjStore(gprsResp); //store response     
+        genCacheReviewScreen888();
+        navController.pushToView("com-verify-password", true);
+
+    }
+
+};
+
+//event listener: http request fail
+function requestMBServiceFail888(){
+
+};
+
+/*** GENARATE REVIEW SCREEN ***/
+function genReviewScreen888() {
+    //var nodeReviewInfo = document.getElementById("panelContent");
+    var htmlReviewInfo = "";
+
+    var sourceAcc = document.getElementById("id.sourceAcc");
+    var destinationAcc = document.getElementById("topup.dynaInput.8001");
+    var amountTrans = document.getElementById("topup.dynaInput.8002");
+    var contentTrans = "QPAY-Nap tien tieu vat";    
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlRootNode = createXMLNode('review', '', docXml);
+    //review/reviewtitle //screen title
+    var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+
+    //review/reviewinfo/reviewtranstitle
+    var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+    var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+
+    //review/reviewinfo/transinfo
+    //trans type
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('QPAY_TRANS_TYPE'), docXml, tmpChildNodeAcc);
+    //source account name
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_TITLE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', sourceAcc.value, docXml, tmpChildNodeAcc);
+
+    var balance = 0;
+    //source account balance
+    for (var idx=0; idx<gUserInfo.accountList.length; idx++) {
+        var tmpAcc = new AccountObj();
+        tmpAcc = gUserInfo.accountList[idx];
+        if(tmpAcc.accountNumber == sourceAcc.value) {
+            tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+            tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE'), docXml, tmpChildNodeAcc);
+            tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(tmpAcc.balanceAvailable,' VND'), docXml, tmpChildNodeAcc);
+            balance = tmpAcc.balanceAvailable;
+            tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+            break;
+        }
+    }
+
+    //review/reviewinfo/reviewtranstitle
+    tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+    tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+
+    //review/reviewinfo/transinfo
+    //destination account
+    var tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ACCOUNT_ACC_NO_TITLE'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', destinationAcc.value, docXml, tmpChildNodeTrans);
+
+    //amount
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('QPAY_TRANS_AMOUNT'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', amountTrans.value + ' VND', docXml, tmpChildNodeTrans);
+    var amount = removeSpecialChar(amountTrans.value);
+    var balanceCont = balance - amount;
+
+    //fee
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_FEE'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', '0 VND', docXml, tmpChildNodeTrans);
+
+    //balance cont
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_BALANCE_CONT'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(balanceCont,' VND'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeTrans);
+
+    //content
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_CONTENT'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', contentTrans, docXml, tmpChildNodeTrans);
+
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd
+    }
+    if(mm<10){
+        mm='0'+mm
+    }
+    var today = dd+'/'+mm+'/'+yyyy;
+
+    //execute date
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_DATE_TRANS'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent',today, docXml, tmpChildNodeTrans);
+    
+    //var xmlAsString = new XMLSerializer().serializeToString( docXml );
+    logInfo(docXml);
+    setReviewXmlStore(docXml);
+
+    navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+
+//TUANNM5 update bo sung cho fingerprint/pin code
+function genCacheReviewScreen888() {
+    //var nodeReviewInfo = document.getElementById("panelContent");
+    var htmlReviewInfo = "";
+
+    var sourceAcc = document.getElementById("id.sourceAcc");
+    var destinationAcc = document.getElementById("topup.dynaInput.8001");
+    var amountTrans = document.getElementById("topup.dynaInput.8002");
+    var contentTrans = "QPAY-Nap tien tieu vat";    
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlRootNode = createXMLNode('review', '', docXml);
+    //review/reviewtitle //screen title
+    var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+
+    //review/reviewinfo/reviewtranstitle
+    var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+    var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+
+    //review/reviewinfo/transinfo
+    //trans type
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_TYPE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('QPAY_TRANS_TYPE'), docXml, tmpChildNodeAcc);
+    //source account name
+    var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_TITLE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', sourceAcc.value, docXml, tmpChildNodeAcc);
+
+    var balance = 0;
+    //source account balance
+    for (var idx=0; idx<gUserInfo.accountList.length; idx++) {
+        var tmpAcc = new AccountObj();
+        tmpAcc = gUserInfo.accountList[idx];
+        if(tmpAcc.accountNumber == sourceAcc.value) {
+            tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+            tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE'), docXml, tmpChildNodeAcc);
+            tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(tmpAcc.balanceAvailable,' VND'), docXml, tmpChildNodeAcc);
+            balance = tmpAcc.balanceAvailable;
+            tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+            break;
+        }
+    }
+
+    //review/reviewinfo/reviewtranstitle
+    tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+    tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+
+    //review/reviewinfo/transinfo
+    //destination account
+    var tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ACCOUNT_ACC_NO_TITLE'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', destinationAcc.value, docXml, tmpChildNodeTrans);
+
+    //amount
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('QPAY_TRANS_AMOUNT'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', amountTrans.value + ' VND', docXml, tmpChildNodeTrans);
+    var amount = removeSpecialChar(amountTrans.value);
+    var balanceCont = balance - amount;
+
+    //fee
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_FEE'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', '0 VND', docXml, tmpChildNodeTrans);
+
+    //balance cont
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_BALANCE_CONT'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrencyWithSymbol(balanceCont,' VND'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeTrans);
+
+    //content
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_ACC_CONTENT'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent', contentTrans, docXml, tmpChildNodeTrans);
+
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+
+    var yyyy = today.getFullYear();
+    if(dd<10){
+        dd='0'+dd
+    }
+    if(mm<10){
+        mm='0'+mm
+    }
+    var today = dd+'/'+mm+'/'+yyyy;
+
+    //execute date
+    tmpChildNodeTrans = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TRANS_LOCAL_DATE_TRANS'), docXml, tmpChildNodeTrans);
+    tmpChildNode = createXMLNode('transinfocontent',today, docXml, tmpChildNodeTrans);
+
+    logInfo(docXml);
+    setReviewXmlStore(docXml);
+}
+
+
+//event listener: http request success
+function requestMBServiceSuccess(e){
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp);
+
+    if ((gprsResp.respCode == '0' || gprsResp.respCode == '1013'|| gprsResp.respCode == '1042') &&
+        (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_PAYMENT"))) &&
+        gprsResp.arguments != undefined) {
+
+        genReviewScreen(gprsResp.arguments);
+
+    } else if ((gprsResp.respCode == '2003') &&
+        (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_PAYMENT"))) &&
+        gprsResp.arguments != undefined) {
+
+        genCacheReviewScreen(gprsResp.arguments);
+        navController.pushToView("com-verify-password", true);
+    }
+
+    //else {
+    //  showAlertText(CONST_STR.get('TOPUP_SERVICE_ERROR_MSG'));
+    //}
+};
+
+//event listener: http request fail
+function requestMBServiceFail(){
+    /*if ((e.type == "evtHttpFail") && (currentPage == "paymentxsl/payment-topup-create-scr")) {
+        document.removeEventListener("evtHttpFail", requestMBServiceFail, false);
+        //alert("Http request fail!");
+    }*/
+};
+
+
+//event: selectect dialog list
+
+function handleSelectionAccountList(e) {
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        handleSelectionAccountListClose();
+        var accountNumber = e.selectedValue1;
+        var accountBalance = e.selectedValue2;
+        comboEl.refresh({
+            accountNumber : accountNumber,
+            accountBalance : accountBalance
+        });
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var tagAccNo = document.getElementById("id.sourceAcc");
+            if (tagAccNo.nodeName == "INPUT") {
+                tagAccNo.value = e.selectedValue1;
+            }
+            else {
+                tagAccNo.innerHTML = e.selectedValue1;
+            }
+        }
+        var nodeAccBal = document.getElementById("payment.sourceaccoutbalance");
+        if (e.selectedValue2 != undefined) {
+            nodeAccBal.innerHTML = "<div class='availblstyle' id='id.balance'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + "VND</div>";
+            //            var balance = document.getElementById("id.balance");
+            //            balance.value = removeSpecialChar(e.selectedValue2.replace("VND","").trim());
+        }
+    }
+}
+
+
+
+function handleSelectionAccountListClose(e) {
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+        document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+    }
+}
+
+//event listener: input account
+function handleInputAcc(e) {
+    document.removeEventListener("evtInputAccount", handleInputAcc, false);
+    //e.inputValue
+    statusInputAcc = true;
+}
+function handleTransaction(e)
+{
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialog", handleTransaction, false);
+
+        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+            var transaction = document.getElementById('topup.input.transaction');
+
+            if (transaction.nodeName == "INPUT") {
+                transaction.value = e.selectedValue1;
+            }
+            else {
+                transaction.innerHTML = e.selectedValue1;
+            }
+
+            var transactionVal = document.getElementById('id.topup.srvId');
+
+            if (transactionVal.nodeName == "INPUT") {
+                transactionVal.value = e.selectedValue2;
+            }
+            else {
+                transactionVal.innerHTML = e.selectedValue2;
+            }
+            //reset value of providers
+            var provider = document.getElementById('topup.input.provider');
+            var srvCode = document.getElementById("id.topup.srvCode");
+
+            if (transactionVal.value != "") {
+                for (var i=0; i<paymentProviders.data.length; i++) {
+                    if (paymentProviders.data[i].srvId == transactionVal.value) {
+                        if (gUserInfo.lang == "VN") {
+                            provider.value = paymentProviders.data[i].prDesc;
+                        } else {
+                            provider.value = paymentProviders.data[i].prDescEn;
+                        }
+                        srvCode.value = paymentProviders.data[i].srvCode;
+//                        setPaymentConfig(srvCode.value);
+                        gpayment=srvCode.value;
+                        if (paymentProviders.data[i].srvCode == 'TOPUP_MOBILE')
+                        {
+                            document.getElementById('tr.topup.provider').style.display = 'none';
+                        }
+                        else{
+                            document.getElementById('tr.topup.provider').style.display = '';
+                        }
+                        document.getElementById("id.topup.prId").value = paymentProviders.data[i].prId;
+                        break;
+                    }
+                }
+            }
+
+            reDrawRequestField(srvCode.value);
+            initComboTextAccount();
+        }
+
+    }
+}
+
+function reDrawRequestField(id) {
+    var dynamicTable = document.getElementById("dynamic-topup-table");
+    var rowId = 1;
+    var tRow;
+    var tData;
+    var stringHTML = "";
+
+    if (dynamicTable != null && dynamicTable != undefined) {
+        var trowConvert = document.getElementById('row_convert');
+
+        for (var i= 0; i < dynamicTable.rows.length; i++) {
+            if (dynamicTable.rows[i].id.indexOf("row_convert") != -1) {
+                dynamicTable.deleteRow(i);
+                i--;
+            }
+        }
+
+        /*
+        if (dynamicTable.hasChildNodes() && trowConvert != undefined)
+        {
+            try{
+                dynamicTable.deleteRow(trowConvert);
+            }catch(e)
+            {
+            }
+        }
+        */
+
+        //delete old drawn contents
+        for (var i= 0; i < dynamicTable.rows.length; i++) {
+            if (dynamicTable.rows[i].id.indexOf("dynaRow.") != -1) {
+                dynamicTable.deleteRow(i);
+                i--;
+            }
+        }
+        //draw new dynamic contents
+        if (id != null) {
+
+            var transVal = document.getElementById('id.topup.srvId').value;
+            storePayee = 0;
+            //check if this service need store payee
+            for (var i= 0; i < paymentServices.data.length; i++) {
+                if (paymentServices.data[i].srvId == transVal) {
+                    storePayee = paymentServices.data[i].storePayee;
+                    break;
+                }
+            }
+
+
+            for (var i= 0; i < paymentRequestFields.data.length; i++) {
+                if (paymentRequestFields.data[i].srvCode == id) {
+                    var isAmount = false;
+                    tRow = document.createElement('TR');
+                    tRow.id = "dynaRow." + rowId;
+                    rowId++;
+
+                    tData = document.createElement('TD');
+                    tData.setAttribute("colspan",2);
+                    tData.align = "center";
+                    tData.vAlign = "middle";
+                    tData.className = "td-text";
+
+                    stringHTML = "";
+
+                    tDiv = document.createElement('DIV');
+                    tInput = document.createElement('INPUT');
+
+                    if (paymentRequestFields.data[i].inputType == "COMBO") {
+                        //                      <tr>
+                        //                        <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group" onclick="showTransactions();"> <span class="input-group-addon">TOPUP_TRANS_TYPE_TITLE</span>
+                        //                            <input type="button" id="topup.input.transaction" class="form-control form-control-righttext" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="COM_TXT_SELECTION_PLACEHOLDER" />
+                        //                            <span class="icon-movenext input-group-addon input-group-symbol"></span>
+                        //                          </div></td>
+                        //                      </tr>
+
+                        var reqComboId = paymentRequestFields.data[i].id;
+                        var fieldDesc = gUserInfo.lang == "VN" ? paymentRequestFields.data[i].fieldDesc : paymentRequestFields.data[i].fieldDescEn;
+                        var fieldDescTitle = CONST_STR.get('TOPUP_DIALOG_TITLE_SELECT') + " " + fieldDesc.toLowerCase();
+                        var inputBtnId = "topup.dynaInput." + paymentRequestFields.data[i].id;
+                        var placeHolder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+                        var inputValue = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+                        var fieldVal = "";
+
+                        tempDynaId = reqComboId;
+                        for (var k=0; k<paymentComboFields.data.length; k++) {
+                            if (paymentComboFields.data[k].mapId == reqComboId) {
+                                if (gUserInfo.lang == "VN") {
+                                    inputValue = paymentComboFields.data[k].fieldDesc;
+                                } else {
+                                    inputValue = paymentComboFields.data[k].fieldDescEn;
+                                }
+                                fieldVal = paymentComboFields.data[k].fieldVal;
+                                break;
+                            }
+                        }
+
+                        stringHTML = "<div class='input-group' onclick='showReqCombo(" + reqComboId +", &#39;" + fieldDescTitle + "&#39;);'> <span class='input-group-addon' >" + fieldDesc + "</span>" +
+                                "<input type='button' id='" + inputBtnId + "' class='form-control form-control-righttext' placeholder='" + placeHolder + "' value='" + inputValue + "' />" +
+                                "<span class='icon-movenext input-group-addon input-group-symbol'></span>" +
+                                "<input type='hidden' id='" + inputBtnId + ".val' value='" + fieldVal + "'/>" +
+                                "<input type='hidden' id='" + inputBtnId + ".msgFieldId' value='" + paymentRequestFields.data[i].msgFieldId +"'/>" +
+                                "<input type='hidden' id='" + inputBtnId + ".isAmount' value='" + paymentRequestFields.data[i].isAmount +"'/>" +
+                                "<input type='hidden' id='" + inputBtnId + ".dfltVal' value='" + paymentRequestFields.data[i].dfltVal +"'/>" +
+                                "<input type='hidden' id='" + inputBtnId + ".isPayee' value='" + paymentRequestFields.data[i].isPayee +"'/>" +
+                                "</div>";
+
+                        tData.innerHTML = stringHTML;
+                        tRow.appendChild(tData);
+
+                        dynamicTable.appendChild(tRow);
+                    }
+                    else if (paymentRequestFields.data[i].inputType == "TEXT") {
+                        var fieldDesc = gUserInfo.lang == "VN" ? paymentRequestFields.data[i].fieldDesc : paymentRequestFields.data[i].fieldDescEn;
+                        var inputId = "topup.dynaInput." + paymentRequestFields.data[i].id;
+                        var fieldType = paymentRequestFields.data[i].fieldType == "NUMBER" ? "tel" : "text";
+                        var placeHolder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+                        var ip = CONST_STR.get('INPUT_MONEY');
+                        var vnd="VND";
+                        var value = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+
+                        if (paymentRequestFields.data[i].isPayee == 1 && storePayee == 1) {
+                            stringHTML = "<div class='input-group'> <span class='input-group-addon'>" + fieldDesc + "</span> " +
+                                    "<input id='" + inputId + "' type='" + fieldType + "'  class='form-control form-control-righttext-datepicker' style='padding-right:1px;' placeholder='" + placeHolder + "' maxlength='" + paymentRequestFields.data[i].fieldLength + "'/>" +
+                                    //"<span class='icon-movenext input-group-addon input-group-symbol'></span>" +
+//                                   "<span  onclick='showPayeePage(&#39;" + i + "&#39;,&#39;" + inputId + "&#39;, &#39;" + paymentRequestFields.data[i].srvCode + "&#39;);' class='tooltip icon-book input-group-addon-datepicker input-group-symbol-datepicker' style='cursor:pointer;'> <span>"+CONST_STR.get('TRANSFER_REMITTANCE_SAVE_BENEFIC1')+"</span></span>"+
+//                                    "<span onclick='showPayeePage(&#39;" + i + "&#39;, &#39;" + inputId + "&#39;, &#39;" + paymentRequestFields.data[i].srvCode + "&#39;);'  id='span.trans.target'><a><u><span style='float:right;'>"+CONST_STR.get('TRANS_BENEFIC_HYPERLINK')+"</span></u></a></span>"+
+
+                                    "<input type='hidden' id='" + inputId + ".msgFieldId' value='" + paymentRequestFields.data[i].msgFieldId +"'/>" +
+                                    "<input type='hidden' id='" + inputId + ".isAmount' value='" + paymentRequestFields.data[i].isAmount +"'/>" +
+                                    "<input type='hidden' id='" + inputId + ".dfltVal' value='" + paymentRequestFields.data[i].dfltVal +"'/>" +
+                                    "<input type='hidden' id='" + inputId + ".isPayee' value='" + paymentRequestFields.data[i].isPayee +"'/>" +
+                                    "</div>";
+
+                        }else if (paymentRequestFields.data[i].isPayee == 1 && storePayee == 0) {
+                            stringHTML = "<div class='input-group'> <span class='input-group-addon'>" + fieldDesc + "</span> " +
+                                "<input id='" + inputId + "' type='" + fieldType + "'  class='form-control form-control-righttext-datepicker' style='padding-right:1px;' placeholder='" + placeHolder + "' maxlength='" + paymentRequestFields.data[i].fieldLength + "' />" +
+
+                                "<input type='hidden' id='" + inputId + ".msgFieldId' value='" + paymentRequestFields.data[i].msgFieldId +"'/>" +
+                                "<input type='hidden' id='" + inputId + ".isAmount' value='" + paymentRequestFields.data[i].isAmount +"'/>" +
+                                "<input type='hidden' id='" + inputId + ".dfltVal' value='" + paymentRequestFields.data[i].dfltVal +"'/>" +
+                                "<input type='hidden' id='" + inputId + ".isPayee' value='" + paymentRequestFields.data[i].isPayee +"'/>" +
+                                "</div>";
+
+                        }
+                        else {
+
+                            if (paymentRequestFields.data[i].isAmount == 1)
+                            {
+                                isAmount = true;
+                                stringHTML = "<div class='input-group enter-amount' style='border-top: none;margin-top: -2px'> <span class='input-group-addon icon-enter-amount' style='padding-left: 2px'>" + vnd + "</span> " +
+                                        "<input id='" + inputId + "' type='" + fieldType + "'  class='form-control form-control-righttext format-left-input' placeholder='" + ip + "' onkeyup='handleInputAmount(event,this " + ");' maxlength='" + paymentRequestFields.data[i].fieldLength + "'/>" +
+                                        "<input type='hidden' id='" + inputId + ".msgFieldId' value='" + paymentRequestFields.data[i].msgFieldId +"'/>" +
+                                        "<input type='hidden' id='" + inputId + ".isAmount' value='" + paymentRequestFields.data[i].isAmount +"'/>" +
+                                        "<input type='hidden' id='" + inputId + ".dfltVal' value='" + paymentRequestFields.data[i].dfltVal +"'/>" +
+                                        "<input type='hidden' id='" + inputId + ".isPayee' value='" + paymentRequestFields.data[i].isPayee +"'/>" +
+                                        "</div>";
+
+                            }else{
+
+
+                                var mgnPayee1 = CONST_STR.get('TOPUP_MGN_PAYEE');
+                                stringHTML = "<div class='input-group' style='padding-bottom: 4px;padding-top: 3px;' > <span class='input-group-addon saveInfo'>" + mgnPayee1 + "</span>" +
+                                    "<div style='top:0px !important;' class='custom-switch custom-switch-off' onclick='onChangeSwitch(this)' id='clickChange'>"+
+                                    " <input type='checkbox' class='custom-switch-input custom-switch-input-on' id='' value='false' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'>"+
+                                    " <span class='custom-switch-label custom-switch-label-off' id='mng.payee.val' data-on='On' data-off='Off'>off</span>"+
+                                    "<span class='custom-switch-handle custom-switch-handle-off'></span>"+
+                                    "</div></div></td></tr>"+
+
+
+                                    "<div class='input-group' id='id.sample' style='display: none'> <span class='input-group-addon' style='width: 40%;white-space:pre-wrap;'>" + fieldDesc + "</span> " +
+                                    "<input id='" + inputId + "' type='" + fieldType +"' class='form-control form-control-righttext' placeholder='" + placeHolder + "' maxlength='" + paymentRequestFields.data[i].fieldLength + "' />" +
+                                    "<input type='hidden' id='" + inputId + ".msgFieldId' value='" + paymentRequestFields.data[i].msgFieldId +"'/>" +
+                                    "<input type='hidden' id='" + inputId + ".isAmount' value='" + paymentRequestFields.data[i].isAmount +"'/>" +
+                                    "<input type='hidden' id='" + inputId + ".dfltVal' value='" + paymentRequestFields.data[i].dfltVal +"'/>" +
+                                    "<input type='hidden' id='" + inputId + ".isPayee' value='" + paymentRequestFields.data[i].isPayee +"'/>" +
+                                    "</div>";
+
+
+                                    "<input type='hidden' id='mng.payee.val' value='" + CONST_VAL_PAYEE_NOT_TEMPLATE[1] + "'/>";
+                            }
+
+                        }
+
+                        tData.innerHTML = stringHTML;
+                        tRow.appendChild(tData);
+
+                        dynamicTable.appendChild(tRow);
+
+                        if (isAmount)
+                        {
+                            var tData = document.createElement('TD');
+                            tData.setAttribute("colspan",2);
+                            tData.align = "left";
+                            tData.innerHTML ='<div id="trans.amounttotext" ><h6></h6></div>';
+                            var tRow = document.createElement('TR');
+                            tRow.id = "row_convert" ;
+                            tRow.style.display='none';
+                            tRow.appendChild(tData);
+                            dynamicTable.appendChild(tRow);
+
+                        }
+
+                    }
+                    else if(paymentRequestFields.data[i].inputType == "LABEL")
+                    {
+                        var fieldDesc = gUserInfo.lang == "VN" ? paymentRequestFields.data[i].fieldDesc : paymentRequestFields.data[i].fieldDescEn;
+                        var tData = document.createElement('TD');
+                        tData.setAttribute("colspan",2);
+                        tData.align = "left";
+                        tData.innerHTML = '<div id="trans.notetext"><h6><span>' + fieldDesc + '</span></h6></div>';
+                        var tRow = document.createElement('TR');
+                        tRow.id = "row_convert" ;
+                        tRow.appendChild(tData);
+                        dynamicTable.appendChild(tRow);
+                    }
+                }
+
+
+
+            }
+
+            //need store payee
+            if (storePayee == 1) {
+
+//                tRow = document.createElement('TR');
+//                tRow.id = "dynaRow.mgnPayee";
+//
+//                tData = document.createElement('TD');
+//                tData.setAttribute("colspan",2);
+//                tData.align = "center";
+//                tData.vAlign = "middle";
+//                tData.className = "td-text";
+//
+//
+//                var placeHolder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+//                var inputValue = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN[1]: CONST_VAL_PAYEE_NOT_TEMPLATE_VN[1];
+//
+//
+//
+//                tData.innerHTML = stringHTML;
+//                tRow.appendChild(tData);
+//
+//                dynamicTable.appendChild(tRow);
+
+
+
+                tRow = document.createElement('TR');
+                tRow.id = "dynaRow.note";
+
+                tData = document.createElement('TD');
+                tData.setAttribute("colspan",2);
+
+                var mgnPayee = CONST_STR.get('TOPUP_MGN_PAYEE');
+                var placeHolder = CONST_STR.get('COM_TXT_INPUT_PLACEHOLDER');
+                var inputValue = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+                var inputValue = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN[0]: CONST_VAL_PAYEE_NOT_TEMPLATE_VN[0];
+
+
+
+
+
+                /*sua lai style
+                stringHTML = "<div><h6><span style='font-style:italic;'>" + CONST_STR.get('TOPUP_MGN_PAYEE_NOTE') + "</span></h6></div>";*/
+                //stringHTML = "<div><h6><span class='notestyle'>" + CONST_STR.get('TOPUP_MGN_PAYEE_NOTE') + "</span></h6></div>";
+                stringHTML = "<div><h6><span class='notestyle'></span></h6></div>";
+                tData.innerHTML = stringHTML;
+                tRow.appendChild(tData);
+
+                dynamicTable.appendChild(tRow);
+            }
+        }
+
+
+
+        tRow = document.createElement('TR');
+        tRow.id = "dynaRow.space";
+        tRow.className = "trow-space";
+        dynamicTable.appendChild(tRow);
+
+        tRow = document.createElement('TR');
+        tRow.id = "dynaRow.submitBtn";
+
+        tData = document.createElement('TD');
+        tData.setAttribute("colspan",2);
+        tData.setAttribute("align",'center');
+
+        stringHTML = "<div class='tdbtndesktop' style='width:50%'>"+"<input style='float:left;margin-left:65px;margin-top:5px;' type='button' class='btnDesktopshadow btnDesktopBack'" +
+                "onclick='clickHomeOrBack();' value='" + CONST_STR.get('INPUT_ACC_BTN_GOBACK') + "'/></div>" 
+        +"<div style='width:50%'><input style='margin-right:40px;margin-top:5px;' type='button' class='btnshadow btn-second'" +
+                "onclick='sendJSONRequest();' value='" + CONST_STR.get('TOPUP_BTN_SENDREQUEST') + "'/></div>";
+
+        tData.innerHTML = stringHTML;
+        tRow.appendChild(tData);
+
+        dynamicTable.appendChild(tRow);
+
+        setInputRuleInNode(dynamicTable);
+
+        if(document.getElementById('topup.dynaInput.8001')){
+            setInputOnlyNumberInfo('topup.dynaInput.8001');
+        }
+        if(document.getElementById('topup.dynaInput.4471')){
+            setInputOnlyNumberInfo('topup.dynaInput.4471');
+        }
+        if(document.getElementById('topup.dynaInput.3501')){
+            setInputOnlyNumberInfo('topup.dynaInput.3501');
+        }
+        if(document.getElementById('topup.dynaInput.3901')){
+            setInputOnlyNumberInfo('topup.dynaInput.3901');
+        }
+    }
+}
+
+function setInputRuleInNode(inNode) {
+    var tmpArrNodes = inNode.getElementsByTagName('input');
+    for (var i=0; i<tmpArrNodes.length; i++) {
+        var tmpNode = tmpArrNodes[i];
+        if(tmpNode.type == 'text' && tmpNode.id != undefined && tmpNode.id != 'topup.dynaInput.0') {// them doan nay && tmpNode.id != 'topup.dynaInput.0')
+            setInputOnlySpace(tmpNode);
+        }
+        else if(tmpNode.type == 'tel' || tmpNode.type == 'number') {
+            setInputOnlyNumberTopup(tmpNode);
+        }
+    }
+}
+
+function handleTransactionClose(e) {
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleTransactionClose, false);
+        document.removeEventListener("evtSelectionDialog", handleTransaction, false);
+    }
+}
+
+
+function showPayeePage(index, id, code)
+{
+    var fieldDesc = gUserInfo.lang == "VN" ? paymentRequestFields.data[index].fieldDesc : paymentRequestFields.data[index].fieldDescEn;
+
+    tempDynaId = id;
+    gPayeeCode = code;
+    gpayment= gPayeeCode;
+    document.addEventListener("evtSelectionDialogInput", handleInputPayeeAccOpen, false);
+    document.addEventListener("evtSelectionDialogCloseInput", handleInputPayeeAccClose, false);
+    document.addEventListener("onInputSelected", okSelected, false);
+    //Tao dialog
+    dialog = new DialogListInput(fieldDesc, 'ALL', gPayeeCode);
+
+    dialog.showDialog(callbackShowDialogSuccessed, '');
+
+}
+
+function callbackShowDialogSuccessed(node){
+    dialog.hiddenTab2();
+}
+function handleInputPayeeAccOpen(e){
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        var transAcc = document.getElementById(tempDynaId);
+        handleInputPayeeAccClose();
+        if(e.tabSelected == 'tab1'){
+            var obj = e.dataObject;
+            transAcc.value = obj.transValue;
+            payeeType = obj.transType;
+            tmpDestinationAccName = obj.peopleName;
+            document.getElementById('topup.dynaInput.0').value = tmpDestinationAccName;
+        }else{
+        }
+    }
+}
+
+function handleInputPayeeAccClose(e){
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("evtSelectionDialogClose", handleInputPayeeAccClose, false);
+        document.removeEventListener("evtSelectionDialog", handleInputPayeeAccOpen, false);
+        //document.removeEventListener("tabChange", tabChanged, false);
+        document.removeEventListener("onInputSelected", okSelected, false);
+    }
+}
+
+function okSelected(e){
+
+    //tmpDestinationAcc = "";
+    //tmpDestinationAccName = "";
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        handleInputPayeeAccClose();
+        var transAcc = document.getElementById(tempDynaId);
+        if ((e.selectedValue != undefined) &&(e.selectedValue != null) && (e.selectedValue.length>0)){
+            document.getElementById('topup.dynaInput.0').value = "";
+            transAcc.value = e.selectedValue;
+            //loadLocalTransSuccess();
+        }
+    }
+}
+
+
+
+//function showInputMNG()
+//{
+//    var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_VAL_PAYEE_NOT_TEMPLATE_EN: CONST_VAL_PAYEE_NOT_TEMPLATE_VN;
+//    var tmpArray2 = CONST_VAL_PAYEE_NOT_TEMPLATE;
+////    document.addEventListener("evtSelectionDialog", handleInputMNG, false);
+////    document.addEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+//    showDialogList(CONST_STR.get('TRANS_PERIODIC_MGN_PAYEE_SELCT'), tmpArray1, tmpArray2, false);
+//}
+
+//function handleInputMNG(e)
+//{
+//    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+//        handleInputMNGClose();
+//
+//        if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+//            var mnglist = document.getElementById('mng.payee');
+//            if (mnglist.nodeName == "INPUT") {
+//                mnglist.value = e.selectedValue1;
+//            }
+//            else {
+//                mnglist.innerHTML = e.selectedValue1;
+//            }
+//
+//        }
+//
+//        if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+//            var mngVal = document.getElementById('mng.payee.val');
+//            mngVal.value = e.selectedValue2;
+//        }
+//
+//    }
+//}
+//
+//function handleInputMNGClose() {
+//    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+//        document.removeEventListener("evtSelectionDialogClose", handleInputMNGClose, false);
+//        document.removeEventListener("evtSelectionDialog", handleInputMNG, false);
+//    }
+//}
+
+
+function parserPaymentTopup() {
+    //parser info
+    //gprsResp
+}
+
+function parserQuickQueryAccount() {
+    //gprsResp
+    var nodeDesAcc = document.getElementById("trans.targetaccountname");
+    nodeDesAcc.innerHTML = "<h6>" + CONST_STR.get('TRANS_LOCAL_ACC_DESTINATION_TITLE') + ": <b>" + gprsResp.arguments[0] + "</b></h6>";
+}
+
+function genReviewScreen(paymentObj) {
+    var transaction = document.getElementById("topup.input.transaction").value;
+    var sourceAcc = document.getElementById("id.sourceAcc").value;
+    var balance = comboEl.accountBalance;
+    var provider = document.getElementById("topup.input.provider").value;
+    var serviceCode = document.getElementById('id.topup.srvCode').value;
+    var mgnPayee = mngPayeeVal;
+    var providercode = document.getElementById("id.topup.prId").value;
+
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlNodeInfo;
+    var tmpChildNodeAcc;
+    var tmpChildNode;
+
+    //root node
+    tmpXmlRootNode = createXMLNode('review', '', docXml);
+    tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+
+
+    tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+
+    //Thong tin giao dich
+    var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('TOPUP_TRANS_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+
+    //Loai giao dich
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TOPUP_TRANS_TYPE_TITLE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', transaction, docXml, tmpChildNodeAcc);
+
+    //Tai khoan
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TOPUP_ACC_TITLE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', sourceAcc, docXml, tmpChildNodeAcc);
+
+    //So du kha dung
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ACC_PAYMENT_TOTAL_BEFORE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', balance, docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+
+    tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+
+    //Thong tin hoa don
+    var tmpXmlNodeBillTitle = createXMLNode('reviewtranstitle', CONST_STR.get('TOPUP_BILL_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+    var sotiennap = 0;
+    var fieldDesc;
+    var fieldVal;
+    var tmpArr = [];
+    var phidichvu = 0;
+    if (paymentObj != undefined && paymentObj.length >= 2){
+        for (var i = 1; i < paymentObj.length; i++) {
+            tmpArr = paymentObj[i].split('#');
+
+            if (tmpArr.length == 3) {
+                fieldDesc = gUserInfo.lang == 'VN'? tmpArr[0]: tmpArr[2];
+                fieldVal = tmpArr[1];
+                if(i==2){
+                	sotiennap = fieldVal;
+                	phidichvu = sotiennap.replace(",","");
+                }
+                if(i==3 && serviceCode =='TOPUP_MOBILE'){
+                    sotiennap = fieldVal;
+                }
+
+                if (i == 3 && serviceCode == '401-MM') {
+                	phidichvu = Number(fieldVal.replace(",", "")) - Number(phidichvu);
+                }
+
+                //Cac truong thanh toan dong
+                tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+                tmpChildNode = createXMLNode('transinfotitle', fieldDesc, docXml, tmpChildNodeAcc);
+                if (i == 2 || i == 3) {
+                	if (serviceCode == '401-MM' && i == 3) {
+                		tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency(phidichvu) + ' VND', docXml, tmpChildNodeAcc);
+                	}
+                	else {
+                		tmpChildNode = createXMLNode('transinfocontent', fieldVal + ' VND', docXml, tmpChildNodeAcc);
+                	}
+                } else {
+                    tmpChildNode = createXMLNode('transinfocontent', fieldVal, docXml, tmpChildNodeAcc);
+                }
+            }
+        }
+    }
+
+
+    //Số dư tài khoản sau khi nạp
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ACC_PAYMENT_TOTAL_AFTER'), docXml, tmpChildNodeAcc);
+    //ngocdt3 chinh sua tinh toan so du sau khi nap voi MM
+    if(providercode =='PR0362'){
+        tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency( parseFloat(removeSpecialChar(balance)) - parseFloat(removeSpecialChar(fieldVal)))+' VND', docXml, tmpChildNodeAcc);
+    }
+    else {
+        tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency( parseFloat(removeSpecialChar(balance)) - parseFloat(removeSpecialChar(sotiennap)))+' VND', docXml, tmpChildNodeAcc);}
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc);
+    //Tên thuê bao
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('BENEFIC_NAME_TITLE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', document.getElementById('topup.dynaInput.0').value, docXml, tmpChildNodeAcc);
+    //Quan ly nguoi thu huong
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TOPUP_MGN_PAYEE'), docXml, tmpChildNodeAcc);
+	if(mgnPayee=='N'){
+		tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('AUTO_BILLING_BENEFIC_NOT_SAVE'), docXml, tmpChildNodeAcc);
+	}
+	else if (mgnPayee=='TH'){
+		tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('AUTO_BILLING_BENEFIC_SAVE'), docXml, tmpChildNodeAcc);
+	}
+    
+    //Thời gian thực hiện
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_TRANSACTION_DATE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', getToday(), docXml, tmpChildNodeAcc);
+    logInfo(docXml);
+    //luu xml trong cache
+    setReviewXmlStore(docXml);
+
+    navController.pushToView("com-review-xsl-scr", true, 'xsl');
+}
+
+function genCacheReviewScreen(paymentObj) {
+    var transaction = document.getElementById("topup.input.transaction").value;
+    var sourceAcc = document.getElementById("id.sourceAcc").value;
+    var balance = comboEl.accountBalance;
+    var provider = document.getElementById("topup.input.provider").value;
+    var serviceCode = document.getElementById('id.topup.srvCode').value;
+    var mgnPayee = mngPayeeVal;
+    var providercode = document.getElementById("id.topup.prId").value;
+
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlNodeInfo;
+    var tmpChildNodeAcc;
+    var tmpChildNode;
+
+    //root node
+    tmpXmlRootNode = createXMLNode('review', '', docXml);
+    tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+
+
+    tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+
+    //Thong tin giao dich
+    var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('TOPUP_TRANS_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+
+    //Loai giao dich
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TOPUP_TRANS_TYPE_TITLE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', transaction, docXml, tmpChildNodeAcc);
+
+    //Tai khoan
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TOPUP_ACC_TITLE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', sourceAcc, docXml, tmpChildNodeAcc);
+
+    //So du kha dung
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ACC_PAYMENT_TOTAL_BEFORE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', balance, docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc); //display or not in result
+
+    tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+
+    //Thong tin hoa don
+    var tmpXmlNodeBillTitle = createXMLNode('reviewtranstitle', CONST_STR.get('TOPUP_BILL_INFO_TITLE'), docXml, tmpXmlNodeInfo);
+    var sotiennap = 0;
+    var fieldDesc;
+    var fieldVal;
+    var tmpArr = [];
+    if (paymentObj != undefined && paymentObj.length >= 2){
+        for (var i = 1; i < paymentObj.length; i++) {
+            tmpArr = paymentObj[i].split('#');
+
+            if (tmpArr.length == 3) {
+                fieldDesc = gUserInfo.lang == 'VN'? tmpArr[0]: tmpArr[2];
+                fieldVal = tmpArr[1];
+                if(i==2){
+                    sotiennap = fieldVal;
+                }
+                //Cac truong thanh toan dong
+                tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+                tmpChildNode = createXMLNode('transinfotitle', fieldDesc, docXml, tmpChildNodeAcc);
+                tmpChildNode = createXMLNode('transinfocontent', fieldVal, docXml, tmpChildNodeAcc);
+            }
+        }
+    }
+
+
+    //Số dư tài khoản sau khi nạp
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ACC_PAYMENT_TOTAL_AFTER'), docXml, tmpChildNodeAcc);
+    //ngocdt3 chinh sua tinh toan so du sau khi nap voi MM
+    if(providercode =='PR0362'){
+        tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency( parseFloat(removeSpecialChar(balance)) - parseFloat(removeSpecialChar(fieldVal)))+' VND', docXml, tmpChildNodeAcc);
+    }
+    else {
+        tmpChildNode = createXMLNode('transinfocontent', formatNumberToCurrency( parseFloat(removeSpecialChar(balance)) - parseFloat(removeSpecialChar(sotiennap)))+' VND', docXml, tmpChildNodeAcc);}
+    tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc);
+    //Tên thuê bao
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('BENEFIC_MOBILE_NAME'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', document.getElementById('topup.dynaInput.0').value, docXml, tmpChildNodeAcc);
+    //Quan ly nguoi thu huong
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('TOPUP_MGN_PAYEE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', mgnPayee, docXml, tmpChildNodeAcc);
+    //Thời gian thực hiện
+    tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+    tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CREDIT_CARD_TRANSACTION_DATE'), docXml, tmpChildNodeAcc);
+    tmpChildNode = createXMLNode('transinfocontent', getToday(), docXml, tmpChildNodeAcc);
+    logInfo(docXml);
+    //luu xml trong cache
+    setReviewXmlStore(docXml);
+}
+
+function getToday(){
+    var result = '';
+    var today = new Date();
+
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+    var yyyy = today.getFullYear();
+
+    if(dd<10) {
+        dd='0'+dd;
+    }
+    if(mm<10) {
+        mm='0'+mm;
+    }
+
+    return result = dd+'/'+mm+'/'+yyyy;
+}
+
+function validatePhoneNumber(valueToCheck){
+    if(valueToCheck.length<= 0 || valueToCheck.length >12 ){
+        showAlertText(CONST_STR.get('ERR_INPUT_PHONE_NUMBER'));
+        //SĐT không hợp lệ
+        return false;
+    }else{
+        if( valueToCheck.indexOf("0") != 0){
+            //thông báo lỗi
+            showAlertText(CONST_STR.get('ERR_INPUT_PHONE_NUMBER'));
+            return false;
+        }
+    }
+    return true;
+}
+//anhntt them hien thi combo chon accout
+var comboEl;
+function initComboTextAccount(){
+
+    var accountName = "Invalid";
+    var accountNumber = "Invalid";
+    var accountBalance = "Invalid";
+
+    try{
+        document.getElementById("holder-account-info").innerHTML = "";
+        var accountName = gUserInfo.accountName;
+        var accountNumber = gUserInfo.accountList[0].accountNumber;
+        var accountBalance = formatNumberToCurrency(gUserInfo.accountList[0].balanceAvailable) + ' ' + gUserInfo.accountList[0].currency;
+        var srvId = document.getElementById("id.topup.srvId").value;
+
+        for (var i = 0; i < gUserInfo.accountList.length; i++) {
+        	var tmpAcc = gUserInfo.accountList[i];
+        	if ((tmpAcc.accClass == 'D3A003') || (tmpAcc.nodebit == 'Y') || ((srvId == "107") && ((tmpAcc.accClass == 'T6A001') || (tmpAcc.accClass == 'T6A000')
+			|| (tmpAcc.accClass == 'T5A000') || (tmpAcc.accClass == 'T5A001')
+			|| (tmpAcc.accClass == 'SFGLOC') || (tmpAcc.accClass == 'SFGNDJ')
+			|| (tmpAcc.accClass == 'SFGPHC') || (tmpAcc.accClass == 'SFGPHT')
+			|| (tmpAcc.accClass == 'SFGSJC') || (tmpAcc.accClass == 'SFGTAI')
+			|| (tmpAcc.accClass == 'SKCSJC') || (tmpAcc.accClass == 'SKGLOC')
+			|| (tmpAcc.accClass == 'SKGNDJ') || (tmpAcc.accClass == 'SKGPHC')
+			|| (tmpAcc.accClass == 'SKGPHT') || (tmpAcc.accClass == 'SKGSJC')
+			|| (tmpAcc.accClass == 'SKGTAI') || (tmpAcc.accClass == 'STGSJC') || (tmpAcc.udfFieldVal != '' && tmpAcc.udfFieldVal != '6')))) {
+        	}
+        	else {        		
+        		accountNumber = tmpAcc.accountNumber;
+        		accountBalance = formatNumberToCurrency(tmpAcc.balanceAvailable) + ' ' + tmpAcc.currency;
+        		document.getElementById("id.sourceAcc").value = tmpAcc.accountNumber;
+        		break;
+        	}
+        }
+    }catch(e){
+        logInfo("Khong load duoc thong tin tai khoan")
+    }
+
+    comboEl = new Combo({
+        containerId : "cb-container", //holder of combo
+        accountName : accountName, //account name
+        accountNumber : accountNumber, //account number
+        accountBalance : accountBalance, //account balance
+        showBorderBottom : false,//set margin to holder of combo
+        clickIt : function (){ //handle function click
+            console.log("already click");
+        }
+    });
+    comboEl.show("holder-account-info");
+}
+
+//anhntt bo xung acction bar
+function switchAction(index){
+    switch(index)
+    {
+        case "0":
+            // template danh ba
+            initDialog(CONST_STR.get('BOTTOM_BAR_CONTACT'),"","paymentxsl/template-payment-doc",
+                function callbackDialogClose(){
+                    callbackCloseDialogSchedulerPayment();
+                },
+                function callbackDialogLoadSuccess(){
+                    modalDialog.showDialogFull();
+                    actionbar.hideActionbar();
+                    bottomBar.hide();
+                    firstLetterArray = [];
+                    bgrColorArray = [];
+                },true,callbackContactPayment);
+            break;
+    }
+}
+function callbackContactPayment(obj) {
+
+    console.log(obj);
+//    alert(tempDynaId);
+    // double click template tranfer contact doc
+    modalDialog.hideDialogFull();
+    callbackCloseDialogSchedulerPayment();
+    var transAcc = document.getElementById('dynaRow.1').getElementsByTagName("input")[0];
+//    transAcc.attribute("0")[]
+    transAcc.value=obj.transValue;
+
+}
+
+function callbackCloseDialogSchedulerPayment(param,clickfromtop){
+    console.log(param + " " + clickfromtop);
+    bottomBar.resumeView('paymentxsl/paymet-topup-create-scr','payment-topup');
+    actionbar.showActionBar();
+}
+
+function initBottomBar(){
+    var arrBottom = new Array();
+    arrBottom.push(new MenuBottom("BOTTOM_BAR_CONTACT", "icon-beneficiaries"));
+    navController.initBottomBarWithCallBack("paymentxsl/payment-topup-create-scr", arrBottom, "payment-topup", function (index) {
+        //alert(index);
+        switchAction(index);
+});
+}
+function genTemplatePayment(id,respArr){
+    tempRespArr = respArr;
+    for(var i = respArr.length; i > 0 ; i--){
+        for(var j = 0; j < i - 1; j++){
+            var tempValue;
+            if(respArr[j].peopleName.toUpperCase().charCodeAt(0) > respArr[j + 1].peopleName.toUpperCase().charCodeAt(0)){
+                tempValue = respArr[j];
+                respArr[j] = respArr[j + 1];
+                respArr[j + 1] = tempValue;
+            }
+        }
+    }
+    var div = document.getElementById("divListContact");
+    div.innerHTML = "";
+    var firstLetter;
+    for(var i = 0; i < respArr.length; i++){
+        if(i == 0 ||respArr[i].peopleName.toUpperCase().charCodeAt(0) > firstLetter.charCodeAt(0)){
+            firstLetter = respArr[i].peopleName.charAt(0).toUpperCase();
+            var localTitle = document.createElement('div');
+            localTitle.innerHTML = firstLetter;
+            localTitle.style.textAlign = "left";
+            localTitle.style.padding = "10px";
+            localTitle.style.color = "#5f2f85";
+            localTitle.style.fontWeight = "bold";
+            div.appendChild(localTitle);
+        }
+        var tempView = document.createElement('div');
+        tempView.setAttribute('class','my-acc-view');
+        tempView.setAttribute('id','topup_' + i);
+        tempView.setAttribute('onclick',"pick(this," + i + ")");
+        tempView.innerHTML = respArr[i].peopleName;
+
+        div.appendChild(tempView);
+        pick(document.getElementById("topup_0"),0);
+    }
+}
+function pick(e, index){
+    document.getElementById('accNo').style.display = '';
+    document.getElementById('accNo').innerHTML = document.getElementById('dynaRow.1').getElementsByTagName("span")[0].innerHTML;
+    document.getElementById('topupValue').innerHTML =  tempRespArr[index].transValue;//mã thụ hưởng
+    document.getElementById('accNameContact').innerHTML =  tempRespArr[index].peopleName;  //tên thụ hưởng
+    document.getElementById('magiaodich').innerHTML =  tempRespArr[index].transactionId;  //mã giao dịch
+    document.getElementById('payeeType').innerHTML =  tempRespArr[index].payeeType;  //Transtype
+    document.getElementById('deleteSelection').style.display = '';
+    resetActiveTopUp();
+    e.style.backgroundColor = '#FF8C29';
+    e.style.color = '#fff';
+    tempIndex = index;
+}
+function resetActiveTopUp(){    
+    if(tempRespArr != undefined){
+        for(var i = 0; i< tempRespArr.length; i++){
+            if(document.getElementById('topup_' + i)){
+                if(i%2 == 0){
+                    document.getElementById('topup_' + i).style.backgroundColor = '#F7E9FA';
+                }else{
+                    document.getElementById('topup_' + i).style.backgroundColor = '#FDF1FF';
+                }
+                document.getElementById('topup_' + i).style.color = '#000';
+            }
+        }
+    }
+}
+function clickTopUp(){  
+    var obj = {};
+    obj.transValue = document.getElementById('topupValue').innerText;
+    callbackContactPayment(obj);
+
+}
+
+function alertConfirmContactOK() {
+
+    //check currentPage
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        alertConfirmContactCancel();
+        console.log(deleteContact);
+        if(deleteContact!==null)
+        {
+            var arrayArgs = new Array();
+            //gTransId
+            arrayArgs.push(deleteContact.transactionId);
+            //delete/update
+            arrayArgs.push("DELETE");
+            arrayArgs.push(deleteContact.payeeType);
+            arrayArgs.push("");
+            var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_UPDATE_BOOK_BENEFICIARY"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+
+            var  data = getDataFromGprsCmd(gprsCmd);
+            requestMBService(data, true, 0, requestMBContactDeleteSuccess, requestMBContactServiceDeleteFail);
+
+        }
+    }
+}
+function alertConfirmContactCancel() {
+    if (currentPage == "paymentxsl/payment-topup-create-scr") {
+        document.removeEventListener("alertConfirmCancel", alertConfirmContactCancel, false);
+        document.removeEventListener("alertConfirmOK", alertConfirmContactOK, false);
+    }
+}
+
+function requestMBContactDeleteSuccess(e){
+    try{
+        gprsResp = parserJSON(e);
+        for(var i = 0; i < tempArrGenContact.arguments.length; i++){
+            if(tempArrGenContact.arguments[i].split("#")[12] == gprsResp.arguments){
+                tempArrGenContact.arguments.splice(i,1);
+            }
+        }
+        GenContact(tempArrGenContact)
+    }catch(e){
+
+    }
+    setTimeout(function(){
+        pick(document.getElementById("topup_0"),0);        
+    },60);
+
+}
+function requestMBContactServiceDeleteFail(){
+
+}
+function deleteTopUp(){
+    var objectVal = {};
+    objectVal.transactionId = document.getElementById('magiaodich').innerText;
+    objectVal.payeeType = document.getElementById('payeeType').innerText;
+    objectVal.transValue = document.getElementById('topupValue').innerText;
+    objectVal.peopleName = document.getElementById('accNameContact').innerText;
+    showPopUpTranferContactDelete(objectVal);
+}

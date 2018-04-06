@@ -1,0 +1,1037 @@
+/**
+ * Created by ThuanTM
+ * User: ThuanTM
+ * Date: 9/9/14
+ * Time: 5:05 PM
+ */
+var tmpBankInfoSelected;
+var tmpCityInfoSelected;
+var tmpBranchInfoSelected1;
+var pageIndex = 1;
+var itemsPerPage = 4;
+ 
+var historyArray = new Array(); 
+var lstArgs = new Array();
+var lstTemplateStored = new Array();
+
+var KEY_PARAMETERS_NAME = "";//TÊN
+var KEY_PARAMETERS_ALL = "";//NULL LÀ TẤT CẢ 
+var KEY_PARAMETERS_INTERNAL = "0";
+var KEY_PARAMETERS_OTHER_BANK = "1";
+
+var KEY_DELETE = "D";
+var KEY_UPDATE = "U";
+
+var keyOption;
+var keyName = "";
+
+var dialog = "";
+
+var evtDispatherSample = document.createEvent('Event');
+evtDispatherSample.initEvent('evtDispatherSample', true, true);
+
+function loadInitXML(){
+	return;
+}
+
+function viewDidLoadSuccess(){
+	logInfo('Drawal history load success');
+	//Khi vào mặc định 
+	//Arg1 = ""
+	//Arg2 = "ALL"
+	var selectedV =  document.getElementById('id.transtype.selected');
+	if(selectedV !=null && selectedV !=undefined){
+		selectedV.value = (gUserInfo.lang == 'VN')? 
+		CONST_HIS_TRANS_TYPE_TEMP_VN[0]:CONST_HIS_TRANS_TYPE_TEMP_EN[0];
+	}
+	var bankNameVal = document.getElementById('trans.bankname');
+	
+	if(bankNameVal == null || bankNameVal.value.length<= 0 && currentPage == "transfer/remittance-template-scr"){		
+		keyOption = "";
+		sendJSONRequest();
+	}
+	
+	/*if(bankNameVal !=null){
+		bankNameVal.value = 	tmpBankInfoSelected.split('#')[1] + '\n' + tmpBranchInfoSelected1.split('#')[1];
+	}*/
+	if(bankNameVal !=null){
+		if (bank_code != '101' && bank_code != '204') {
+            bankNameVal.value = tmpBankInfoSelected.split('#')[2] + ' - ' + gCityInfoSelected.split('#')[1];
+        }
+        else {
+            bankNameVal.value = tmpBankInfoSelected.split('#')[1] + '\n' + tmpBranchInfoSelected1.split('#')[1];
+        }
+		keyOption=KEY_PARAMETERS_OTHER_BANK;
+	}
+	setInputCharNumberAndUpcase('nameChanged', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+	setInputCharNumberAndUpcase('content.trans', CONST_STR.get("ERR_INPUT_ONLY_ASCII_CHAR"));
+}
+
+function viewWillUnload(){
+	logInfo('Drawal history unload');
+}
+//Gửi yêu cầu để lấy danh sách mẫu
+function sendJSONRequest(){
+	var data = {};
+	var arrayArgs = new Array();
+	
+	arrayArgs.push(KEY_PARAMETERS_NAME);//TÊN
+	arrayArgs.push(keyOption);//OPTION
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TRANSFER_TEMPLATE_TEMPLATE"), "", "", 
+								 gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+
+}
+//Lấy danh sách mẫu thành công
+function requestMBServiceSuccesss(e){  
+	
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANSFER_TEMPLATE_TEMPLATE") || (gprsResp.responseType == '-1')))){
+		
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANSFER_TEMPLATE_TEMPLATE")))) {
+		
+		lstTemplate = new Array();
+		
+		lstArgs = gprsResp.arguments;
+		//document.getElementById('id.view.template').innerHTML = "";
+		if(lstArgs == null){
+			//THUANTM 
+			document.getElementById('id.result.template').innerHTML = CONST_STR.get('TRAN_HIS_NO_DATA_TITLE');
+				
+			/*SHOW EMPTY DATA ON PAGE*/						
+			return;
+		}
+		hideOrDisplay(false);
+		getData();	
+		genHtmlSearchResult(getItemsPerPage(lstTemplate, pageIndex));
+	}	
+}
+
+//Lấy danh sách mẫu thất bại
+function requestMBServiceFail(e){
+	logInfo('Request server failed');
+	//navController.initWithRootView('account/account-scr', true);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+	
+}
+
+//Phân trang
+function genHtmlSearchResult(arr) {
+	
+	var docXsl = getCachePageXsl("transfer/remittance-template-table-scr");
+	genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback, failPaggingCallback);	
+}
+//Callback successed
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("id.result.template");
+	div.innerHTML = strHtml;
+	genPagging(lstTemplate, pageIndex ,document.getElementById('pageIndicatorNums'));		
+}
+//Phân trang (tạo page number);
+function genPagging(arr, pageIndex, nodepage) {
+	var totalPage = calTotalPage(arr);
+	var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+	nodepage.innerHTML = tmpStr;
+}
+//Tính toán phục vụ phân trang
+function calTotalPage(arrObj) {
+	if(arrObj != null && arrObj.length > 0){
+		return Math.ceil(arrObj.length/itemsPerPage);
+	}
+	return 0;
+}
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+	var arrTmp = new Array();
+	var from = 0;
+	var to  = 0;
+	for(var i = 0; i < arrObj.length; i++) {
+		from = (pageIndex - 1) * itemsPerPage;
+		to = from + itemsPerPage;
+		if(i >= from && i < to) {
+			arrTmp.push(arrObj[i]); 
+		}		
+	}	
+	return arrTmp;
+}
+//Khi page number được selected
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+
+	var arrMedial = new Array();
+	pageIndex = selectedIdx;
+	arrMedial = getItemsPerPage(lstTemplate, selectedIdx);		
+	genHtmlSearchResult(arrMedial);				
+}
+//Callback failed
+function failPaggingCallback() {
+	//navController.initWithRootView('account/account-scr', true);	
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+//Gen xml phân trang
+function genXmlDataPagging(arr) {
+	var docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('transtemplate','',docXml);
+	
+	var childlistsavingNode = createXMLNode('lsttemplate','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('templateTitleTable','',docXml,childlistsavingNode);
+	
+	var childNodeTit = createXMLNode('nametit',CONST_STR.get('TRANSFER_REMITTANCE_NAME'),docXml,titleTable);	
+	childNodeTit = createXMLNode('modifytit',CONST_STR.get('TRANSFER_REMITTANCE_MODIFY'),docXml,titleTable);	
+	childNodeTit = createXMLNode('deletetit',CONST_STR.get('TRANSFER_REMITTANCE_DELETE'),docXml,titleTable);
+	childNodeTit = createXMLNode('usingtit',CONST_STR.get('TRANSFER_REMITTANCE_USE'),docXml,titleTable);
+	
+	//LIST 1
+	for(var i in arr){
+		var valTable = createXMLNode('detail_info','',docXml, childlistsavingNode);
+		
+		var nodeVal = createXMLNode('name',arr[i].name,docXml,valTable);			
+		nodeVal = createXMLNode('nametit',CONST_STR.get('TRANSFER_REMITTANCE_NAME'),docXml,valTable);
+
+		nodeVal = createXMLNode('modify',CONST_STR.get('TRANSFER_REMITTANCE_MODIFY'),docXml,valTable);
+		nodeVal = createXMLNode('modifytit',CONST_STR.get('TRANSFER_REMITTANCE_MODIFY'),docXml,valTable);
+		
+		nodeVal = createXMLNode('deletetit',CONST_STR.get('TRANSFER_REMITTANCE_DELETE'), docXml,valTable);
+		nodeVal = createXMLNode('delete',CONST_STR.get('TRANSFER_REMITTANCE_DELETE'),docXml,valTable);
+		
+		nodeVal = createXMLNode('using',CONST_STR.get('TRANSFER_REMITTANCE_USE'), docXml,valTable);
+		nodeVal = createXMLNode('usingtit',CONST_STR.get('TRANSFER_REMITTANCE_USE'),docXml,valTable);			
+	}
+	return docXml;
+}
+
+//=================SHOW DIALOG FOR ACCOUNT NUMBER SELECTION=============================//
+function showInputTransType(){
+
+	var tmpArray1 = (gUserInfo.lang == 'VN')? CONST_HIS_TRANS_TYPE_TEMP_VN:CONST_HIS_TRANS_TYPE_TEMP_EN;
+	var tmpArray2 = [KEY_PARAMETERS_ALL, KEY_PARAMETERS_INTERNAL,KEY_PARAMETERS_OTHER_BANK ];
+	
+	document.addEventListener("evtSelectionDialog", showInputTransTypeOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showInputTransTypeClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, tmpArray2, false);
+}
+
+function showInputTransTypeOpen(e) {
+	if (currentPage == "transfer/remittance-template-scr") {
+		if(e.selectedValue1 !=null && e.selectedValue1 != undefined){
+			document.getElementById('id.transtype.selected').value = e.selectedValue1;
+		}
+		if(e.selectedValue2 !=null && e.selectedValue2 != undefined){
+			keyOption = e.selectedValue2;
+		}
+	}
+}
+
+function showInputTransTypeClose() {
+	if (currentPage == "transfer/remittance-template-scr") {		
+		document.removeEventListener("evtSelectionDialog", showInputTransTypeOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showInputTransTypeClose, false);
+	}
+}
+
+function backPage(){
+	//navController.popToView('loan/esaving-information',true,'xsl');	
+}
+
+function getData(){
+	
+	lstTemplate = new Array();
+	var tempArrStr;
+	var objtemp = null;
+	//FIRST LIST DRAWAL HISTORY LIST
+	
+	for(var k=0;k<lstArgs.length;k++){
+		tempArrStr = lstArgs[k].split("#");			
+		objtemp = new Object();		
+		objtemp.name = tempArrStr[0];
+		objtemp.tai_khoan_nguon = tempArrStr[1];
+		objtemp.ten_tai_khoan_dich = tempArrStr[2];
+		objtemp.tai_khoan_dich = tempArrStr[3];
+		objtemp.so_tien = tempArrStr[4];
+		objtemp.noi_dung = tempArrStr[5];
+		objtemp.ngan_hang_nhan = tempArrStr[6];
+		objtemp.ma_citad = tempArrStr[7];
+		objtemp.loai_chuyen_tien = tempArrStr[8];
+		lstTemplate.push(objtemp);
+	}	
+	lstTemplateStored = lstTemplate;
+}
+//tìm kiếm action
+function searchTemplate(){
+	keyName = "";	
+	pageIndex = 1;
+	var bankName = document.getElementById('trans.bankname');
+	if(bankName !=null && bankName !=undefined){
+		bankName.value = "";
+	}
+	KEY_PARAMETERS_NAME = document.getElementById('trans.name').value;
+	sendJSONRequest();
+}
+
+//Nhập lại action
+function clickInputAgain(){
+	//lấy id
+	//refresh lại
+	document.getElementById('id.transtype.selected').value = (gUserInfo.lang == 'VN')? 
+		CONST_HIS_TRANS_TYPE_TEMP_VN[0]:CONST_HIS_TRANS_TYPE_TEMP_EN[0];
+	keyOption	= "";
+	document.getElementById('trans.name').value = "";
+}
+
+//function to get Object by name
+function getObjbyName(name){
+	for(var i = 0; i<lstTemplate.length; i++){
+		if(name !=null && name != undefined && name.trim() == lstTemplate[i].name.trim()){
+			return lstTemplate[i];
+		}
+	}
+	return null;
+}
+
+function genXMLToEdit(obj){
+	var docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('transtemplate','',docXml);
+	
+	var childlistsavingNode = createXMLNode('lsttemplate','',docXml,rootNode);
+	//Tên
+	var childNodeTit = createXMLNode('name',obj.name,docXml,childlistsavingNode);	
+	//Tài khoản nguồn
+	childNodeTit = createXMLNode('tai_khoan_nguon',obj.tai_khoan_nguon,docXml,childlistsavingNode);	
+	//Tên chủ tài khoản đích
+	if(obj.ten_tai_khoan_dich !=null){
+		childNodeTit = createXMLNode('ten_tai_khoan_dich',obj.ten_tai_khoan_dich,docXml,childlistsavingNode);
+	}else{
+		childNodeTit = createXMLNode('ten_tai_khoan_dich',"-",docXml,childlistsavingNode);
+	}
+	//Tài khoản đích
+	childNodeTit = createXMLNode('tai_khoan_dich',obj.tai_khoan_dich,docXml,childlistsavingNode);
+	//Số tiền
+	childNodeTit = createXMLNode('so_tien',formatNumberToCurrency(obj.so_tien),docXml,childlistsavingNode);
+	//Nội dung chuyển tiền
+	childNodeTit = createXMLNode('noi_dung',obj.noi_dung,docXml,childlistsavingNode);
+	//Ngân hàng nhận
+	if(obj.ngan_hang_nhan !=null){
+		childNodeTit = createXMLNode('ngan_hang_nhan',obj.ngan_hang_nhan,docXml,childlistsavingNode);
+	}else{
+		childNodeTit = createXMLNode('ngan_hang_nhan',"-",docXml,childlistsavingNode);
+	}
+	//Mã citad
+	childNodeTit = createXMLNode('ma_citad',obj.ma_citad,docXml,childlistsavingNode);
+	//Loại chuyển tiền
+	childNodeTit = createXMLNode('loai_chuyen_tien',obj.loai_chuyen_tien,docXml,childlistsavingNode);	
+	//Hạn mức giao dịch
+	childNodeTit = createXMLNode('han_muc',/*obj.ham_muc*/0,docXml,childlistsavingNode);	
+	//Tỉnh/Thành phố
+	childNodeTit = createXMLNode('tinh_thanh_pho',obj.tinh_thanh_pho,docXml,childlistsavingNode);	
+	//Chi nhánh
+	childNodeTit = createXMLNode('chi_nhanh',obj.chi_nhanh,docXml,childlistsavingNode);	
+	
+	return docXml;
+}
+//Go to view screen
+function gotoView(name){
+	keyName = name;
+	var objView = getObjbyName(name);
+	if(objView != null){
+		hideOrDisplay(true);
+		var docXsl = getCachePageXsl("transfer/remittance-template-table-view-scr");
+		genHTMLStringWithXML(genXMLToEdit(objView), docXsl, successDetailScreenCallback, failDetailScreenCallback);
+	}
+}
+
+function hideOrDisplay(flag){
+	if(flag){
+		document.getElementById('table1').style.display = 'none';
+		document.getElementById('table2').style.display = '';	
+	}
+	else{
+		document.getElementById('table1').style.display = '';
+		document.getElementById('table2').style.display = 'none';	
+	}
+}
+//*******PHẦN CHỈNH SỬA************//
+//Go to view screen
+function gotoModify(name){
+	//Fix loi null truong CITAD
+	tmpBranchInfoSelected1 = null;
+	
+	keyName = name;
+	var objView = getObjbyName(name);
+	if(objView != null){
+		hideOrDisplay(true);
+		var docXsl = getCachePageXsl("transfer/remittance-template-table-edit-scr");
+		genHTMLStringWithXML(genXMLToEdit(objView), docXsl, successDetailScreenCallback, failDetailScreenCallback);		
+	}
+	
+}
+//Ẩn các trường không cần thiết với mẫu chuyển khoản nội bộ (EDIT)
+function hiddenFieldsNoNeed(flag){
+	if(flag){
+		
+		var node = document.getElementById('otherBank');
+		if(node !=null && node !=undefined) {
+			node.style.display = 'none';
+		}
+		/*for(var i = 1; i<=3; i++){
+			var node = document.getElementById('otherBank'+i);
+			if(node !=null && node !=undefined) {
+				node.style.display = 'none';
+			}
+		}*/
+	}
+	else{
+		var node = document.getElementById('otherBank');
+		if(node !=null && node !=undefined) {
+			node.style.display = '';
+		}
+		/*for(var i = 1; i<=3; i++){
+			var node = document.getElementById('otherBank'+i);
+			if(node !=null && node !=undefined) {
+				node.style.display = '';
+			}
+		}*/
+	}
+}
+
+//Update modify
+function updatedModify(name){	
+	var objView = getObjbyName(name);
+	var accTrans = document.getElementById('id.account.trans');	
+	var accReceived = document.getElementById('id.account.received');
+	var nameChanged = document.getElementById('nameChanged');
+	var amount = document.getElementById('id.amount');
+	var content = document.getElementById('content.trans');
+	var des = document.getElementById('des.trans');
+	var bankName = document.getElementById('trans.bankname');
+	var ma_citad = "";
+	if(validateContentEdit()){
+		var arrayArgs = new Array();
+		arrayArgs.push(KEY_UPDATE);
+		arrayArgs.push(name);
+		
+		arrayArgs.push(accTrans.value);
+		arrayArgs.push(nameChanged.value);
+		arrayArgs.push(accReceived.value);
+		
+		arrayArgs.push(removeSpecialChar(amount.value));
+		arrayArgs.push(content.value);		
+		if(objView.loai_chuyen_tien == '1'){
+			if(tmpBranchInfoSelected1 !=null && tmpBranchInfoSelected1 != undefined){
+				ma_citad = tmpBranchInfoSelected1.split('#')[0];
+			}
+			//nee update thi lay lai ma CITAD
+			else {
+				ma_citad = objView.ma_citad;
+			}				
+			arrayArgs.push(ma_citad);			
+			arrayArgs.push(bankName.value);				
+		}else{
+			arrayArgs.push(objView.ma_citad);			
+			arrayArgs.push(objView.ngan_hang_nhan);
+		}
+		sendJSONRequestUpdate(arrayArgs);
+	}
+}
+//Cancel modify
+function cancelModify(){
+	hideOrDisplay(false);
+}
+
+//*******END CHỈNH SỬA*************//
+//Back from view
+function backView(){
+	hideOrDisplay(false);
+}
+//***********BEGIN DELETE SCREEN**********//
+//Go to delete screen
+function gotoDelete(name){	
+	keyName = name;
+	hideOrDisplay(true);
+	var objView = getObjbyName(name);
+	if(objView != null){
+		hideOrDisplay(true);
+		var docXsl = getCachePageXsl("transfer/remittance-template-table-delete-scr");
+		genHTMLStringWithXML(genXMLToEdit(objView), docXsl, successDetailScreenCallback, failDetailScreenCallback);
+	}
+}
+//Executing delete action
+function deleteTemplate(name){
+	var arrayArgs = new Array();
+	arrayArgs.push(KEY_DELETE);
+	arrayArgs.push(name);	
+	for(var i = 0; i<7; i++){
+		arrayArgs.push("");	
+	}	
+	sendJSONRequestUpdate(arrayArgs);
+}
+
+//***********END DELETE SCREEN**********//
+
+//Go to view screen
+function gotoUsing(name){	
+	hideOrDisplay(true);
+	var objView = getObjbyName(name);
+	if(objView != null){
+		//B1: tạo event
+		//B2: gọi init view
+		//B3: dispathher event		
+		if(objView.loai_chuyen_tien=='0'){		
+			navController.initWithRootView("transfer/transfer-local-create-scr", true, 'xsl', function(){			
+				//evtDispatherSample.sampleObj = objView;
+				//document.dispatchEvent(evtDispatherSample);
+				if(typeof(excuteSampleSelected) == 'function') {
+					
+					excuteSampleSelected(objView);
+					
+				}
+			}, function(){
+				//Failed
+			});
+		}else{
+			navController.initWithRootView("transfer/transfer-inter-bank",true, 'xsl', function(){			
+				excuteInterSampleSelected(objView);
+				
+			}, function(){
+				//Failed
+			});
+		}
+	}
+}
+
+function failDetailScreenCallback(){
+	
+}
+//Callback successed
+function successDetailScreenCallback(strHtml) {
+	var div = document.getElementById("id.view.template");
+	var node;
+	div.innerHTML = strHtml;	
+	var objView = getObjbyName(keyName);
+	if(objView !=null){
+		if(objView.loai_chuyen_tien =="0"){
+			//Nội bộ
+			node = document.getElementById('editTitle');
+			if(node != null && node !=undefined){
+				node.innerHTML = CONST_STR.get('TRANSFER_REMITTANCE_TIT_EDIT1');
+			}			
+			hiddenFieldsNoNeed(true);
+		}else{
+			//Liên ngân hàng
+			node = document.getElementById('editTitle');
+			if(node != null && node !=undefined){
+				node.innerHTML = CONST_STR.get('TRANSFER_REMITTANCE_TIT_EDIT2');
+			}
+			hiddenFieldsNoNeed(false);
+		}
+	}
+	
+	//PHỤC VỤ CHO VIỆC THÊM MẪU (KeyName = "");
+	if(objView == null){
+		if(keyOption == "0"){
+			node = document.getElementById('titleAdd');
+			if(node != null && node !=undefined){
+				node.innerHTML = CONST_STR.get('TRANSFER_REMITTANCE_TIT_ADD1');
+			}			
+			hiddenFieldsNoNeed(true);
+		}
+		else{
+			node = document.getElementById('titleAdd');
+			if(node != null && node !=undefined){
+				node.innerHTML = CONST_STR.get('TRANSFER_REMITTANCE_TIT_ADD2');
+			}			
+			hiddenFieldsNoNeed(false);
+		}
+	}
+}
+
+function sendJSONRequestUpdate(args){
+	var data = {};
+	var arrayArgs = args;
+	
+	//arrayArgs.push(KEY_PARAMETERS_NAME);//TÊN
+	//arrayArgs.push(keyOption);//OPTION
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TRANSFER_TEMPLATE_UPDATE"), "", "",
+								 gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+	data = getDataFromGprsCmd(gprsCmd);
+	requestMBService(data, true, 0, requestMBServiceUpdateSuccesss, requestMBServiceUpdateFail);
+
+}
+function requestMBServiceUpdateSuccesss(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp); //store response
+	if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TRANSFER_TEMPLATE_UPDATE") || (gprsResp.responseType == '-1')))){
+		
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+		return;
+	}
+	hideOrDisplay(false);
+	sendJSONRequest();		
+}
+
+function requestMBServiceUpdateFail(e){
+	showAlertText(gprsResp.respContent);
+	/*var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);*/
+}
+
+//Validate data method
+function validateContentEdit(){
+	var accTrans = document.getElementById('id.account.trans');	
+	//var accReceived = document.getElementById('id.account.received');
+	var bankName = document.getElementById('trans.bankname');
+	var nameChanged = document.getElementById('nameChanged');
+	var amount = document.getElementById('id.amount');
+
+	
+	//Kiểm tra tài khoản gửi khác rỗng
+	if(accTrans !=null){
+		if(accTrans.value.length <=0){
+			showAlertText(CONST_STR.get('REMITTENCE_BANK_SENT'));
+			return false;
+		}
+	}
+	if(bankName !=null && keyOption == KEY_PARAMETERS_OTHER_BANK){
+		if(bankName.value.length <=0){
+			showAlertText(CONST_STR.get('REMITTENCE_BANK_RECEIVE'));
+			return false;
+		}
+	}
+	
+	//Kiểm tra tài khoản nhận khác rỗng
+	/*if(accReceived !=null){
+		if(accReceived.value.length <=0){
+			showAlertText(CONST_STR.get('REMITTENCE_BANK_RECEIVE'));
+			return false;
+		}
+	}*/
+	//Kiểm tra tên khác rỗng
+	if(nameChanged !=null){
+		if(nameChanged.value.length <=0){
+			showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_USER'));
+			return false;
+		}
+	}
+	//Kiểm tra số lượng khác rỗng
+	if(amount !=null){
+		if(amount.value.length <=0){
+			showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_AMOUNT'));
+			return false;
+		}
+	}
+
+	return true;
+}
+function isNumberKeyNotDot(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+function isNumberKey(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode != 46 && charCode > 31
+    && (charCode < 48 || charCode > 57))
+        return false;
+
+    return true;
+}
+function handleInputAmount(e, des){
+	var limitActivate = document.getElementById('id.amount');
+	formatCurrency(e, limitActivate);		
+}
+//***********BEGIN SHOW COMMBOBOX CHO PHẦN EDIT 1***************//
+function showInputTransTypeEdit(){
+
+	var tmpArray1 = getLstDestinationAcc();	
+	
+	document.addEventListener("evtSelectionDialog", showInputTransTypeEditOpen, false);
+	document.addEventListener("evtSelectionDialogClose", showInputTransTypeEditClose, false);
+	showDialogList(CONST_STR.get('ESAVING_BGN_CHOICE'), tmpArray1, false);
+}
+
+function showInputTransTypeEditOpen(e) {
+	if (currentPage == "transfer/remittance-template-scr") {		
+		if(e.selectedValue1 !=null && e.selectedValue1 != undefined){
+			document.getElementById('id.account.trans').value = e.selectedValue1;
+		}	
+		showInputTransTypeEditClose();	
+	}
+}
+
+function showInputTransTypeEditClose() {
+	if (currentPage == "transfer/remittance-template-scr") {		
+		document.removeEventListener("evtSelectionDialog", showInputTransTypeEditOpen, false);
+		document.removeEventListener("evtSelectionDialogClose", showInputTransTypeEditClose, false);
+	}
+}
+//Tạo danh sách account
+function getLstDestinationAcc(){
+	var lstDesAcc = new Array();
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+			var tmpAcc = gUserInfo.accountList[i];
+			lstDesAcc.push(tmpAcc.accountNumber);			
+	}
+	return lstDesAcc;
+}
+//******END COMBOBOX CHO PHẦN EDIT 1**********//
+
+
+//***********BEGIN SHOW COMMBOBOX CHO PHẦN EDIT 2***************//
+function showInputTransTypeEditInput()
+{
+	//B1 cho bật dialog lên
+	//B2 cho load service ngầm
+	//B3 khi load thành công thì add lại vào dialog	
+	document.addEventListener("evtSelectionDialogInput", handleInputPayeeAccOpen, false);
+	document.addEventListener("evtSelectionDialogCloseInput", handleInputPayeeAccClose, false);
+	//document.addEventListener("tabChange", tabChanged, false);
+	document.addEventListener("onInputSelected", okSelected, false);	
+	var transType = "ALL";
+	var temp = CONST_PAYEE_LOCAL_TRANSFER;
+
+	if(keyOption == KEY_PARAMETERS_ALL){
+		transType = "ALL";
+	}
+	if(keyOption == KEY_PARAMETERS_INTERNAL){
+		//transType = "TH";
+		temp = CONST_PAYEE_LOCAL_TRANSFER;
+	}
+	if(keyOption == KEY_PARAMETERS_OTHER_BANK){
+		//transType = "TC";
+		temp = CONST_PAYEE_INTER_TRANSFER;
+	}
+	
+	dialog = new DialogListInput(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), transType, temp);
+	
+	dialog.showDialog(callbackShowDialogSuccessed, '');
+	
+	//Ẩn tab
+	//document.getElementById('tab1').style.display = 'none';
+	//document.getElementById('tab2').style.display = 'none';
+	//sendJsonToGetDataWithoutMask();	
+}
+
+function callbackShowDialogSuccessed(node){
+	dialog.hiddenTab2();
+}
+
+function handleInputPayeeAccOpen(e){
+	if (currentPage == "transfer/remittance-template-scr") {
+		handleInputPayeeAccClose();			
+		if(e.tabSelected == 'tab1'){
+			var accReceived = document.getElementById("id.account.received");
+			var bankName = document.getElementById("nameChanged");
+			var obj = e.dataObject;
+			if(accReceived !=null && bankName !=null ){
+				accReceived.value = obj.transValue;
+				bankName.value = obj.peopleName;
+			}
+		}
+	}
+}
+function handleInputPayeeAccClose(e){
+	if (currentPage == "transfer/remittance-template-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputPayeeAccClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputPayeeAccOpen, false);
+		//document.removeEventListener("tabChange", tabChanged, false);
+		document.removeEventListener("onInputSelected", okSelected, false);
+	}
+}
+function tabChanged(e){	
+	if (currentPage == "transfer/remittance-template-scr") {		
+		var node = e.selectedValueTab;
+		if(node.id == 'tab1'){
+			if(dialog !=null && dialog!= undefined){
+				dialog.removeData();
+				dialog.transType = "ALL";
+				dialog.gPayeeCode = CONST_PAYEE_INTER_TRANSFER;
+				dialog.requestData(node.id);
+			}
+		}
+		else{			
+				
+		}
+		
+	}
+}
+function okSelected(e){
+
+	tmpDestinationAcc = "";
+	tmpDestinationAccName = "";
+	if (currentPage == "transfer/remittance-template-scr") {		
+		handleInputPayeeAccClose();
+		var destinationAcc = document.getElementById("trans.targetaccount");
+		if ((e.selectedValue != undefined) &&(e.selectedValue != null) && (e.selectedValue.length>0)){
+			document.getElementById('id.account.received').value = e.selectedValue;
+			//Get name after user inputed account name			
+			loadLocalTransSuccess(e.selectedValue);
+		}
+	}
+}
+
+function sendJsonToGetDataWithoutMask(){	
+	gPayeeCode = CONST_PAYEE_LOCAL_TRANSFER;
+	var data = {};
+	var arrayArgs = new Array();	
+	var userCIFAccount = gCustomerNo;
+	arrayArgs.push(userCIFAccount);
+	arrayArgs.push(gPayeeCode);
+	arrayArgs.push('ALL');	
+	
+	requestBacgroundMBService('CMD_TYPE_LOOKUP_PAYEE', arrayArgs, requestMBServiceHistorySuccess, requestMBServiceHistoryFail);
+	
+}
+
+function loadLocalTransSuccess(accNo){
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push("QSNAME");
+	arrayArgs.push(accNo);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH"), "", "", "VN", gUserInfo.sessionID, arrayArgs);
+	data = getDataFromGprsCmd(gprsCmd);
+	requestBacgroundMBService("CMD_TYPE_QUICK_SEARCH", arrayArgs, requestQuickMBServiceSuccess, requestQuickMBServiceFail);
+}
+//event listener: http request success
+function requestQuickMBServiceSuccess(e){
+	gprsResp = parserJSON(e);
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_TYPE_QUICK_SEARCH")))) {
+		parserQuickQueryAccount();
+	}
+};
+function parserQuickQueryAccount() {
+	//gprsResp
+	if(!gprsResp || !gprsResp.arguments[0]) {		
+		return;
+	}
+	document.getElementById('nameChanged').value = gprsResp.arguments[0];
+}
+//event listener: http request fail
+function requestQuickMBServiceFail(){	
+};
+
+//******END COMBOBOX CHO PHẦN EDIT 2**********//
+//*******FILTER ******************************//
+
+function handleFilterABC(evt, node){
+	pageIndex = 1;
+	var listFilterTemplate = new Array();
+	if(node !=null && node.value.length>0){
+		for(var i = 0; i<lstTemplateStored.length; i++){
+			var nameParent = lstTemplateStored[i].name;
+			if(nameParent != null && nameParent != undefined){			
+				nameParent = nameParent.toLowerCase();
+				if(nameParent.indexOf(node.value.toLowerCase()) > -1){
+					listFilterTemplate.push(lstTemplateStored[i]);
+				}
+			}
+		}
+		//Gen xml
+		lstTemplate = listFilterTemplate;
+		
+	}else{
+		//Gen lại
+		lstTemplate = 	lstTemplateStored;	
+	}	
+	genHtmlSearchResult(getItemsPerPage(lstTemplate, pageIndex));
+}
+//*******END FILTER*************************//
+
+
+//*********PHẦN THÊM MỚI MẪU **********//
+//Thêm mẫu action
+function addMoreTemplate(){
+	keyName = "";//Để vào phần objView = null;
+	if(keyOption == ""){
+		showAlertText(CONST_STR.get("TRANSFER_REMITTANCE_MSG_ADD"));
+		return;	
+	}
+	hideOrDisplay(true);
+	var docXml = createXMLDoc();
+	var rootNode = createXMLNode('transtemplate','',docXml);	
+	var childlistsavingNode = createXMLNode('lsttemplate','',docXml,rootNode);
+	//Tài khoản nguồn
+	childNodeTit = createXMLNode('tai_khoan_nguon',gUserInfo.accountList[0].accountNumber,docXml,childlistsavingNode);	
+	
+	var docXsl = getCachePageXsl("transfer/remittance-template-table-add-scr");
+	genHTMLStringWithXML(docXml, docXsl, successDetailScreenCallback, failDetailScreenCallback);
+	
+}
+//*******SELECT BANK**********//
+function showBankSelection() {
+	tmpBankInfoSelected = "";
+	tmpCityInfoSelected = "";
+	tmpBranchInfoSelected1 ="";
+	navController.pushToView("transfer/trans-input-bank", true);
+	document.addEventListener("evtSelectedBranch", handleInputBankBranch, false);
+}
+
+var statusInputBank = false; //using check input bank ready
+ 
+function handleInputBankBranch(e) {
+	document.removeEventListener("evtSelectedBranch", handleInputBankBranch, false);
+	tmpBankInfoSelected = e.bankInfo;
+	tmpCityInfoSelected = e.bankCityInfo;
+	tmpBranchInfoSelected1 = e.bankBranchInfo;	
+	statusInputBank = true;
+	
+}
+//*******SELECT BANK**********//
+
+//THÊM MỚI MẪU
+function addNew(){
+	var templateName = document.getElementById('id.template.name');
+	var accSend = document.getElementById('id.account.trans');
+	var accReceived = document.getElementById('id.account.received');
+	var name    = document.getElementById('nameChanged');
+	var amount  = document.getElementById('id.amount');
+	var content = document.getElementById('content.trans');
+	var bankName = document.getElementById('trans.bankname');
+	var ma_citad = "";	
+
+	
+	if(validateAddNew()){
+		
+		
+		var arrayArgs = new Array();
+		arrayArgs.push(KEY_UPDATE);
+		arrayArgs.push(templateName.value);//KEY ĐÂY
+		
+		arrayArgs.push(accSend.value);
+		arrayArgs.push(name.value);
+		arrayArgs.push(accReceived.value);
+		
+		arrayArgs.push(removeSpecialChar(amount.value));
+		arrayArgs.push(content.value);
+		
+		if(keyOption == KEY_PARAMETERS_OTHER_BANK){	
+			if(tmpBranchInfoSelected1 !=null && tmpBranchInfoSelected1 != undefined){
+				ma_citad = tmpBranchInfoSelected1.split('#')[0];
+			}							
+		}
+		logInfo(tmpBranchInfoSelected1);
+		logInfo(tmpCityInfoSelected);
+		logInfo(tmpBankInfoSelected);
+
+		arrayArgs.push(ma_citad);//Mã này lấy từ ngân hàng mà khách hàng chọn
+		if(keyOption == KEY_PARAMETERS_OTHER_BANK){	
+			arrayArgs.push(bankName.value);	
+		}else{
+			arrayArgs.push("");	
+		}
+		sendJSONRequestUpdate(arrayArgs);
+	}
+}
+
+function validateAddNew(){
+	var templateName = document.getElementById('id.template.name');
+	var accSend = document.getElementById('id.account.trans');
+	var accReceived = document.getElementById('id.account.received');
+	var name    = document.getElementById('nameChanged');
+	var amount  = document.getElementById('id.amount');
+	var content = document.getElementById('content.trans');
+	var bankName = document.getElementById('trans.bankname');
+	
+	
+	if(templateName==null || accSend == null || accReceived == null ||  name == null || amount == null ||
+		content == null){
+		showAlertText(CONST_STR.get('Lỗi! Quý khác vui lòng kiểm tra lại'));	
+		return false;
+	}
+	//Kiểm tra tên mẫu
+	if(templateName !=null && templateName != undefined){
+		if(templateName.value.length <=0){
+			showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_NAME'));
+			return false;
+		}
+	}
+	//Kiểm tra tài khoản gửi khác rỗng
+	if(accSend !=null && accSend != undefined){
+		if(accSend.value.length <=0){
+			showAlertText(CONST_STR.get(''));
+			return false;
+		}
+	}
+	//Kiểm tra tài khoản nhận khác rỗng
+	if(accReceived !=null && accReceived != undefined){
+		if(accReceived.value.length <=0){
+			
+			return false;
+		}
+	}
+	//Kiểm tra tên khác rỗng
+	if(nameChanged !=null && nameChanged != undefined){
+		if(nameChanged.value.length <=0){
+			showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_USER'));
+			return false;
+		}
+	}
+	//Kiểm tra số lượng khác rỗng
+	if(amount !=null && amount != undefined){
+		if(amount.value.length <=0){
+			showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_AMOUNT'));
+			return false;
+		}
+	}
+	//Kiểm tra tên khác rỗng
+	if(content !=null && content != undefined){
+		if(content.value.length <=0){
+			showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_CONTENT'));
+			return false;
+		}
+	}
+	//Kiểm tra số lượng khác rỗng
+	if(bankName !=null && bankName != undefined && keyOption ==KEY_PARAMETERS_OTHER_BANK){
+		if(bankName.value.length <=0){
+			showAlertText(CONST_STR.get('TRANSFER_REMITTANCE_MSG_BANK'));
+			return false;
+		}
+	}
+	return true;
+}
+//NHẬP LẠI PHẦN THÊM MẪU
+function reInput(){
+	var accSend = document.getElementById('id.account.trans');
+	var accReceived = document.getElementById('id.account.received');
+	var name    = document.getElementById('nameChanged');
+	var amount  = document.getElementById('id.amount');
+	var content = document.getElementById('content.trans');
+	var bankName = document.getElementById('trans.bankname');
+	if(accSend !=null && accSend !=undefined){	
+		accSend.value = gUserInfo.accountList[0].accountNumber;
+	}	
+	if(accReceived !=null && accReceived !=undefined){
+		accReceived.value = "";		
+	}
+	if(name !=null && name !=undefined){
+		name.value = "";		
+	}
+	if(amount !=null && amount !=undefined){
+		amount.value = "";		
+	}
+	if(content !=null && content !=undefined){
+		content.value = "";		
+	}
+	if(bankName !=null && bankName !=undefined){
+		bankName.value = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');		
+	}
+}

@@ -1,0 +1,492 @@
+/**
+ * Created by NgocDT3
+ * User: NgocDT3
+ * Date: 20/7/2015
+ * Time: 5:05 PM
+ */
+
+
+var pageIndex = 1;
+var itemsPerPage = 10;
+var totalPage = 0;
+var gAccCurrent;
+var tmparr1;
+var tmparr2;
+var tmpContentHTML;
+var HistoryObj=[]
+var HisTopup =[];
+var HisRate=[];
+var gFurSavAcc;
+var LinkExcel=[];
+function loadInitXML(){
+    gAccCurrent = gFurSavAcc;
+}
+
+function viewDidLoadSuccess(){
+    logInfo('Drawal history load success');
+    sendJSONRequest();
+}
+
+function viewWillUnload(){
+    logInfo('Drawal history unload');
+}
+
+function sendJSONRequest(){
+    var data = {};
+    var arrayArgs = new Array();
+
+    arrayArgs.push(gAccCurrent);
+    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_HISTORY_FUTURE_SAVING"), "", "",
+        gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+
+    data = getDataFromGprsCmd(gprsCmd);
+    requestMBService(data, true, 0, requestMBServiceSuccesss, requestMBServiceFail);
+
+}
+
+function requestMBServiceSuccesss(e){
+    logInfo('Request server successed');
+    gprsResp = parserJSON(e);
+    setRespObjStore(gprsResp); //store response
+    if((gprsResp.respCode != '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_HISTORY_FUTURE_SAVING") || (gprsResp.responseType == '-1')))){
+        //navController.pushToView('account/account-scr', true);
+        var tmpPageName = navController.getDefaultPage();
+        var tmpPageType = navController.getDefaultPageType();
+        navController.pushToView(tmpPageName, true, tmpPageType);
+    }
+    if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_HISTORY_FUTURE_SAVING")))) {
+
+        if(gprsResp.arguments == 'EMPTY'){
+            var div = document.getElementById("show-data-history");
+            var div = document.getElementById("show-rate-history");
+            div.innerHTML = "";
+            var node = document.getElementById('id.empty.withdraw');
+            node.style.display = '';
+            return;
+        }else{
+
+            HistoryObj = new Array();
+            HistoryObj = gprsResp.arguments;
+
+            if(HistoryObj == null){
+                var tmpPageName = navController.getDefaultPage();
+                var tmpPageType = navController.getDefaultPageType();
+                navController.pushToView(tmpPageName, true, tmpPageType);
+//				document.getElementById('tableButton').style.display = '';
+                return;
+            }
+            getData();
+            genHtmlSearchResult1(getItemsPerPage(HisTopup, pageIndex));
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                genDesktopdata(HisRate);
+            }
+            else{
+            genHtmlSearchResult2(getItemsPerPage(HisRate, pageIndex));
+        }
+        }
+    }
+}
+function getData(){
+    for(var i=0; i<HistoryObj.length; i++){
+        if(HistoryObj[i] != 'END') {
+            tempArrStr = HistoryObj[i].split("#");
+            if (tempArrStr.length > 3){ //Card object
+                tmpTopObj = new HisTopObj();
+                tmpTopObj.date = tempArrStr[0];
+                tmpTopObj.amount = tempArrStr[1];
+                tmpTopObj.balance = tempArrStr[2];
+                tmpTopObj.savingtype = tempArrStr[3];
+                HisTopup.push(tmpTopObj);
+            }
+            else if (tempArrStr.length ==2){
+                tmpRateObj = new HisRateObj();
+                tmpRateObj.startdate =tempArrStr[0];
+                tmpRateObj.rate = tempArrStr[1];
+                HisRate.push(tmpRateObj);
+            }
+            else{
+
+                var tmpLinkFile = (tempArrStr[0]);
+                setDownloadFileAccHis(tmpLinkFile);
+
+            }
+        }
+    }
+    var nodeExport = document.getElementById('acchis-exportFunc');
+    if(HisTopup.length >0){
+
+        nodeExport.style.display = 'none';
+    }
+    else{
+        nodeExport.style.display = 'none';
+    }
+    //total page
+    totalPage = calTotalPage(HisTopup);
+    //gen page indicator
+    pageIndex = 1;
+    genPagging(totalPage, pageIndex);
+
+    //get object per page
+    var arrMedial = new Array();
+    arrMedial = getItemsPerPage(HisTopup, pageIndex);
+    genXmlDataPagging(arrMedial);
+    genHtmlSearchResult1(arrMedial);
+    /*}*/
+}
+
+function requestMBServiceFail(e){
+    logInfo('Request server failed');
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.pushToView(tmpPageName, true, tmpPageType);
+    //document.getElementById('tableButton').style.display = '';
+}
+
+function genHtmlSearchResult1(arr) {
+    var docXsl = getCachePageXsl("esaving/future-saving-history-table");
+    console.log('esaving/future-saving-history-table');
+    console.log(arr);
+    tmparr1 = arr;
+    genHTMLStringWithXML(genXmlDataPagging(tmparr1), docXsl, successPaggingCallback, failPaggingCallback);
+}
+function genHtmlSearchResult2(arr) {
+    var docXsl = getCachePageXsl("esaving/future-saving-rate-table");
+    console.log('esaving/future-saving-rate-table');
+    console.log(arr);
+    tmparr2 = arr;
+    genHTMLStringWithXML(genXmlRatePagging(tmparr2), docXsl, successPaggingCallback2, failPaggingCallback2);
+}
+//Callback successed
+function successPaggingCallback(strHtml) {
+    var div = document.getElementById("show-data-history");
+//    div.innerHTML = strHtml;
+    if(tmpContentHTML == null || tmpContentHTML == "")
+    {
+        document.getElementById('tmpHeader').style.display = 'none';
+        document.getElementById('acchis-exportFunc').style.display = 'none';
+    }
+    else    {
+        div.innerHTML = tmpContentHTML;
+        document.getElementById('tmpHeader').style.display = 'block';
+        document.getElementById('acchis-exportFunc').style.display = 'none';
+    }
+
+//    for(var i = 0; i < tmparr1.length; i++) {
+//        var tmpHisObj = tmparr1[i];
+//        var data = new Array();
+//        var data1 = new Array();
+////        var data2 = new Array();
+//
+//        data1.push(CONST_STR.get('FUTURE_SAVING_AMOUNT_DATE'),tmpHisObj.date);
+//        data1.push(CONST_STR.get('FUTURE_SAVING_AMOUNT_REAL'),formatNumberToCurrency(tmpHisObj.amount));
+//        data1.push(CONST_STR.get('FUTURE_SAVING_BALANCE'),formatNumberToCurrency(tmpHisObj.balance));
+//            if(tmpHisObj.savingtype =='PRD'){
+//                data1.push(CONST_STR.get('FUTURE_SAVING_PRD'));
+//            }
+//            else if(tmpHisObj.savingtype =='FLX'){
+//                data1.push(CONST_STR.get('FUTURE_SAVING_AUTO'));
+//            }
+//        data.push(data1);
+//        var recycler = new RecyclerView({
+//            type: "NORMAL",
+//            typeTextAlign: "MIDLE",
+//            title: "Detail history",
+//            titleAlign:"LEFT",
+//            opacity:true
+//        });
+//
+//        recycler.setData(data);
+//        var contentHTML = recycler.init();
+//
+//        div.innerHTML += contentHTML + "<div style='margin-bottom: 15px'></div>";
+//        console.log(contentHTML);
+//    }
+
+
+    //genPagging(HisTopup, pageIndex ,document.getElementById('pageIndicatorNums'));
+
+    //document.getElementById('esavingAccLst').value = gDestinationAcc;
+
+    //document.getElementById('tableButton').style.display = '';
+}
+function successPaggingCallback2(strHtml) {
+    var div = document.getElementById("show-rate-history");
+    //div.innerHTML = strHtml;
+    for(var i = 0; i < tmparr2.length; i++) {
+        var tmpHisObj = tmparr2[i];
+        var data = new Array();
+        var data1 = new Array();
+        var data2 = new Array();
+
+        data1.push(CONST_STR.get('FUTURE_SAVING_START_DATE'),tmpHisObj.startdate);
+        data2.push(CONST_STR.get('FUTURE_SAVING_RATE_LEVEL'),tmpHisObj.rate + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'));
+        data.push(data1,data2);
+        var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Detail history",
+            titleAlign:"LEFT",
+            opacity:true
+        });
+
+        recycler.setData(data);
+        var contentHTML = recycler.init();
+
+        div.innerHTML += contentHTML + "<div style='margin-bottom: 15px'></div>";
+        console.log(contentHTML);
+    }
+    //genPagging(HisTopup, pageIndex ,document.getElementById('pageIndicatorNums'));
+    //document.getElementById('tableButton').style.display = '';
+    //document.getElementById('esavingAccLst').value = gDestinationAcc;
+
+}
+/*function genPagging(arr, pageIndex, nodepage) {
+ var totalPage = calTotalPage(arr);
+ var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+ nodepage.innerHTML = tmpStr;
+ }
+ */
+function genPagging(arr, pageIndex) {
+
+    //var nodePager = document.getElementById('pageIndicatorNums');
+    var nodepage = document.getElementById('acc.pagination');
+    var tmpStr = genPageIndicatorHtml(totalPage, Number(pageIndex));
+    nodepage.innerHTML = tmpStr;
+}
+
+function calTotalPage(arrObj) {
+    if(arrObj != null && arrObj.length > 0){
+        return Math.ceil(arrObj.length/itemsPerPage);
+    }
+    return 0;
+}
+
+//get items per page
+function getItemsPerPage(arrObj, pageIndex) {
+    var arrTmp = new Array();
+    var from = 0;
+    var to  = 0;
+    for(var i = 0; i < arrObj.length; i++) {
+        from = (pageIndex - 1) * itemsPerPage;
+        to = from + itemsPerPage;
+        if(i >= from && i < to) {
+            arrTmp.push(arrObj[i]);
+        }
+    }
+    return arrTmp;
+}
+
+function pageIndicatorSelected(selectedIdx, selectedPage) {
+
+    var arrMedial = new Array();
+    pageIndex = selectedIdx;
+    arrMedial = getItemsPerPage(HisTopup, selectedIdx);
+    genHtmlSearchResult1(arrMedial);
+}
+//Callback failed
+function failPaggingCallback() {
+    //navController.pushToView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.pushToView(tmpPageName, true, tmpPageType);
+}
+function failPaggingCallback2() {
+    //navController.pushToView('account/account-scr', true);
+    var tmpPageName = navController.getDefaultPage();
+    var tmpPageType = navController.getDefaultPageType();
+    navController.pushToView(tmpPageName, true, tmpPageType);
+}
+function genXmlDataPagging(arr) {
+    tmpContentHTML= "";
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlRootNode = createXMLNode('resptable', '', docXml);
+    var tmpXmlNodeTitle = createXMLNode('tabletitle', '', docXml, tmpXmlRootNode);
+    var tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('FUTURE_SAVING_AMOUNT_DATE'), docXml, tmpXmlNodeTitle);
+    tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('FUTURE_SAVING_AMOUNT_REAL'), docXml, tmpXmlNodeTitle);
+    tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('FUTURE_SAVING_BALANCE'), docXml, tmpXmlNodeTitle);
+    tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('FUTURE_SAVING_TOPUP_TYPE'), docXml, tmpXmlNodeTitle);
+    //tmpChildNode = createXMLNode('coltitle5', CONST_STR.get('ACCOUNT_BALANCE_TITLE'), docXml, tmpXmlNodeTitle);
+    //tmpChildNode = createXMLNode('coltitle6', CONST_STR.get('ACC_TRAS_ID_TITLE'), docXml, tmpXmlNodeTitle);
+    for(var i = 0; i < arr.length; i++) {
+        var tmpHisObj = arr[i];
+        if(tmpHisObj.savingtype != 'PRD' && tmpHisObj.savingtype != 'FLX'){
+            var row1 = new Array();
+            row1.push(CONST_STR.get('FUTURE_SAVING_AMOUNT_DATE'),tmpHisObj.date);
+            var row2 = new Array();
+            row2.push(CONST_STR.get('FUTURE_SAVING_AMOUNT_REAL'),formatNumberToCurrency(tmpHisObj.amount));
+            var row3 = new Array();
+            row3.push(CONST_STR.get('FUTURE_SAVING_BALANCE'),formatNumberToCurrency(tmpHisObj.balance));
+//            var row4 = new Array();
+//            row4.push(CONST_STR.get('FUTURE_SAVING_TOPUP_TYPE'));
+//            if(tmpHisObj.savingtype =='IC'){
+//
+//            }
+            var data = new Array();
+            data.push(row1,row2,row3);
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+            var recycler = new RecyclerView({
+                type: "DESKTOP_GRID",
+                typeTextAlign: "MIDLE",
+                title: "Detail history",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+            }else{
+            var recycler = new RecyclerView({
+                type: "NORMAL",
+                typeTextAlign: "MIDLE",
+                title: "Detail history",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+            }
+            recycler.setData(data);
+            tmpContentHTML = tmpContentHTML+ recycler.init()+"<br>";
+        }
+        else{
+            /*var tmpXmlNodeInfo = createXMLNode('tabletdetail', '', docXml, tmpXmlRootNode);
+
+             tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('FUTURE_SAVING_AMOUNT_DATE'), docXml, tmpXmlNodeInfo);
+             tmpChildNode = createXMLNode('colcontent1', tmpHisObj.date, docXml, tmpXmlNodeInfo);
+             tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('FUTURE_SAVING_AMOUNT_REAL'), docXml, tmpXmlNodeInfo);
+             tmpChildNode = createXMLNode('colcontent2', formatNumberToCurrency(tmpHisObj.amount), docXml, tmpXmlNodeInfo);
+             tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('FUTURE_SAVING_BALANCE'), docXml, tmpXmlNodeInfo);
+             tmpChildNode = createXMLNode('colcontent3', formatNumberToCurrency(tmpHisObj.balance), docXml, tmpXmlNodeInfo);
+             tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('FUTURE_SAVING_TOPUP_TYPE'), docXml, tmpXmlNodeInfo);
+             if(tmpHisObj.savingtype =='PRD'){
+             tmpChildNode = createXMLNode('colcontent4', CONST_STR.get('FUTURE_SAVING_PRD'), docXml, tmpXmlNodeInfo);
+             }
+             else if(tmpHisObj.savingtype =='FLX'){
+             tmpChildNode = createXMLNode('colcontent4', CONST_STR.get('FUTURE_SAVING_AUTO'), docXml, tmpXmlNodeInfo);
+             }*/
+            var row1 = new Array();
+            row1.push(CONST_STR.get('FUTURE_SAVING_AMOUNT_DATE'),tmpHisObj.date);
+            var row2 = new Array();
+            row2.push(CONST_STR.get('FUTURE_SAVING_AMOUNT_REAL'),formatNumberToCurrency(tmpHisObj.amount));
+            var row3 = new Array();
+            row3.push(CONST_STR.get('FUTURE_SAVING_BALANCE'),formatNumberToCurrency(tmpHisObj.balance));
+            var row4 = new Array();
+            row4.push(CONST_STR.get('FUTURE_SAVING_TOPUP_TYPE'));
+            if(tmpHisObj.savingtype =='PRD'){
+                row4.push(CONST_STR.get('FUTURE_SAVING_PRD'));
+            }
+            else if(tmpHisObj.savingtype =='FLX'){
+                row4.push(CONST_STR.get('FUTURE_SAVING_AUTO'));
+            }
+            var data = new Array();
+            data.push(row1,row2,row3,row4);
+            var recycler = new RecyclerView({
+                type: "NORMAL",
+                typeTextAlign: "MIDLE",
+                title: "Detail history",
+                titleAlign:"LEFT",
+                opacity:true
+            });
+
+            recycler.setData(data);
+            tmpContentHTML = tmpContentHTML+ recycler.init()+"<br>";
+            //var tmpXmlNodeInfo = createXMLNode('content', contentHTML, docXml, tmpXmlRootNode);
+        }
+
+
+    }
+    /*for(var i = 0; i < HisTopup.length; i++) {
+     var tmpHisObj = HisTopup[i];
+     var tmpXmlNodeInfo = createXMLNode('tabletdetail', '', docXml, tmpXmlRootNode);
+
+     tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('FUTURE_SAVING_AMOUNT_DATE'), docXml, tmpXmlNodeInfo);
+     tmpChildNode = createXMLNode('colcontent1', tmpHisObj.date, docXml, tmpXmlNodeInfo);
+     tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('FUTURE_SAVING_AMOUNT_REAL'), docXml, tmpXmlNodeInfo);
+     tmpChildNode = createXMLNode('colcontent2', tmpHisObj.amount, docXml, tmpXmlNodeInfo);
+     tmpChildNode = createXMLNode('coltitle3', CONST_STR.get('FUTURE_SAVING_BALANCE'), docXml, tmpXmlNodeInfo);
+     tmpChildNode = createXMLNode('colcontent3', tmpHisObj.balance, docXml, tmpXmlNodeInfo);
+     tmpChildNode = createXMLNode('coltitle4', CONST_STR.get('FUTURE_SAVING_TOPUP_TYPE'), docXml, tmpXmlNodeInfo);
+     tmpChildNode = createXMLNode('colcontent4', tmpHisObj.savingtype, docXml, tmpXmlNodeInfo);
+
+     }*/
+
+    logInfo(docXml);
+    return docXml;
+}
+function genDesktopdata(arr){
+    var contentHTML;
+    var div = document.getElementById("show-rate-history");
+
+    var arrTitle = new Array();
+    arrTitle.push(CONST_STR.get('FUTURE_SAVING_START_DATE'));
+    arrTitle.push(CONST_STR.get('FUTURE_SAVING_RATE_LEVEL'));
+
+    var arrContentData = new Array();
+        arrContentData.push(arrTitle);
+    for(i = 0;i< arr.length; i++) {
+        var tmpHisObj =arr[i];
+
+    var arrItemContent = new Array();
+    arrItemContent.push(tmpHisObj.startdate);
+    arrItemContent.push(tmpHisObj.rate + CONST_STR.get('JUMBO_PERCENT_PER_YEAR'));
+    arrContentData.push(arrItemContent);
+    }
+    var recycler = new RecyclerView({
+        type: "DESKTOP_LIST",
+        typeTextAlign: "MIDLE",
+        title: "Tai khoan jumbo",
+        titleAlign:"LEFT",
+        opacity:false
+    });
+
+    recycler.setData(arrContentData);
+    contentHTML = recycler.init();
+    div.innerHTML = contentHTML;
+
+}
+function genXmlRatePagging(arr) {
+    var docXml = createXMLDoc();
+    var tmpXmlRootNode;
+    var tmpXmlRootNode = createXMLNode('ratetable', '', docXml);
+    var tmpXmlNodeTitle = createXMLNode('ratetitle', '', docXml, tmpXmlRootNode);
+    var tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('FUTURE_SAVING_START_DATE'), docXml, tmpXmlNodeTitle);
+    tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('FUTURE_SAVING_RATE_LEVEL'), docXml, tmpXmlNodeTitle);
+
+    for(var i = 0; i < HisRate.length; i++) {
+        var tmpHisObj = HisRate[i];
+        var tmpXmlNodeInfo = createXMLNode('ratedetail', '', docXml, tmpXmlRootNode);
+
+        tmpChildNode = createXMLNode('coltitle1', CONST_STR.get('FUTURE_SAVING_START_DATE'), docXml, tmpXmlNodeInfo);
+        tmpChildNode = createXMLNode('colcontent1', tmpHisObj.startdate, docXml, tmpXmlNodeInfo);
+        tmpChildNode = createXMLNode('coltitle2', CONST_STR.get('FUTURE_SAVING_RATE_LEVEL'), docXml, tmpXmlNodeInfo);
+        tmpChildNode = createXMLNode('colcontent2', tmpHisObj.rate +CONST_STR.get('JUMBO_PERCENT_PER_YEAR'), docXml, tmpXmlNodeInfo);
+
+    }
+    return docXml;
+}
+
+
+function backPage(){
+    navController.pushToView('esaving/esaving-information',true,'xsl');
+}
+
+function printAccHistory() {
+
+    var div1 = 99;
+    for (i=0;i<document.getElementById("mainViewContent").childNodes.length;i++)
+    {
+        //alert("Nodename: " + tmpParent.childNodes[i].nodeName + "Nodetype: " + tmpParent.childNodes[i].nodeType);
+        if (document.getElementById("mainViewContent").childNodes[i].nodeType == 1)
+        {
+            if (div1 == 99)
+            {
+                div1 = i;
+                break;
+            }
+        }
+    }
+
+    var printNode = document.getElementById("mainViewContent").childNodes[div1];
+    printNodeWithAll(printNode);
+}
+function setDownloadFileAccHis(inLink) {
+
+    var nodeLoadFile = document.getElementById('acchis.exportfile');
+    nodeLoadFile.setAttribute('onClick', 'window.open("' + inLink + '")');
+}

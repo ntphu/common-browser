@@ -1,0 +1,585 @@
+var xmlDetail = '';
+var ResultControl =[];
+var sourceacc;
+var tmpfrequency;
+var tmparracc = [];
+function loadInitXML(){	
+
+}
+function viewDidLoadSuccess(){
+	var tmpXsl = getCachePageXsl("esaving/esaving-info-table");
+	//if(gFurSaving.length > 0){
+			ResultControl =gFurSaving;
+			genHtmlSearchResult(ResultControl);
+	//}
+	//Init calendar
+	var today = new Date();						
+	var dd = today.getDate();						
+	var mm = today.getMonth()+1; //January is 0!						
+	var yyyy = today.getFullYear();						
+							
+	if(dd<10) {						
+		dd='0'+dd;					
+	} 						
+							
+	if(mm<10) {						
+		mm='0'+mm;					
+	} 						
+							
+	today = yyyy+'-'+mm+'-'+dd;						
+							
+	var fromDate;						
+	var toDate;						
+							
+	if (gUserInfo.lang == 'VN') {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {
+					document.getElementById('FurSav_begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',			
+				dom_field    : document.getElementById('span.begindate'), //node make action			
+				async_selection : true,
+								
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Trước',
+							fwd  : 'Sau',
+							hide : 'Đóng'
+						},	
+						weekdays : {	
+							motu : 'T2;T3;T4;T5;T6;T7;CN'
+						},	
+						monthes : {	
+							full : 'Tháng 1;Tháng 2;Tháng 3;Tháng 4;Tháng 5;Tháng 6;Tháng 7;Tháng 8;Tháng 9;Tháng 10;Tháng 11;Tháng 12'
+						},	
+					}		
+				}			
+			}				
+		);
+							
+	}						
+	else {						
+		fromDate = new DatePicker(					
+			{				
+				show : function(data) {},			
+				hide : function(data) {},			
+				seek : function(data) {},			
+				select : function(data, fn) {					
+					document.getElementById('FurSav_begindate').value = HumanDate.human(data, 'd/m/Y'); //node nhan gia tri
+					fromDate.hide();
+				}			
+			},				
+			{				
+				tmpl_field   : 'd/m/Y',			
+				range_min    : '01-01-2008',			
+				range_max    : '12-31-2999',					
+				dom_field    : document.getElementById('span.begindate'), //node make action	
+				async_selection : true,
+				
+				dictionaries : {			
+					'custom' : {		
+						common : {	
+							bwd  : 'Previous',
+							fwd  : 'Next',
+							hide : 'Close'
+						},	
+						weekdays : {	
+							motu : 'Mo;Tu;We;Th;Fr;Sa;Su'
+						},	
+						monthes : {	
+							full : 'January;Feburary;March;April;May;June;July;August;September;October;November;December'
+						},	
+					}		
+				}			
+			}				
+		);		
+						
+	}	
+	//end calendar
+}
+function genHtmlSearchResult(arr) {
+		//var docXsl = getCachePageXsl("esaving/esaving-close-table-src");
+		var docXsl = getCachePageXsl("esaving/future-saving-change-info-table");
+		genHTMLStringWithXML(genXmlDataPagging(arr), docXsl, successPaggingCallback, failPaggingCallback);
+}
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("esaving-info");
+    if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+        var recycler = new RecyclerView({
+            type: "DESKTOP_GRID",
+            typeTextAlign: "MIDLE",
+            title: "Tài khoản online",
+            titleAlign:"LEFT",
+            opacity:true
+        });
+        recycler.setData(tmparracc);
+        var contentHTML = recycler.init();
+        div.innerHTML = contentHTML;
+    }else{
+        var recycler = new RecyclerView({
+            type: "NORMAL",
+            typeTextAlign: "MIDLE",
+            title: "Tài khoản online",
+            titleAlign:"LEFT",
+            opacity:false
+        });
+        recycler.setData(tmparracc);
+        var contentHTML = recycler.init();
+        div.innerHTML = contentHTML+"<br>";
+    }
+
+}
+//Callback failed
+function failPaggingCallback() {
+	navController.pushToView('account/account-scr', true);
+}
+function genXmlDataPagging(arr) {
+	docXml = createXMLDoc();
+
+	var rootNode = createXMLNode('esavingChangeInfo','',docXml);
+	var childlistsavingNode = createXMLNode('listaccsaving','',docXml,rootNode);
+	var childlistaccvisNode = createXMLNode('listacccanchange','',docXml,rootNode);
+	var childlistaccnovisNode = createXMLNode('listaccnotchange','',docXml,rootNode);
+	
+	var titleTable = createXMLNode('esavingTitleTable','',docXml,childlistsavingNode);
+	var childNodeTit = createXMLNode('selecttit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_TIT_CHOICE'),docXml,titleTable);
+	    childNodeTit = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,titleTable);
+		childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,titleTable);
+		childNodeTit = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,titleTable);
+		childNodeTit = createXMLNode('interesttit',CONST_STR.get('FUTURE_SAVING_CHANGE_AMT_CURR_VND'),docXml,titleTable);
+		childNodeTit = createXMLNode('valdatetit',CONST_STR.get('FUTURE_SAVING_CHANGE_ACC_CURR'),docXml,titleTable);
+		childNodeTit = createXMLNode('formtit',CONST_STR.get('FUTURE_SAVING_FREQUENCY_CUR'),docXml,titleTable);
+		childNodeTit = createXMLNode('matdatetit',CONST_STR.get('FUTURE_SAVING_TYPE'),docXml,titleTable);
+	
+	//childNodeTit = createXMLNode('esavingtypetit',CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'),docXml,titleTable);
+
+	//childNodeTit = createXMLNode('currtit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCTMONEY'),docXml,titleTable);
+		var valTable = createXMLNode('accinfo','',docXml,childlistsavingNode);
+		var nodeVal = createXMLNode('accnotit',CONST_STR.get('ACCOUNT_ACC_NO_TITLE'),docXml,valTable);
+		//so tai khoan
+		nodeVal = createXMLNode('accnotit',CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),docXml,valTable);
+		nodeVal = createXMLNode('accnocont',arr.accnocont,docXml,valTable);
+        var row1 = new Array();
+        row1.push(CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'),arr.accnocont);
+        tmparracc.push(row1);
+		//loại tk/muc dich
+		nodeVal = createXMLNode('esavingtypetit',CONST_STR.get('FUTURE_SAVING_PURPOSE'),docXml,valTable);
+		nodeVal = createXMLNode('savingtype',CONST_STR.get(arr.purpose),docXml,valTable);
+    var row2 = new Array();
+    row2.push(CONST_STR.get('FUTURE_SAVING_PURPOSE'),CONST_STR.get(arr.purpose));
+    tmparracc.push(row2);
+		// so du hien tai
+		nodeVal = createXMLNode('amounttit',CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),docXml,valTable);
+		nodeVal = createXMLNode('amountcont',arr.sodu_hientai,docXml,valTable);
+    var row3 = new Array();
+    row3.push(CONST_STR.get('FUTURE_SAVING_BALANCE_CURR'),arr.sodu_hientai);
+    tmparracc.push(row3);
+		//Lãi suất/so tien gui dinh ki hien tai//ngay gui
+		nodeVal = createXMLNode('interesttit',CONST_STR.get('FUTURE_SAVING_CHANGE_AMT_CURR_VND'),docXml,valTable);
+		nodeVal = createXMLNode('interestcont',formatNumberToCurrencyWithSymbol(arr.frequency_amt),docXml,valTable);
+    var row4 = new Array();
+    row4.push(CONST_STR.get('FUTURE_SAVING_CHANGE_AMT_CURR_VND'),formatNumberToCurrencyWithSymbol(arr.frequency_amt));
+    tmparracc.push(row4);
+		//ngay gui/so tai khoan trich tien hien tai//ngay den han
+		nodeVal = createXMLNode('valdatetit',CONST_STR.get('FUTURE_SAVING_CHANGE_ACC_CURR'),docXml,valTable);
+		nodeVal = createXMLNode('valdatecont',arr.accamt,docXml,valTable);
+    var row5 = new Array();
+    row5.push(CONST_STR.get('FUTURE_SAVING_CHANGE_ACC_CURR'),arr.accamt);
+    tmparracc.push(row5);
+    var row6 = new Array();
+		//tan suat gui gop
+		nodeVal = createXMLNode('formtit',CONST_STR.get('FUTURE_SAVING_FREQUENCY_CUR'),docXml,valTable);
+    row6.push(CONST_STR.get('FUTURE_SAVING_FREQUENCY_CUR'));
+		if(arr.is_type =='T30'){
+		nodeVal = createXMLNode('formtitcont',CONST_KEY_ESAVING_FREQUENCY_VN[0]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+arr.frequendate,docXml,valTable);
+            row6.push(CONST_KEY_ESAVING_FREQUENCY_VN[0]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+arr.frequendate);
+		}
+		else if(arr.is_type =='T60'){
+		nodeVal = createXMLNode('formtitcont',CONST_KEY_ESAVING_FREQUENCY_VN[1]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+arr.frequendate,docXml,valTable);
+            row6.push(CONST_KEY_ESAVING_FREQUENCY_VN[1]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+arr.frequendate);
+		}
+		else if(arr.is_type =='T90'){
+		nodeVal = createXMLNode('formtitcont',CONST_KEY_ESAVING_FREQUENCY_VN[2]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+arr.frequendate,docXml,valTable);
+            row6.push(CONST_KEY_ESAVING_FREQUENCY_VN[2]+ CONST_STR.get('FUTURE_SAVING_FROM_DATE')+" "+arr.frequendate);
+		}
+    tmparracc.push(row6);
+		//nodeVal = createXMLNode('formtitcont',CONST_STR.get('FUTURE_SAVING_PRD'),docXml,valTable);
+		//ngay het han/hinh thuc gui gop
+		nodeVal = createXMLNode('matdatetit',CONST_STR.get('FUTURE_SAVING_TYPE'),docXml,valTable);
+		nodeVal = createXMLNode('matdatecont',CONST_STR.get('FUTURE_SAVING_PRD'),docXml,valTable);
+    var row7 = new Array();
+    row7.push(CONST_STR.get('FUTURE_SAVING_TYPE'),CONST_STR.get('FUTURE_SAVING_PRD'));
+    tmparracc.push(row7);
+
+		console.log(tmparracc);
+		
+	return docXml;
+}
+function goBack() {
+	navController.popView(true);
+}
+
+function viewWillUnload(){
+
+}
+//=================SHOW DIALOG FOR SAVING TYPE(ngocdt3)=============================//
+function showSavingType(){
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_FUTURE_SAVING_TYPE_EN: CONST_KEY_FUTURE_SAVING_TYPE_VN;
+	var tmpArray2 = CONST_KEY_FUTURE_SAVING_TYPE_ID;
+	document.addEventListener("evtSelectionDialog", handleSelectionFutureSavingType, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionFutureSavingTypeClose, false);
+	showDialogList(CONST_STR.get('FUTURE_SAVING_CHOOSE_TYPE'), tmpArray1,tmpArray2, false);
+}
+
+function handleSelectionFutureSavingType(e) {
+	var selectionID = "";
+	if (currentPage == "esaving/future-esaving-prd-changeinfo") {
+		handleSelectionFutureSavingTypeClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {		
+			var tagSelection = document.getElementById("FurSav_Type");
+			if (tagSelection.nodeName == "INPUT") {
+				tagSelection.value = e.selectedValue1;
+			}
+			else {
+				tagSelection.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			selectionID = e.selectedValue2;
+		}
+		if(selectionID == 'A'){
+            tagSelection.value = CONST_STR.get('FUTURE_SAVING_PRD');
+			navController.pushToView('esaving/future-esaving-flx-changeinfo', true, 'xsl');
+		}else
+		if(selectionID == 'P'){
+		}
+	}
+}
+
+function handleSelectionFutureSavingTypeClose() {
+	if (currentPage == "esaving/future-esaving-prd-changeinfo") {		
+		document.removeEventListener("evtSelectionDialog", handleSelectionFutureSavingType, false);
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionFutureSavingTypeClose, false);
+	}
+}
+//Format currency and pronounce to Vietnamese
+function handleInputAmount (e, des) {
+	var tmpVale = des.value;
+	formatCurrency(e, des);
+	var numStr = convertNum2WordWithLang(keepOnlyNumber(tmpVale), gUserInfo.lang); 	
+	var nodeNumTxt = document.getElementById("trans.amounttotext");
+	nodeNumTxt.innerHTML = "<div class='txtmoneystyle'>" + CONST_STR.get('TRANS_LOCAL_NUM_TO_WORD') + ": " + numStr + "</div>";
+}
+//chọn tài khoản trích tiền
+function showAccSelection() {
+	var tmpArray1 = [];
+	var tmpArray2 = [];
+	for (var i=0; i<gUserInfo.accountList.length; i++) {
+		var tmpAcc = gUserInfo.accountList[i];
+		if(tmpAcc.accClass == 'D3A003' && tmpAcc.nodebit == 'Y'){
+		}
+		else{
+		tmpArray1.push(tmpAcc.accountNumber);
+		tmpArray2.push(formatNumberToCurrency(tmpAcc.balanceAvailable));
+		}
+		
+	}	
+	document.addEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);	
+	
+	showDialogList(CONST_STR.get('TRANS_LOCAL_DIALOG_TITLE_ACC'), tmpArray1, tmpArray2, true);
+}
+//event: selection dialog list
+function handleSelectionAccountList(e) {
+	if (currentPage == "esaving/future-esaving-prd-changeinfo") {
+		handleSelectionAccountListClose();		
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("FurSav_acc");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		var nodeAccBal = document.getElementById("trans.sourceaccoutbalance");
+		if (e.selectedValue2 != undefined) {
+			nodeAccBal.innerHTML = "<div class='availblstyle'>" + CONST_STR.get('COM_TXT_ACC_BALANCE_TITLE') + ": " + e.selectedValue2 + " VND</div>";
+		}
+	}
+}
+function handleSelectionAccountListClose(e) {
+	if (currentPage == "esaving/future-esaving-prd-changeinfo") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionAccountListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionAccountList, false);
+	}
+}
+//CHON TAN SUAT GUI GOP
+function showInputFrequency()
+{
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_ESAVING_FREQUENCY_EN: CONST_KEY_ESAVING_FREQUENCY_VN;
+	var tmpArray2 = CONST_VAL_ESAVING_FREQUENCY;
+	document.addEventListener("evtSelectionDialog", handleInputFrequency, false);
+	document.addEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+	showDialogList(CONST_STR.get('FUTURE_SAVING_CHOOSE_FREQUENCY'), tmpArray1, tmpArray2, false);
+}
+
+
+function handleInputFrequency(e)
+{
+	if (currentPage == "esaving/future-esaving-prd-changeinfo") {
+		handleInputFrequencyClose();
+		var frequency = document.getElementById('FurSav_frequency');
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			if (frequency.nodeName == "INPUT") {
+				frequency.value = e.selectedValue1;
+			}
+			else {
+				frequency.innerHTML = e.selectedValue1;
+			}
+			
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+				tmpfrequency = e.selectedValue2;
+		}
+	}
+		
+}
+
+function handleInputFrequencyClose() {
+	if (currentPage == "esaving/future-esaving-prd-changeinfo") {
+		document.removeEventListener("evtSelectionDialogClose", handleInputFrequencyClose, false);
+		document.removeEventListener("evtSelectionDialog", handleInputFrequency, false);
+	}
+}
+
+function checkFreq(){
+	var freqTrans = document.getElementById("FurSav_frequency");
+	if(freqTrans.value == CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+		showAlertText(CONST_STR.get('TRANS_PERIODIC_ERR_FREQ'));
+		return false;
+	}
+	return true;
+}
+
+//END
+//function chuc nang
+function click_Next(){
+	var arrayArgs = new Array();
+	var arrayNew = new Array();
+	var FurSavType = document.getElementById('FurSav_Type').value;
+	var FurSavAmt = document.getElementById('FurSav_amt').value;
+	var FurSavAcc = document.getElementById('FurSav_acc').value;
+	var startdate = document.getElementById('FurSav_begindate').value;
+	var frequency = document.getElementById('FurSav_frequency').value;
+	//khoi tao mang chua cac tuy chon ban dau cua KH
+	var arraySource = new Array();
+	arraySource.push(ResultControl.accnocont);
+	arraySource.push('PRD');
+	arraySource.push(ResultControl.frequency_amt);
+	arraySource.push(ResultControl.is_type);
+	arraySource.push(ResultControl.frequendate);
+	arraySource.push(ResultControl.accamt);
+	//mang so sanh
+	arrayNew.push(ResultControl.accnocont);
+	arrayNew.push('PRD');
+	if(!FurSavAmt || FurSavAmt==""){
+		arrayNew.push(ResultControl.frequency_amt);
+	}
+	else{
+		arrayNew.push(removeSpecialChar(FurSavAmt));
+	}
+	if(!tmpfrequency || tmpfrequency==null ||tmpfrequency ==""||tmpfrequency == undefined){
+		arrayNew.push(ResultControl.is_type);
+	}
+	else{
+		arrayNew.push(tmpfrequency);
+		}
+	if(!startdate || startdate==null ||startdate ==""||startdate == undefined){
+		arrayNew.push(ResultControl.frequendate);
+	}
+	else{
+		arrayNew.push(startdate);
+		}
+	if(FurSavAcc ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+	arrayNew.push(ResultControl.accamt);
+	}
+	else{
+	arrayNew.push(FurSavAcc);
+	}
+	//mang day len service
+	arrayArgs.push(ResultControl.accnocont);
+	arrayArgs.push('PRD');
+	if(!FurSavAmt || FurSavAmt==""){
+		arrayArgs.push("");
+	}
+	else if(parseInt(removeSpecialChar(FurSavAmt)) <500000){
+			showAlertText(CONST_STR.get('FUTURE_SAVING_ERR_AMT_PRD_MIN'));
+			return;
+		}
+		else{
+		arrayArgs.push(removeSpecialChar(FurSavAmt));
+		
+	}
+	if(!tmpfrequency || tmpfrequency==null ||tmpfrequency ==""||tmpfrequency == undefined){
+		arrayArgs.push("");
+	}
+	else{
+		arrayArgs.push(tmpfrequency);
+		}
+	if(!startdate || startdate==null ||startdate ==""||startdate == undefined){
+		arrayArgs.push("");
+	}
+	else{
+		arrayArgs.push(startdate);
+		}
+	if(FurSavAcc ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+	arrayArgs.push("");
+	}
+	else{
+	arrayArgs.push(FurSavAcc);
+	}
+	//check neu khong co su thay doi
+		if(arrayNew.toString()==arraySource.toString()){
+			showAlertText(CONST_STR.get('FUTURE_SAVING_CHANGE_ERR'));
+			return;
+		
+	}
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_CHANGEINFO_FUTURE_SAVING"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestMBServiceReviewSuccess, requestMBServiceReviewFail);	
+}
+function requestMBServiceReviewSuccess(e){
+	//Gen review screen
+	gprsResp = parserJSON(e);
+	if ((gprsResp.respCode == '0') && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get("CMD_CHANGEINFO_FUTURE_SAVING")))) {		
+	//By Pass Token
+		setRespObjStore(gprsResp);
+		genReviewScreen();		
+	}else{
+		//document.addEventListener('closeAlertView', handleAlertEmpty, false);
+		showAlertText(gprsResp.respContent);			
+	}
+};
+
+function requestMBServiceReviewFail(e){
+	document.addEventListener('closeAlertView', handleAlertEmpty, false);
+	showAlertText(CONST_STR.get('ESAVING_TRANS_FAILED'));	
+}
+function genReviewScreen(){
+	var FurSavType = document.getElementById('FurSav_Type').value;
+	var FurSavAmt = document.getElementById('FurSav_amt').value;
+	var FurSavAcc = document.getElementById('FurSav_acc').value;
+	var FurSavFreq = document.getElementById('FurSav_frequency').value;
+	var FurSavStart = document.getElementById('FurSav_begindate').value;
+		
+	docXml = createXMLDoc();	
+	//root node 
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	//review/reviewtitle //screen title
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('ESAVING_CHANGEINFO_TXT_TITLE'), docXml, tmpXmlNodeInfo);
+	//review/reviewinfo/reviewtranstitle
+	
+	//Sổ tài khoản
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('ESAVING_CHANGEINFO_INPUT_ACCNO'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', ResultControl.accnocont, docXml, tmpChildNodeAcc);
+	//Loại tiết kiệm
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle',  CONST_STR.get('ESAVING_CHANGEINFO_TBLDT_STYPE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('FUTURE_SAVING_TYPE_NAME_PFD'), docXml, tmpChildNodeAcc);
+
+	//Số dư hiện tại
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('JUMBO_CURRENT_SURPLUS'), docXml, tmpChildNodeAcc);	
+	tmpChildNode = createXMLNode('transinfocontent',formatNumberToCurrency(gprsResp.arguments[2])+" VND", docXml, tmpChildNodeAcc);
+	//Số tiền gửi định kỳ hiện tại
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_CHANGE_AMT_CURR'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  formatNumberToCurrency(ResultControl.frequency_amt)+" VND", docXml, tmpChildNodeAcc);
+	//tan suat gui gop hien tai
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_CHANGE_FRE_CURR'), docXml, tmpChildNodeAcc);
+	if(ResultControl.is_type=='T30'){
+		tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('FUTURE_SAVING_MONTHLY'), docXml, tmpChildNodeAcc);
+	}
+	else if(ResultControl.is_type=='T60'){
+		tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('FUTURE_SAVING_TWO_MONTH'), docXml, tmpChildNodeAcc);
+	}
+	else if(ResultControl.is_type=='T90'){
+		tmpChildNode = createXMLNode('transinfocontent', CONST_STR.get('FUTURE_SAVING_THREE_MONTH'), docXml, tmpChildNodeAcc);
+	}
+	//ngay bat dau gui gop hien tai
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_CHANGE_DATE_CURR'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',  ResultControl.frequendate, docXml, tmpChildNodeAcc);
+	//Số tài khoản  trích tiền hiện tại
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_CHANGE_ACC_CURR'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent',   ResultControl.accamt, docXml, tmpChildNodeAcc);
+	//tmpChildNode = createXMLNode('transinfodisplay', 'review', docXml, tmpChildNodeAcc);
+	//thông tin giao dịch
+	var tmpXmlNodeInfo = createXMLNode('reviewtitle', CONST_STR.get('REVIEW_TITLE_SCREEN'), docXml, tmpXmlRootNode);
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo','', docXml, tmpXmlRootNode);
+	tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('COM_TXT_ACC_CONFIRM_TRANS_TITLE'), docXml, tmpXmlNodeInfo);
+	//Số tiền gửi định kỳ mới
+	if(!FurSavAmt || FurSavAmt==""||FurSavAmt==null||FurSavAmt==undefined){
+	}
+	else{
+		var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_CHANGE_AMT'), docXml, tmpChildNodeAcc);
+		tmpChildNode = createXMLNode('transinfocontent',formatNumberToCurrency(FurSavAmt)+ " VND", docXml, tmpChildNodeAcc);
+	}
+	//tan suat gui gop mơi
+	if(!FurSavFreq ||FurSavFreq==undefined||FurSavFreq==""||FurSavFreq==null||FurSavFreq ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){
+	}
+	else{
+		var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_CHANGE_FRE_NEW'), docXml, tmpChildNodeAcc);
+		tmpChildNode = createXMLNode('transinfocontent',  FurSavFreq, docXml, tmpChildNodeAcc);
+	}
+	//ngay bat dau guii gop moi
+	if(!FurSavStart ||FurSavStart==undefined||FurSavStart==""||FurSavStart==null){
+	}
+	else{
+		var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_CHANGE_DATE_NEW'), docXml, tmpChildNodeAcc);
+		tmpChildNode = createXMLNode('transinfocontent',  FurSavStart, docXml, tmpChildNodeAcc);
+	}
+	//số tài khoản trích tiền mới
+	if(!FurSavAcc || FurSavAcc ==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')||FurSavAcc==undefined||FurSavAcc==""||FurSavAcc==null){
+	}
+	else{
+		var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+		var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('FUTURE_SAVING_CHANGE_ACC'), docXml, tmpChildNodeAcc);
+		tmpChildNode = createXMLNode('transinfocontent',  FurSavAcc, docXml, tmpChildNodeAcc);
+	}
+	
+	
+	
+	setReviewXmlStore(docXml);
+
+	navController.pushToView("com-review-xsl-scr", true, 'xsl');
+	
+}
+function ReloadPage(){
+	navController.pushToView('esaving/esaving-changeinfo-input-scr', true,'xsl');
+}

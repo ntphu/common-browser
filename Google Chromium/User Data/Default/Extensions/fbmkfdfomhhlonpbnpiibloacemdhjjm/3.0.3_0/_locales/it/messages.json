@@ -1,0 +1,311 @@
+{
+   "12hour": {
+      "message": "12 Ore"
+   },
+   "24hour": {
+      "message": "24 Ore"
+   },
+   "AM": {
+      "message": "am"
+   },
+   "PM": {
+      "message": "pm"
+   },
+   "about": {
+      "message": "About"
+   },
+   "aboutText": {
+      "message": "Quest'estensione visualizza la cronologia recente, le schede chiuse di recente, le pagine più visitate e i segnalibri aggiunti di recente in un clic su una finestra."
+   },
+   "advanceOptions": {
+      "message": "Opzioni avanzate"
+   },
+   "allHistory": {
+      "message": "Tutta la Cronologia"
+   },
+   "classic": {
+      "message": "Classico"
+   },
+   "click1": {
+      "message": "Apri nella scheda corrente"
+   },
+   "click2": {
+      "message": "Apri in una nuova scheda"
+   },
+   "click3": {
+      "message": "Apri in una nuova scheda in secondo piano"
+   },
+   "currentHistory": {
+      "message": "Data Corrente"
+   },
+   "deleteItems": {
+      "message": "Elimina Elementi"
+   },
+   "fridayLetter": {
+      "message": "F"
+   },
+   "help1": {
+      "message": "Il numero di elementi di cronologia recente"
+   },
+   "help10": {
+      "message": "L'URL della pagina situata sotto il titolo dell'elemento"
+   },
+   "help11": {
+      "message": "Il separatore situato sotto l'elemento"
+   },
+   "help12": {
+      "message": "Le informazioni extra (es. contatore visite e data)"
+   },
+   "help13": {
+      "message": "Se attivato viene visualizzato un colore per ogni elemento diverso, come un segnalibro o un URL bloccato, nella lista della cronologia recente e delle schede chiuse di recente"
+   },
+   "help16": {
+      "message": "Gli URL rimossi dalla lista più visitati. Cliccare sulla croce accanto all'URL per ripristinarlo."
+   },
+   "help17": {
+      "message": "Gli URL nei nomi di dominio che non si desidera visualizzare nella lista della cronologia recente (es. foobar.com)"
+   },
+   "help18": {
+      "message": "Che cosa dovrebbe accadere quando si fa clic su una voce della finestra"
+   },
+   "help2": {
+      "message": "Il numero di schede chiuse di recente"
+   },
+   "help20": {
+      "message": "Il formato del tempo utilizzato dall'estensione"
+   },
+   "help21": {
+      "message": "Aggiunge un'icona di condivisione accanto agli elementi nella finestra durante la modifica"
+   },
+   "help3": {
+      "message": "Il numero degli elementi più visitati"
+   },
+   "help4": {
+      "message": "Il numero degli elementi recenti aggiunti ai Preferiti"
+   },
+   "help5": {
+      "message": "L'ordine in cui gli elementi specificati verranno mostrati"
+   },
+   "help6": {
+      "message": "Il manager di Cronologia che si desidera utilizzare"
+   },
+   "help7": {
+      "message": "Il formato della data usato dall'estensione"
+   },
+   "help8": {
+      "message": "La barra di ricerca situata nella parte superiore della finestra"
+   },
+   "loading": {
+      "message": "Caricamento..."
+   },
+   "mainOptions": {
+      "message": "Opzioni principali"
+   },
+   "mondayLetter": {
+      "message": "M"
+   },
+   "mostVisited": {
+      "message": "Più Visitati"
+   },
+   "no": {
+      "message": "No"
+   },
+   "noResults": {
+      "message": "Nessun Risultato"
+   },
+   "option1": {
+      "message": "Numero di elementi di cronologia recente"
+   },
+   "option10": {
+      "message": "Mostra URL"
+   },
+   "option11": {
+      "message": "Mostra separatore"
+   },
+   "option12": {
+      "message": "Mostra info aggiuntive"
+   },
+   "option13": {
+      "message": "Mostra colori di sfondo"
+   },
+   "option14": {
+      "message": "Icona finestra"
+   },
+   "option15": {
+      "message": "Larghezza finestra"
+   },
+   "option16": {
+      "message": "Elementi più visitati da ripristinare"
+   },
+   "option17": {
+      "message": "Filtro dominio cronologia recente"
+   },
+   "option18": {
+      "message": "Azione click tasto sinistro"
+   },
+   "option19": {
+      "message": "Tema finestra"
+   },
+   "option2": {
+      "message": "Numero di schede chiuse di recente"
+   },
+   "option20": {
+      "message": "Formato tempo"
+   },
+   "option21": {
+      "message": "Social Bookmarking"
+   },
+   "option3": {
+      "message": "Numero di elementi più visitati"
+   },
+   "option4": {
+      "message": "Numero di elementi preferiti"
+   },
+   "option5": {
+      "message": "Ordine finestra"
+   },
+   "option6": {
+      "message": "Cronologia"
+   },
+   "option7": {
+      "message": "Formato data"
+   },
+   "option8": {
+      "message": "Mostra barra di ricerca"
+   },
+   "option9": {
+      "message": "Anteprima"
+   },
+   "options": {
+      "message": "Opzioni"
+   },
+   "original": {
+      "message": "Originale"
+   },
+   "pink": {
+      "message": "Rosa"
+   },
+   "pinned": {
+      "message": "Bloccato"
+   },
+   "recentBookmarks": {
+      "message": "Preferiti Recenti"
+   },
+   "recentHistory": {
+      "message": "Cronologia Recente"
+   },
+   "recentlyClosedTabs": {
+      "message": "Schede Chiuse di Recente"
+   },
+   "saturdayLetter": {
+      "message": "S"
+   },
+   "saveOptions": {
+      "message": "Salva Opzioni"
+   },
+   "saved": {
+      "message": "Salvato!"
+   },
+   "saving": {
+      "message": "Salvataggio..."
+   },
+   "showAllHistory": {
+      "message": "Mostra tutta la Cronologia"
+   },
+   "styleOptions": {
+      "message": "Opzioni di stile"
+   },
+   "successfullyInstalled": {
+      "message": "Installato/Aggiornato con successo"
+   },
+   "sundayLetter": {
+      "message": "S"
+   },
+   "thursdayLetter": {
+      "message": "T"
+   },
+   "tip1": {
+      "message": "finestra: Cliccando sull'elemento mentre si tiene premuto CTRL è possibile aprirlo in una nuova scheda in secondo piano."
+   },
+   "tip2": {
+      "message": "finestra: Cliccando sugli ingranaggi accanto ai titoli è possibile eliminare, bloccare e condividere gli elementi."
+   },
+   "tip3": {
+      "message": "Opzioni: È possibile premere i tasti su e giù per aumentare e diminuire i valori numerici quando il campo è selezionato."
+   },
+   "tip4": {
+      "message": "Opzioni: È possibile premere Invio per aggiungere un dominio all'elenco dei filtri"
+   },
+   "tip5": {
+      "message": "Cronologia: Usare il tasto Shift per selezionare più elementi."
+   },
+   "tip6": {
+      "message": "Cronologia: Usare i pulsanti nella barra degli strumenti blu per manipolare il modo in cui vengono mostrati gli elementi della cronologia."
+   },
+   "tips": {
+      "message": "Consigli Utili"
+   },
+   "totalHistoryItems": {
+      "message": "Elementi della Cronologia totale:"
+   },
+   "translation1": {
+      "message": "Si prega di contribuire a rendere migliore Recent History, fornendo traduzioni nuove e migliori. Questa pagina è stata creata per rendere più facile la traduzione di quest'estensione."
+   },
+   "translation2": {
+      "message": "Si prega di attenersi alla seguente procedura per tradurre Recent History nella tua lingua:"
+   },
+   "translation3": {
+      "message": "Scorri fino alla fine di questa pagina."
+   },
+   "translation4": {
+      "message": "Compila il modulo correttamente."
+   },
+   "translation5": {
+      "message": "Traduci tutti i 'messaggi' nella tua lingua."
+   },
+   "translation6": {
+      "message": "Fai clic sul pulsante 'Invia'."
+   },
+   "translation7": {
+      "message": "Fatto!"
+   },
+   "translations": {
+      "message": "Traduzione"
+   },
+   "tuesdayLetter": {
+      "message": "T"
+   },
+   "ui1": {
+      "message": "Bloccare l'elemento?"
+   },
+   "ui2": {
+      "message": "Eliminare l'elemento dalla cronologia?"
+   },
+   "ui3": {
+      "message": "Eliminare l'elemento dalle schede chiuse di recente?"
+   },
+   "ui4": {
+      "message": "Eliminare Preferito?"
+   },
+   "ui5": {
+      "message": "Eliminare l'elemento dalla lista dei Più Visitati?"
+   },
+   "ui6": {
+      "message": "Sbloccare?"
+   },
+   "version": {
+      "message": "Versione"
+   },
+   "visits": {
+      "message": "Visite"
+   },
+   "wednesdayLetter": {
+      "message": "W"
+   },
+   "whatsNew": {
+      "message": "Cosa c'è di nuovo?"
+   },
+   "yes": {
+      "message": "Si"
+   }
+}

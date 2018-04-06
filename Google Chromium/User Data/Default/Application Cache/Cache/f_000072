@@ -1,0 +1,472 @@
+/**
+ * Created by HuyNT2.
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+ 
+/*** HEADER ***/
+var gprsResp = new GprsRespObj("","","","");
+var arrayCardObj = new Array();
+var pCardNoSelected = '';
+var pCardTypeSelected = CONST_CARD_LOCK_TYPE_ID[0];
+
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+	logInfo('card list init');
+}
+
+/*** INIT VIEW END ***/
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+	logInfo('card load success');
+	arrayCardObj = getArrayCardObjs();
+	//if(arrayCardObj == undefined || arrayCardObj.length > 0) 
+	requestCardLockList();
+	
+	//disable card no selection on load
+	document.getElementById("card-lock-no").disabled = 'disable';
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('card will unload');
+}
+
+/*** VIEW WILL UNLOAD END ***/
+
+/*** FUNCTION ***/
+
+function requestCardLockList() {
+	
+	var data = {};
+	var arrayArgs = new Array();
+	arrayArgs.push(gCustomerNo);
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOOKUP_VISA_CARD"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestVisaListMBServiceSuccess, requestVisaListMBServiceFail);
+}
+
+/*
+tmpVisaObj.cardNumber = tmpArr[0];
+tmpVisaObj.fullName = tmpArr[1];  // ten chu the
+tmpVisaObj.curLimit = tmpArr[2]; //han muc con lai
+tmpVisaObj.cardGrantedLimit = tmpArr[3]; //han muc duoc cap
+tmpVisaObj.cardMinRepay = tmpArr[4]; //so tien thanh toan toi thieu
+tmpVisaObj.curDebt = tmpArr[5]; //du no hien tai
+tmpVisaObj.payDate = tmpArr[6]; // thanh toan truoc ngay
+tmpVisaObj.cardStateDebt = tmpArr[7]; //du no trong ky sao ke --> cuoi ky saoke
+tmpVisaObj.cardType = tmpArr[8]; //loai the C, D, A
+tmpVisaObj.waitingAmount = tmpArr[9]; //so tien da tieu cho quyet toan
+tmpVisaObj.currencyCode = tmpArr[10]; //loai tien
+tmpVisaObj.currentStatus = tmpArr[11]; // trang thai 0: active
+tmpVisaObj.description = tmpArr[12]; // mo ta the
+tmpVisaObj.ownerType = tmpArr[13]; //0: chinh, 1: phu
+-	Dư nợ hiện tại //5
+-	Dư nợ trong kỳ sao kê //7
+-	Số tiền đã trả nợ (đang chờ duyệt) //14
+-	Số tiền đã chi tiêu (đang chờ quyết toán) //9
+- 	Số tiền thanh toán tối thiểu //4
+
+*/
+
+function requestVisaListMBServiceSuccess(e) {
+	gprsResp = parserJSON(e);
+	arrayCardObj = new Array();
+	
+	if ((gprsResp.respCode == RESP.get('COM_SUCCESS')) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get('CMD_LOOKUP_VISA_CARD')))) {
+		
+		if((gprsResp.arguments == undefined) || (gprsResp.arguments == null) 
+		|| (gprsResp.arguments.length==0)) {
+			//showAlertText(CONST_STR.get('CREDIT_CARD_NO_CARDS_MSG'));
+			showAlertText(CONST_STR.get('CREDIT_CARD_NO_CARDS_FORLOCK_MSG'));
+			var tmpPageName = navController.getDefaultPage();
+			var tmpPageType = navController.getDefaultPageType();
+			navController.initWithRootView(tmpPageName, true, tmpPageType);
+		}
+		else
+		{
+		for(var i=0; i<gprsResp.arguments.length; i++) {
+			var tmpStr = gprsResp.arguments[i];
+			var tmpArr = tmpStr.split('#');
+			var tmpVisaObj = new VisaCardObj();
+			tmpVisaObj.cardNumber = tmpArr[0];
+			tmpVisaObj.fullName = tmpArr[1];
+			tmpVisaObj.curLimit = tmpArr[2];
+			tmpVisaObj.cardGrantedLimit = tmpArr[3];
+			tmpVisaObj.cardMinRepay = tmpArr[4];
+			tmpVisaObj.curDebt = tmpArr[5];
+			tmpVisaObj.payDate = tmpArr[6];
+			tmpVisaObj.cardStateDebt = tmpArr[7];
+			tmpVisaObj.cardType = tmpArr[8];
+			tmpVisaObj.waitingAmount = tmpArr[9];
+			tmpVisaObj.currencyCode = tmpArr[10];
+			tmpVisaObj.currentStatus = tmpArr[11];
+			tmpVisaObj.description = tmpArr[12];
+			tmpVisaObj.ownerType = tmpArr[13];
+			tmpVisaObj.waitingPaidAmount = tmpArr[14];
+			//if(parseInt(tmpVisaObj.currentStatus) == 0) { // the active --> các thẻ trả về đều có thể khóa được
+				arrayCardObj.push(tmpVisaObj);
+			//}
+		}
+		}
+		if(arrayCardObj == undefined || arrayCardObj.length == 0){ //setArrayCardObjs(arrayCardObj); //store all card obj
+			showAlertText(CONST_STR.get('CREDIT_CARD_NO_CARDS_FORLOCK_MSG'));
+			var tmpPageName = navController.getDefaultPage();
+			var tmpPageType = navController.getDefaultPageType();
+			navController.initWithRootView(tmpPageName, true, tmpPageType);
+		}
+	}
+	else {
+		showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+}
+
+function requestVisaListMBServiceFail() {
+	showAlertText(CONST_STR.get('CREDIT_CARD_REQ_CARD_FAIL_MSG'));
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+/***
+	createXMLDoc(); //return XML document
+	
+	createXMLNode(nodeKey, nodeValue, inDocXml, nodeParent) //void
+		+ nodeKey: tag name (require)
+		+ nodeValue: node text or ""
+		+ inDocXml: XML document (require)
+		+ nodeParent: xml node or null
+		
+	setNodeText(inNode, inStr); //void
+		+ inNode: xml node
+		+ inStr: node content
+***/
+
+
+function requestConfirmCardLock() {
+	/*if(pCardTypeSelected == undefined || pCardTypeSelected == '' || pCardNoSelected == '') {
+		showAlertText(CONST_STR.get('CARD_LOCK_NO_CARD_SELECTION'));
+		return;
+	}*/
+		/*check loai the*/
+	var cardtype = document.getElementById("card-lock-type");
+	var _tmpStr_type = cardtype.value;
+	if (_tmpStr_type==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){	
+		document.getElementById("id.card-lock-type").style.display='';
+		document.getElementById("id.lbcard-lock-type").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		return;
+	}
+	else
+	{
+		document.getElementById("id.card-lock-type").style.display='none';
+		}
+	
+	var cardno = document.getElementById("card-lock-no");
+	var _tmpStr_no = cardno.value;
+	if (_tmpStr_no==CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER')){	
+		document.getElementById("id.card-lock-no").style.display='';
+		document.getElementById("id.lbcard-lock-no").innerHTML = CONST_STR.get('ERR_EMPTY_INPUT');
+		return;
+	}
+	else
+	{
+		document.getElementById("id.card-lock-no").style.display='none';
+		}
+	
+	/*document.addEventListener("alertConfirmOK", handleCardLockAlertOK, false);
+	document.addEventListener("alertConfirmCancel", handleCardLockAlertCancel, false);
+	showAlertConfirmText(CONST_STR.get('CARD_LOCK_ALERT_CONFIRM'));*/
+	var tmpArray1 = (gUserInfo.lang == 'EN')? CONST_KEY_CHANGE_CONFIRM_EN: CONST_KEY_CHANGE_CONFIRM_VN;
+	var tmpArray2 = CONST_KEY_CHANGE_CONFIRM_ID;
+	document.addEventListener("evtSelectionDialog", showChoiceConfirmPre, false);
+	document.addEventListener("evtSelectionDialogClose", showChoiceConfirmPreClose, false);
+	showDialogList(CONST_STR.get('CARD_LOCK_ALERT_CONFIRM'), tmpArray1, tmpArray2 , false);
+}
+
+function showChoiceConfirmPre(e) {
+	if (currentPage == "visa/card-lock-scr") {
+		showChoiceConfirmPreClose();
+		/*if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			defaultChoice = e.selectedValue1;			
+			var tagAccNo1 = document.getElementById("id.buttonChange");
+			if (tagAccNo1.nodeName == "INPUT") {
+				//tagAccNo1.value = e.selectedValue1;		
+			}
+			else {
+				tagAccNo1.innerHTML = e.selectedValue1;				
+			}
+
+		}*/
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			buttonId = e.selectedValue2;
+			if(e.selectedValue2 == "2") {
+			 sendRequestCardLock();
+			}
+		}
+		//sendRequestChangeCardRepayment();
+	}
+}
+
+function showChoiceConfirmPreClose() {
+	if (currentPage == "visa/card-lock-scr") {
+		document.removeEventListener("evtSelectionDialogClose", showChoiceConfirmPreClose, false);
+		document.removeEventListener("evtSelectionDialog", showChoiceConfirmPre, false);
+	}
+}
+
+/*function handleCardLockAlertOK() {
+	handleCardLockAlertCancel();
+	if(pCardTypeSelected == undefined || pCardTypeSelected == '' || pCardNoSelected == '') {
+		showAlertText(CONST_STR.get('CARD_LOCK_NO_CARD_SELECTION'));
+		return;
+	}
+	sendRequestCardLock();
+}
+
+function handleCardLockAlertCancel() {
+	document.removeEventListener("alertConfirmOK", handleCardLockAlertOK, false);
+	document.removeEventListener("alertConfirmCancel", handleCardLockAlertCancel, false);
+}*/
+
+function sendRequestCardLock() {
+	var data = {};
+	var arrayArgs = new Array();
+	/*if(pCardTypeSelected == undefined || pCardTypeSelected == '' || pCardNoSelected == '') {
+		showAlertText(CONST_STR.get('CARD_LOCK_NO_CARD_SELECTION'));
+		return;
+	}*/
+	/*check loai the*/
+	var cardtype = document.getElementById("card-lock-type");
+	var _tmpStr = cardtype.value;
+	if (_tmpStr.length > 0){	
+		
+	}
+	else
+	{
+		showAlertText(CONST_STR.get('ERR_EMPTY_INPUT'));
+		return;
+		}
+	
+	arrayArgs.push(pCardNoSelected);
+	arrayArgs.push(pCardTypeSelected);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_LOCK_VISA_CARD"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	
+	data = getDataFromGprsCmd(gprsCmd);
+	
+	requestMBService(data, true, 0, requestCardLockServiceSuccess, requestCardLockServiceFail);
+}
+
+function requestCardLockServiceSuccess(e) {
+	gprsResp = parserJSON(e);
+	
+	if ((gprsResp.respCode == RESP.get('COM_SUCCESS')) && (parseInt(gprsResp.responseType) == parseInt(CONSTANTS.get('CMD_LOCK_VISA_CARD')))) {
+		//navController.pushToView('visa/card-lock-result-scr', true, 'xsl');
+		genResultScreen();
+	}
+}
+
+function requestCardLockServiceFail() {
+	showAlertText(CONST_STR.get('ERR_COM_TRANS_FAILED'));
+}
+
+
+function showCardTypeSelection() {
+
+	var tmpArr1 = new Array();
+	var tmpArr2 = new Array();
+	// lap cac dong du lieu tra ve tu server
+	for(var i=0; i<arrayCardObj.length; i++) {
+		// add loai the (value)s
+		if (tmpArr2.indexOf(arrayCardObj[i].cardType) == -1 ){
+			tmpArr2.push(arrayCardObj[i].cardType);
+			var name = '';
+			// Tim ten cua loai the: tim trong constant
+			for (var j = 0; j < 4; j++){
+				if (CONST_CARD_LOCK_TYPE_ID[j] == arrayCardObj[i].cardType){
+					name = (gUserInfo.lang == 'EN')? CONST_CARD_LOCK_TYPE_EN[j]: CONST_CARD_LOCK_TYPE_VN[j];	
+					break;						
+				}				
+			}
+			// add loai the (ten)
+			tmpArr1.push(name);	
+		}
+		
+	}
+	document.addEventListener("evtSelectionDialog", handleSelectionCardTypeList, false);
+document.addEventListener("evtSelectionDialogClose", handleSelectionCardTypeListClose, false);
+showDialogList(CONST_STR.get('CARD_LOCK_TYPE_SELECTION_TITLE'), tmpArr1, tmpArr2, false);
+
+
+}
+	
+
+//event: selection dialog list
+function handleSelectionCardTypeList(e) {
+	if (currentPage == "visa/card-lock-scr") {
+		handleSelectionCardTypeListClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			var tagAccNo = document.getElementById("card-lock-type");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+		if ((e.selectedValue2 != undefined) && (e.selectedValue2 != null)) {
+			if(pCardTypeSelected != e.selectedValue2) {
+				document.getElementById("card-lock-no").value = CONST_STR.get('COM_TXT_SELECTION_PLACEHOLDER');
+			}
+			pCardTypeSelected = e.selectedValue2;
+			
+			//disable if do not card
+			document.getElementById("card-lock-no").disabled = 'disable';
+			for(var i=0; i< arrayCardObj.length; i++) {
+				var tmpCard = arrayCardObj[i];
+				if(tmpCard.cardType == pCardTypeSelected) {
+					document.getElementById("card-lock-no").disabled = '';
+					break;
+				}
+			}
+		}
+	}
+}
+
+function handleSelectionCardTypeListClose() {
+	if (currentPage == "visa/card-lock-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionCardTypeListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionCardTypeList, false);
+	}
+}
+
+
+function showCardNoSelection() {
+	var tmpArray1 = new Array();
+	if(arrayCardObj && pCardTypeSelected != undefined && pCardTypeSelected != '') {
+		for(var i=0; i<arrayCardObj.length; i++) {
+			var tmpCard = arrayCardObj[i];
+			if(tmpCard.cardType == pCardTypeSelected) { // && parseInt(tmpCard.currentStatus) == 0) { //0: active status --> các thẻ trả về có thể khóa được
+				tmpArray1.push(tmpCard.cardNumber);
+			}
+		}
+		if(!tmpArray1 || tmpArray1.length < 1) {
+			return;
+		}
+	}
+	else {
+		return;
+	}
+	
+	document.addEventListener("evtSelectionDialog", handleSelectionCardNoList, false);
+	document.addEventListener("evtSelectionDialogClose", handleSelectionCardNoListClose, false);
+	showDialogList(CONST_STR.get('CARD_LOCK_TYPE_SELECTION_TITLE'), tmpArray1, '', false);
+}
+
+//event: selection dialog list
+function handleSelectionCardNoList(e) {
+	if (currentPage == "visa/card-lock-scr") {
+		handleSelectionCardNoListClose();
+		if ((e.selectedValue1 != undefined) && (e.selectedValue1 != null)) {
+			pCardNoSelected = e.selectedValue1;
+			var tagAccNo = document.getElementById("card-lock-no");
+			if (tagAccNo.nodeName == "INPUT") {
+				tagAccNo.value = e.selectedValue1;
+			}
+			else {
+				tagAccNo.innerHTML = e.selectedValue1;
+			}
+		}
+	}
+}
+
+function handleSelectionCardNoListClose(e) {
+	if (currentPage == "visa/card-lock-scr") {
+		document.removeEventListener("evtSelectionDialogClose", handleSelectionCardNoListClose, false);
+		document.removeEventListener("evtSelectionDialog", handleSelectionCardNoList, false);
+	}
+}
+
+/*** GENARATE REVIEW SCREEN ***/
+function genResultScreen() {
+	//var nodeReviewInfo = document.getElementById("panelContent");
+	var htmlReviewInfo = "";
+	
+	var tmpCardType = document.getElementById("card-lock-type");
+	var tmpCardNo = document.getElementById("card-lock-no");
+	
+	var docXml = createXMLDoc();
+	var tmpXmlRootNode;
+	var tmpXmlRootNode = createXMLNode('review', '', docXml);
+	
+	//review/result
+	var tmpXmlNodeResult = createXMLNode('result', '', docXml, tmpXmlRootNode);
+	var tmpXmlNodeResultCode = createXMLNode('resultcode', gprsResp.respCode, docXml, tmpXmlNodeResult);
+	var tmpXmlNodeResultContent = createXMLNode('resultcontent', gprsResp.respContent, docXml, tmpXmlNodeResult);
+	
+	if(gprsResp.arguments && gprsResp.arguments.length > 0 && !(gprsResp.arguments.length == 1 && gprsResp.arguments[0] == '')) {
+		//review/reviewinfo
+		var tmpXmlNodeResultInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+		for(var i=0; i < gprsResp.arguments.length; i++) {
+			var tmpArr = gprsResp.arguments[i].split('#');
+			//review/reviewinfo/transinfo
+			var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeResultInfo);
+			var tmpChildNode = createXMLNode('transinfotitle', tmpArr[1], docXml, tmpChildNodeAcc); //caption
+			tmpChildNode = createXMLNode('transinfocontent', tmpArr[0], docXml, tmpChildNodeAcc); //value
+		}
+	}
+	
+	//review/reviewinfo/reviewtranstitle
+	var tmpXmlNodeInfo = createXMLNode('reviewinfo', '', docXml, tmpXmlRootNode);
+	var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', CONST_STR.get('CARD_LOCK_SCR_TITLE'), docXml, tmpXmlNodeInfo);
+		
+	//review/reviewinfo/transinfo
+	//card type
+	var tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	var tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CARD_LOCK_RESULT_TYPE_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', tmpCardType.value, docXml, tmpChildNodeAcc);
+	//card number
+	tmpChildNodeAcc = createXMLNode('transinfo', '', docXml, tmpXmlNodeInfo);
+	tmpChildNode = createXMLNode('transinfotitle', CONST_STR.get('CARD_LOCK_RESULT_NUMBER_TITLE'), docXml, tmpChildNodeAcc);
+	tmpChildNode = createXMLNode('transinfocontent', tmpCardNo.value, docXml, tmpChildNodeAcc);
+	
+	//table
+	/*var tmpXmlNodeTable = createXMLNode('reviewtable', '', docXml, tmpXmlNodeInfo);
+	var tmpXmlNodeTitle = createXMLNode('reviewtabletitle', '', docXml, tmpXmlNodeTable);
+	tmpChildNode = createXMLNode('tbcol1', CONST_STR.get('ACCOUNT_ACC_NO_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('tbcol2', CONST_STR.get('ACCOUNT_ACC_NO_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('tbcol3', CONST_STR.get('ACCOUNT_ACC_NO_TITLE'), docXml, tmpXmlNodeTitle);
+	tmpChildNode = createXMLNode('tbcol4', CONST_STR.get('ACCOUNT_BALANCE_TITLE'), docXml, tmpXmlNodeTitle);
+	//tmpChildNode = createXMLNode('tbcol5', CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'), docXml, tmpXmlNodeTitle);
+	for(var i = 0; i < gUserInfo.accountList.length; i++) {
+		var inAccObj = gUserInfo.accountList[i];
+		var tmpXmlNodeInfo = createXMLNode('reviewtabledetail', '', docXml, tmpXmlNodeTable);
+		tmpChildNode = createXMLNode('tbcol1', CONST_STR.get('ACCOUNT_ACC_NAME'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('tbcontent1', gUserInfo.accountName, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('tbcol2', CONST_STR.get('ACCOUNT_ACC_NO_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('tbcontent2', inAccObj.accountNumber, docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('tbcol3', CONST_STR.get('ACCOUNT_BALANCE_TITLE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('tbcontent3', formatNumberToCurrency(inAccObj.balance), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('tbcol4', CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'), docXml, tmpXmlNodeInfo);
+		tmpChildNode = createXMLNode('tbcontent4', formatNumberToCurrency(inAccObj.balanceAvailable), docXml, tmpXmlNodeInfo);
+		//tmpChildNode = createXMLNode('tbcol5', CONST_STR.get('ACCOUNT_AVAILABLE_BALANCE'), docXml, tmpXmlNodeInfo);
+		//tmpChildNode = createXMLNode('tbcontent5', formatNumberToCurrency(inAccObj.balanceAvailable), docXml, tmpXmlNodeInfo);
+	}*/
+	
+	logInfo(docXml);
+	setStoreResultXmlStore(docXml);
+	
+	navController.pushToView("com-result-scr", true, 'xsl');
+}

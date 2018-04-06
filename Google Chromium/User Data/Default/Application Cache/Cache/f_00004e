@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:template match="/">
+    <html>
+    <body>
+    <div id="mainViewContent" class="main-layout-subview">
+      <div>
+        <div  class="panelContent">
+          <input id="id.introCusId" type="hidden" value="{introCus/introCusId}"/>
+          <input id="id.introCusSex" type="hidden" value="{introCus/introCusSex}"/>
+          <input id="id.introCusNation" type="hidden" value="{introCus/introCusNation}"/>
+          <input id="id.introCusRevenue" type="hidden" value="{introCus/introCusRevenue}"/>
+          <input id="id.introCusMobile" type="hidden" value="{introCus/introCusCellPhoneNum}"/>
+          <table width="100%" align="center">
+            <tr>
+              <td colspan="2"><h5 align="left" class="screen-title" style="display: none" > <span>INTRODUCE_TITLE</span> </h5></td>
+            </tr>
+            <tr>
+              <td colspan="2"><h5 align="left"> <span class="font-inclined">INTRODUCE_INFO_TITLE</span> </h5>
+                <!--<div class="line-separate"></div>-->
+              </td>
+            </tr>
+          </table>
+          <table width="100%" align="center" >
+            <tr>
+              <td colspan="2" class="Header"><h5> <span>PERSONAL_INFO_TITLE</span> </h5></td>
+                <td colspan="2"><h5 align="right"> <span class="font-inclined">MANDATORY_INFO_TITLE</span> </h5></td>
+            </tr>
+          </table>
+          <table width="100%" align="center" class="table-intro">
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >FULLNAME_TITLE_BGN</span>
+                  <input id="id.fullName"  type="text" class="form-control form-control-righttext" placeholder="COM_TXT_INPUT_PLACEHOLDER" maxlength="25" value="{introCus/introCusName}"/>
+                  </div></td>
+            </tr>
+            <tr id = "id.checkName" style="display: none">
+              <td><div align="right">
+                  <h6>
+                    <label type ="text" id="id.lbCheckName" class="cssLineColor"> </label>
+                  </h6>
+                </div></td>
+            </tr>
+			
+			
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text">
+			  <div class="input-group"> <span class="input-group-addon">GENDER_TITLE_BGN</span>
+                  <xsl:choose>
+                    <xsl:when test="introCus/introCusSex = '1'">
+                      <input onclick="showChoiceGenderInfo()" id="id.genderInfo" type="button" placeholder="COM_TXT_SELECTION_PLACEHOLDER" class="form-control form-control-righttext input-left" value="INTRODUCE_GENDER_MALE" />
+                    </xsl:when>
+                    <xsl:when test="introCus/introCusSex = '2'">
+                      <input onclick="showChoiceGenderInfo()" id="id.genderInfo" type="button" placeholder="COM_TXT_SELECTION_PLACEHOLDER" class="form-control form-control-righttext input-left" value="INTRODUCE_GENDER_FEMALE" />
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <input onclick="showChoiceGenderInfo()" id="id.genderInfo" type="button" placeholder="COM_TXT_SELECTION_PLACEHOLDER" class="form-control form-control-righttext input-left" value="GENDER_BGN_CHOICE" />
+                    </xsl:otherwise>
+                  </xsl:choose>
+                  <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span> </div>
+                <div  id = "id.checkGender" align="right" style="display: none">
+                  <h6>
+                    <label type ="text" id="id.lbCheckGender" class="cssLineColor"> error </label>
+                  </h6>
+                </div></td>              
+            </tr>
+			<tr>
+              
+              <td colspan="2" align="center" valign="middle" class="td-text">
+			  
+			  <!--			  
+			  <div class="input-group"> <span class="input-group-addon" style="width:41%;">DATEOFBIRTH_TITLE_BGN</span>
+                  <input id="id.dateOfBirth" type="text" class="form-control form-control-righttext" placeholder="COM_DATE_DEFAULT_PLACEHOLDER" value="{introCus/introCusDob}" style="white-space:pre-wrap;" onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;"/>
+                  <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span> </div>
+				-->
+				
+				<div class="input-group">
+					  <span class="input-group-addon input-left" >DATEOFBIRTH_TITLE_BGN</span>
+					  <input id="id.dateOfBirth" type="tel" placeholder="COM_TXT_SELECTION_PLACEHOLDER_DATE" value="{introCus/introCusDob}" class="form-control form-control-righttext-datepicker" 
+					  onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;" />
+					  <span id="begindate" onclick="initDialogCal('id.dateOfBirth')" class="icon-calendar input-group-addon-datepicker input-group-symbol-datepicker"></span>
+					</div>  
+				  
+                <div id = "id.checkDateOfBirth" align="right" style="display: none">
+                  <h6>
+                    <label type ="text" id="id.lbcheckDateOfBirth" class="cssLineColor"> error </label>
+                  </h6>
+                </div></td>
+            </tr>
+			
+			
+			
+			
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >PASSPORT_TITLE_BGN_BLANKABLE</span>
+                  <input id="id.passport"  onkeypress="return isNumberKey(event)" type="text" class="form-control form-control-righttext input-left" maxlength="12" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="{introCus/introCusCardNum}" onchange="checkCusCardNum({introCus/introCusCardNum})" />
+                  <!--<span class="input-group-addon input-group-symbol btnFormat"></span>-->
+                   </div>
+				  
+				  <div id = "id.checkPassport" style="display: none" align="right">
+                      <h6>
+                        <label type ="text" id="id.lbcheckPassport" class="cssLineColor"></label>
+                      </h6>
+                    </div>
+				  
+				  
+				  </td>              
+            </tr>
+			<tr>
+             
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >NATIONALITY_TITLE_BGN</span>
+                  <xsl:if test="introCus/introCusNation = ''">
+                    <input onclick="showChoiceNationalityInfo()" id="id.nationality" type="button" class="form-control form-control-righttext input-left" placeholder="NATIONALITY_BGN_CHOICE" value="NATIONALITY_BGN_CHOICE" />
+                  </xsl:if>
+                  <xsl:if test="introCus/introCusNation != ''">
+                    <input onclick="showChoiceNationalityInfo()" id="id.nationality" type="button" class="form-control form-control-righttext input-left" placeholder="NATIONALITY_BGN_CHOICE" value="{introCus/introCusNation}" />
+                  </xsl:if>
+                  <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span> </div></td>
+            </tr>
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text">
+			  
+			  <!--
+			  <div class="input-group"> <span class="input-group-addon" style="width:41%;">DATEOFISSUE_TITLE_BGN</span>
+                  <input id="id.dateOfIssue" type="text" class="form-control form-control-righttext" placeholder="COM_DATE_DEFAULT_PLACEHOLDER" value="{introCus/introCusCardDate}" style="white-space:pre-wrap;" onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;" />
+                  <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span> </div>
+				  -->
+				  
+				  <div class="input-group">
+					  <span class="input-group-addon input-left" >DATEOFISSUE_TITLE_BGN</span>
+					  <input id="id.dateOfIssue" type="tel" placeholder="COM_TXT_SELECTION_PLACEHOLDER_DATE" value="{introCus/introCusCardDate}" class="form-control form-control-righttext-datepicker" 
+					  onkeydown="return handleCalendarNav(this, event);" onclick="handleCalendarNav(this, event);" onpaste="return false;" />
+					  <span id="begindate" onclick="initDialogCal('id.dateOfIssue')" class="icon-calendar input-group-addon-datepicker input-group-symbol-datepicker"></span>
+					</div>  
+				  
+                <div id = "id.checkDateOfIssue" align="right" style="display: none">
+                  <h6>
+                    <label type ="text" id="id.lbCheckDateOfIssue" class="cssLineColor"> error </label>
+                  </h6>
+                </div></td>              
+            </tr>
+			<tr>
+              
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >PLACEOFISSUE_TITLE_BGN</span>
+                  <input id="id.placeOfIssue" type="text" class="form-control form-control-righttext input-left" placeholder="COM_TXT_INPUT_PLACEHOLDER" maxlength="50" value="{introCus/introCusCardAddress}" />
+                  <!--<span class="input-group-addon input-group-symbol btnFormat"></span> -->
+              </div>
+              </td>
+            </tr>
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >MOBILE_TITLE_BGN</span>
+                  <input id="id.mobileNumber" type="tel" class="form-control form-control-righttext input-left" placeholder="COM_TXT_INPUT_PLACEHOLDER" maxlength="11" onkeypress="return isNumberKey(event)" value="{introCus/introCusCellPhoneNum}"  onchange="checkMobileValid({introCus/introCusCellPhoneNum});"/>
+                  <!--<span class="input-group-addon input-group-symbol btnFormat"></span>-->
+              </div>
+                <div id = "id.checkMobile" align="right" style="display: none">
+                  <h6>
+                    <label type ="text" id="id.lbCheckMobile" class="cssLineColor"> error </label>
+                  </h6>
+                </div></td>              
+            </tr>
+			<tr>              
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon">HOMEPHONE_TITLE_BGN</span>
+                  <input id="id.homePhone" type="tel" class="form-control form-control-righttext input-left" maxlength="16" onkeypress="return isNumberKey(event)" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="{introCus/introCusPhoneNum}" />
+                  <!--<span class="input-group-addon input-group-symbol btnFormat"></span>-->
+              </div>
+              </td>
+            </tr>
+			
+			
+			
+			
+			
+			
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >EMAIL_TITLE_BGN</span>
+                  <input id="id.email" name= "email" type="email" class="form-control form-control-righttext" maxlength="50" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="{introCus/introCusEmail}"/>
+                  </div></td>
+            </tr>
+            <tr id = "id.checkEmail" style="display: none">
+              <td><div align="right">
+                  <h6>
+                    <label type ="text" id="id.lbCheckEmail"> </label>
+                  </h6>
+                </div></td>
+            </tr>
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >ADDRESS_TITLE_BGN</span>
+                  <input id="id.address" type="text" class="form-control form-control-righttext" maxlength="200" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="{introCus/introCusAddress}"/>
+                  </div></td>
+            </tr>
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >COMPANY_TITLE_BGN</span>
+                  <input id="id.company" type="text" class="form-control form-control-righttext" maxlength="100" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="{introCus/introCusCompany}"/>
+                  </div></td>
+            </tr>
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >COMPANYADDRESS_TITLE_BGN</span>
+                  <input id="id.companyAddress" type="text" class="form-control form-control-righttext" maxlength="200" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="{introCus/introCusCompanyAddress}"/>
+                  </div></td>
+            </tr>
+            
+			
+			
+			
+			
+			
+			
+			<tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >POSITION_TITLE_BGN</span>
+                  <input id="id.position" type="text" class="form-control form-control-righttext input-left" maxlength="100" placeholder="COM_TXT_INPUT_PLACEHOLDER" value="{introCus/introCusWorkPosition}" />
+                  <!--<span class="input-group-addon input-group-symbol btnFormat"></span>-->
+              </div>
+              </td>
+            </tr>
+			<tr>
+              
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon" >INCOME_TITLE_BGN</span>
+                  <xsl:choose>
+                    <xsl:when test="introCus/introCusRevenue = 1">
+                      <input onclick="showChoiceIncomeInfo()" id="id.incomeInfo" type="button" class="form-control form-control-righttext input-left" placeholder="COM_TXT_SELECTION_PLACEHOLDER" value="INTRODUCE_INFO_INCOME_1" />
+                    </xsl:when>
+                    <xsl:when test="introCus/introCusRevenue = 2">
+                      <input onclick="showChoiceIncomeInfo()" id="id.incomeInfo" type="button" class="form-control form-control-righttext input-left" placeholder="COM_TXT_SELECTION_PLACEHOLDER" value="INTRODUCE_INFO_INCOME_2" />
+                    </xsl:when>
+                    <xsl:when test="introCus/introCusRevenue = 3">
+                      <input onclick="showChoiceIncomeInfo()" id="id.incomeInfo" type="button" class="form-control form-control-righttext input-left" placeholder="COM_TXT_SELECTION_PLACEHOLDER" value="INTRODUCE_INFO_INCOME_3" />
+                    </xsl:when>
+                    <xsl:when test="introCus/introCusRevenue = 4">
+                      <input onclick="showChoiceIncomeInfo()" id="id.incomeInfo" type="button" class="form-control form-control-righttext input-left" placeholder="COM_TXT_SELECTION_PLACEHOLDER" value="INTRODUCE_INFO_INCOME_4" />
+                    </xsl:when>
+                    <xsl:when test="introCus/introCusRevenue = 5">
+                      <input onclick="showChoiceIncomeInfo()" id="id.incomeInfo" type="button" class="form-control form-control-righttext input-left" placeholder="COM_TXT_SELECTION_PLACEHOLDER" value="INTRODUCE_INFO_INCOME_5" />
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <input onclick="showChoiceIncomeInfo()" id="id.incomeInfo" type="button" class="form-control form-control-righttext input-left" placeholder="COM_TXT_SELECTION_PLACEHOLDER" value="INCOME_BGN_CHOICE" />
+                    </xsl:otherwise>
+                  </xsl:choose>
+                  <span class="icon-movenext input-group-addon input-group-symbol btnFormat"></span> </div></td>
+            </tr>
+          </table>
+          <table width="100%" align="center">
+            <tr>
+              <td colspan="2" class="Header"><h5 > <span>PRODUCT_INFO_TITLE</span> </h5></td>
+            </tr>
+            <tr>
+              <td colspan="2" align="center" valign="middle" class="td-text"><div class="input-group">
+                  <input id="id.checkboxAcount" type="checkbox" align="left" checked="checked" disabled="disabled"/>
+                  <span class="input-group-addon left-input">ACCOUNT_TITLE_BGN</span> </div></td>
+            </tr>
+          </table>
+          <table width="100%" align="center">
+            <tr>
+              <td align="center" valign="middle" class="td-text"><div class="input-group"> <span class="input-group-addon">ATTACK_TITLE_BGN</span>
+                 <!-- <input id="id.fileUpload01" type="file" class="form-control form-control-rightbutton"/>-->
+				<input style="margin-top:8px" type="file" onchange="fnChange(this)" class="form-control form-control-rightbutton input-file"
+value="COM_TXT_INPUT_PLACEHOLDER" id="id.fileUpload01" accept="image/png;image/jpg"/>
+				<input style="margin-left:0px;margin-top:4px;" id="btnFile" type="button" class="form-control form-control-rightbutton" onclick="document.getElementById('id.fileUpload01').click()"/>
+                  <!--<span class="input-group-addon input-group-symbol"></span> -->
+              </div>
+              </td>
+            </tr>
+            <tr id = "id.checkFile" style="display: none">
+              <td colspan="2"><div align="right">
+                    <label type ="text" id="id.lbCheckFile"  class="cssLineColor"></label>
+                </div></td>
+            </tr>
+              </table>
+            <table id="tb-prevPicture1" width="100%" align="center" class="table-intro" style="display: none">
+                <tr>
+                    <td colspan="2" class="border-b">
+                        <div id="prevPic1" class="prevPicture" align="center">
+                            <!--<h2>Keep crop area square</h2>-->
+                            <div id="cropperContainer11" class="cropperContainer" onclick="rotateImageIntroCus(90);"></div>
+                            <div class="previews">
+                                <!--<div id="previewSmall1" class="previewSmall" style="display:none"></div>-->
+                                <div id="previewBig11" class="previewBig desktopmode" style="display: none"></div>
+                            </div>
+                            <div id="info11" class="infoPicture desktopmode"></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <table width="100%">
+                <tr>
+                    <td colspan="2" align="center" valign="middle" class="td-text" >
+                         <div class="tdbtndesktop" style="width:50%;margin-top:10px;">
+                             <input  type='submit' style="float:left;margin-left:65px" class='btnDesktopshadow btnDesktopBack' onClick= 'clickHomeOrBack()' value='INPUT_ACC_BTN_GOBACK'/>
+                         </div>
+                         <div style="width:50%;margin-top:12px;">
+                             <input type="button" onclick="sendJSONRequest()" style="margin-right:10%" class="btnshadow btn-second" value="CUSTOMER_CREATE_BTN_SENDREQUEST"/>
+                         </div>
+                    </td>
+                </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="selection-dialog" class="dialog-blacktrans" style="display: none" align="center" >
+      <div class="dialog-backgroundtrans" align="center" onClick="closeDialog(this)"> </div>
+      <div id="divListGroup" class="list-group dialog-list"> </div>
+    </div>
+    </body>
+    </html>
+  </xsl:template>
+</xsl:stylesheet>

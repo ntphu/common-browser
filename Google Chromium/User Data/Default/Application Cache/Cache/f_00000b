@@ -1,0 +1,469 @@
+/**
+ * Created by HuyNT2
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+
+
+var gprsResp = new GprsRespObj("","","","");
+page_html= true;
+xml_review='';
+var nodeReviewInfo = document.getElementById("reviewInfo");
+	//nodeReviewInfo.innerHTML = gReviewHtml;
+	var tmpReviewHTML = getReviewHtmlStore();
+	//ngocdt3 bo gach class='line-separate'
+	var tmpReviewForm = "<div><h5 align='left' class='review-title'>" + CONST_STR.get('REVIEW_TITLE_SCREEN') + "</h5><div></div></div>";// + tmpReviewHTML;
+
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpRespReview = getRespObjStore();
+   
+	if(tmpRespReview.respCode == RESP.get('COM_FINGERPRINT_OVER_LIMIT')||tmpRespReview.respCode == RESP.get('COM_FINGERPRINT_OVER_LIMIT_PAYMENT')){
+		document.getElementById('note_mca').style.display='none';
+		document.getElementById('note_finger').style.display='';
+	}
+	else {
+		if(gUserInfo.valicationType=='MCA'){
+			document.getElementById('note_mca').style.display='';
+			document.getElementById('note_finger').style.display='none';
+		}
+		else{
+			document.getElementById('note_mca').style.display='none';
+			document.getElementById('note_finger').style.display='none';
+		}
+	}
+	
+	//var tmpStepNo = (!tmpRespReview || tmpRespReview.respCode == CONSTANTS.get("CMD_TYPE_REG_eSAVING") || tmpRespReview.respCode != RESP.get('COM_TRUST_PAYEE'))? 402: 302;
+	//var tmpStepNo = (!tmpRespReview && tmpRespReview.respCode != CONSTANTS.get("CMD_TYPE_REG_eSAVING"))? 402: 302;
+	var tmpStepNo = getSequenceFormIdx(tmpStepNo);
+	tmpStepNo = (!tmpStepNo || (tmpStepNo != 301))? 402: 302;
+	//store sequence review index
+if (tmpStepNo!= 302);
+{
+    setSequenceFormIdx(tmpStepNo);
+}
+// addListSequence
+actionbar.addListSequence('com-review-scr');
+	
+	var docXml = createXMLDoc();	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		//var tmpNode = document.getElementById('seqForm');
+		//tmpNode.innerHTML = oStr;
+		tmpReviewForm = '<div id="seqFormReview">' + oStr + '</div>' + tmpReviewForm;
+		tmpReviewForm += tmpReviewHTML;
+		nodeReviewInfo.innerHTML = tmpReviewForm;
+	}, function() {
+		logInfo('gen review screen fail');
+		goBack();
+	});
+
+	//nodeReviewInfo.innerHTML = tmpReviewHTML;
+
+
+
+//change language
+changeLanguageInView();
+
+function sendJSONRequest() {
+		
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var tmpRespObj;
+	tmpRespObj = getRespObjStore();
+	mailtransid =tmpRespObj.arguments[0];
+	mailservice =tmpRespObj.responseType;
+	arrayArgs.push(tmpRespObj.responseType); //confirm type
+	arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+	arrayArgs.push(""); //Token key --> demo
+	if (tmpRespObj.respCode == RESP.get('COM_TRUST_PAYEE'))
+	{
+		arrayArgs.push(""); //user: authen type
+	}
+	else if ((tmpRespObj.respCode == RESP.get('COM_OVER_LIMIT')) || (tmpRespObj.respCode == RESP.get('COM_OVER_DATE_LIMIT'))) {
+		arrayArgs.push("OTP"); //user: authen type
+	}
+	else if ((tmpRespObj.respCode == RESP.get('COM_FINGERPRINT_OVER_LIMIT')) ||(tmpRespObj.respCode == RESP.get('COM_FINGERPRINT_OVER_LIMIT_PAYMENT'))|| (tmpRespObj.respCode == RESP.get('COM_FINGERPRINT_OVER_DATE_LIMIT'))) {
+		//arrayArgs.push(""); //user: authen type
+		AuthenticateUsingFingerprint();
+		
+		return;
+	}
+	else 
+	{
+		arrayArgs.push(gUserInfo.valicationType); //user: authen type
+	}
+	
+	setRespObjStore(tmpRespObj);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data["cmdType"] = gprsCmd.cmdType;
+	data["time"] = gprsCmd.timeCur;
+	data["app"] = gprsCmd.appName;
+	data["version"] = gprsCmd.version;
+	data["language"] = gprsCmd.language;
+	data["session"] = gprsCmd.sessionID;
+	data["args"] = gprsCmd.arguments;
+	
+	//gGprsCmd = gprsCmd; //save to global variable-- confirm
+	setGprsCmdStore(gprsCmd);
+	
+	if (tmpRespObj.respCode == RESP.get('COM_SUCCESS'))
+	{
+	// 	  if(tmpRespObj.responseType == CONSTANTS.get('CMD_TYPE_REG_eSAVING') || tmpRespObj.responseType == CONSTANTS.get('CMD_TYPE_REG_eSAVING_FORTUNE')
+	// 	 ||(tmpRespObj.responseType == CONSTANTS.get('CMD_TYPE_UPDATE_BOOK_BENEFICIARY')))
+	//   {
+		  if(tmpRespObj.responseType == CONSTANTS.get('CMD_TYPE_UPDATE_BOOK_BENEFICIARY'))
+		  {	 
+		 			logInfo('Confirm without Authentication');
+	 				requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+		 }		
+		 else
+		 {
+					navController.pushToView("com-authentication-scr", true);
+		}
+	}
+	//TUANNM5 TOUCHID
+	else if ((tmpRespObj.respCode == RESP.get('COM_OVER_LIMIT')) || (tmpRespObj.respCode == RESP.get('COM_OVER_DATE_LIMIT')) || (tmpRespObj.respCode == RESP.get('COM_FINGERPRINT_PIN_LIMIT'))) {
+		navController.pushToView("com-authentication-scr", true);
+	}
+	else if (tmpRespObj.respCode == CONSTANTS.get('TRANS_RELIABLE')){
+		logInfo('Confirm without Authentication');
+		requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	}
+	
+	//loadPage("com-authentication-scr", true);
+	
+}
+function viewDidLoadSuccess() {
+    navController.getBottomBar().hide();
+    logInfo('review load success');
+    var tmpRespObj = getRespObjStore();
+
+    if (tmpRespObj.responseType == CONSTANTS.get("CMD_TYPE_CONNECT_EWALLET") || tmpRespObj.responseType == CONSTANTS.get("CMD_TYPE_GET_DISCONNECT_EWALLET"))
+    {
+    	var obj = document.getElementById("reviewwalletlink");
+    	obj.style.display = "";
+    }
+}
+
+function requestMBServiceSuccess(e)
+{
+	logInfo('Confirm transaction success!');
+	
+	gprsResp = parserJSON(e, false);
+	if (gprsResp.respCode == RESP.get('COM_SUCCESS'))
+	{
+		//gRespObj = gprsResp;
+
+		setRespObjStore(gprsResp);
+		
+		//document.addEventListener("closeAlertView", handleCloseAlertSuccess, false);
+		//showAlertText(gprsResp.respContent);
+		navController.pushToView("com-review-result-scr", true);
+		
+		//Query account change 
+		queryInfoOfAccountNo(gUsingAccountNo);
+	}
+	else if (gprsResp.respCode == RESP.get('COM_TRANS_EXT_TIMEOUT')) { //go to home page
+		showAlertText(gprsResp.respContent);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	else if (gprsResp.respCode == RESP.get('COM_WRONG_INPUT_TOKEN')) { //wrong input token
+		showAlertText(gprsResp.respContent);
+	}
+	else { //ask to change view
+		/*document.addEventListener("alertConfirmOK", handleRequestConfirmAlertOK, false);
+		document.addEventListener("alertConfirmCancel", handleRequestConfirmAlertCancel, false);
+		showAlertConfirmText(gprsResp.respContent + CONST_STR.get('ERR_COM_ASK_TO_EXECUTE_AGAIN'));*/
+		document.addEventListener("closeAlertView", handleRequestAlertReviewOKBtn, false);
+		showAlertText(gprsResp.respContent);
+	}
+}
+
+
+/*function handleRequestConfirmAlertOK() {
+	document.removeEventListener("alertConfirmOK", handleRequestConfirmAlertOK, false);
+	document.removeEventListener("alertConfirmCancel", handleRequestConfirmAlertCancel, false);
+	navController.resetBranchView();
+}
+
+function handleRequestConfirmAlertCancel() {
+	document.removeEventListener("alertConfirmOK", handleRequestConfirmAlertOK, false);
+	document.removeEventListener("alertConfirmCancel", handleRequestConfirmAlertCancel, false);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}*/
+function handleRequestAlertReviewOKBtn() {
+	document.removeEventListener("closeAlertView", handleRequestAlertReviewOKBtn, false);
+	navController.resetBranchView();
+}
+
+function requestMBServiceFail(e)
+{
+	logInfo('Confirm transaction faild!');	
+} 
+
+
+function goBack() {
+	navController.popView(true);
+}
+
+function setChecked() {
+	document.getElementById('trMessage').style.display = "none";
+	var obj = document.getElementById('chkAgree');
+	if(obj.className == "icon-checkbox-unchecked") {
+		obj.className = "icon-checked";
+	} else {
+		obj.className = "icon-checkbox-unchecked";
+	}	
+}
+
+function checkAgree()
+{
+	var obj = document.getElementById('chkAgree');
+	if(obj.className == "icon-checkbox-unchecked") {
+		//alert('Quý khách vui lòng đọc và chấp nhận các điều khoản điều khoản, điều kiện của gửi tiết kiệm rút gốc linh hoạt');
+
+		//var error = document.getElementById('lblErrRequired');
+		//error.innerHTML = 'Quý khách vui lòng đọc và chấp nhận các điều khoản điều khoản, điều kiện của gửi tiết kiệm điện tử';
+		showAlertText(CONST_STR.get('ERR_CHECK_ACCEPT_OD_TERM'));
+      //  document.getElementById('trMessage').style.display = "";
+
+		return false;
+	} else {
+		sendJSONRequest();
+		return true;
+	}	
+}
+
+function CancelbtnClick()
+{
+	navController.resetBranchView();
+	goBack();
+}
+function btnCancelClick()
+{
+	withdraw_account = "";
+	//navController.resetBranchView();
+    //goBack();
+    navController.popViewInit(true);
+}
+
+
+function sendRequestForUpdateBenefit(){
+	var data = {};		
+	var tmpGprsCmd = getGprsCmdStore();
+	var arrayArgs = new Array();
+	arrayArgs.push(''); //transaction ID
+	
+	data["cmdType"] = gGprsCmd.cmdType;
+	data["time"] = tmpGprsCmd.timeCur;
+	data["app"] = tmpGprsCmd.appName;
+	data["version"] = tmpGprsCmd.version;
+	data["language"] = tmpGprsCmd.language;
+	data["session"] = tmpGprsCmd.sessionID;
+	data["args"] = tmpGprsCmd.arguments;
+	//data = getDataFromGprsCmd(gprsCmd);	
+	requestMBService(data, true, 0, requestMBServiceSuccessBenefit, requestMBServiceFailBenefit);
+}
+function requestMBServiceSuccessBenefit(e){
+	gprsResp = parserJSON(e);
+	setRespObjStore(gprsResp);
+	if("0" == gprsResp.respCode) {
+		navController.pushToView("com-review-result-scr", true);
+	}else{
+		showAlertText(gprsResp.respContent);
+	}
+}
+function requestMBServiceFailBenefit(){
+
+	showAlertText(gprsResp.respContent);
+	//navController.initWithRootView('account/account-scr', true);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+
+function checkAQ()
+{
+	var obj = document.getElementById('chkAgree');
+	if(obj.className == "icon-checkbox-unchecked") {
+		//alert('Quý khách vui lòng đọc và chấp nhận các điều khoản điều khoản, điều kiện của gửi tiết kiệm rút gốc linh hoạt');
+
+		//var error = document.getElementById('lblErrRequired');
+		//error.innerHTML = 'Quý khách vui lòng đọc và chấp nhận các điều khoản điều khoản, điều kiện của gửi tiết kiệm điện tử';
+		showAlertText(CONST_STR.get('ERR_CHECK_ACCEPT_OD_TERM'));
+      //  document.getElementById('trMessage').style.display = "";
+
+		return false;
+	} else {
+		sendJSONRequest();
+		return true;
+	}	
+}
+
+function AuthenticateUsingFingerprint() {
+	var touchIDTimer = setInterval(function(){
+	//if (touchIDTokenKey != null && touchIDTokenKey.length > 0) {
+		clearInterval(touchIDTimer);
+		var devicePlatform = device.platform;
+		var versionSDK = device.version;
+        if(devicePlatform == 'Android' && versionSDK != 'undefined' && parseInt(versionSDK) >= 6){
+
+            cordova.exec(function(e){
+                
+                var data = {};
+                var arrayArgs = new Array();
+
+                var tmpRespObj;
+                tmpRespObj = getRespObjStore();
+                mailtransid =tmpRespObj.arguments[0];
+                mailservice =tmpRespObj.responseType;
+                arrayArgs.push(tmpRespObj.responseType); //confirm type
+                arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+                arrayArgs.push(""); //Token key --> demo
+                arrayArgs.push(""); //user: authen type
+
+                setRespObjStore(tmpRespObj);
+
+                var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST_FINGERPRINT"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+                data["cmdType"] = gprsCmd.cmdType;
+                data["time"] = gprsCmd.timeCur;
+                data["app"] = gprsCmd.appName;
+                data["version"] = gprsCmd.version;
+                data["language"] = gprsCmd.language;
+                data["session"] = gprsCmd.sessionID;
+                data["args"] = gprsCmd.arguments;
+
+                //gGprsCmd = gprsCmd; //save to global variable-- confirm
+                setGprsCmdStore(gprsCmd);
+
+                logInfo('Authenticate using fingerprint successfully');
+                requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+            }, function(e){
+
+              
+                if( isPinEX=='Y' ){
+                    showAlertText(CONST_STR.get('PIN_EX_DATE_ALERT'));
+                }else{
+                    var data = {};
+                    var arrayArgs = new Array();
+
+                    var tmpRespObj;
+                    tmpRespObj = getRespObjStore();
+                    mailtransid =tmpRespObj.arguments[0];
+                    mailservice =tmpRespObj.responseType;
+                    arrayArgs.push(tmpRespObj.responseType); //confirm type
+                    arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+                    arrayArgs.push(""); //Token key --> demo
+                    arrayArgs.push(gUserInfo.valicationType); //user: authen type
+
+                    setRespObjStore(tmpRespObj);
+
+                    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+                    data["cmdType"] = gprsCmd.cmdType;
+                    data["time"] = gprsCmd.timeCur;
+                    data["app"] = gprsCmd.appName;
+                    data["version"] = gprsCmd.version;
+                    data["language"] = gprsCmd.language;
+                    data["session"] = gprsCmd.sessionID;
+                    data["args"] = gprsCmd.arguments;
+
+                    //gGprsCmd = gprsCmd; //save to global variable-- confirm
+                    setGprsCmdStore(gprsCmd);
+
+                    logInfo('Authenticate using fingerprint failed or cancelled, return to default authen type');
+                    navController.pushToView("com-authentication-scr", true);
+
+                }
+            }, 'FingerPrint', 'checkMyFingerPrint', ['checkMyFingerPrint']);
+        }else{
+			
+			
+			THEBTouchID.alert('abc', 'def', 'Huynt2', function(){
+				// collect the form data while iterating over the inputs
+				var data = {};
+				var arrayArgs = new Array();
+				
+				var tmpRespObj;
+				tmpRespObj = getRespObjStore();
+				mailtransid =tmpRespObj.arguments[0];
+				mailservice =tmpRespObj.responseType;
+				arrayArgs.push(tmpRespObj.responseType); //confirm type
+				arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+				arrayArgs.push(""); //Token key --> demo
+				arrayArgs.push(""); //user: authen type
+				
+				setRespObjStore(tmpRespObj);
+	
+				var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST_FINGERPRINT"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+				data["cmdType"] = gprsCmd.cmdType;
+				data["time"] = gprsCmd.timeCur;
+				data["app"] = gprsCmd.appName;
+				data["version"] = gprsCmd.version;
+				data["language"] = gprsCmd.language;
+				data["session"] = gprsCmd.sessionID;
+				data["args"] = gprsCmd.arguments;
+				
+				//gGprsCmd = gprsCmd; //save to global variable-- confirm
+				setGprsCmdStore(gprsCmd);
+				
+				logInfo('Authenticate using fingerprint successfully');
+				requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+			}, function(e) {
+				//authenticate failed or cancelled
+				 // collect the form data while iterating over the inputs
+				var data = {};
+				var arrayArgs = new Array();
+				
+				var tmpRespObj;
+				tmpRespObj = getRespObjStore();
+				mailtransid =tmpRespObj.arguments[0];
+				mailservice =tmpRespObj.responseType;
+				arrayArgs.push(tmpRespObj.responseType); //confirm type
+				arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+				arrayArgs.push(""); //Token key --> demo
+				arrayArgs.push(gUserInfo.valicationType); //user: authen type
+				
+				setRespObjStore(tmpRespObj);
+	
+				var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+				data["cmdType"] = gprsCmd.cmdType;
+				data["time"] = gprsCmd.timeCur;
+				data["app"] = gprsCmd.appName;
+				data["version"] = gprsCmd.version;
+				data["language"] = gprsCmd.language;
+				data["session"] = gprsCmd.sessionID;
+				data["args"] = gprsCmd.arguments;
+				
+				//gGprsCmd = gprsCmd; //save to global variable-- confirm
+				setGprsCmdStore(gprsCmd);
+				
+				logInfo('Authenticate using fingerprint failed or cancelled, return to default authen type');
+				navController.pushToView("com-authentication-scr", true);
+			/*
+				if (e == '3') {
+					//showAlertText(CONST_STR.get("TOUCHID_3_TIMES_FAIL_ALERT"));
+				}
+			*/
+				
+			});
+		}
+		//}
+	}, 200);
+	setTimeout(function(){
+		if(touchIDTimer) {
+			clearInterval(touchIDTimer);
+		}
+	}, 45000);
+}

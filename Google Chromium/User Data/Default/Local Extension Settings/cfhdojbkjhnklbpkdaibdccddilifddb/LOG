@@ -1,0 +1,26 @@
+2018/02/27-19:07:39.405 17288 Reusing MANIFEST F:\Browser\Google Chromium\User Data\Default\Local Extension Settings\cfhdojbkjhnklbpkdaibdccddilifddb/MANIFEST-000001
+2018/02/27-19:07:39.452 17288 Recovering log #4479
+2018/02/27-19:07:39.452 17288 Reusing old log F:\Browser\Google Chromium\User Data\Default\Local Extension Settings\cfhdojbkjhnklbpkdaibdccddilifddb/004479.log 
+2018/02/27-19:08:38.920 3392 Level-0 table #4484: started
+2018/02/27-19:08:39.012 3392 Level-0 table #4484: 3795859 bytes OK
+2018/02/27-19:08:39.039 3392 Delete type=0 #4479
+2018/02/27-19:09:19.990 3392 Level-0 table #4486: started
+2018/02/27-19:09:20.141 3392 Level-0 table #4486: 3796302 bytes OK
+2018/02/27-19:09:20.165 3392 Delete type=0 #4483
+2018/02/27-20:08:38.953 3392 Level-0 table #4488: started
+2018/02/27-20:08:39.078 3392 Level-0 table #4488: 3795590 bytes OK
+2018/02/27-20:08:39.103 3392 Delete type=0 #4485
+2018/02/27-20:08:39.105 3392 Compacting 4@0 + 2@1 files
+2018/02/27-20:08:39.279 3392 Generated table #4489@0: 1 keys, 3795185 bytes
+2018/02/27-20:08:39.304 3392 Generated table #4490@0: 3 keys, 1248 bytes
+2018/02/27-20:08:39.304 3392 Compacted 4@0 + 2@1 files => 3796433 bytes
+2018/02/27-20:08:39.334 3392 compacted to: files[ 0 3 7 0 0 0 0 ]
+2018/02/27-20:08:39.335 3392 Delete type=2 #4478
+2018/02/27-20:08:39.336 3392 Delete type=2 #4480
+2018/02/27-20:08:39.336 3392 Delete type=2 #4481
+2018/02/27-20:08:39.337 3392 Delete type=2 #4484
+2018/02/27-20:08:39.338 3392 Delete type=2 #4486
+2018/02/27-20:08:39.338 3392 Delete type=2 #4488
+2018/02/27-20:13:03.516 3392 Level-0 table #4492: started
+2018/02/27-20:13:03.639 3392 Level-0 table #4492: 3796304 bytes OK
+2018/02/27-20:13:03.665 3392 Delete type=0 #4487

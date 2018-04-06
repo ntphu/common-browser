@@ -1,0 +1,726 @@
+/**
+ * Created by HuyNT2
+ * User: 
+ * Date: 12/17/13
+ * Time: 5:35 PM
+ */
+var pageIndex = 1;//CURRENT PAGE
+var itemsPerPage = 5;//3 DÒNG/ TRANG
+var totalItems = 9;//TỔNG SỐ DÒNG
+var totalPages = 0;
+var strXml = "";
+/*** HEADER ***/
+var gprsResp = new GprsRespObj("","","","");
+var XmlLocal;
+page_html=false;
+
+/*** INIT VIEW ***/
+function loadInitXML() {
+	var tmpXml = getReviewXmlStore();
+	XmlLocal = tmpXml;
+	if (strXml == '' || strXml == undefined){
+		strXml = XMLToString(tmpXml);
+	}
+	xml_review=strXml;
+	logInfo(xml_review);
+    tmpXml = convertToNewStructureXML(strXml);
+    XmlLocal = tmpXml;
+    strXml = XMLToString(tmpXml);
+
+	return tmpXml;
+}
+
+function viewBackFromOther() {
+    logInfo('Back from other view');
+
+//	setDefaultInfo(newCusInfoObj);
+}
+/*** INIT VIEW END ***/
+
+function convertToNewStructureXML(strXml) {
+    var parser = new DOMParser();
+    xmlDoc = parser.parseFromString(strXml,"text/xml");
+	
+    // create new documnet
+    var newDoc = createXMLDoc();
+    var tmpXmlRootNode = createXMLNode('review', '', newDoc);
+    //review/reviewtitle //screen title
+    // check
+
+    //var tmpXmlReviewTitle = createXMLNode('reviewtitle', xmlDoc.getElementsByTagName("reviewtitle")[0].firstChild.nodeValue, newDoc, tmpXmlRootNode);
+    var tagReviewTitle = xmlDoc.getElementsByTagName("reviewtitle");
+    var tmpXmlReviewTitle = null;
+    if(tagReviewTitle != null && tagReviewTitle[0] != undefined)
+    {
+        if (tagReviewTitle[0].firstChild != null)
+        {
+            tmpXmlReviewTitle = createXMLNode('reviewtitle', tagReviewTitle[0].firstChild.nodeValue,
+                newDoc, tmpXmlRootNode);
+        }
+    }
+
+    //review/reviewinfo/reviewtranstitle
+    var tagReviewInfoXml = xmlDoc.getElementsByTagName("reviewinfo");
+    var tagTs = '';
+	var tagDKDK;
+    for (i=0; i< tagReviewInfoXml.length;i++) {
+        tagTs = tagReviewInfoXml[i].getElementsByTagName("transinfo");
+        tagReviewTranTitle = tagReviewInfoXml[i].getElementsByTagName("reviewtranstitle");
+		tagDKDK =tagReviewInfoXml[i].getElementsByTagName("conditioncontent");
+        var tmpXmlReviewInfo = createXMLNode('reviewinfo', '', newDoc, tmpXmlRootNode);
+        var tmpXmlNodeTransTitle = createXMLNode('reviewtranstitle', tagReviewTranTitle[0].firstChild.nodeValue, newDoc, tmpXmlReviewInfo);
+		
+        data = new Array();
+		
+	if(i==1 && trans_type=="transfer" && checkTransferPage()){
+		for (j=0; j< tagTs.length;j++) {
+            try{
+                var title = tagTs[j].getElementsByTagName('transinfotitle')[0].firstChild.nodeValue;
+                var content = tagTs[j].getElementsByTagName('transinfocontent')[0].firstChild.nodeValue;
+                var row = [title,content];
+                data.push(row);
+            }catch(e){
+                
+            }
+        }
+	}
+	else{
+		for (j=0; j< tagTs.length;j++) {
+            try{
+                var title = tagTs[j].getElementsByTagName('transinfotitle')[0].firstChild.nodeValue;
+                var content = tagTs[j].getElementsByTagName('transinfocontent')[0].firstChild.nodeValue;
+				/*if(tagTs[j].getElementsByTagName('transinfodisplay')[0]!= undefined && tagTs[j].getElementsByTagName('transinfodisplay')[0] != null &&tagTs[j].getElementsByTagName('transinfodisplay'[0]) != '' ){
+					var scrinfo = tagTs[j].getElementsByTagName('transinfodisplay')[0].firstChild.nodeValue;
+					var row = [title, content+'#'+scrinfo];
+				}
+				else{
+					var row =[title, content];
+				}*/
+				 
+                var row =[title, content]
+                data.push(row);
+            }catch(e){
+                
+            }
+        }
+	}
+        
+
+        
+		if(i==1&& trans_type=="transfer" && checkTransferPage()){
+				var recycler = new RecyclerView({
+				type: "TITLE",
+				typeTextAlign: "MIDLE",
+				title: "Chuyển tới",
+				titleAlign:"LEFT",
+				opacity:false
+			});
+			recycler.setData(data);
+		}
+		else{
+			//gen listview
+            if(CONST_DESKTOP_MODE && !checkScreenisMobilePX()){
+                var recycler = new RecyclerView({
+                    type: "DESKTOP_GRID",
+                    typeTextAlign: "MIDLE",
+                    title: "Tai khoan jumbo",
+                    titleAlign:"LEFT",
+                    opacity:true
+                });
+                recycler.setData(data);
+                var contentHTML = recycler.init();
+            }else{
+			var recycler = new RecyclerView({
+				type: "NORMAL",
+				typeTextAlign: "MIDLE",
+				title: "Tai khoan jumbo",
+				titleAlign:"LEFT",
+				opacity:false
+			});
+			recycler.setData(data);
+            }
+		}
+        var contentHTML = recycler.init();
+
+        var reviewTb = xmlDoc.getElementsByTagName("reviewtable")[0];
+        var contentTableHTML = '';
+        if(reviewTb != undefined && reviewTb != null){
+	        var dataTable =  new Array();
+	        var dataTableTitle =  new Array();
+	        
+	        var a = reviewTb.getElementsByTagName('reviewtabletitle')[0];
+	        for(var i = 1; i <= a.childElementCount; i++){
+	        	dataTableTitle.push(a.getElementsByTagName('tbcol' + i)[0].firstChild.nodeValue);
+	        }
+	        dataTable.push(dataTableTitle);
+	        var rowDetail = reviewTb.getElementsByTagName('reviewtabledetail');
+	        for(var i = 0; i < rowDetail.length;i++){
+	        	var dataTableContent =  new Array();
+	        	for(var j = 1;j <= (rowDetail[i].childElementCount/2);j++){
+	        		dataTableContent.push(rowDetail[i].getElementsByTagName('tbcontent'+j)[0].firstChild.nodeValue);
+	        	}
+	        	dataTable.push(dataTableContent);
+	        }
+
+
+	        var recycler = new RecyclerView({
+	            type: "DESKTOP_NORMAL",
+	            typeTextAlign: "MIDLE",
+	            opacity:false
+	        });
+	        recycler.setData(dataTable);
+	        recycler.setHeaderHightlight(true);
+	        contentTableHTML = '<br>' + recycler.init();	      
+        }
+
+
+		if(tagDKDK != undefined && tagDKDK != null && tagDKDK != '' && tagDKDK.length >0){
+			contentHTML = contentHTML+ "<tr id ='setCheck'>" +
+                    "<td width='3#' onclick='setChecked()'>" +
+					"<span class='icon-checkbox-unchecked' style='display:table-cell;font-size:16px' id='chkAgree'/>" +
+					"</td>" + 
+                    "<td><div class='notestyle'><span>"+CONST_STR.get('FUTURE_SAVING_CONDITION')
+					+ "</span></div></td>" +
+                  "</tr>";
+		}
+		else{
+			var titlesTKTD = gUserInfo.lang == 'VN' ?(CONST_KEY_JUMBO_TRANS_TYPE_VN[0]):(CONST_KEY_JUMBO_TRANS_TYPE_EN[0]);
+            var isTKTD = contentHTML.indexOf(titlesTKTD) > -1;
+			if(isTKTD){
+				contentHTML = contentHTML +    "<table width='98%'>"+
+                             "<tr><td width='2%' onclick='setChecked()'><span class='icon-checkbox-unchecked' style='display:table-cell;font-size:16px' id='chkAgree'/></td>"+
+                             "<td class='notestyle'><span>JUMBO_AUTO_SAV_CONDITON_NOTE1</span><span id='span-blank-space'>BLANK_SPACE</span><em><a target='_blank' class='ref-link' onClick='openlinkSaveAuto();'><u><span>JUMBO_AUTO_SAV_CONDITON_NOTE2</span></u></a></em>&nbsp;<span>JUMBO_AUTO_SAV_CONDITON_NOTE3</span></td></tr></table >";
+
+			}
+			contentHTML=contentHTML;
+		}
+		contentHTML = contentHTML + contentTableHTML;
+        var tmpContent = createXMLNode('content', contentHTML, newDoc, tmpXmlReviewInfo);
+		
+		
+    }
+    //console.log(data);
+
+    //tmpXml = parseXMLPagging();
+    logInfo(newDoc);
+    return newDoc;
+}
+function openlinkSaveAuto(){
+	openLinkInWindows('./download/jumbo/term-condition-autosaving-create.html');
+}
+
+/*** VIEW LOAD SUCCESS ***/
+
+function viewDidLoadSuccess() {
+    resizeMainViewContent(currentPage);
+    navController.getBottomBar().hide();
+    logInfo('review load success');
+	//get sequence form xsl
+	var tmpXslDoc = getCachePageXsl("sequenceform");
+	//create xml
+	var tmpRespReview = getRespObjStore();
+	mailtransid =tmpRespReview.arguments[0];
+	mailservice =tmpRespReview.responseType;
+	if(tmpRespReview.respCode == RESP.get('COM_FINGERPRINT_OVER_LIMIT')||tmpRespReview.respCode == RESP.get('COM_FINGERPRINT_OVER_LIMIT_PAYMENT')){
+		document.getElementById('note_mca').style.display='none';
+		document.getElementById('note_finger').style.display='';
+	}
+	else {
+		if(gUserInfo.valicationType=='MCA'){
+			document.getElementById('note_mca').style.display='';
+			document.getElementById('note_finger').style.display='none';
+		}
+		else{
+			document.getElementById('note_mca').style.display='none';
+			document.getElementById('note_finger').style.display='none';
+		}
+	}
+	//var tmpStepNo = (!tmpRespReview || tmpRespReview.respCode != RESP.get('COM_TRUST_PAYEE'))? 402: 302; //disable trust payee
+	var tmpStepNo = getSequenceFormIdx(tmpStepNo);
+	//tmpStepNo = (!tmpStepNo || (tmpStepNo != 301))? 402: 302;
+	tmpStepNo = (!tmpStepNo || (tmpStepNo != 301))? 302: 302;
+	
+	//store sequence review index
+	setSequenceFormIdx(tmpStepNo);
+    actionbar.addListSequence("com-review-xsl-scr");
+    
+	genHtmlSearchResult(parseXMLPagging());
+	var docXml = createXMLDoc();
+	
+	var tmpXmlRootNode = createXMLNode('seqFrom', '', docXml);
+	var tmpXmlNodeInfo = createXMLNode('stepNo', tmpStepNo, docXml, tmpXmlRootNode);
+	//gen html string
+	genHTMLStringWithXML(docXml, tmpXslDoc, function(oStr){
+		var tmpNodeSeq = document.getElementById('seqFormReview');
+		tmpNodeSeq.innerHTML = oStr;
+		if (tmpRespReview.responseType == '264') {
+			if (get_browser() == 'Chrome') {
+				if (parseInt(get_browser_version()) < 38) {
+					document.getElementById('span-blank-space').style.display = 'none';
+				}
+			} else {
+                // check style
+               var  valSpanBlankSpace = document.getElementById('span-blank-space')
+               if(valSpanBlankSpace != null){
+                   valSpanBlankSpace.style.display = 'none';
+               }
+				//document.getElementById('span-blank-space').style.display = 'none';
+			}
+		}
+		changeLanguageInView();
+	}, function() {
+		logInfo('gen review screen fail');
+		goBack();
+	});
+
+}
+
+function pageIndicatorSelected(selectedIdx, selectedPage) { 
+	pageIndex = selectedIdx;
+	genHtmlSearchResult(parseXMLPagging());
+}
+
+function genHtmlSearchResult(newDocx) {
+	var docXsl = getCachePageXsl("com-review-xsl-scr-tmp");
+	//logInfo(newDocx);
+	genHTMLStringWithXML(newDocx, docXsl, successPaggingCallback, failPaggingCallback);	
+}
+function successPaggingCallback(strHtml) {
+	var div = document.getElementById("show-info");
+	div.innerHTML = strHtml;
+	genPagging(pageIndex);
+}
+
+//Callback failed
+function failPaggingCallback() {
+	//navController.initWithRootView('account/account-scr', true);	
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}
+function genPagging(pageIndex) {
+	var tmpStr = genPageIndicatorHtml(totalPages, Number(pageIndex));
+	var ele = document.getElementById('pageIndicatorNums');
+	if (ele != null && ele != undefined)
+		document.getElementById('pageIndicatorNums').innerHTML = tmpStr;
+}
+
+/*** VIEW LOAD SUCCESS END viewWillUnload ***/
+function parseXMLPagging(){
+	
+	var docXml = stringtoXML(strXml);	
+	var valFrom = itemsPerPage*(pageIndex-1);
+		
+	var ppp = docXml.getElementsByTagName('reviewtabledetail');
+	var totalP = ppp.length;
+	totalItems = totalP;
+	totalPages = Math.ceil(totalItems/itemsPerPage);
+	for(var i = 0; i<valFrom; i++){		
+		var y = docXml.getElementsByTagName('reviewtabledetail')[0];		
+		docXml.getElementsByTagName('reviewtable')[0].removeChild(y);		
+	}
+	ppp = docXml.getElementsByTagName('reviewtabledetail');
+	totalP = ppp.length;
+	
+	for(var i =itemsPerPage; i<totalP; i++){		
+		var y = docXml.getElementsByTagName('reviewtabledetail')[itemsPerPage];		
+		docXml.getElementsByTagName('reviewtable')[0].removeChild(y);		
+	}
+	
+	//logInfo('thuan doc New');
+	//logInfo(docXml);
+	return docXml;	
+}
+/*** VIEW WILL UNLOAD ***/
+
+function viewWillUnload() {
+	logInfo('review will unload');
+
+}
+/*** VIEW WILL UNLOAD END ***/
+
+
+function sendJSONRequest() {
+		
+	var obj = document.getElementById('chkAgree');
+	if (obj != null) {
+		if(obj.className == "icon-checkbox-unchecked") {
+			
+			showAlertText(CONST_STR.get('ERR_CHECK_ACCEPT_AUTO_SAVING_TERM'));
+	
+			return //false;
+		} else {
+			requestData();
+		}
+	} else {
+		requestData();
+	}
+}
+
+function requestData() {
+	// collect the form data while iterating over the inputs
+	var data = {};
+	var arrayArgs = new Array();
+	
+	var tmpRespObj;
+	tmpRespObj = getRespObjStore();
+	
+	arrayArgs.push(tmpRespObj.responseType); //confirm type
+	arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+	arrayArgs.push(""); //Token key --> By Pass	
+	if (tmpRespObj.respCode == RESP.get('COM_TRUST_PAYEE') && tmpRespObj.responseType != 70 && tmpRespObj.responseType != 271 && tmpRespObj.responseType != 272)
+	{
+		arrayArgs.push(""); //user: authen type
+	}
+	else if ((tmpRespObj.respCode == RESP.get('COM_OVER_LIMIT')) || (tmpRespObj.respCode == RESP.get('COM_OVER_DATE_LIMIT'))) {
+		arrayArgs.push("OTP"); //user: authen type
+	}
+	else if ((tmpRespObj.respCode == RESP.get('COM_FINGERPRINT_OVER_LIMIT'))||(tmpRespObj.respCode == RESP.get('COM_FINGERPRINT_OVER_LIMIT_PAYMENT')) || (tmpRespObj.respCode == RESP.get('COM_FINGERPRINT_OVER_DATE_LIMIT'))) {
+		//arrayArgs.push(""); //user: authen type
+		AuthenticateUsingFingerprint();
+		
+		return;
+	}
+	else 
+	{
+		arrayArgs.push(gUserInfo.valicationType); //user: authen type
+	}
+	setRespObjStore(tmpRespObj);
+	
+	var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+	data["cmdType"] = gprsCmd.cmdType;
+	data["time"] = gprsCmd.timeCur;
+	data["app"] = gprsCmd.appName;
+	data["version"] = gprsCmd.version;
+	data["language"] = gprsCmd.language;
+	data["session"] = gprsCmd.sessionID;
+	data["args"] = gprsCmd.arguments;
+	
+	//gGprsCmd = gprsCmd; //save to global variable-- confirm
+	setGprsCmdStore(gprsCmd);
+	
+	if (tmpRespObj.respCode == RESP.get('COM_SUCCESS'))
+	{
+		//SangNT1 comment cho viec mo so tiet kiem tu dong cung can xac thuc.7/2/2017
+		//  if(tmpRespObj.responseType == CONSTANTS.get('CMD_CREATE_AUTO_SAVING') || tmpRespObj.responseType == CONSTANTS.get('CMD_CHANGE_AUTO_SAVING'))
+		//  {
+		//  	logInfo('Confirm without Authentication');
+		//  	requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+		//  }		
+		//  else
+		//  {
+			if(tmpRespObj.responseType==CONSTANTS.get('CMD_REGIS_GET_GOLD')||tmpRespObj.responseType== CONSTANTS.get('CMD_ECOUNTER_BOOKING')){
+				requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+			}
+			else{
+			navController.pushToView("com-authentication-scr", true);
+			}
+		 // }
+		//end sangnt1 comment7/2/2017
+        }
+	//disable trust payee
+	//else if (tmpRespObj.respCode == RESP.get('COM_TRUST_PAYEE')){
+		//logInfo('Confirm without Authentication');
+		//requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+	//}
+	
+	//TUANNM5 update cho fingerprint/pincode
+	else if ((tmpRespObj.respCode == RESP.get('COM_OVER_LIMIT')) || (tmpRespObj.respCode == RESP.get('COM_OVER_DATE_LIMIT')) || (tmpRespObj.respCode == RESP.get('COM_FINGERPRINT_PIN_LIMIT'))) {
+		navController.pushToView("com-authentication-scr", true);
+	} 	//TUANNM5 update cho fingerprint/pincode EMD
+	//20170628 ngocdt3 bo sung dat lich rut vang khong can xac thuc
+	else if (tmpRespObj.respCode == CONSTANTS.get('TRANS_RELIABLE') ){
+		logInfo('Confirm without Authentication');
+		/*HaiNM*/
+		if (tmpRespObj.responseType==CONSTANTS.get('CMD_TYPE_LOCAL_TRANSFER_CUSTOMER')|| tmpRespObj.responseType==CONSTANTS.get('CMD_REGISTER_FUTURE_SAVING')){
+			navController.pushToView("com-authentication-scr", true);
+		}
+        else
+        {
+			requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+		}
+		/*End*/
+	}
+	//requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);	
+}
+
+
+function requestMBServiceSuccess(e)
+{
+	logInfo('Confirm transaction success!');
+	setReviewXmlStore(XmlLocal);
+	logInfo("haink0");
+	logInfo(XmlLocal);
+	gprsResp = parserJSON(e,false);
+	
+	var tmpRespObj;
+	tmpRespObj = getRespObjStore();
+	
+	
+	if (gprsResp.respCode == RESP.get('COM_SUCCESS'))
+	{
+		setRespObjStore(gprsResp);
+		navController.pushToView("com-review-result-scr", true);
+		//Query account change 
+		queryInfoOfAccountNo(gUsingAccountNo);
+	}
+	else if (gprsResp.respCode == RESP.get('COM_TRANS_EXT_TIMEOUT')) { //go to home page
+		showAlertText(gprsResp.respContent);
+		var tmpPageName = navController.getDefaultPage();
+		var tmpPageType = navController.getDefaultPageType();
+		navController.initWithRootView(tmpPageName, true, tmpPageType);
+	}
+	else if (gprsResp.respCode == RESP.get('COM_WRONG_INPUT_TOKEN')) { //ask to change view
+		showAlertText(gprsResp.respContent);
+	}
+	else if (gprsResp.respCode == '106') {  //by pass for Auto Register with respCode = 106
+		if (tmpRespObj.responseType == CONSTANTS.get('CMD_CREATE_AUTO_SAVING')) {
+			setRespObjStore(gprsResp);
+			navController.pushToView("com-review-result-scr", true);
+			//Query account change 
+			queryInfoOfAccountNo(gUsingAccountNo);
+		}
+	}
+	else { //ask to change view
+		//alert('aaa');
+		//document.addEventListener("alertConfirmOK", handleRequestConfirmAlertOK, false);
+		//document.addEventListener("alertConfirmCancel", handleRequestConfirmAlertCancel, false);
+		//showAlertConfirmText(gprsResp.respContent + CONST_STR.get('ERR_COM_ASK_TO_EXECUTE_AGAIN'));
+		document.addEventListener("closeAlertView", handleRequestAlertReviewOKBtn, false);
+		showAlertText(gprsResp.respContent);
+	}
+}
+
+/*function handleRequestConfirmAlertOK() {
+	document.removeEventListener("alertConfirmOK", handleRequestConfirmAlertOK, false);
+	document.removeEventListener("alertConfirmCancel", handleRequestConfirmAlertCancel, false);
+	navController.resetBranchView();
+}
+
+function handleRequestConfirmAlertCancel() {
+	document.removeEventListener("alertConfirmOK", handleRequestConfirmAlertOK, false);
+	document.removeEventListener("alertConfirmCancel", handleRequestConfirmAlertCancel, false);
+	var tmpPageName = navController.getDefaultPage();
+	var tmpPageType = navController.getDefaultPageType();
+	navController.initWithRootView(tmpPageName, true, tmpPageType);
+}*/
+
+function handleRequestAlertReviewOKBtn() {
+	document.removeEventListener("closeAlertView", handleRequestAlertReviewOKBtn, false);
+	navController.resetBranchView();
+}
+
+function requestMBServiceFail(e)
+{
+	logInfo('Confirm transaction faild!');	
+} 
+
+
+// function goBack() {
+// 	navController.popView(true);
+// }
+
+function btnCancelClick()
+{	
+navController.removePageInCache('esaving/future-esaving-close');	
+withdraw_account = "";
+	//navController.resetBranchView();
+    //goBack();
+	navController.popViewInit();
+}
+
+//TUANNM5 Update
+function setChecked() {
+	//alert('aa');
+	//document.getElementById('trMessage').style.display = "none";
+	var obj = document.getElementById('chkAgree');
+	if(obj.className == "icon-checkbox-unchecked") {
+		obj.className = "icon-checked";
+	} else {
+		obj.className = "icon-checkbox-unchecked";
+	}	
+}
+
+function checkAgree()
+{
+	var obj = document.getElementById('chkAgree');
+	if(obj.className == "icon-checkbox-unchecked") {
+		//alert('Quý khách vui lòng đọc và chấp nhận các điều khoản điều khoản, điều kiện của gửi tiết kiệm rút gốc linh hoạt');
+
+		//var error = document.getElementById('lblErrRequired');
+		//error.innerHTML = 'Quý khách vui lòng đọc và chấp nhận các điều khoản điều khoản, điều kiện của gửi tiết kiệm điện tử';
+		showAlertText(CONST_STR.get('ERR_CHECK_ACCEPT_AUTO_SAVING_TERM'));
+      //  document.getElementById('trMessage').style.display = "";
+
+		return false;
+	} else {
+		sendJSONRequest();
+		return true;
+	}	
+}
+
+function openLink(link) {
+	var items = link.split('.');
+	var linkEN = '';
+	for (var i = 0; i < items.length - 1; i++) {
+		if (i == items.length - 2) {
+			linkEN = linkEN + items[i] + '-EN';
+		} else {
+			linkEN = linkEN + items[i] + '.';
+		}
+	}
+	linkEN = linkEN + '.' + items[items.length - 1];
+	if (gUserInfo.lang == 'EN') {
+		openLinkInWindows(linkEN);
+	} else {
+		openLinkInWindows(link);
+	}	
+}
+
+function AuthenticateUsingFingerprint() {
+	var touchIDTimer = setInterval(function(){
+	//if (touchIDTokenKey != null && touchIDTokenKey.length > 0) {
+			clearInterval(touchIDTimer);
+			 var devicePlatform = device.platform;
+		var versionSDK = device.version;
+        console.log("SANGNT1 com review " +devicePlatform +" "+ versionSDK);
+        if(devicePlatform == 'Android' && versionSDK != 'undefined' && parseInt(versionSDK) >= 6){
+
+            cordova.exec(function(e){
+                var data = {};
+                var arrayArgs = new Array();
+
+                var tmpRespObj;
+                tmpRespObj = getRespObjStore();
+                mailtransid =tmpRespObj.arguments[0];
+                mailservice =tmpRespObj.responseType;
+                arrayArgs.push(tmpRespObj.responseType); //confirm type
+                arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+                arrayArgs.push(""); //Token key --> demo
+                arrayArgs.push(""); //user: authen type
+
+                setRespObjStore(tmpRespObj);
+
+                var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST_FINGERPRINT"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+                data["cmdType"] = gprsCmd.cmdType;
+                data["time"] = gprsCmd.timeCur;
+                data["app"] = gprsCmd.appName;
+                data["version"] = gprsCmd.version;
+                data["language"] = gprsCmd.language;
+                data["session"] = gprsCmd.sessionID;
+                data["args"] = gprsCmd.arguments;
+
+                //gGprsCmd = gprsCmd; //save to global variable-- confirm
+                setGprsCmdStore(gprsCmd);
+
+                logInfo('Authenticate using fingerprint successfully');
+                requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+            }, function(e){
+
+             
+                if( isPinEX=='Y' ){
+                    showAlertText(CONST_STR.get('PIN_EX_DATE_ALERT'));
+                }else{
+                    var data = {};
+                    var arrayArgs = new Array();
+
+                    var tmpRespObj;
+                    tmpRespObj = getRespObjStore();
+                    mailtransid =tmpRespObj.arguments[0];
+                    mailservice =tmpRespObj.responseType;
+                    arrayArgs.push(tmpRespObj.responseType); //confirm type
+                    arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+                    arrayArgs.push(""); //Token key --> demo
+                    arrayArgs.push(gUserInfo.valicationType); //user: authen type
+
+                    setRespObjStore(tmpRespObj);
+
+                    var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+                    data["cmdType"] = gprsCmd.cmdType;
+                    data["time"] = gprsCmd.timeCur;
+                    data["app"] = gprsCmd.appName;
+                    data["version"] = gprsCmd.version;
+                    data["language"] = gprsCmd.language;
+                    data["session"] = gprsCmd.sessionID;
+                    data["args"] = gprsCmd.arguments;
+
+                    //gGprsCmd = gprsCmd; //save to global variable-- confirm
+                    setGprsCmdStore(gprsCmd);
+
+                    logInfo('Authenticate using fingerprint failed or cancelled, return to default authen type');
+                    navController.pushToView("com-authentication-scr", true);
+
+                }
+            }, 'FingerPrint', 'checkMyFingerPrint', ['checkMyFingerPrint']);
+        }else{
+			THEBTouchID.alert('abc', 'def', 'Huynt2', function(){
+				var data = {};
+				var arrayArgs = new Array();
+				
+				var tmpRespObj;
+				tmpRespObj = getRespObjStore();
+				
+				arrayArgs.push(tmpRespObj.responseType); //confirm type
+				arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+				arrayArgs.push(""); //Token key --> By Pass
+				arrayArgs.push(""); //user: authen type
+				setRespObjStore(tmpRespObj);
+				
+				var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST_FINGERPRINT"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+				data["cmdType"] = gprsCmd.cmdType;
+				data["time"] = gprsCmd.timeCur;
+				data["app"] = gprsCmd.appName;
+				data["version"] = gprsCmd.version;
+				data["language"] = gprsCmd.language;
+				data["session"] = gprsCmd.sessionID;
+				data["args"] = gprsCmd.arguments;
+				
+				//gGprsCmd = gprsCmd; //save to global variable-- confirm
+				setGprsCmdStore(gprsCmd);
+				
+				logInfo('Authenticate using fingerprint successfully');
+				requestMBService(data, true, 0, requestMBServiceSuccess, requestMBServiceFail);
+			}, function(e) {
+				//authenticate failed or cancelled
+				 var data = {};
+				var arrayArgs = new Array();
+				
+				var tmpRespObj;
+				tmpRespObj = getRespObjStore();
+				
+				arrayArgs.push(tmpRespObj.responseType); //confirm type
+				arrayArgs.push(tmpRespObj.arguments[0]); //transaction ID
+				arrayArgs.push(""); //Token key --> By Pass
+				arrayArgs.push(gUserInfo.valicationType); //user: authen type
+				setRespObjStore(tmpRespObj);
+				
+				var gprsCmd = new GprsCmdObj(CONSTANTS.get("CMD_TYPE_TICKET_REQUEST"), "", "", gUserInfo.lang, gUserInfo.sessionID, arrayArgs);
+				data["cmdType"] = gprsCmd.cmdType;
+				data["time"] = gprsCmd.timeCur;
+				data["app"] = gprsCmd.appName;
+				data["version"] = gprsCmd.version;
+				data["language"] = gprsCmd.language;
+				data["session"] = gprsCmd.sessionID;
+				data["args"] = gprsCmd.arguments;
+				
+				//gGprsCmd = gprsCmd; //save to global variable-- confirm
+				setGprsCmdStore(gprsCmd);
+				
+				logInfo('Authenticate using fingerprint failed or cancelled, return to default authen type');
+				navController.pushToView("com-authentication-scr", true);
+			/*
+				if (e == '3') {
+					//showAlertText(CONST_STR.get("TOUCHID_3_TIMES_FAIL_ALERT"));
+				}
+			*/
+				
+			});
+		}
+		//}
+	}, 200);
+	setTimeout(function(){
+		if(touchIDTimer) {
+			clearInterval(touchIDTimer);
+		}
+	}, 45000);
+}
